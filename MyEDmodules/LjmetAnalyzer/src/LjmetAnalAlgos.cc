@@ -1,0 +1,603 @@
+// Current issues:
+//
+#include "MyEDmodules/LjmetAnalyzer/src/LjmetAnalAlgos.h"
+#include "MyEDmodules/LjmetAnalyzer/src/pdgid.h"
+#include "DataFormats/Math/interface/LorentzVector.h"
+#include "CLHEP/Vector/ThreeVector.h"
+
+#include <iostream>
+#include <vector>
+
+//======================================================================
+
+using namespace std;
+//using namespace HepMC;
+using namespace reco;
+
+//======================================================================
+
+typedef math::XYZTLorentzVector LorentzVector;
+
+template <class T>
+class CompareET {
+public:
+  bool operator()(const T& h1,
+		  const T& h2) const {
+    return h1.et()>h2.et();
+  }
+};//needed for sorting by et
+
+template <class T>
+class CompareETp {
+public:
+  bool operator()(const T& h1,
+		  const T& h2) const {
+    return h1->et()>h2->et();
+  }
+};//needed for sorting by et
+
+//======================================================================
+
+LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
+			       const edm::ParameterSet& iConfig) :
+  verbosity_(verbosity)
+{
+  outRootFileName_ = iConfig.getUntrackedParameter<string>("outRootFileName");
+  evtclass_ = new GenEvtClass(verbosity);
+
+  dRisolationMin_           = iConfig.getParameter<double>("dRisolationMin");
+  recjetETgevMin_           = iConfig.getParameter<double>("recjetETgevMin");
+  hltcut1_electronETminGeV_ = iConfig.getParameter<double>("hltcut1_electronETminGeV");
+
+  hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
+  hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
+  hpars_.ethtmet.max   = iConfig.getUntrackedParameter<double>("ethtmetMaxGeV");
+  hpars_.numobj.nbins  = iConfig.getUntrackedParameter<int>("numobjNbins");
+  hpars_.numobj.min    = iConfig.getUntrackedParameter<double>("numobjMinGeV");
+  hpars_.numobj.max    = iConfig.getUntrackedParameter<double>("numobjMaxGeV");
+  hpars_.signif.nbins  = iConfig.getUntrackedParameter<int>("signifNbins");
+  hpars_.signif.min    = iConfig.getUntrackedParameter<double>("signifMinGeV");
+  hpars_.signif.max    = iConfig.getUntrackedParameter<double>("signifMaxGeV");
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::bookOneSet(string descr)
+{
+  outf->cd();
+  TDirectory *dir = outf->mkdir(descr.c_str());
+  LjmetCut *pLjmetCut = new LjmetCut(evtclass_,v_cuts.size(),descr, hpars_,dir);
+  v_cuts.push_back(pLjmetCut);
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::beginJob(void)
+{
+  vector<int> pdgidvec;
+
+  outf = new TFile(outRootFileName_.c_str(),"RECREATE");
+
+  /*************************
+   * Initialize cut vectors
+   *************************/
+
+  // "Zeroth" cut is no cut, never active;
+  bookOneSet("no cuts");
+
+  // First cut is the HLT selection - electron ET min
+  bookOneSet("hltminElectronET");
+
+#if 0
+  // Second cut is another electron minGeV above HLT threshold
+  bookOneSet("electronETminGeV");
+
+  // Third cut is # of additional jets
+  bookOneSet("minNumJets");
+
+  // Fourth cut is deltaphi(e+bjet,recoTop)
+  bookOneSet("dPhi(e+b,rT)");
+
+  // Fifth cut is minGeV of HT+MET
+  bookOneSet("HT+METminGeV");
+#endif
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::endJob()
+{
+  char s[80];
+
+  outf->Write();
+
+  /******************************
+   * Output the cut statistics
+   ******************************/
+
+  for (uint32_t i=0; i<v_cuts.size(); i++) {
+    sprintf (s, "Cut %d: %20s", i, v_cuts[i]->description().c_str());
+    cout << s << endl;
+    for (int j=0; j<evtclass_->numClasses(); j++) {
+      if (!i)
+	sprintf (s, "\tclass %d #events = %5d (100.0%%)",
+		 j, v_cuts[i]->nEvents(j));
+      else
+	sprintf (s, "\tclass %d #events = %5d (%5.1f%%)",
+		 j, v_cuts[i]->nEvents(j),
+		 100.*(float)v_cuts[i]->nEvents(j)/(float)v_cuts[i-1]->nEvents(j));
+
+      cout << s << endl;
+    }
+  }
+
+  delete evtclass_;
+
+  delete outf;
+  for (uint32_t i=0; i<v_cuts.size(); i++) {
+    delete v_cuts[i];
+  }
+}
+
+//======================================================================
+
+LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
+				   int cutnum,
+				   std::string descr,
+				   LjmetAnalHistos::AllHistoParams_t hpars,
+				   TDirectory *rootDir) :
+  active_(false),
+  evtclass_(pEvtclass),
+  cutnum_(cutnum),
+  descr_(descr),
+  hpars_(hpars),
+  rootDir_(rootDir)
+{
+  for (int i=0; i<evtclass_->numClasses(); i++) {
+    v_nev_.push_back(0);
+  }
+
+  char name[80];
+  char title[80];
+
+  rootDir_->cd();
+
+  sprintf (name, "classhistcut%d", cutnum_); 
+  sprintf (title, "classhist, %s", descr_.c_str()); 
+  h1f_class      = new TH1F(name,title,21,-10.5,10.5);
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars)
+{
+  int iec = vars.eventclass;
+
+  h1f_class->Fill((float)iec);
+
+  if (iec &&
+      iec < evtclass_->numClasses()) {
+    std::map<int,LjmetAnalHistos *>::const_iterator it = m_pHistos_.find(iec);
+
+    // book histos only if the sample shows evidence of those classified events
+    if (it == m_pHistos_.end()) {
+      m_pHistos_[iec] = new LjmetAnalHistos();
+      rootDir_->cd();
+      ostringstream ssid;
+      ssid << "cut" << cutnum_ << "class" << iec;
+      m_pHistos_[iec]->bookHistos(hpars_,ssid.str(), descr_+evtclass_->classDescr(iec));
+      m_pHistos_[iec]->fill(vars);
+    }
+    else
+      it->second->fill(vars);
+    v_nev_[iec]++;
+  }
+}
+
+//======================================================================
+#if 0
+bool LjmetAnalAlgos::isElectron(CaloJet& cj)
+{
+  //  double theET = cj.et() * JEScor(cj.eta(), cj.et());
+  double theET = cj.et();
+
+  return ((cj.emEnergyFraction() >= emfraction4eid_) &&
+	  (theET >= hltcut1_electronETminGeV_) &&
+	  (fabs(cj.eta()) < 1.4 )); // barrel only (endcap n.a.)
+}
+#endif
+//======================================================================
+
+static double deltaPhi(double phi1, double phi2)
+{
+  double dPhi=fabs(phi1-phi2);
+  if (dPhi>M_PI) dPhi=2*M_PI-dPhi;
+  return dPhi;
+}
+
+//======================================================================
+
+static double calcdR(double eta1, double phi1,
+		     double eta2, double phi2)
+{
+  double delta1 = (eta1-eta2);
+  double delta2 = deltaPhi(phi1,phi2);
+  return sqrt(delta1*delta1 + delta2*delta2);
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::sortElectrons(const RecoCandidateCollection& ElsIn,
+				RecoCandidateCollection& sortedEls)
+{
+  RecoCandidateCollection::const_iterator it;
+  //  reco::ElectronCollection::const_iterator it;
+
+  for (it=ElsIn.begin(); it!=ElsIn.end(); it++){
+    sortedEls.push_back(*it);
+  }
+
+  // sort by decreasing ET
+  //
+  std::sort(sortedEls.begin(), sortedEls.end(), CompareETp<reco::RecoCandidate *>());
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::filterJets(const std::vector<reco::CaloJet>& JetsIn,
+			   const RecoCandidateCollection& ElsIn,
+			   std::vector<reco::CaloJet>& filteredJetsOut)
+{
+  std::vector<reco::CaloJet> sortedJets;
+  CaloJetCollection::const_iterator it;
+
+  // sort first
+  for (it=JetsIn.begin(); it!=JetsIn.end(); it++){
+    sortedJets.push_back(*it);
+  }
+
+  // sort by decreasing ET
+  //
+  std::sort(sortedJets.begin(), sortedJets.end(), CompareET<reco::CaloJet>());
+
+  filteredJetsOut.clear();
+
+  std::vector<reco::CaloJet>::iterator ij;
+  for (ij=sortedJets.begin(); ij != sortedJets.end(); ij++) {
+
+    // filter out low ET jets
+    if (ij->et() < recjetETgevMin_)
+      break; // already sorted by ET, so all the rest are junk
+
+    // Also check if this jet has any cone overlap with the previously
+    // identified electrons, and erase from further consideration if so.
+    //
+    RecoCandidateCollection::const_iterator el;
+    for (el  = ElsIn.begin(); el != ElsIn.end(); el++) {
+      double dR = calcdR((*el)->eta(), (*el)->phi(),
+			 ij->eta(), ij->phi());
+      if (dR < dRisolationMin_) break;
+    }
+
+    if (el != ElsIn.end()) continue;
+
+    filteredJetsOut.push_back(*ij);
+  }
+}                                        // LjmetAnalAlgos::filterJets
+
+//======================================================================
+
+void
+LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
+			 const RecoCandidateCollection& elecs,
+			 const reco::CaloMETCollection& metIn)
+{
+  vars_.absmet        = 0.;
+  vars_.ht            = 0.;
+  vars_.htplusmet     = 0.;
+  vars_.leadingjetET  = 0.;
+  vars_.maxElectronET = 0.;
+  vars_.numElecs      = 0;
+  vars_.numJets       = 0;
+
+  vars_.numJetsCoHemi   = 0;
+  vars_.numJetsAntiHemi = 0;
+
+  vars_.v_electronETs.clear();
+  vars_.v_jetETs.clear();
+#if 0
+  vars_.v_maxjet_e_dr.clear();
+#endif
+
+  vars_.v_ejetdR.clear();
+  vars_.v_ejetdphi.clear();
+
+  /****************************************
+   * Collect electron statistics
+   ****************************************/
+
+  vars_.genElectronCount = evtclass_->getElectronCount();
+
+  /* Create own collection of electrons (so that they can be sorted)
+  ** and count and categorize
+  */
+
+  vars_.numElecs = elecs.size();
+  RecoCandidateCollection::const_iterator el = elecs.begin();
+
+  if (vars_.numElecs>0) {
+    vars_.maxElectronET  = (*el)->et();
+    vars_.maxElectronEta = (*el)->eta();
+    vars_.maxElectronPhi = (*el)->phi();
+
+    RecoCandidateCollection::const_iterator e;
+    for (e=el; e!=elecs.end(); e++)
+      vars_.v_electronETs.push_back((*e)->et());
+  }
+
+  /****************************************
+   * Collect hadron jet statistics
+   ****************************************/
+
+  vars_.genQuarkCount = evtclass_->getQuarkCount();
+
+  vars_.numJets = recjets.size();
+  std::vector<CaloJet>::const_iterator lj = recjets.begin();
+
+  if (vars_.numJets>0) {
+    vars_.leadingjetET  = lj->et();
+    vars_.leadingjetEta = lj->eta();
+    vars_.leadingjetPhi = lj->phi();
+
+    std::vector<CaloJet>::const_iterator j;
+    for (j=lj; j!=recjets.end(); j++) {
+      vars_.v_jetETs.push_back(j->et());
+      if (vars_.numElecs>0) {
+	CLHEP::Hep3Vector barrelElec3V((*el)->px(), (*el)->py(), (*el)->pz());
+
+	vars_.v_ejetdR.push_back(calcdR(j->eta(),j->phi(),
+					(*el)->eta(),(*el)->phi()));
+
+	vars_.v_ejetdphi.push_back(deltaPhi(j->phi(),(*el)->phi()));
+
+	CLHEP::Hep3Vector jet3V(j->px(),j->py(),j->pz());
+
+	double dot = barrelElec3V.dot(jet3V);
+	if (dot > 0)
+	  vars_.numJetsCoHemi++;
+	else if (dot < 0)
+	  vars_.numJetsAntiHemi++;
+      }
+    }
+  }
+
+  if (metIn.size() > 0) 
+    vars_.absmet =  metIn.begin()->sumEt();
+
+#if 0
+  vars_.htplusmet = vars_.ht + vars_.absmet;
+  vars_.metsignificance = vars_.absmet/sqrt(vars_.ht);
+
+  if (maxET > 0.0) {
+    vars_.leadingjetET = maxET;
+
+    if (maxET > maxplottedETgev_)
+      cout << "Max plotted ET exceeded: " << maxET << endl;
+
+    /**********************************************
+     * ...max ET jet/electron angle distribution
+     **********************************************/
+
+    CaloJetCollection::iterator ej;
+    for (ej  = ejets.begin(); ej != ejets.end(); ej++) {
+      vars_.v_maxjet_e_dr.push_back(calcdR(ej->eta(), maxij->eta(),
+					  ej->phi(), maxij->phi()));
+    }
+  }
+#endif
+}                                         // LjmetAnalAlgos::calcVars
+
+//======================================================================
+
+static const double Wmass   = 80.425;
+static const double topMass = 172.3;
+
+void
+LjmetAnalAlgos::recoWandTop()
+{
+#if 0
+  vars_.recoWmass      = 0.0;
+  vars_.recoTopMass    = 0.0;
+  vars_.recoTopEt      = 0.0;
+  vars_.recoTopBoost   = 0.0;
+  vars_.recoTop_e_dr   = 0.0;
+  vars_.recoTop_e_dphi = 0.0;
+  vars_.recomassChi2   = 0.0;
+  vars_.eplusbjetmass  = 0.0;
+  vars_.recoTop_eplusbjet_dphi = 0.0;
+#endif
+
+  if (hjets.size() < 4) return;
+
+  double minChi2 = 1e99;
+
+  // Loop over possible combinations of 2 jets reconstructing a W,
+  // and that combination plus a 3rd jet (b jet) reconstructing the top.
+  // Minimize the chi2 w.r.t. the known masses of the particles.
+  //
+  CaloJetCollection::iterator bestij1,bestij2,bestij3;
+  LorentzVector recoTopLV;
+
+  CaloJetCollection::iterator ij1;
+  for (ij1=hjets.begin(); ij1 != hjets.end(); ij1++) {
+    CaloJetCollection::iterator ij2;
+    for (ij2=ij1+1; ij2 != hjets.end(); ij2++) {
+
+      LorentzVector lvj1  = ij1->p4();
+      LorentzVector lvj2  = ij2->p4();
+      LorentzVector sum2j = lvj1 + lvj2;
+
+      double tstmassW = sum2j.M();
+      double Wchi2    = (tstmassW - Wmass)*(tstmassW - Wmass);
+
+      CaloJetCollection::iterator ij3;
+      for (ij3=hjets.begin(); ij3 != hjets.end(); ij3++) {
+	if ((ij3 == ij1) || (ij3 == ij2)) continue;
+
+	LorentzVector lvj3  = ij3->p4();
+	LorentzVector sum3j = sum2j + lvj3;
+
+	double tstmassTop = sum3j.M();
+	double topChi2 = (2./3.)*(tstmassTop - topMass)*(tstmassTop - topMass);
+
+	double sumChi2 = Wchi2+topChi2;
+	if (sumChi2 < minChi2) {
+	  minChi2           = sumChi2;
+	  bestij1           = ij1;
+	  bestij2           = ij2;
+	  bestij3           = ij3;
+	  recoTopLV         = sum3j;
+#if 0
+	  vars_.recoWmass    = tstmassW;
+	  vars_.recoTopMass  = tstmassTop;
+	  vars_.recoTopEt    = recoTopLV.E()*sin(recoTopLV.Theta());
+	  vars_.recoTopPt    = recoTopLV.Pt();
+	  vars_.recoTopBoost = vars_.recoTopEt/vars_.recoTopMass;
+	  vars_.recomassChi2 = minChi2;
+
+	  if (emaxij != ejets.end()) {
+	    vars_.recoTop_e_dr = calcdR(emaxij->eta(), recoTopLV.Eta(),
+				       emaxij->phi(), recoTopLV.Phi());
+	    vars_.recoTop_e_dphi = deltaPhi(emaxij->phi(), recoTopLV.Phi());
+	  }
+#endif
+	}
+      } // inner loop
+    } // middle loop
+  } // outer loop
+
+  // Found the best combination, now find the highest ET jet remaining
+  // and call that the b-jet from the other top decay.
+  //
+  double maxET = 0.0;
+  CaloJetCollection::iterator hmaxij = hjets.end();
+
+  for (ij1=hjets.begin(); ij1 != hjets.end(); ij1++) {
+    if ((ij1 == bestij1) ||
+	(ij1 == bestij2) ||
+	(ij1 == bestij3)) continue;
+      
+    double theET = ij1->et();
+    if (theET > maxET) {
+      maxET = theET;
+      hmaxij = ij1;
+    }
+  }
+
+#if 0
+  // ...and recombine with the electron for further study.
+  if ((hmaxij != hjets.end()) &&
+      (emaxij != ejets.end())) {
+    LorentzVector lvj4  = hmaxij->p4();
+    LorentzVector elv   = emaxij->p4();
+    LorentzVector sumj4e = lvj4 + elv;
+
+    vars_.eplusbjetmass = sumj4e.M();
+    vars_.recoTop_eplusbjet_dphi = deltaPhi(sumj4e.Phi(),recoTopLV.Phi());
+  }
+#endif
+}                                      // LjmetAnalAlgos::recoWandTop
+
+//======================================================================
+
+void
+LjmetAnalAlgos::applyCutsAndAccount()
+{
+  bool totalcut = false;
+  int  hn=1;
+
+  v_cuts[0]->setActive(false);
+
+  /***********************************
+   * Determine what cuts are active
+   ***********************************/
+  v_cuts[hn++]->setActive(vars_.maxElectronET          < hltcut1_electronETminGeV_);
+#if 0
+  v_cuts[hn++]->setActive(vars_.maxElectronET          < cut2_electronETminGeV_);
+  v_cuts[hn++]->setActive(vars_.numjetsoverthresh      < cut3_minNumJets_);
+  v_cuts[hn++]->setActive(vars_.recoTop_eplusbjet_dphi > cut4_maxDphirTeb_);
+  v_cuts[hn]->setActive  (vars_.htplusmet              < cut5_minHTplusMETgev_);
+#endif
+
+  /*****************
+   * Do accounting
+   *****************/
+
+  for (uint32_t i=0; i<v_cuts.size(); i++) {
+    totalcut = totalcut || v_cuts[i]->isActive();
+    if (!totalcut)
+      v_cuts[i]->fill(vars_);
+    else
+      break;
+  }
+}                              // LjmetAnalAlgos::applyCutsAndAccount
+
+//======================================================================
+
+void
+LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
+			const reco::CaloJetCollection& recJets,
+			const reco::CaloMETCollection& met,
+			const RecoCandidateCollection& elecs)
+//			const reco::ElectronCollection& elecs)
+{
+  vars_.eventclass = evtclass_->classifyEvent(genEvt);
+
+  RecoCandidateCollection  sortedEls;
+  sortElectrons(elecs,sortedEls);
+
+  std::vector<reco::CaloJet>  filteredRJs;
+  filterJets(recJets,sortedEls,filteredRJs);
+
+  calcVars(filteredRJs, sortedEls, met);
+
+#if 0
+  recoWandTop();
+#endif
+
+  applyCutsAndAccount();
+}
+
+//======================================================================
+
+void
+LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
+			const reco::CaloJetCollection& recJets,
+			const reco::CaloMETCollection& met,
+			const RecoCandidateCollection& elecs)
+//			const reco::ElectronCollection& elecs)
+{
+  vars_.eventclass = evtclass_->classifyEvent(genParticles);
+
+  RecoCandidateCollection  sortedEls;
+  sortElectrons(elecs,sortedEls);
+
+  std::vector<reco::CaloJet>  filteredRJs;
+  filterJets(recJets,sortedEls,filteredRJs);
+
+  calcVars(filteredRJs, sortedEls, met);
+
+#if 0
+  recoWandTop();
+#endif
+
+  applyCutsAndAccount();
+}
+
+//======================================================================
