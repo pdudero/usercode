@@ -29,8 +29,8 @@ typedef std::vector<reco::RecoCandidate *> RecoCandidateCollection;
 //======================================================================
 /** \class LjmetAnalAlgos specification
       
-$Date: 2008/03/10 16:07:18 $
-$Revision: 1.1 $
+$Date: 2008/03/12 14:21:28 $
+$Revision: 1.1.1.1 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalAlgos {
@@ -107,14 +107,18 @@ private:
  bool   verbosity_;
  string outRootFileName_;
  double emfraction4eid_;
- double recjetETgevMin_;
- double maxplottedETgev_;
- double hltcut1_electronETminGeV_;
+
+ // filters:
+ double filter_recjetETminGeV_;
+ double filter_elecETminGeV_;
+ double filter_eJetIsolationMindR_;
+
+ // cuts:
+ double cut1_HLTelectronETminGeV_;
  double cut2_electronETminGeV_;
  int    cut3_minNumJets_;
  double cut4_maxDphirTeb_;
  double cut5_minHTplusMETgev_;
- double dRisolationMin_;
 
  GenEvtClass  *evtclass_;
 

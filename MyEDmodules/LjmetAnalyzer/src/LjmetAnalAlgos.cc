@@ -45,9 +45,11 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
   outRootFileName_ = iConfig.getUntrackedParameter<string>("outRootFileName");
   evtclass_ = new GenEvtClass(verbosity);
 
-  dRisolationMin_           = iConfig.getParameter<double>("dRisolationMin");
-  recjetETgevMin_           = iConfig.getParameter<double>("recjetETgevMin");
-  hltcut1_electronETminGeV_ = iConfig.getParameter<double>("hltcut1_electronETminGeV");
+  filter_eJetIsolationMindR_ = iConfig.getParameter<double>("filter_eJetIsolationMindR");
+  filter_recjetETminGeV_     = iConfig.getParameter<double>("filter_recjetETminGeV");
+  filter_elecETminGeV_       = iConfig.getParameter<double>("filter_elecETminGeV");
+
+  cut1_HLTelectronETminGeV_  = iConfig.getParameter<double>("cut1_HLTelectronETminGeV");
 
   hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
   hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
@@ -189,7 +191,8 @@ LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars)
       rootDir_->cd();
       ostringstream ssid;
       ssid << "cut" << cutnum_ << "class" << iec;
-      m_pHistos_[iec]->bookHistos(hpars_,ssid.str(), descr_+evtclass_->classDescr(iec));
+      m_pHistos_[iec]->bookHistos(hpars_,ssid.str(),
+				  descr_+evtclass_->classDescr(iec));
       m_pHistos_[iec]->fill(vars);
     }
     else
@@ -206,7 +209,7 @@ bool LjmetAnalAlgos::isElectron(CaloJet& cj)
   double theET = cj.et();
 
   return ((cj.emEnergyFraction() >= emfraction4eid_) &&
-	  (theET >= hltcut1_electronETminGeV_) &&
+	  (theET >= cut1_HLTelectronETminGeV_) &&
 	  (fabs(cj.eta()) < 1.4 )); // barrel only (endcap n.a.)
 }
 #endif
@@ -239,7 +242,8 @@ LjmetAnalAlgos::sortElectrons(const RecoCandidateCollection& ElsIn,
   //  reco::ElectronCollection::const_iterator it;
 
   for (it=ElsIn.begin(); it!=ElsIn.end(); it++){
-    sortedEls.push_back(*it);
+    if ((*it)->et() > filter_elecETminGeV_)
+      sortedEls.push_back(*it);
   }
 
   // sort by decreasing ET
@@ -272,7 +276,7 @@ LjmetAnalAlgos::filterJets(const std::vector<reco::CaloJet>& JetsIn,
   for (ij=sortedJets.begin(); ij != sortedJets.end(); ij++) {
 
     // filter out low ET jets
-    if (ij->et() < recjetETgevMin_)
+    if (ij->et() < filter_recjetETminGeV_)
       break; // already sorted by ET, so all the rest are junk
 
     // Also check if this jet has any cone overlap with the previously
@@ -282,7 +286,7 @@ LjmetAnalAlgos::filterJets(const std::vector<reco::CaloJet>& JetsIn,
     for (el  = ElsIn.begin(); el != ElsIn.end(); el++) {
       double dR = calcdR((*el)->eta(), (*el)->phi(),
 			 ij->eta(), ij->phi());
-      if (dR < dRisolationMin_) break;
+      if (dR < filter_eJetIsolationMindR_) break;
     }
 
     if (el != ElsIn.end()) continue;
@@ -386,9 +390,6 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
 
   if (maxET > 0.0) {
     vars_.leadingjetET = maxET;
-
-    if (maxET > maxplottedETgev_)
-      cout << "Max plotted ET exceeded: " << maxET << endl;
 
     /**********************************************
      * ...max ET jet/electron angle distribution
@@ -527,7 +528,7 @@ LjmetAnalAlgos::applyCutsAndAccount()
   /***********************************
    * Determine what cuts are active
    ***********************************/
-  v_cuts[hn++]->setActive(vars_.maxElectronET          < hltcut1_electronETminGeV_);
+  v_cuts[hn++]->setActive(vars_.maxElectronET          < cut1_HLTelectronETminGeV_);
 #if 0
   v_cuts[hn++]->setActive(vars_.maxElectronET          < cut2_electronETminGeV_);
   v_cuts[hn++]->setActive(vars_.numjetsoverthresh      < cut3_minNumJets_);
