@@ -10,8 +10,8 @@
 //======================================================================
 /** \class LjmetAnalHistos specification
       
-$Date: 2008/03/10 16:07:25 $
-$Revision: 1.1 $
+$Date: 2008/03/12 14:21:28 $
+$Revision: 1.1.1.1 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalHistos {
@@ -26,6 +26,8 @@ public:
   typedef struct {
     HistoParams_t ethtmet;
     HistoParams_t numobj;
+    HistoParams_t dR;
+    HistoParams_t dphi;
     HistoParams_t signif;
   }
   AllHistoParams_t;

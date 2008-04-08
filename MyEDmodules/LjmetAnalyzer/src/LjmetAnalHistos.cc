@@ -136,23 +136,23 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 
   sprintf (name, "leljdRh%s", setid.c_str());
   sprintf (title, "leading electron*leading jet dR, %s; ", setdescr.c_str()); 
-  h1f_leljdR = new TH1F(name, title, 100, -0.5, 9.5);
+  h1f_leljdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
 
   sprintf (name, "lealljdRh%s", setid.c_str());
   sprintf (title, "leading electron*all jet dR, %s; ", setdescr.c_str()); 
-  h1f_lealljdR = new TH1F(name, title, 100, -0.5, 9.5);
-
-  sprintf (name, "leljdphih%s", setid.c_str());
-  sprintf (title, "leading electron*leading jet dphi, %s; ", setdescr.c_str()); 
-  h1f_leljdphi = new TH1F(name, title, 100, -0.5, 4.5);
-
-  sprintf (name, "lealljdphih%s", setid.c_str());
-  sprintf (title, "leading electron*all jet dphi, %s; ", setdescr.c_str()); 
-  h1f_lealljdphi = new TH1F(name, title, 100, -0.5, 4.5);
+  h1f_lealljdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
 
   sprintf (name, "lecjdRh%s", setid.c_str());
   sprintf (title, "leading electron*closest jet dR, %s; ", setdescr.c_str()); 
-  h1f_lecjdR = new TH1F(name, title, 50, -0.5, 2.0);
+  h1f_lecjdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
+
+  sprintf (name, "leljdphih%s", setid.c_str());
+  sprintf (title, "leading electron*leading jet dphi, %s; ", setdescr.c_str()); 
+  h1f_leljdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
+
+  sprintf (name, "lealljdphih%s", setid.c_str());
+  sprintf (title, "leading electron*all jet dphi, %s; ", setdescr.c_str()); 
+  h1f_lealljdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
 #if 0
   sprintf (name, "rWmassh%s", setid.c_str());

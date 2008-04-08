@@ -57,6 +57,12 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
   hpars_.numobj.nbins  = iConfig.getUntrackedParameter<int>("numobjNbins");
   hpars_.numobj.min    = iConfig.getUntrackedParameter<double>("numobjMinGeV");
   hpars_.numobj.max    = iConfig.getUntrackedParameter<double>("numobjMaxGeV");
+  hpars_.dR.nbins      = iConfig.getUntrackedParameter<int>("dRnbins");
+  hpars_.dR.min        = iConfig.getUntrackedParameter<double>("dRmin");
+  hpars_.dR.max        = iConfig.getUntrackedParameter<double>("dRmax");
+  hpars_.dphi.nbins    = iConfig.getUntrackedParameter<int>("dphiNbins");
+  hpars_.dphi.min      = iConfig.getUntrackedParameter<double>("dphiMin");
+  hpars_.dphi.max      = iConfig.getUntrackedParameter<double>("dphiMax");
   hpars_.signif.nbins  = iConfig.getUntrackedParameter<int>("signifNbins");
   hpars_.signif.min    = iConfig.getUntrackedParameter<double>("signifMinGeV");
   hpars_.signif.max    = iConfig.getUntrackedParameter<double>("signifMaxGeV");
