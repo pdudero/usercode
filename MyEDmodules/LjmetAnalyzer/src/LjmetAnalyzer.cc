@@ -13,7 +13,7 @@
 //
 // Original Author:  pts/0
 //         Created:  Wed Oct 17 14:05:17 CEST 2007
-// $Id: LjmetAnalyzer.cc,v 1.2 2008/03/10 19:42:35 dudero Exp $
+// $Id: LjmetAnalyzer.cc,v 1.1.1.1 2008/03/12 14:21:28 dudero Exp $
 //
 //
 
@@ -26,6 +26,7 @@
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/Run.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -38,6 +39,7 @@
 #include "AnalysisDataFormats/Egamma/interface/ElectronID.h"
 #include "AnalysisDataFormats/Egamma/interface/ElectronIDAssociation.h"
 
+#include "SimDataFormats/HepMCProduct/interface/GenInfoProduct.h"
 
 //======================================================================
 
@@ -73,6 +75,7 @@ private:
   edm::InputTag    metLabel_;
   edm::InputTag    elIDAssocProducer_;
   LjmetAnalAlgos  *algos_;
+  int              ngsfcol_;
   int              nfiltel_;
   int              nevt_;
 };
@@ -98,6 +101,7 @@ LjmetAnalyzer::LjmetAnalyzer(const edm::ParameterSet& iConfig) :
   //now do what ever initialization is needed
   algos_ = new LjmetAnalAlgos(verbose_, iConfig);
 
+  ngsfcol_ = 0;
   nfiltel_ = 0;
   nevt_    = 0;
 }
@@ -141,6 +145,8 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // get event id information
   int runn = iEvent.id().run();
   int evtn = iEvent.id().event();
+
+  nevt_++;
 
   if (verbose_) {
     cout  << "Processing run" << runn << "," << "event " << evtn << endl;
@@ -206,7 +212,7 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // pre-filter Els on the basis of electron Identification
       filterEls(elIDAssocHandle, electrons, genericEls);
 
-      nevt_++;
+      ngsfcol_++;
 
     }catch(const Exception&) {
       throw cms::Exception("LjmetAnalyzer") <<
@@ -230,6 +236,7 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *********************************************/
 
   edm::Handle<edm::HepMCProduct> hepMCEvt;
+  edm::Handle<edm::GenInfoProduct> gi;
   bool getGenParticles = false;
 
   try{
@@ -238,6 +245,10 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout << "source HepMCProduct found"<< std::endl;
     }
     const HepMC::GenEvent* genEvt=hepMCEvt->GetEvent();
+    iEvent.getRun().getByLabel( "source", gi);
+
+    double xsecpb = gi->external_cross_section(); // precalculated xsec in pb
+    cout << "Got cross-section: " << xsecpb << "pb" << endl;
 
     algos_->analyze(*genEvt, *caloJets, *met, genericEls);
 
@@ -286,7 +297,8 @@ void
 LjmetAnalyzer::endJob() {
   algos_->endJob();
 
-  cout << "Filtered " << nfiltel_ << " electrons out of " << nevt_ << " events" << endl;
+  cout << "Filtered " << nfiltel_ << " electrons out of ";
+  cout << ngsfcol_ << " GSF electron collections, " << nevt_ << " events" << endl;
 }
 
 //define this as a plug-in
