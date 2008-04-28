@@ -317,7 +317,9 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p, int depth)
   if (it == m_pMap_.end())
     m_pMap_ [barcode] = p;            // register that we visited this particle
   else {
+#if 0
     if (verbosity_) cout << "double-linked barcode " << barcode << " pdgid " << pdgid <<  endl;
+#endif
     return pdgid;                     // no need to traverse the same subtree twice!
   }
 
@@ -402,9 +404,9 @@ int GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt)
        p != genEvt.particles_end ();
        ++p) {
     if (!(*p)->production_vertex()) { // top of the tree
-      if (verbosity_) printTree(*p,0);
       int evtclass = recurseTree(*p,0);
       evtclass *= -1;
+      if (verbosity_ && (evtclass != numClasses())) printTree(*p,0);
       if ((evtclass) &&
 	  (evtclass < eventclass))
 	eventclass = evtclass;
