@@ -13,7 +13,7 @@
 //
 // Original Author:  pts/0
 //         Created:  Wed Oct 17 14:05:17 CEST 2007
-// $Id: LjmetAnalyzer.cc,v 1.1.1.1 2008/03/12 14:21:28 dudero Exp $
+// $Id: LjmetAnalyzer.cc,v 1.2 2008/04/28 09:12:12 dudero Exp $
 //
 //
 
@@ -231,12 +231,24 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    ***         GET SRC INFORMATION           ***
    *********************************************/
 
+  try {
+    edm::Handle<edm::GenInfoProduct> gi;
+    iEvent.getRun().getByLabel( "source", gi);
+
+    double xsecpb = gi->external_cross_section(); // precalculated xsec in pb
+    cout << "Got cross-section: " << xsecpb << "pb" << endl;
+  }
+  catch(const Exception&) {
+    if(verbose_){
+      std::cout << "GenInfoProduct not found, couldn't obtain cross-section"<< std::endl;
+    }
+  }
+
   /*********************************************
    ***      TRY HepMCProduct FIRST           ***
    *********************************************/
 
   edm::Handle<edm::HepMCProduct> hepMCEvt;
-  edm::Handle<edm::GenInfoProduct> gi;
   bool getGenParticles = false;
 
   try{
@@ -245,10 +257,6 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout << "source HepMCProduct found"<< std::endl;
     }
     const HepMC::GenEvent* genEvt=hepMCEvt->GetEvent();
-    iEvent.getRun().getByLabel( "source", gi);
-
-    double xsecpb = gi->external_cross_section(); // precalculated xsec in pb
-    cout << "Got cross-section: " << xsecpb << "pb" << endl;
 
     algos_->analyze(*genEvt, *caloJets, *met, genericEls);
 
