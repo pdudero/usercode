@@ -15,7 +15,7 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 				 string setdescr)
 {
   char name[80];
-  char title[80];
+  char title[128];
 
   // Leading electron/jet histos
 
