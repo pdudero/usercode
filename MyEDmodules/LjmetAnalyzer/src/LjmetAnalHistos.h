@@ -6,12 +6,13 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "MyEDmodules/LjmetAnalyzer/src/GenEvtClass.h"
 
 //======================================================================
 /** \class LjmetAnalHistos specification
       
-$Date: 2008/03/12 14:21:28 $
-$Revision: 1.1.1.1 $
+$Date: 2008/04/08 19:06:53 $
+$Revision: 1.2 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalHistos {
@@ -46,7 +47,8 @@ public:
     std::vector<double> v_jetETs;
     std::vector<double> v_ejetdR;   // 0th element for leading jet
     std::vector<double> v_ejetdphi; // 0th element for leading jet
-    int    eventclass;
+    GenEvtClass::EnumSample_t     eventclass;
+    GenEvtClass::EnumSignature_t  signatureclass;
     int    genElectronCount;
     int    genQuarkCount;
     int    numElecs;
@@ -105,9 +107,11 @@ private:
 
   TH2F  *h2f_numElecs;
   TH2F  *h2f_numJets;
+  TH2F  *h2f_numElecsVsNumJets;
   TH2F  *h2f_jetetbynumber;
   TH1F  *h1f_numJetsCoHemi;
   TH1F  *h1f_numJetsAntiHemi;
+  TH2F  *h2f_numJetsCoHemiVsAntiHemi;
   TH1F  *h1f_leljdR;
   TH1F  *h1f_leljdphi;
   TH1F  *h1f_lealljdR;

@@ -49,7 +49,7 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
   filter_recjetETminGeV_     = iConfig.getParameter<double>("filter_recjetETminGeV");
   filter_elecETminGeV_       = iConfig.getParameter<double>("filter_elecETminGeV");
 
-  cut1_HLTelectronETminGeV_  = iConfig.getParameter<double>("cut1_HLTelectronETminGeV");
+  cut_jetETminGeV_           = iConfig.getParameter<double>("cut_jetETminGeV");
 
   hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
   hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
@@ -92,16 +92,12 @@ LjmetAnalAlgos::beginJob(void)
    * Initialize cut vectors
    *************************/
 
-  // "Zeroth" cut is no cut, never active;
-  bookOneSet("no cuts");
-
-  // First cut is the HLT selection - electron ET min
-  bookOneSet("hltminElectronET");
+  // book the histos in order of how the cuts are applied
+  bookOneSet("noCuts");
+  bookOneSet("ctAtLeast1e1j");
+  bookOneSet("ctJetETminGeV");
 
 #if 0
-  // Second cut is another electron minGeV above HLT threshold
-  bookOneSet("electronETminGeV");
-
   // Third cut is # of additional jets
   bookOneSet("minNumJets");
 
@@ -130,15 +126,20 @@ LjmetAnalAlgos::endJob()
     sprintf (s, "Cut %d: %20s", i, v_cuts[i]->description().c_str());
     cout << s << endl;
     for (int j=0; j<evtclass_->numClasses(); j++) {
-      if (!i)
-	sprintf (s, "\tclass %d #events = %5d (100.0%%)",
-		 j, v_cuts[i]->nEvents(j));
-      else
-	sprintf (s, "\tclass %d #events = %5d (%5.1f%%)",
-		 j, v_cuts[i]->nEvents(j),
-		 100.*(float)v_cuts[i]->nEvents(j)/(float)v_cuts[i-1]->nEvents(j));
-
-      cout << s << endl;
+      for (int k=0; k<evtclass_->numSignatureTypes(); k++) {
+	int nev  = v_cuts[i]->nEvents(j,k);
+	int nev0 = v_cuts[0]->nEvents(j,k);
+	if (nev0) { // don't bother printing out things you never had.
+	  if (!i)
+	    sprintf (s, "\tclass %d sig %d #events = %5d (100.0%%)",
+		     j, k, nev);
+	  else
+	    sprintf (s, "\tclass %d sig %d #events = %5d (%5.1f%%)",
+		     j, k, v_cuts[i]->nEvents(j,k),
+		     100.*(float)nev/(float)v_cuts[i-1]->nEvents(j,k));
+	  cout << s << endl;
+	}
+      }
     }
   }
 
@@ -164,10 +165,6 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
   hpars_(hpars),
   rootDir_(rootDir)
 {
-  for (int i=0; i<evtclass_->numClasses(); i++) {
-    v_nev_.push_back(0);
-  }
-
   char name[80];
   char title[80];
 
@@ -175,7 +172,15 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
 
   sprintf (name, "classhistcut%d", cutnum_); 
   sprintf (title, "classhist, %s", descr_.c_str()); 
-  h1f_class      = new TH1F(name,title,21,-10.5,10.5);
+  h2f_class      = new TH2F(name,title,5,-0.5,4.5,5,-0.5,4.5);
+
+  for (int i=0; i<evtclass_->numClasses(); i++) {
+    h2f_class->GetYaxis()->SetBinLabel(i+1,evtclass_->classDescr(i).c_str());
+  }
+
+  for (int i=0; i<evtclass_->numSignatureTypes(); i++)
+    h2f_class->GetXaxis()->SetBinLabel
+      (i+1,evtclass_->signDescr(GenEvtClass::EnumSignature_t(i)).c_str());
 }
 
 //======================================================================
@@ -183,27 +188,29 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
 void
 LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars)
 {
-  int iec = vars.eventclass;
+  int iec = (int)vars.eventclass;
+  int isc = (int)vars.signatureclass;
 
-  h1f_class->Fill((float)iec);
+  if (iec < evtclass_->numClasses()) {
 
-  if (iec &&
-      iec < evtclass_->numClasses()) {
-    std::map<int,LjmetAnalHistos *>::const_iterator it = m_pHistos_.find(iec);
+    h2f_class->Fill((float)isc,(float)iec);
+    int key = iec*10 + isc;
+
+    std::map<int,LjmetAnalHistos *>::const_iterator it = m_pHistos_.find(key);
 
     // book histos only if the sample shows evidence of those classified events
     if (it == m_pHistos_.end()) {
-      m_pHistos_[iec] = new LjmetAnalHistos();
+      m_pHistos_[key] = new LjmetAnalHistos();
       rootDir_->cd();
       ostringstream ssid;
-      ssid << "cut" << cutnum_ << "class" << iec;
-      m_pHistos_[iec]->bookHistos(hpars_,ssid.str(),
-				  descr_+evtclass_->classDescr(iec));
-      m_pHistos_[iec]->fill(vars);
+      ssid << "cut" << cutnum_ << "cls" << iec << "sig" << isc;
+      m_pHistos_[key]->bookHistos
+	(hpars_,ssid.str(),
+	 descr_+evtclass_->classDescr(iec)+evtclass_->signDescr(GenEvtClass::EnumSignature_t(isc)));
+      m_pHistos_[key]->fill(vars);
     }
     else
       it->second->fill(vars);
-    v_nev_[iec]++;
   }
 }
 
@@ -412,133 +419,22 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
 
 //======================================================================
 
-static const double Wmass   = 80.425;
-static const double topMass = 172.3;
-
-void
-LjmetAnalAlgos::recoWandTop()
-{
-#if 0
-  vars_.recoWmass      = 0.0;
-  vars_.recoTopMass    = 0.0;
-  vars_.recoTopEt      = 0.0;
-  vars_.recoTopBoost   = 0.0;
-  vars_.recoTop_e_dr   = 0.0;
-  vars_.recoTop_e_dphi = 0.0;
-  vars_.recomassChi2   = 0.0;
-  vars_.eplusbjetmass  = 0.0;
-  vars_.recoTop_eplusbjet_dphi = 0.0;
-#endif
-
-  if (hjets.size() < 4) return;
-
-  double minChi2 = 1e99;
-
-  // Loop over possible combinations of 2 jets reconstructing a W,
-  // and that combination plus a 3rd jet (b jet) reconstructing the top.
-  // Minimize the chi2 w.r.t. the known masses of the particles.
-  //
-  CaloJetCollection::iterator bestij1,bestij2,bestij3;
-  LorentzVector recoTopLV;
-
-  CaloJetCollection::iterator ij1;
-  for (ij1=hjets.begin(); ij1 != hjets.end(); ij1++) {
-    CaloJetCollection::iterator ij2;
-    for (ij2=ij1+1; ij2 != hjets.end(); ij2++) {
-
-      LorentzVector lvj1  = ij1->p4();
-      LorentzVector lvj2  = ij2->p4();
-      LorentzVector sum2j = lvj1 + lvj2;
-
-      double tstmassW = sum2j.M();
-      double Wchi2    = (tstmassW - Wmass)*(tstmassW - Wmass);
-
-      CaloJetCollection::iterator ij3;
-      for (ij3=hjets.begin(); ij3 != hjets.end(); ij3++) {
-	if ((ij3 == ij1) || (ij3 == ij2)) continue;
-
-	LorentzVector lvj3  = ij3->p4();
-	LorentzVector sum3j = sum2j + lvj3;
-
-	double tstmassTop = sum3j.M();
-	double topChi2 = (2./3.)*(tstmassTop - topMass)*(tstmassTop - topMass);
-
-	double sumChi2 = Wchi2+topChi2;
-	if (sumChi2 < minChi2) {
-	  minChi2           = sumChi2;
-	  bestij1           = ij1;
-	  bestij2           = ij2;
-	  bestij3           = ij3;
-	  recoTopLV         = sum3j;
-#if 0
-	  vars_.recoWmass    = tstmassW;
-	  vars_.recoTopMass  = tstmassTop;
-	  vars_.recoTopEt    = recoTopLV.E()*sin(recoTopLV.Theta());
-	  vars_.recoTopPt    = recoTopLV.Pt();
-	  vars_.recoTopBoost = vars_.recoTopEt/vars_.recoTopMass;
-	  vars_.recomassChi2 = minChi2;
-
-	  if (emaxij != ejets.end()) {
-	    vars_.recoTop_e_dr = calcdR(emaxij->eta(), recoTopLV.Eta(),
-				       emaxij->phi(), recoTopLV.Phi());
-	    vars_.recoTop_e_dphi = deltaPhi(emaxij->phi(), recoTopLV.Phi());
-	  }
-#endif
-	}
-      } // inner loop
-    } // middle loop
-  } // outer loop
-
-  // Found the best combination, now find the highest ET jet remaining
-  // and call that the b-jet from the other top decay.
-  //
-  double maxET = 0.0;
-  CaloJetCollection::iterator hmaxij = hjets.end();
-
-  for (ij1=hjets.begin(); ij1 != hjets.end(); ij1++) {
-    if ((ij1 == bestij1) ||
-	(ij1 == bestij2) ||
-	(ij1 == bestij3)) continue;
-      
-    double theET = ij1->et();
-    if (theET > maxET) {
-      maxET = theET;
-      hmaxij = ij1;
-    }
-  }
-
-#if 0
-  // ...and recombine with the electron for further study.
-  if ((hmaxij != hjets.end()) &&
-      (emaxij != ejets.end())) {
-    LorentzVector lvj4  = hmaxij->p4();
-    LorentzVector elv   = emaxij->p4();
-    LorentzVector sumj4e = lvj4 + elv;
-
-    vars_.eplusbjetmass = sumj4e.M();
-    vars_.recoTop_eplusbjet_dphi = deltaPhi(sumj4e.Phi(),recoTopLV.Phi());
-  }
-#endif
-}                                      // LjmetAnalAlgos::recoWandTop
-
-//======================================================================
-
 void
 LjmetAnalAlgos::applyCutsAndAccount()
 {
   bool totalcut = false;
   int  hn=1;
 
-  v_cuts[0]->setActive(false);
+  v_cuts[0]->Activate(false);
 
   /***********************************
    * Determine what cuts are active
    ***********************************/
-  v_cuts[hn++]->setActive(vars_.maxElectronET          < cut1_HLTelectronETminGeV_);
+  v_cuts[hn++]->Activate(!vars_.numElecs || !vars_.numJets);
+  v_cuts[hn++]->Activate(vars_.leadingjetET < cut_jetETminGeV_);
 #if 0
-  v_cuts[hn++]->setActive(vars_.maxElectronET          < cut2_electronETminGeV_);
-  v_cuts[hn++]->setActive(vars_.numjetsoverthresh      < cut3_minNumJets_);
-  v_cuts[hn++]->setActive(vars_.recoTop_eplusbjet_dphi > cut4_maxDphirTeb_);
+  v_cuts[hn++]->Activate(vars_.numjetsoverthresh      < cut3_minNumJets_);
+  v_cuts[hn++]->Activate(vars_.recoTop_eplusbjet_dphi > cut4_maxDphirTeb_);
   v_cuts[hn]->setActive  (vars_.htplusmet              < cut5_minHTplusMETgev_);
 #endif
 
@@ -564,7 +460,7 @@ LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
 			const RecoCandidateCollection& elecs)
 //			const reco::ElectronCollection& elecs)
 {
-  vars_.eventclass = evtclass_->classifyEvent(genEvt);
+  evtclass_->classifyEvent(genEvt,vars_.eventclass,vars_.signatureclass);
 
   RecoCandidateCollection  sortedEls;
   sortElectrons(elecs,sortedEls);
@@ -573,10 +469,6 @@ LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
   filterJets(recJets,sortedEls,filteredRJs);
 
   calcVars(filteredRJs, sortedEls, met);
-
-#if 0
-  recoWandTop();
-#endif
 
   applyCutsAndAccount();
 }
@@ -590,7 +482,8 @@ LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
 			const RecoCandidateCollection& elecs)
 //			const reco::ElectronCollection& elecs)
 {
-  vars_.eventclass = evtclass_->classifyEvent(genParticles);
+  vars_.eventclass = 
+    (GenEvtClass::EnumSample_t)evtclass_->classifyEvent(genParticles);
 
   RecoCandidateCollection  sortedEls;
   sortElectrons(elecs,sortedEls);
@@ -599,10 +492,6 @@ LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
   filterJets(recJets,sortedEls,filteredRJs);
 
   calcVars(filteredRJs, sortedEls, met);
-
-#if 0
-  recoWandTop();
-#endif
 
   applyCutsAndAccount();
 }

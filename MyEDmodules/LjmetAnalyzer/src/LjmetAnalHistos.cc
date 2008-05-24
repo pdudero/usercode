@@ -110,12 +110,20 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 			     pars.numobj.min,
 			     pars.numobj.max);
 
+  sprintf (name, "numevsjh%s", setid.c_str());
+  sprintf (title, "# reco els vs reco jets, %s;# RecoJets;# RecoEls", setdescr.c_str()); 
+  h2f_numElecsVsNumJets = new TH2F(name, title,
+				   pars.numobj.nbins,
+				   pars.numobj.min,
+				   pars.numobj.max,
+				   pars.numobj.nbins,
+				   pars.numobj.min,
+				   pars.numobj.max);
+
   sprintf (name, "jetetbynumber%s", setid.c_str());
   sprintf (title, "Sorted Jet Spectrum, %s;Jet #; ET(GeV)", setdescr.c_str()); 
   h2f_jetetbynumber = new TH2F(name, title,
-			       pars.numobj.nbins,
-			       pars.numobj.min,
-			       pars.numobj.max,
+			       15, 0.5, 15.5,
 			       pars.ethtmet.nbins,
 			       pars.ethtmet.min,
 			       pars.ethtmet.max);
@@ -133,6 +141,16 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 				 pars.numobj.nbins,
 				 pars.numobj.min,
 				 pars.numobj.max);
+
+  sprintf (name, "njCoVsAntiHh%s", setid.c_str());
+  sprintf (title, "# jets CoHemi vs AntiHemi, %s;# AntiHemi Jets;# CoHemi Jets", setdescr.c_str()); 
+  h2f_numJetsCoHemiVsAntiHemi = new TH2F(name, title,
+					 pars.numobj.nbins,
+					 pars.numobj.min,
+					 pars.numobj.max,
+					 pars.numobj.nbins,
+					 pars.numobj.min,
+					 pars.numobj.max);
 
   sprintf (name, "leljdRh%s", setid.c_str());
   sprintf (title, "leading electron*leading jet dR, %s; ", setdescr.c_str()); 
@@ -236,11 +254,16 @@ void  LjmetAnalHistos::fill(HistoVars_t& vars)
   h2f_numJets->Fill((float)vars.genQuarkCount,
 		    (float)vars.numJets);
 
+  h2f_numElecsVsNumJets->Fill(vars.numJets,vars.numElecs);
+
   h1f_numJetsCoHemi->Fill((float)vars.numJetsCoHemi);
   h1f_numJetsAntiHemi->Fill((float)vars.numJetsAntiHemi);
 
+  h2f_numJetsCoHemiVsAntiHemi->Fill((float)vars.numJetsAntiHemi,
+				    (float)vars.numJetsCoHemi);
+
   for (unsigned int i=0; i<vars.v_jetETs.size(); i++) {
-    h2f_jetetbynumber->Fill(i*1.0,vars.v_jetETs[i]);
+    h2f_jetetbynumber->Fill((i+1)*1.0,vars.v_jetETs[i]);
   }
 
   double mindR = 1e99;

@@ -57,8 +57,8 @@ int myParticleRecord::leptoncount()
   return lcount;
 }
   
-void myParticleRecord::clearcounts() {
-
+void myParticleRecord::clearcounts()
+{
   // pre-initialize map with entries for given pdg IDs,
   // counts set to zero.
   //
@@ -67,3 +67,18 @@ void myParticleRecord::clearcounts() {
     i->second.count = 0;
   }
 }
+
+void myParticleRecord::Add(myParticleRecord& addend)
+{
+  map<int,prec_t>::iterator a;
+  for (a  = addend.m_particleRec_.begin();
+       a != addend.m_particleRec_.end();
+       a++) {
+    map<int,prec_t>::iterator b = m_particleRec_.find(a->first);
+    if (b == m_particleRec_.end())
+      m_particleRec_[a->first] = a->second;
+    else
+      b->second.count += a->second.count;
+  }
+}
+

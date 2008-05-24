@@ -8,7 +8,7 @@ using namespace std;
 
 /** \class myParticleRecord
  *  
- *  $Id: myParticleRecord.h,v 1.1 2008/03/10 16:07:28 dudero Exp $
+ *  $Id: myParticleRecord.h,v 1.1.1.1 2008/03/12 14:21:28 dudero Exp $
  */
 
 
@@ -27,6 +27,8 @@ class myParticleRecord {
   int quarkcount();             // returns total number of quarks
   int leptoncount();            // returns total number of final state leptons 
   int lspcount();               // returns total number of final state LSPs
+
+  void Add(myParticleRecord& addend);
 
  private:
   typedef struct {

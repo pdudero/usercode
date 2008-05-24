@@ -15,8 +15,8 @@
 //======================================================================
 /** \class GenEvtClass specification
       
-$Date: 2008/03/10 16:07:18 $
-$Revision: 1.1 $
+$Date: 2008/03/12 14:21:28 $
+$Revision: 1.1.1.1 $
 \author P. Dudero - Minnesota
 */
 class GenEvtClass {
@@ -24,21 +24,53 @@ public:
   GenEvtClass(bool verbosity);
   ~GenEvtClass();
 
-  int          numClasses() const;
+  typedef enum {
+    eOTHERSAMPLE,
+    eSUSY,
+    eTTBAR,
+    eWJETS
+  }
+  EnumSample_t;
+
+  typedef enum {
+    eNOLEPTONS,
+    e1ELEC,
+    e1ELECpLEPTONS,
+    e1MUorTAU,
+    e2orMOREMUorTAU
+  }
+  EnumSignature_t;
+
   std::string  classDescr(int classnum) const;
+  std::string  signDescr(EnumSignature_t sig) const;
 
-  int          getElectronCount() const { return myprec_->count(electron); }
-  int          getQuarkCount()    const { return myprec_->quarkcount(); }
+  int numClasses() const;
+  int numSignatureTypes() const;
 
-  int          classifyEvent(const HepMC::GenEvent& MCEvt);
-  int          classifyEvent(const reco::CandidateCollection& genParticles);
+  myParticleRecord *newParticleRecord(void);
+
+  inline int  getElectronCount()   const { return myprec_->count(electron); }
+  inline int  getNonELeptonCount() const { return
+					     (myprec_->count(muminus) +
+					      myprec_->count(tauminus)); }
+  inline int  getQuarkCount()      const { return myprec_->quarkcount(); }
+
+  void classifyEvent(const HepMC::GenEvent& genEvt,
+		     EnumSample_t&    sampleclass,
+		     EnumSignature_t& signatureclass);
+
+  int classifyEvent(const reco::CandidateCollection& genParticles);
 
 private:
   // internal methods
   void loadPdgidStrings(void);
   std::string pdgidStr(int pdgid);
-  int recurseTree(HepMC::GenParticle *p, int depth);
-  void printTree(HepMC::GenParticle *p, int depth);
+
+  EnumSignature_t detSignatureClass(void);
+
+  int  recurseTree(HepMC::GenParticle *p, int depth, myParticleRecord *prec);
+  void printTree  (HepMC::GenParticle *p, int depth);
+  void printCounts(myParticleRecord& prec);
 
   // user-configurable parameters
   bool              verbosity_;

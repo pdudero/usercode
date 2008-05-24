@@ -29,8 +29,8 @@ typedef std::vector<reco::RecoCandidate *> RecoCandidateCollection;
 //======================================================================
 /** \class LjmetAnalAlgos specification
       
-$Date: 2008/03/12 14:21:28 $
-$Revision: 1.1.1.1 $
+$Date: 2008/03/12 15:27:38 $
+$Revision: 1.2 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalAlgos {
@@ -68,10 +68,11 @@ public:
 
   inline bool isActive() const          { return active_; }
   inline std::string& description()     { return descr_;  }
-  inline void setActive(bool val)       { active_ = val;  }
+  inline void Activate(bool val)        { active_ = val;  }
 
-  inline int  nEvents(int iec)  const {
-    return (iec < evtclass_->numClasses()) ? v_nev_[iec] : 0;
+  inline int  nEvents(int iec,int isc)  const {
+    return (iec < evtclass_->numClasses()) ?
+      ((int)h2f_class->GetBinContent(isc+1,iec+1)) : 0;
   }
 
 private:
@@ -81,9 +82,8 @@ private:
   std::string                        descr_;
   LjmetAnalHistos::AllHistoParams_t  hpars_;
   TDirectory                        *rootDir_;
-  std::vector<int>                   v_nev_;
   std::map<int, LjmetAnalHistos *>   m_pHistos_;
-  TH1F                              *h1f_class;
+  TH2F                              *h2f_class;
 };
 
 // internal methods
@@ -98,7 +98,6 @@ private:
  void   calcVars(const std::vector<reco::CaloJet>& recjets,
 		 const RecoCandidateCollection& elecs,
 		 const reco::CaloMETCollection& metIn);
- void   recoWandTop();
  void   applyCutsAndAccount();
 
  // user-configurable parameters
@@ -114,8 +113,7 @@ private:
  double filter_eJetIsolationMindR_;
 
  // cuts:
- double cut1_HLTelectronETminGeV_;
- double cut2_electronETminGeV_;
+ double cut_jetETminGeV_;
  int    cut3_minNumJets_;
  double cut4_maxDphirTeb_;
  double cut5_minHTplusMETgev_;
