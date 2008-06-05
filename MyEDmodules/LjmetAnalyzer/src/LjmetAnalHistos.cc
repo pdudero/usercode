@@ -172,47 +172,10 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
   sprintf (title, "leading electron*all jet dphi, %s; ", setdescr.c_str()); 
   h1f_lealljdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
-#if 0
-  sprintf (name, "rWmassh%s", setid.c_str());
-  sprintf (title, "recoWmass, %s;GeV", setdescr.c_str()); 
-  h1d_recoWmass   = new TH1D(name, title, 100, 0.0, 200.0);
+  sprintf (name, "leMETdphih%s", setid.c_str());
+  sprintf (title, "leading electron*MET dphi, %s; ", setdescr.c_str()); 
+  h1f_leMETdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
-  sprintf (name, "rTmassh%s", setid.c_str());
-  sprintf (title, "recoTopMass, %s;GeV", setdescr.c_str()); 
-  h1d_recoTopMass = new TH1D(name, title, 100, 0.0, 500.0);
-
-  sprintf (name, "rTopEth%s", setid.c_str());
-  sprintf (title, "recoTopEt, %s;GeV", setdescr.c_str()); 
-  h1d_recoTopEt   = new TH1D(name, title, 100, 0.0, 1000.0);
-
-  sprintf (name, "rTopPth%s", setid.c_str());
-  sprintf (title, "recoTopPt, %s;GeV", setdescr.c_str()); 
-  h1d_recoTopPt   = new TH1D(name, title, 100, 0.0, 1000.0);
-
-  sprintf (name, "rmassChi2h%s", setid.c_str());
-  sprintf (title, "recoMassChi2, %s;GeV^2", setdescr.c_str()); 
-  h1d_recomassChi2= new TH1D(name, title, 100, 0.0, 500.0);
-
-  sprintf (name, "rTboosth%s", setid.c_str());
-  sprintf (title, "recoTopBoost, %s;recoEt/recoM", setdescr.c_str()); 
-  h1d_recoTopBoost= new TH1D(name, title, 50, -0.5, 9.5);
-
-  sprintf (name, "rTedRh%s", setid.c_str()); 
-  sprintf (title, "recoTop/electron dR, %s;dR", setdescr.c_str()); 
-  h1d_recoTop_e_dr= new TH1D(name, title, 100, 0.0, 10.0);
-
-  sprintf (name, "rTedPhih%s", setid.c_str()); 
-  sprintf (title, "recoTop/electron dPhi, %s;dPhi", setdescr.c_str()); 
-  h1d_recoTop_e_dphi= new TH1D(name, title, 25, 0.0, 4.0);
-
-  sprintf (name, "rTe+bjetdPhih%s", setid.c_str());
-  sprintf (title, "recoTop/e+bjet dPhi, %s;dPhi", setdescr.c_str()); 
-  h1d_recoTop_eplusbjet_dphi = new TH1D(name, title, 25, 0.0, 4.0);
-
-  sprintf (name, "e+bjetmassh%s", setid.c_str());
-  sprintf (title, "e+bjet mass, %s;GeV", setdescr.c_str()); 
-  h1d_eplusbjetmass = new TH1D(name, title, 100, 0.0, 500.0);
-#endif
 }                                         // LjmetAnalHistos::bookHistos
 
 //======================================================================
@@ -227,6 +190,9 @@ void  LjmetAnalHistos::fill(HistoVars_t& vars)
     h1d_leET->Fill(vars.maxElectronET);
     h1d_leEta->Fill(vars.maxElectronEta);
     h1d_lePhi->Fill(vars.maxElectronPhi);
+
+    if (vars.absmet > 0.0)
+      h1f_leMETdphi->Fill(vars.lemetdphi);
   }
 
 #if 0
@@ -240,7 +206,9 @@ void  LjmetAnalHistos::fill(HistoVars_t& vars)
     h1d_ljPhi->Fill(vars.leadingjetPhi);
   }
 
-  h1d_met->Fill(vars.absmet);
+  if (vars.absmet > 0.0)
+    h1d_met->Fill(vars.absmet);
+
 #if 0
   h1d_ht->Fill(vars.ht);
 
@@ -280,36 +248,4 @@ void  LjmetAnalHistos::fill(HistoVars_t& vars)
     if (!i) h1f_leljdphi->Fill(vars.v_ejetdphi[0]);
     h1f_lealljdphi->Fill(vars.v_ejetdphi[i]);
   }
-
-#if 0
-  //  if (vars.recoWmass > 0.0)
-  h1d_recoWmass->Fill(vars.recoWmass);
-
-  //    if (vars.recoTopMass > 0.0)
-  h1d_recoTopMass->Fill(vars.recoTopMass);
-
-  //  if (vars.recoTopEt > 0.0)
-  h1d_recoTopEt->Fill(vars.recoTopEt);
-
-  //  if (vars.recoTopPt > 0.0)
-  h1d_recoTopPt->Fill(vars.recoTopPt);
-
-  //  if (vars.recomassChi2 > 0.0)
-  h1d_recomassChi2->Fill(vars.recomassChi2);
-
-  //  if (vars.recoTopBoost > 0.0)
-  h1d_recoTopBoost->Fill(vars.recoTopBoost);
-
-  //  if (vars.recoTop_e_dr > 0.0)
-  h1d_recoTop_e_dr->Fill(vars.recoTop_e_dr);
-
-  //  if (vars.recoTop_e_dphi > 0.0)
-  h1d_recoTop_e_dphi->Fill(vars.recoTop_e_dphi);
-
-  //  if (vars.recoTop_eplusbjet_dphi > 0.0)
-  h1d_recoTop_eplusbjet_dphi->Fill(vars.recoTop_eplusbjet_dphi);
-
-  //  if (vars.eplusbjetmass > 0.0)
-  h1d_eplusbjetmass->Fill(vars.eplusbjetmass);
-#endif
 }                                          // LjmetAnalHistos::fill

@@ -50,6 +50,7 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
   filter_elecETminGeV_       = iConfig.getParameter<double>("filter_elecETminGeV");
 
   cut_jetETminGeV_           = iConfig.getParameter<double>("cut_jetETminGeV");
+  cut_minNumJets_            = iConfig.getParameter<int>("cut_minNumJets");
 
   hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
   hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
@@ -96,11 +97,9 @@ LjmetAnalAlgos::beginJob(void)
   bookOneSet("noCuts");
   bookOneSet("ctAtLeast1e1j");
   bookOneSet("ctJetETminGeV");
+  bookOneSet("ctMinNumJets");
 
 #if 0
-  // Third cut is # of additional jets
-  bookOneSet("minNumJets");
-
   // Fourth cut is deltaphi(e+bjet,recoTop)
   bookOneSet("dPhi(e+b,rT)");
 
@@ -315,13 +314,18 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
 			 const RecoCandidateCollection& elecs,
 			 const reco::CaloMETCollection& metIn)
 {
-  vars_.absmet        = 0.;
-  vars_.ht            = 0.;
-  vars_.htplusmet     = 0.;
-  vars_.leadingjetET  = 0.;
-  vars_.maxElectronET = 0.;
-  vars_.numElecs      = 0;
-  vars_.numJets       = 0;
+  vars_.absmet         = 0.;
+  vars_.lemetdphi      = 0.;
+  vars_.ht             = 0.;
+  vars_.htplusmet      = 0.;
+  vars_.leadingjetET   = 0.;
+  vars_.leadingjetEta  = 0.;
+  vars_.leadingjetPhi  = 0.;
+  vars_.maxElectronET  = 0.;
+  vars_.maxElectronEta = 0.;
+  vars_.maxElectronPhi = 0.;
+  vars_.numElecs       = 0;
+  vars_.numJets        = 0;
 
   vars_.numJetsCoHemi   = 0;
   vars_.numJetsAntiHemi = 0;
@@ -394,8 +398,12 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
     }
   }
 
-  if (metIn.size() > 0) 
-    vars_.absmet =  metIn.begin()->sumEt();
+  if (metIn.size() > 0) {
+    vars_.absmet = metIn.begin()->sumEt();
+    if (vars_.numElecs>0)
+      vars_.lemetdphi = deltaPhi(metIn.begin()->phi(),
+				 vars_.maxElectronPhi);
+  }
 
 #if 0
   vars_.htplusmet = vars_.ht + vars_.absmet;
@@ -432,10 +440,10 @@ LjmetAnalAlgos::applyCutsAndAccount()
    ***********************************/
   v_cuts[hn++]->Activate(!vars_.numElecs || !vars_.numJets);
   v_cuts[hn++]->Activate(vars_.leadingjetET < cut_jetETminGeV_);
+  v_cuts[hn++]->Activate(vars_.numJets < cut_minNumJets_);
 #if 0
-  v_cuts[hn++]->Activate(vars_.numjetsoverthresh      < cut3_minNumJets_);
-  v_cuts[hn++]->Activate(vars_.recoTop_eplusbjet_dphi > cut4_maxDphirTeb_);
-  v_cuts[hn]->setActive  (vars_.htplusmet              < cut5_minHTplusMETgev_);
+  v_cuts[hn++]->Activate(vars_.recoTop_eplusbjet_dphi  > cut_maxDphirTeb_);
+  v_cuts[hn]->Activate  (vars_.htplusmet              < cut_minHTplusMETgev_);
 #endif
 
   /*****************

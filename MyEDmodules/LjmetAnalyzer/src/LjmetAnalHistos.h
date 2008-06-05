@@ -11,8 +11,8 @@
 //======================================================================
 /** \class LjmetAnalHistos specification
       
-$Date: 2008/04/08 19:06:53 $
-$Revision: 1.2 $
+$Date: 2008/05/24 02:06:50 $
+$Revision: 1.3 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalHistos {
@@ -56,6 +56,7 @@ public:
     int    numJetsCoHemi;
     int    numJetsAntiHemi;
     double metsignificance;
+    double lemetdphi;
 
 #if 0
     double recoWmass;
@@ -117,6 +118,7 @@ private:
   TH1F  *h1f_lealljdR;
   TH1F  *h1f_lealljdphi;
   TH1F  *h1f_lecjdR;
+  TH1F  *h1f_leMETdphi;
 };
 
 #endif // _LJMETANALHISTOS_H
