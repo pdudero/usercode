@@ -352,7 +352,7 @@ void GenEvtClass::printCounts(myParticleRecord& prec)
 }
 
 //======================================================================
-// m_pMap_ keeps track of visited particles as we traverse the tree.
+// pMap keeps track of visited particles as we traverse the tree.
 // Look for end vertices and count up final state particles.
 // Classify the event according to the current particle, and also count
 // up the leptons tau, mu, and e.
@@ -363,12 +363,13 @@ void GenEvtClass::printCounts(myParticleRecord& prec)
 //
 int GenEvtClass::recurseTree(HepMC::GenParticle *p,
 			     int depth,
+			     std::map<int,HepMC::GenParticle *>& pMap,
 			     myParticleRecord *prec)
 {
   int evtclass = 0;
 
   std::map<int,HepMC::GenParticle *>::const_iterator it;
-  it = m_pMap_.find(p->barcode());
+  it = pMap.find(p->barcode());
 
   int pdgid   = abs(p->pdg_id());
   int barcode = p->barcode();
@@ -380,8 +381,8 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
   /* 1. particle already visited - 
   **    no need to traverse the same subtree twice!
   */
-  if (it == m_pMap_.end())
-    m_pMap_ [barcode] = p;
+  if (it == pMap.end())
+    pMap [barcode] = p;
   else {
     //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
     return pdgid;
@@ -413,7 +414,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
        child != p->end_vertex ()->particles_end   (HepMC::children); 
        ++child) {
 
-    int retval = recurseTree(*child, depth+1, prec);
+    int retval = recurseTree(*child, depth+1, pMap, prec);
 #if 0
     if (verbosity_) {
       cout << "Depth " << depth+1 << ": retval = " << retval << endl;
@@ -467,7 +468,7 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
   }
 
   myprec_->clearcounts();
-  m_pMap_.clear();
+  std::map<int,HepMC::GenParticle *> pMap;
 
   HepMC::GenEvent::particle_const_iterator p;
   for (p  = genEvt.particles_begin ();
@@ -475,7 +476,7 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
        ++p) {
     if (!(*p)->production_vertex()) { // top of the tree
       myParticleRecord *prec = newParticleRecord();
-      int evtclass = recurseTree(*p,0,prec);
+      int evtclass = recurseTree(*p,0,pMap,prec);
       evtclass *= -1;
       if (evtclass) {
 	myprec_->Add(*prec);
@@ -503,11 +504,122 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
 }                                          // GenEvtClass::classifyEvent
 
 //======================================================================
-
-int GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles)
+//
+void GenEvtClass::printTree(Candidate *p, int depth)
 {
-  bool foundW  = false;
+  int pdgid = abs(p->pdgId());
+
+  cout << setw(7) << pdgidStr(pdgid);
+
+  int n = p->numberOfDaughters();
+  if (!n) {  cout << endl; return; }
+
+  for( int j = 0; j < n; ++j ) {
+    Candidate * d = p->daughter(j);
+    if (j) {
+      cout << "       ";
+      for (int i=0; i<depth; i++) cout << "          ";
+    }
+    cout << " => ";
+    printTree(d, depth+1);
+  }
+}                                               // GenEvtClass:printTree
+
+//======================================================================
+// Same thing, but with GenParticleCandidates:
+//
+int GenEvtClass::recurseTree(Candidate *p,
+			     int depth,
+			     std::map<Candidate *, int>& pMap,
+			     myParticleRecord *prec)
+{
   int evtclass = 0;
+
+  int pdgid   = abs(p->pdgId());
+  unsigned int n = p->numberOfDaughters();
+
+  std::map<Candidate *, int>::const_iterator it;
+  it = pMap.find(p);
+
+  /*********************************
+   * RECURSION TERMINUS CONDITIONS *
+   *********************************/
+
+  /* 1. particle already visited - 
+  **    no need to traverse the same subtree twice!
+  */
+  if (it == pMap.end())
+    pMap [p] = pdgid;
+  else {
+    //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
+    return pdgid;
+  }
+
+  /* 2. Final state particles encountered
+  */
+  if ((pdgid == tauminus) ||  // count it as a final state particle and stop
+      (pdgid == muminus) ||
+      (!n)) {
+    prec->add(pdgid);
+    return pdgid;
+  }
+
+  /*************************************************************************
+   * Recurse the children in all other cases to count final state particles
+   *************************************************************************/
+
+  std::map<int, Candidate *> m_childretvals;
+
+  /* Visit all the children:
+   */
+  for( size_t j = 0; j < n; ++ j ) {
+    Candidate * d = p->daughter(j);
+
+    int retval = recurseTree(d, depth+1, pMap, prec);
+#if 0
+    if (verbosity_) {
+      cout << "Depth " << depth+1 << ": retval = " << retval << endl;
+      printCounts(*prec);
+    }
+#endif
+    m_childretvals[retval] = d; // don't care if it overwrites
+  }
+
+  /***************************************************
+   * Now try classifying event on current particles...
+   ***************************************************/
+
+  if (pdgid > 1000000) evtclass = -1;    // susy
+  if (pdgid == topq)   evtclass = -2;    // top
+  if (pdgid == Wplus)  evtclass = -3;    // W
+
+  if (evtclass) return evtclass;
+
+  /**************************
+   * Or on child particles...
+   **************************/
+
+  // No class determined yet, inspect the kid pdgids...
+  // return highest classification from among the children...
+  //
+  for (int i=-1; i>=-3; i--)
+    if (m_childretvals.find(i)  != m_childretvals.end()) {
+      evtclass =  i;
+      break;
+    }
+  
+  if (evtclass) return evtclass;
+
+  return depth ? pdgid : 0;
+}                                             // GenEvtClass:recurseTree
+
+//======================================================================
+
+void GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles,
+				EnumSample_t&    sampleclass,
+				EnumSignature_t& signatureclass)
+{
+  int eventclass = numClasses();
   int nParticles = genParticles.size();
     
   if (verbosity_) {
@@ -515,53 +627,39 @@ int GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles)
     cout << nParticles << endl;
   }
 
+  std::map<Candidate *,int> pMap;
+
   myprec_->clearcounts();
 
   for( size_t i = 0; i < genParticles.size(); ++ i ) {
-    const Candidate & p = genParticles[ i ];
-    int       pdgid = abs(p.pdgId());
-    unsigned int n  = p.numberOfDaughters();
-
-    if (!evtclass) {
-      if (pdgid > 1000000) evtclass = 1;    // susy;
-      if (pdgid == topq)   evtclass = 2;    // top
-      if (pdgid == Wplus)  foundW = true;
-    }
-
-    if (verbosity_)
-      cout << "Parent is: " << pdgid << ", children are: ";
-      
-    for( size_t j = 0; j < n; ++ j ) {
-      const Candidate * d = p.daughter( j );
-      int dauId = d->pdgId();
-      if (verbosity_) cout << setw(3) << dauId << ' ';
-
-      if (foundW && !evtclass) {
-	if (dauId == tauminus) evtclass = 3;
-	else if (dauId == muminus)  evtclass = 4;
-	else if (dauId == electron) evtclass = 5;
+    Candidate *p = (Candidate *)&(genParticles[i]);
+    if (!p->mother()) { // top of the tree
+      myParticleRecord *prec = newParticleRecord();
+      int evtclass = recurseTree(p,0,pMap,prec);
+      evtclass *= -1;
+      if (evtclass) {
+	myprec_->Add(*prec);
       }
+      if (verbosity_) printTree(p,0);
+      if ((evtclass) &&
+	  (evtclass < eventclass)) // found a higher event class
+	eventclass = evtclass;
+      delete prec;
     }
-    if (!n) myprec_->add(pdgid);
-    if (verbosity_) cout << endl;
   }
 
-  if (verbosity_)
-    cout << "event class = " << evtclass << endl;
+  if (eventclass == numClasses()) eventclass=0;
 
-  if (verbosity_ || !evtclass) {
-    cout << "#e        = " << myprec_->count(electron);
-    cout << ", #nu_e   = " << myprec_->count(nu_e);
-    cout << ", #mu-    = " << myprec_->count(muminus);
-    cout << ", #nu_mu  = " << myprec_->count(nu_mu);
-    cout << ", #tau-   = " << myprec_->count(tauminus);
-    cout << ", #nu_tau = " << myprec_->count(nu_tau);
-    cout << ", #quark  = " << myprec_->quarkcount() << endl;
+  signatureclass = detSignatureClass();
+
+  if (verbosity_) {
+    cout << "event class = " << classDescr(eventclass) << endl;
+    printCounts(*myprec_);
+    cout << "signature class = " << signDescr(signatureclass) << endl;
   }
 
-  if (!evtclass) evtclass = numClasses();
+  sampleclass = EnumSample_t(eventclass);
 
-  return evtclass;
 }                                    // GenEvtClass::classifyEvent
 
 //======================================================================

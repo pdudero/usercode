@@ -15,8 +15,8 @@
 //======================================================================
 /** \class GenEvtClass specification
       
-$Date: 2008/03/12 14:21:28 $
-$Revision: 1.1.1.1 $
+$Date: 2008/05/24 02:06:50 $
+$Revision: 1.2 $
 \author P. Dudero - Minnesota
 */
 class GenEvtClass {
@@ -59,7 +59,9 @@ public:
 		     EnumSample_t&    sampleclass,
 		     EnumSignature_t& signatureclass);
 
-  int classifyEvent(const reco::CandidateCollection& genParticles);
+  void classifyEvent(const reco::CandidateCollection& genParticles,
+		     EnumSample_t&    sampleclass,
+		     EnumSignature_t& signatureclass);
 
 private:
   // internal methods
@@ -68,8 +70,16 @@ private:
 
   EnumSignature_t detSignatureClass(void);
 
-  int  recurseTree(HepMC::GenParticle *p, int depth, myParticleRecord *prec);
+  int  recurseTree(HepMC::GenParticle *p,
+		   int depth,
+		   std::map<int,HepMC::GenParticle *>& pMap,
+		   myParticleRecord *prec);
+  int  recurseTree(reco::Candidate *p,
+		   int depth,
+		   std::map<reco::Candidate *,int>& pMap,
+		   myParticleRecord *prec);
   void printTree  (HepMC::GenParticle *p, int depth);
+  void printTree  (reco::Candidate    *p, int depth);
   void printCounts(myParticleRecord& prec);
 
   // user-configurable parameters
@@ -78,7 +88,6 @@ private:
   // internal members
   myParticleRecord *myprec_;
   std::map<int,std::string> m_pdgidstr_;
-  std::map<int,HepMC::GenParticle *> m_pMap_;
 };
 
 #endif // _GENEVTCLASS_H
