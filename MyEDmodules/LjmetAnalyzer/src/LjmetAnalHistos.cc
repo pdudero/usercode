@@ -180,72 +180,72 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 
 //======================================================================
 
-void  LjmetAnalHistos::fill(HistoVars_t& vars)
+void  LjmetAnalHistos::fill(HistoVars_t& vars, double weight)
 {
   for (uint32_t i=0; i<vars.v_electronETs.size(); i++) {
-    h1d_alleET->Fill(vars.v_electronETs[i]);
+    h1d_alleET->Fill(vars.v_electronETs[i],weight);
   }
 
   if (vars.numElecs > 0) {
-    h1d_leET->Fill(vars.maxElectronET);
-    h1d_leEta->Fill(vars.maxElectronEta);
-    h1d_lePhi->Fill(vars.maxElectronPhi);
+    h1d_leET->Fill(vars.maxElectronET,weight);
+    h1d_leEta->Fill(vars.maxElectronEta,weight);
+    h1d_lePhi->Fill(vars.maxElectronPhi,weight);
 
     if (vars.absmet > 0.0)
-      h1f_leMETdphi->Fill(vars.lemetdphi);
+      h1f_leMETdphi->Fill(vars.lemetdphi,weight);
   }
 
 #if 0
   for (uint32_t i=0; i<vars.v_maxjet_e_dr.size(); i++)
-    h1d_maxjet_e_dr->Fill(vars.v_maxjet_e_dr[i]);
+    h1d_maxjet_e_dr->Fill(vars.v_maxjet_e_dr[i],weight);
 #endif
 
   if (vars.numJets > 0) {
-    h1d_ljET->Fill(vars.leadingjetET);
-    h1d_ljEta->Fill(vars.leadingjetEta);
-    h1d_ljPhi->Fill(vars.leadingjetPhi);
+    h1d_ljET->Fill(vars.leadingjetET,weight);
+    h1d_ljEta->Fill(vars.leadingjetEta,weight);
+    h1d_ljPhi->Fill(vars.leadingjetPhi,weight);
   }
 
   if (vars.absmet > 0.0)
-    h1d_met->Fill(vars.absmet);
+    h1d_met->Fill(vars.absmet,weight);
 
 #if 0
-  h1d_ht->Fill(vars.ht);
+  h1d_ht->Fill(vars.ht,weight);
 
-  h1d_htplusmet->Fill(vars.htplusmet);
+  h1d_htplusmet->Fill(vars.htplusmet,weight);
 
   //  if (vars.metsignificance > 0.0)
-  h1d_metsignificance->Fill(vars.metsignificance);
+  h1d_metsignificance->Fill(vars.metsignificance,weight);
 #endif
   h2f_numElecs->Fill(vars.genElectronCount,
-		     vars.numElecs);
+		     vars.numElecs,weight);
   h2f_numJets->Fill((float)vars.genQuarkCount,
-		    (float)vars.numJets);
+		    (float)vars.numJets,weight);
 
-  h2f_numElecsVsNumJets->Fill(vars.numJets,vars.numElecs);
+  h2f_numElecsVsNumJets->Fill(vars.numJets,vars.numElecs,weight);
 
-  h1f_numJetsCoHemi->Fill((float)vars.numJetsCoHemi);
-  h1f_numJetsAntiHemi->Fill((float)vars.numJetsAntiHemi);
+  h1f_numJetsCoHemi->Fill((float)vars.numJetsCoHemi,weight);
+  h1f_numJetsAntiHemi->Fill((float)vars.numJetsAntiHemi,weight);
 
   h2f_numJetsCoHemiVsAntiHemi->Fill((float)vars.numJetsAntiHemi,
-				    (float)vars.numJetsCoHemi);
+				    (float)vars.numJetsCoHemi,weight);
 
   for (unsigned int i=0; i<vars.v_jetETs.size(); i++) {
-    h2f_jetetbynumber->Fill((i+1)*1.0,vars.v_jetETs[i]);
+    h2f_jetetbynumber->Fill((i+1)*1.0,vars.v_jetETs[i],weight);
   }
 
   double mindR = 1e99;
   for (unsigned int i=0; i<vars.v_ejetdR.size(); i++) {
     double dR = vars.v_ejetdR[i];
-    if (!i) h1f_leljdR->Fill(dR);
+    if (!i) h1f_leljdR->Fill(dR,weight);
     if (dR < mindR) mindR = dR;
-    h1f_lealljdR->Fill(vars.v_ejetdR[i]);
+    h1f_lealljdR->Fill(vars.v_ejetdR[i],weight);
   }
   if (vars.v_ejetdR.size())
-    h1f_lecjdR->Fill(mindR);
+    h1f_lecjdR->Fill(mindR,weight);
 
   for (unsigned int i=0; i<vars.v_ejetdphi.size(); i++) {
-    if (!i) h1f_leljdphi->Fill(vars.v_ejetdphi[0]);
-    h1f_lealljdphi->Fill(vars.v_ejetdphi[i]);
+    if (!i) h1f_leljdphi->Fill(vars.v_ejetdphi[0],weight);
+    h1f_lealljdphi->Fill(vars.v_ejetdphi[i],weight);
   }
 }                                          // LjmetAnalHistos::fill

@@ -11,8 +11,8 @@
 //======================================================================
 /** \class LjmetAnalHistos specification
       
-$Date: 2008/05/24 02:06:50 $
-$Revision: 1.3 $
+$Date: 2008/06/05 23:02:20 $
+$Revision: 1.4 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalHistos {
@@ -79,7 +79,7 @@ public:
 		  std::string setid,
 		  std::string setdescr);
 
-  void fill(HistoVars_t& vars);
+  void fill(HistoVars_t& vars, double weight);
 
 private:
   TH1D  *h1d_leET;
