@@ -13,7 +13,7 @@
 //
 // Original Author:  pts/0
 //         Created:  Wed Oct 17 14:05:17 CEST 2007
-// $Id: LjmetAnalyzer.cc,v 1.3 2008/04/29 16:02:53 dudero Exp $
+// $Id: LjmetAnalyzer.cc,v 1.4 2008/05/24 02:06:50 dudero Exp $
 //
 //
 
@@ -244,6 +244,17 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
+  double weight = 1.0;
+  Handle< double> weightHandle;
+  try{
+    iEvent.getByLabel ("csaweightproducer","weight", weightHandle);
+    weight = *weightHandle;
+  } catch(const Exception&) {
+    if(verbose_){
+      std::cout << "no CSA07 weight found"<< std::endl;
+    }
+  }
+  
   /*********************************************
    ***      TRY HepMCProduct FIRST           ***
    *********************************************/
@@ -258,14 +269,13 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
     const HepMC::GenEvent* genEvt=hepMCEvt->GetEvent();
 
-    algos_->analyze(*genEvt, *caloJets, *met, genericEls);
+    algos_->analyze(*genEvt, *caloJets, *met, genericEls, weight);
 
   }catch(const Exception&) {
     if(verbose_){
       std::cout << "no HepMCProduct found"<< std::endl;
     }
 
-#if 0
     getGenParticles = true;
   }
 
@@ -283,18 +293,15 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	std::cout << "genParticleCandidates found"<< std::endl;
       }
 
-      algos_->analyze(*genParticles, *caloJets, *met, genericEls);
+      algos_->analyze(*genParticles, *caloJets, *met, genericEls, weight);
 
     }catch(const Exception&) {
       if(verbose_){
 	std::cout << "no genParticleCandidates found"<< std::endl;
       }
-#endif
       throw cms::Exception("LjmetAnalyzer") << "Source data not found";
     }
-#if 0
   }
-#endif
 }
 
 // ------------ method called once each job just before starting event loop  ------------

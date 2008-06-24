@@ -185,14 +185,14 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
 //======================================================================
 
 void
-LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars)
+LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars,double weight)
 {
   int iec = (int)vars.eventclass;
   int isc = (int)vars.signatureclass;
 
   if (iec < evtclass_->numClasses()) {
 
-    h2f_class->Fill((float)isc,(float)iec);
+    h2f_class->Fill((float)isc,(float)iec,weight);
     int key = iec*10 + isc;
 
     std::map<int,LjmetAnalHistos *>::const_iterator it = m_pHistos_.find(key);
@@ -206,10 +206,10 @@ LjmetAnalAlgos::LjmetCut::fill(LjmetAnalHistos::HistoVars_t& vars)
       m_pHistos_[key]->bookHistos
 	(hpars_,ssid.str(),
 	 descr_+evtclass_->classDescr(iec)+evtclass_->signDescr(GenEvtClass::EnumSignature_t(isc)));
-      m_pHistos_[key]->fill(vars);
+      m_pHistos_[key]->fill(vars,weight);
     }
     else
-      it->second->fill(vars);
+      it->second->fill(vars,weight);
   }
 }
 
@@ -428,7 +428,7 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
 //======================================================================
 
 void
-LjmetAnalAlgos::applyCutsAndAccount()
+LjmetAnalAlgos::applyCutsAndAccount(double weight)
 {
   bool totalcut = false;
   int  hn=1;
@@ -453,7 +453,7 @@ LjmetAnalAlgos::applyCutsAndAccount()
   for (uint32_t i=0; i<v_cuts.size(); i++) {
     totalcut = totalcut || v_cuts[i]->isActive();
     if (!totalcut)
-      v_cuts[i]->fill(vars_);
+      v_cuts[i]->fill(vars_, weight);
     else
       break;
   }
@@ -465,7 +465,8 @@ void
 LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
 			const reco::CaloJetCollection& recJets,
 			const reco::CaloMETCollection& met,
-			const RecoCandidateCollection& elecs)
+			const RecoCandidateCollection& elecs,
+			double weight)
 //			const reco::ElectronCollection& elecs)
 {
   evtclass_->classifyEvent(genEvt,vars_.eventclass,vars_.signatureclass);
@@ -478,7 +479,7 @@ LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
 
   calcVars(filteredRJs, sortedEls, met);
 
-  applyCutsAndAccount();
+  applyCutsAndAccount(weight);
 }
 
 //======================================================================
@@ -487,11 +488,11 @@ void
 LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
 			const reco::CaloJetCollection& recJets,
 			const reco::CaloMETCollection& met,
-			const RecoCandidateCollection& elecs)
+			const RecoCandidateCollection& elecs,
+			double weight)
 //			const reco::ElectronCollection& elecs)
 {
-  vars_.eventclass = 
-    (GenEvtClass::EnumSample_t)evtclass_->classifyEvent(genParticles);
+  evtclass_->classifyEvent(genParticles,vars_.eventclass,vars_.signatureclass);
 
   RecoCandidateCollection  sortedEls;
   sortElectrons(elecs,sortedEls);
@@ -501,7 +502,7 @@ LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
 
   calcVars(filteredRJs, sortedEls, met);
 
-  applyCutsAndAccount();
+  applyCutsAndAccount(weight);
 }
 
 //======================================================================

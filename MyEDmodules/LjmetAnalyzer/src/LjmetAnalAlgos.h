@@ -29,8 +29,8 @@ typedef std::vector<reco::RecoCandidate *> RecoCandidateCollection;
 //======================================================================
 /** \class LjmetAnalAlgos specification
       
-$Date: 2008/05/24 02:06:50 $
-$Revision: 1.3 $
+$Date: 2008/06/05 23:02:20 $
+$Revision: 1.4 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalAlgos {
@@ -45,14 +45,14 @@ public:
   void analyze(const HepMC::GenEvent& genEvt,
 	       const reco::CaloJetCollection& recJets,
 	       const reco::CaloMETCollection& met,
-	       const RecoCandidateCollection& elecs);
-  //	       const reco::ElectronCollection& elecs);
+	       const RecoCandidateCollection& elecs,
+	       double weight);
 
   void analyze(const reco::CandidateCollection& genParticles,
 	       const reco::CaloJetCollection& recJets,
 	       const reco::CaloMETCollection& met,
-	       const RecoCandidateCollection& elecs);
-  //	       const reco::ElectronCollection& elecs);
+	       const RecoCandidateCollection& elecs,
+	       double weight);
 
 private:
 
@@ -64,7 +64,7 @@ public:
 	   LjmetAnalHistos::AllHistoParams_t hpars,
 	   TDirectory *rootDir);
 
-  void fill(LjmetAnalHistos::HistoVars_t& vars);
+  void fill(LjmetAnalHistos::HistoVars_t& vars, double weight);
 
   inline bool isActive() const          { return active_; }
   inline std::string& description()     { return descr_;  }
@@ -98,7 +98,7 @@ private:
  void   calcVars(const std::vector<reco::CaloJet>& recjets,
 		 const RecoCandidateCollection& elecs,
 		 const reco::CaloMETCollection& metIn);
- void   applyCutsAndAccount();
+ void   applyCutsAndAccount(double weight);
 
  // user-configurable parameters
  LjmetAnalHistos::AllHistoParams_t hpars_;
