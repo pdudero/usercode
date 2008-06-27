@@ -485,7 +485,7 @@ LjmetAnalAlgos::analyze(const HepMC::GenEvent& genEvt,
 //======================================================================
 
 void
-LjmetAnalAlgos::analyze(const reco::CandidateCollection& genParticles,
+LjmetAnalAlgos::analyze(const reco::GenParticleCollection& genParticles,
 			const reco::CaloJetCollection& recJets,
 			const reco::CaloMETCollection& met,
 			const RecoCandidateCollection& elecs,

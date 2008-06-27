@@ -13,7 +13,7 @@
 //
 // Original Author:  pts/0
 //         Created:  Wed Oct 17 14:05:17 CEST 2007
-// $Id: LjmetAnalyzer.cc,v 1.4 2008/05/24 02:06:50 dudero Exp $
+// $Id: LjmetAnalyzer.cc,v 1.5 2008/06/24 13:47:00 dudero Exp $
 //
 //
 
@@ -261,7 +261,7 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<edm::HepMCProduct> hepMCEvt;
   bool getGenParticles = false;
-
+#if 0
   try{
     iEvent.getByLabel("source",hepMCEvt);
     if(verbose_){
@@ -275,29 +275,31 @@ LjmetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(verbose_){
       std::cout << "no HepMCProduct found"<< std::endl;
     }
-
+#endif
     getGenParticles = true;
-  }
+    //}
 
   if (getGenParticles) {
 
     /*********************************************
-     ***      TRY GenParticleCandidates        ***
+     ***      TRY GenParticles (converted      ***
+     ***      from GenParticleCandidates       ***
+     ***        for CSA07 samples)             ***
      *********************************************/
 
-    Handle<CandidateCollection> genParticles;
+    Handle<GenParticleCollection> genParticles;
 
     try{
-      iEvent.getByLabel( "genParticleCandidates", genParticles );
+      iEvent.getByLabel( "genParticles", genParticles );
       if(verbose_){
-	std::cout << "genParticleCandidates found"<< std::endl;
+	std::cout << "genParticles found"<< std::endl;
       }
 
       algos_->analyze(*genParticles, *caloJets, *met, genericEls, weight);
 
     }catch(const Exception&) {
       if(verbose_){
-	std::cout << "no genParticleCandidates found"<< std::endl;
+	std::cout << "no genParticles found"<< std::endl;
       }
       throw cms::Exception("LjmetAnalyzer") << "Source data not found";
     }

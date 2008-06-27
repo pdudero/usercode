@@ -505,41 +505,42 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
 
 //======================================================================
 //
-void GenEvtClass::printTree(Candidate *p, int depth)
+void GenEvtClass::printTree(const Candidate &p, int depth)
 {
-  int pdgid = abs(p->pdgId());
+  int pdgid = abs(p.pdgId());
 
   cout << setw(7) << pdgidStr(pdgid);
 
-  int n = p->numberOfDaughters();
-  if (!n) {  cout << endl; return; }
+  int n = p.numberOfDaughters();
+  if (!n ||  (pdgid == 92)) {  cout << endl; return; }
 
   for( int j = 0; j < n; ++j ) {
-    Candidate * d = p->daughter(j);
+    const Candidate * d = p.daughter(j);
     if (j) {
       cout << "       ";
       for (int i=0; i<depth; i++) cout << "          ";
     }
     cout << " => ";
-    printTree(d, depth+1);
+    if (d) printTree(*d, depth+1);
+    else   cout << endl;
   }
 }                                               // GenEvtClass:printTree
 
 //======================================================================
 // Same thing, but with GenParticleCandidates:
 //
-int GenEvtClass::recurseTree(Candidate *p,
+int GenEvtClass::recurseTree(const Candidate &p,
 			     int depth,
-			     std::map<Candidate *, int>& pMap,
+			     std::map<const Candidate *, int>& pMap,
 			     myParticleRecord *prec)
 {
   int evtclass = 0;
 
-  int pdgid   = abs(p->pdgId());
-  unsigned int n = p->numberOfDaughters();
+  int pdgid   = abs(p.pdgId());
+  unsigned int n = p.numberOfDaughters();
 
-  std::map<Candidate *, int>::const_iterator it;
-  it = pMap.find(p);
+  std::map<const Candidate *, int>::const_iterator it;
+  it = pMap.find(&p);
 
   /*********************************
    * RECURSION TERMINUS CONDITIONS *
@@ -549,13 +550,17 @@ int GenEvtClass::recurseTree(Candidate *p,
   **    no need to traverse the same subtree twice!
   */
   if (it == pMap.end())
-    pMap [p] = pdgid;
+    pMap [&p] = pdgid;
   else {
     //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
     return pdgid;
   }
 
-  /* 2. Final state particles encountered
+  /* 2. String encountered - she's gonna hadronize!
+  */
+  if (pdgid == 92) return pdgid;
+
+  /* 3. Final state particles encountered
   */
   if ((pdgid == tauminus) ||  // count it as a final state particle and stop
       (pdgid == muminus) ||
@@ -568,14 +573,19 @@ int GenEvtClass::recurseTree(Candidate *p,
    * Recurse the children in all other cases to count final state particles
    *************************************************************************/
 
-  std::map<int, Candidate *> m_childretvals;
+  std::map<int, const Candidate *> m_childretvals;
 
   /* Visit all the children:
    */
-  for( size_t j = 0; j < n; ++ j ) {
-    Candidate * d = p->daughter(j);
+  for( size_t j=0; j < n; ++j ) {
+    const Candidate * d = p.daughter(j);
 
-    int retval = recurseTree(d, depth+1, pMap, prec);
+    if (!d) {
+      cout << "daughter #" << j << " of " << n << " pointer is 0???" << endl;
+      continue;
+    }
+    
+    int retval = recurseTree(*d, depth+1, pMap, prec);
 #if 0
     if (verbosity_) {
       cout << "Depth " << depth+1 << ": retval = " << retval << endl;
@@ -612,10 +622,36 @@ int GenEvtClass::recurseTree(Candidate *p,
 
   return depth ? pdgid : 0;
 }                                             // GenEvtClass:recurseTree
-
+#if 1
 //======================================================================
 
-void GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles,
+static void DumpCollection(const reco::GenParticleCollection& genParticles)
+{
+  char s[256];
+  cout << " i  pdgid   nm nd  daughters" << endl;
+  for( size_t i = 0; i < genParticles.size(); ++ i ) {
+    const GenParticle p = genParticles[i];
+    int ndau  = p.numberOfDaughters();
+    int nmoth = p.numberOfMothers();
+    int pdgid = p.pdgId();
+
+    sprintf(s,"%3d %7d %2d %2d ", i, pdgid, nmoth, ndau); cout << s;
+    for (int j = 0; j<nmoth; j++) {
+      const Candidate *m = p.mother(j);
+      sprintf (s, "0x%08x ", (int)m); cout << s;
+    }
+    cout << "| ";
+    for (int j = 0; j<ndau; j++) {
+      const Candidate *d = p.daughter(j);
+      sprintf (s, "0x%08x ", (int)d); cout << s;
+    }
+    cout << endl;
+  }
+}
+#endif
+//======================================================================
+
+void GenEvtClass::classifyEvent(const reco::GenParticleCollection& genParticles,
 				EnumSample_t&    sampleclass,
 				EnumSignature_t& signatureclass)
 {
@@ -627,13 +663,15 @@ void GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles,
     cout << nParticles << endl;
   }
 
-  std::map<Candidate *,int> pMap;
+  //DumpCollection(genParticles);
 
   myprec_->clearcounts();
+  std::map<const Candidate *,int> pMap;
 
   for( size_t i = 0; i < genParticles.size(); ++ i ) {
-    Candidate *p = (Candidate *)&(genParticles[i]);
-    if (!p->mother()) { // top of the tree
+    const Candidate &p = genParticles[i];
+
+    if (!p.mother()) { // top of the tree
       myParticleRecord *prec = newParticleRecord();
       int evtclass = recurseTree(p,0,pMap,prec);
       evtclass *= -1;
@@ -660,6 +698,6 @@ void GenEvtClass::classifyEvent(const reco::CandidateCollection& genParticles,
 
   sampleclass = EnumSample_t(eventclass);
 
-}                                    // GenEvtClass::classifyEvent
+}                                          // GenEvtClass::classifyEvent
 
 //======================================================================

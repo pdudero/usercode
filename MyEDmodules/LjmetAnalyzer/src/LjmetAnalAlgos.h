@@ -13,8 +13,8 @@
 #include "CLHEP/HepMC/GenEvent.h"
 #include "CLHEP/HepMC/GenVertex.h"
 #include "SimDataFormats/HepMCProduct/interface/HepMCProduct.h"
-#include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoCandidate.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include <string>
 #include <vector>
@@ -29,8 +29,8 @@ typedef std::vector<reco::RecoCandidate *> RecoCandidateCollection;
 //======================================================================
 /** \class LjmetAnalAlgos specification
       
-$Date: 2008/06/05 23:02:20 $
-$Revision: 1.4 $
+$Date: 2008/06/24 13:49:53 $
+$Revision: 1.5 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalAlgos {
@@ -48,7 +48,7 @@ public:
 	       const RecoCandidateCollection& elecs,
 	       double weight);
 
-  void analyze(const reco::CandidateCollection& genParticles,
+  void analyze(const reco::GenParticleCollection& genParticles,
 	       const reco::CaloJetCollection& recJets,
 	       const reco::CaloMETCollection& met,
 	       const RecoCandidateCollection& elecs,

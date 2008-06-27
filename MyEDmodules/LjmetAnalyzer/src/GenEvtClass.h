@@ -10,13 +10,14 @@
 #include "CLHEP/HepMC/GenEvent.h"
 #include "CLHEP/HepMC/GenVertex.h"
 #include "SimDataFormats/HepMCProduct/interface/HepMCProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 
 //======================================================================
 /** \class GenEvtClass specification
       
-$Date: 2008/05/24 02:06:50 $
-$Revision: 1.2 $
+$Date: 2008/06/24 13:44:13 $
+$Revision: 1.3 $
 \author P. Dudero - Minnesota
 */
 class GenEvtClass {
@@ -59,7 +60,7 @@ public:
 		     EnumSample_t&    sampleclass,
 		     EnumSignature_t& signatureclass);
 
-  void classifyEvent(const reco::CandidateCollection& genParticles,
+  void classifyEvent(const reco::GenParticleCollection& genParticles,
 		     EnumSample_t&    sampleclass,
 		     EnumSignature_t& signatureclass);
 
@@ -74,12 +75,12 @@ private:
 		   int depth,
 		   std::map<int,HepMC::GenParticle *>& pMap,
 		   myParticleRecord *prec);
-  int  recurseTree(reco::Candidate *p,
+  int  recurseTree(const reco::Candidate &p,
 		   int depth,
-		   std::map<reco::Candidate *,int>& pMap,
+		   std::map<const reco::Candidate *,int>& pMap,
 		   myParticleRecord *prec);
   void printTree  (HepMC::GenParticle *p, int depth);
-  void printTree  (reco::Candidate    *p, int depth);
+  void printTree  (const reco::Candidate  &p, int depth);
   void printCounts(myParticleRecord& prec);
 
   // user-configurable parameters
