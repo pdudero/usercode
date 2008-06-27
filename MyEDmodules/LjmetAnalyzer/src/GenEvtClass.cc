@@ -257,7 +257,7 @@ GenEvtClass::~GenEvtClass()
 
 int GenEvtClass::numClasses() const
 {
-  return 4;
+  return 5;
 }
 
 //======================================================================
@@ -269,6 +269,7 @@ std::string GenEvtClass::classDescr(int classnum) const
   case 1: return "susy";
   case 2: return "ttbar";
   case 3: return "wjets";
+  case 4: return "zjets";
   }
 
   return "other";
@@ -385,12 +386,12 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
     pMap [barcode] = p;
   else {
     //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
-    return pdgid;
+    return (depth ? pdgid : 0);
   }
 
   /* 2. String encountered - she's gonna hadronize!
   */
-  if (pdgid == 92) return pdgid;
+  if (pdgid == 92) return (depth ? pdgid : 0);
 
   /* 3. Final state particles encountered
   */
@@ -398,7 +399,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
       (pdgid == muminus) ||
       (!p->end_vertex())) {
     prec->add(pdgid);
-    return pdgid;
+    return (depth ? pdgid : 0);
   }
 
   /*************************************************************************
@@ -428,9 +429,10 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000) evtclass = -1;    // susy
-  if (pdgid == topq)   evtclass = -2;    // top
-  if (pdgid == Wplus)  evtclass = -3;    // W
+  if (pdgid > 1000000)  evtclass = -1;    // susy
+  if (pdgid == topq)    evtclass = -2;    // top
+  if (pdgid == Wplus)   evtclass = -3;    // W
+  if (pdgid == Z0boson) evtclass = -4;    // Z
 
   if (evtclass) return evtclass;
 
@@ -441,7 +443,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
   // No class determined yet, inspect the kid pdgids...
   // return highest classification from among the children...
   //
-  for (int i=-1; i>=-3; i--)
+  for (int i=-1; i>=-4; i--)
     if (m_childretvals.find(i)  != m_childretvals.end()) {
       evtclass =  i;
       break;
@@ -449,7 +451,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
   
   if (evtclass) return evtclass;
 
-  return depth ? pdgid : 0;
+  return (depth ? pdgid : 0);
 }                                             // GenEvtClass:recurseTree
 
 //======================================================================
@@ -483,7 +485,7 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
       }
       if (verbosity_ && evtclass) printTree(*p,0);
       if ((evtclass) &&
-	  (evtclass < eventclass)) // found a higher event class
+	  (evtclass < eventclass)) // found a "higher" event class
 	eventclass = evtclass;
       delete prec;
     }
@@ -552,13 +554,13 @@ int GenEvtClass::recurseTree(const Candidate &p,
   if (it == pMap.end())
     pMap [&p] = pdgid;
   else {
-    //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
-    return pdgid;
+    //if(verbosity_) cout<<"we been here before...pdgid "<<pdgid<<endl;
+    return (depth ? pdgid : 0);
   }
 
   /* 2. String encountered - she's gonna hadronize!
   */
-  if (pdgid == 92) return pdgid;
+  if (pdgid == 92) return (depth ? pdgid : 0);
 
   /* 3. Final state particles encountered
   */
@@ -566,7 +568,7 @@ int GenEvtClass::recurseTree(const Candidate &p,
       (pdgid == muminus) ||
       (!n)) {
     prec->add(pdgid);
-    return pdgid;
+    return (depth ? pdgid : 0);
   }
 
   /*************************************************************************
@@ -599,9 +601,10 @@ int GenEvtClass::recurseTree(const Candidate &p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000) evtclass = -1;    // susy
-  if (pdgid == topq)   evtclass = -2;    // top
-  if (pdgid == Wplus)  evtclass = -3;    // W
+  if (pdgid > 1000000)  evtclass = -1;    // susy
+  if (pdgid == topq)    evtclass = -2;    // top
+  if (pdgid == Wplus)   evtclass = -3;    // W
+  if (pdgid == Z0boson) evtclass = -4;    // Z
 
   if (evtclass) return evtclass;
 
@@ -612,7 +615,7 @@ int GenEvtClass::recurseTree(const Candidate &p,
   // No class determined yet, inspect the kid pdgids...
   // return highest classification from among the children...
   //
-  for (int i=-1; i>=-3; i--)
+  for (int i=-1; i>=-4; i--)
     if (m_childretvals.find(i)  != m_childretvals.end()) {
       evtclass =  i;
       break;
@@ -620,7 +623,7 @@ int GenEvtClass::recurseTree(const Candidate &p,
   
   if (evtclass) return evtclass;
 
-  return depth ? pdgid : 0;
+  return (depth ? pdgid : 0);
 }                                             // GenEvtClass:recurseTree
 #if 1
 //======================================================================
@@ -680,7 +683,7 @@ void GenEvtClass::classifyEvent(const reco::GenParticleCollection& genParticles,
       }
       if (verbosity_) printTree(p,0);
       if ((evtclass) &&
-	  (evtclass < eventclass)) // found a higher event class
+	  (evtclass < eventclass)) // found a "higher" event class
 	eventclass = evtclass;
       delete prec;
     }
@@ -692,6 +695,8 @@ void GenEvtClass::classifyEvent(const reco::GenParticleCollection& genParticles,
 
   if (verbosity_) {
     cout << "event class = " << classDescr(eventclass) << endl;
+    if (abs(eventclass) > numClasses())
+      cout << "eventclass = " << eventclass << endl;
     printCounts(*myprec_);
     cout << "signature class = " << signDescr(signatureclass) << endl;
   }
