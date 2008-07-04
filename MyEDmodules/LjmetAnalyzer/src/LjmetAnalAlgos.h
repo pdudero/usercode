@@ -29,8 +29,8 @@ typedef std::vector<reco::RecoCandidate *> RecoCandidateCollection;
 //======================================================================
 /** \class LjmetAnalAlgos specification
       
-$Date: 2008/06/24 13:49:53 $
-$Revision: 1.5 $
+$Date: 2008/06/27 14:53:35 $
+$Revision: 1.6 $
 \author P. Dudero - Minnesota
 */
 class LjmetAnalAlgos {
@@ -86,19 +86,33 @@ private:
   TH2F                              *h2f_class;
 };
 
+ struct LjmetAnalDataset_t {
+   double filter_elecETminGeV;
+   std::vector<LjmetCut *> v_cuts;
+   TDirectory *rootdir;
+ };
+
 // internal methods
 
- void   bookOneSet(string descr);
- // bool   isElectron(reco::CaloJet& cj);
- void   sortElectrons(const RecoCandidateCollection& ElsIn,
-		      RecoCandidateCollection& sortedEls);
- void   filterJets(const std::vector<reco::CaloJet>& JetsIn,
-		   const RecoCandidateCollection& ElsIn,
-		   std::vector<reco::CaloJet>& filteredJetsOut);
- void   calcVars(const std::vector<reco::CaloJet>& recjets,
-		 const RecoCandidateCollection& elecs,
-		 const reco::CaloMETCollection& metIn);
- void   applyCutsAndAccount(double weight);
+ void   bookOneSet          (string descr,
+			     vector<LjmetAnalDataset_t>::iterator it);
+
+ void   sortElectrons       (const RecoCandidateCollection&    ElsIn,
+			     RecoCandidateCollection&          sortedEls,
+			     double                            filterETval);
+
+ void   filterJets          (const std::vector<reco::CaloJet>& JetsIn,
+			     const RecoCandidateCollection&    ElsIn,
+			     std::vector<reco::CaloJet>&       filteredJetsOut);
+
+ void   calcVars            (const std::vector<reco::CaloJet>& recjets,
+			     const RecoCandidateCollection&    elecs,
+			     const reco::CaloMETCollection&    metIn,
+			     LjmetAnalHistos::HistoVars_t&     varsOut);
+
+ void   applyCutsAndAccount (LjmetAnalHistos::HistoVars_t&     vars,
+			     vector<LjmetCut *>&               v_cuts,
+			     double                            weight);
 
  // user-configurable parameters
  LjmetAnalHistos::AllHistoParams_t hpars_;
@@ -109,8 +123,9 @@ private:
 
  // filters:
  double filter_recjetETminGeV_;
- double filter_elecETminGeV_;
  double filter_eJetIsolationMindR_;
+
+ std::vector<LjmetAnalDataset_t> LjmetDatasets_;
 
  // cuts:
  double cut_jetETminGeV_;
@@ -120,14 +135,12 @@ private:
 
  GenEvtClass  *evtclass_;
 
- reco::CaloJetCollection ejets; // "jets" identified as electrons
- reco::CaloJetCollection hjets; //  reconstructed hadronic jets
-
  reco::CaloJetCollection::iterator emaxij; // pointer to max ET electron
 
- LjmetAnalHistos::HistoVars_t      vars_;
+ std::vector<LjmetCut *>           v_cutsLoElecEtThresh_;
+ std::vector<LjmetCut *>           v_cutsHiElecEtThresh_;
+
  TFile                            *outf;
- std::vector<LjmetCut *>           v_cuts;
 };
 
 #endif // _LJMETANALALGOS_H
