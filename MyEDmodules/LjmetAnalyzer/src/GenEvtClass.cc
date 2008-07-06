@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#define OTHERCLASS (numClasses()-1)
+
 //======================================================================
 
 using namespace std;
@@ -265,14 +267,14 @@ int GenEvtClass::numClasses() const
 std::string GenEvtClass::classDescr(int classnum) const
 {
   switch(classnum) {
-  case 0: return "unclassed";
-  case 1: return "susy";
-  case 2: return "ttbar";
-  case 3: return "wjets";
-  case 4: return "zjets";
+  case 0: return "susy";
+  case 1: return "ttbar";
+  case 2: return "wjets";
+  case 3: return "zjets";
+  case 4: return "other";
   }
 
-  return "other";
+  return "unclassed";
 }
 
 //======================================================================
@@ -367,7 +369,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
 			     std::map<int,HepMC::GenParticle *>& pMap,
 			     myParticleRecord *prec)
 {
-  int evtclass = 0;
+  int evtclass = -1*numClasses();
 
   std::map<int,HepMC::GenParticle *>::const_iterator it;
   it = pMap.find(p->barcode());
@@ -386,12 +388,12 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
     pMap [barcode] = p;
   else {
     //if(verbosity_) cout<<"double-linked barcode "<<barcode<<" pdgid "<<pdgid<<endl;
-    return (depth ? pdgid : 0);
+    return (depth ? pdgid : (-1*OTHERCLASS));
   }
 
   /* 2. String encountered - she's gonna hadronize!
   */
-  if (pdgid == 92) return (depth ? pdgid : 0);
+  if (pdgid == 92) return (depth ? pdgid : (-1*OTHERCLASS));
 
   /* 3. Final state particles encountered
   */
@@ -399,7 +401,7 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
       (pdgid == muminus) ||
       (!p->end_vertex())) {
     prec->add(pdgid);
-    return (depth ? pdgid : 0);
+    return (depth ? pdgid : (-1*OTHERCLASS));
   }
 
   /*************************************************************************
@@ -429,12 +431,12 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000)  evtclass = -1;    // susy
-  if (pdgid == topq)    evtclass = -2;    // top
-  if (pdgid == Wplus)   evtclass = -3;    // W
-  if (pdgid == Z0boson) evtclass = -4;    // Z
+  if (pdgid > 1000000)  evtclass =  0;    // susy
+  if (pdgid == topq)    evtclass = -1;    // top
+  if (pdgid == Wplus)   evtclass = -2;    // W
+  if (pdgid == Z0boson) evtclass = -3;    // Z
 
-  if (evtclass) return evtclass;
+  if (evtclass != -1*numClasses()) return evtclass;
 
   /**************************
    * Or on child particles...
@@ -443,15 +445,15 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
   // No class determined yet, inspect the kid pdgids...
   // return highest classification from among the children...
   //
-  for (int i=-1; i>=-4; i--)
+  for (int i=0; i>=-3; i--)
     if (m_childretvals.find(i)  != m_childretvals.end()) {
       evtclass =  i;
       break;
     }
   
-  if (evtclass) return evtclass;
+  if (evtclass != -1*numClasses()) return evtclass;
 
-  return (depth ? pdgid : 0);
+  return (depth ? pdgid : (-1*OTHERCLASS));
 }                                             // GenEvtClass:recurseTree
 
 //======================================================================
@@ -461,7 +463,6 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
 				EnumSignature_t& signatureclass)
 {
   int eventclass = numClasses();
-
   int nParticles = genEvt.particles_size();
     
   if (verbosity_) {
@@ -479,24 +480,21 @@ void GenEvtClass::classifyEvent(const HepMC::GenEvent& genEvt,
     if (!(*p)->production_vertex()) { // top of the tree
       myParticleRecord *prec = newParticleRecord();
       int evtclass = recurseTree(*p,0,pMap,prec);
-      evtclass *= -1;
-      if (evtclass) {
+      if (evtclass < 0) evtclass *= -1;
+      if (evtclass < numClasses()) {
 	myprec_->Add(*prec);
       }
-      if (verbosity_ && evtclass) printTree(*p,0);
-      if ((evtclass) &&
-	  (evtclass < eventclass)) // found a "higher" event class
+      if (verbosity_ && (evtclass!=numClasses())) printTree(*p,0);
+      if (evtclass < eventclass) // found a "higher" event class
 	eventclass = evtclass;
       delete prec;
     }
   }
 
-  if (eventclass == numClasses()) eventclass=0;
-
   signatureclass = detSignatureClass();
 
   if (verbosity_) {
-    cout << "event class = " << classDescr(eventclass) << endl;
+    cout << "event class = " << eventclass << " = " << classDescr(eventclass) << endl;
     printCounts(*myprec_);
     cout << "signature class = " << signDescr(signatureclass) << endl;
   }
@@ -536,7 +534,7 @@ int GenEvtClass::recurseTree(const Candidate &p,
 			     std::map<const Candidate *, int>& pMap,
 			     myParticleRecord *prec)
 {
-  int evtclass = 0;
+  int evtclass = -1*numClasses();
 
   int pdgid   = abs(p.pdgId());
   unsigned int n = p.numberOfDaughters();
@@ -555,12 +553,12 @@ int GenEvtClass::recurseTree(const Candidate &p,
     pMap [&p] = pdgid;
   else {
     //if(verbosity_) cout<<"we been here before...pdgid "<<pdgid<<endl;
-    return (depth ? pdgid : 0);
+    return (depth ? pdgid : (-1*OTHERCLASS));
   }
 
   /* 2. String encountered - she's gonna hadronize!
   */
-  if (pdgid == 92) return (depth ? pdgid : 0);
+  if (pdgid == 92) return (depth ? pdgid : (-1*OTHERCLASS));
 
   /* 3. Final state particles encountered
   */
@@ -568,7 +566,7 @@ int GenEvtClass::recurseTree(const Candidate &p,
       (pdgid == muminus) ||
       (!n)) {
     prec->add(pdgid);
-    return (depth ? pdgid : 0);
+    return (depth ? pdgid : (-1*OTHERCLASS));
   }
 
   /*************************************************************************
@@ -601,12 +599,12 @@ int GenEvtClass::recurseTree(const Candidate &p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000)  evtclass = -1;    // susy
-  if (pdgid == topq)    evtclass = -2;    // top
-  if (pdgid == Wplus)   evtclass = -3;    // W
-  if (pdgid == Z0boson) evtclass = -4;    // Z
+  if (pdgid > 1000000)  evtclass =  0;    // susy
+  if (pdgid == topq)    evtclass = -1;    // top
+  if (pdgid == Wplus)   evtclass = -2;    // W
+  if (pdgid == Z0boson) evtclass = -3;    // Z
 
-  if (evtclass) return evtclass;
+  if (evtclass != -1*numClasses()) return evtclass;
 
   /**************************
    * Or on child particles...
@@ -615,15 +613,15 @@ int GenEvtClass::recurseTree(const Candidate &p,
   // No class determined yet, inspect the kid pdgids...
   // return highest classification from among the children...
   //
-  for (int i=-1; i>=-4; i--)
+  for (int i=0; i>=-3; i--)
     if (m_childretvals.find(i)  != m_childretvals.end()) {
       evtclass =  i;
       break;
     }
   
-  if (evtclass) return evtclass;
+  if (evtclass != -1*numClasses()) return evtclass;
 
-  return (depth ? pdgid : 0);
+  return (depth ? pdgid : (-1*OTHERCLASS));
 }                                             // GenEvtClass:recurseTree
 #if 1
 //======================================================================
@@ -677,24 +675,21 @@ void GenEvtClass::classifyEvent(const reco::GenParticleCollection& genParticles,
     if (!p.mother()) { // top of the tree
       myParticleRecord *prec = newParticleRecord();
       int evtclass = recurseTree(p,0,pMap,prec);
-      evtclass *= -1;
-      if (evtclass) {
+      if (evtclass < 0) evtclass *= -1;
+      if (evtclass < numClasses()) {
 	myprec_->Add(*prec);
       }
-      if (verbosity_) printTree(p,0);
-      if ((evtclass) &&
-	  (evtclass < eventclass)) // found a "higher" event class
+      if (verbosity_ && (evtclass!=numClasses())) printTree(p,0);
+      if (evtclass < eventclass) // found a "higher" event class
 	eventclass = evtclass;
       delete prec;
     }
   }
 
-  if (eventclass == numClasses()) eventclass=0;
-
   signatureclass = detSignatureClass();
 
   if (verbosity_) {
-    cout << "event class = " << classDescr(eventclass) << endl;
+    cout << "event class = " << eventclass << " = " << classDescr(eventclass) << endl;
     if (abs(eventclass) > numClasses())
       cout << "eventclass = " << eventclass << endl;
     printCounts(*myprec_);
