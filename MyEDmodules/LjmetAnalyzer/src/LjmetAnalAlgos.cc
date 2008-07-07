@@ -199,7 +199,7 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
 			    inumclasses,-0.5,fnumclasses-0.5,
 			    inumsigs,-0.5,fnumsigs-0.5);
 
-  for (int i=0; inumclasses; i++) {
+  for (int i=0; i<inumclasses; i++) {
     h2f_class->GetYaxis()->SetBinLabel(i+1,evtclass_->classDescr(i).c_str());
   }
 
