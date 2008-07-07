@@ -188,15 +188,22 @@ LjmetAnalAlgos::LjmetCut::LjmetCut(GenEvtClass *pEvtclass,
 
   rootDir_->cd();
 
+  int   inumclasses = evtclass_->numClasses();
+  float fnumclasses = (float)inumclasses;
+  int   inumsigs    = evtclass_->numSignatureTypes();
+  float fnumsigs    = (float)inumsigs;
+
   sprintf (name, "classhistcut%d", cutnum_); 
   sprintf (title, "classhist, %s", descr_.c_str()); 
-  h2f_class      = new TH2F(name,title,5,-0.5,4.5,5,-0.5,4.5);
+  h2f_class      = new TH2F(name,title,
+			    inumclasses,-0.5,fnumclasses-0.5,
+			    inumsigs,-0.5,fnumsigs-0.5);
 
-  for (int i=0; i<evtclass_->numClasses(); i++) {
+  for (int i=0; inumclasses; i++) {
     h2f_class->GetYaxis()->SetBinLabel(i+1,evtclass_->classDescr(i).c_str());
   }
 
-  for (int i=0; i<evtclass_->numSignatureTypes(); i++)
+  for (int i=0; i<inumsigs; i++)
     h2f_class->GetXaxis()->SetBinLabel
       (i+1,evtclass_->signDescr(GenEvtClass::EnumSignature_t(i)).c_str());
 
