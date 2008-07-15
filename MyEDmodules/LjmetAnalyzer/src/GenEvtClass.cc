@@ -431,10 +431,12 @@ int GenEvtClass::recurseTree(HepMC::GenParticle *p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000)  evtclass =  0;    // susy
-  if (pdgid == topq)    evtclass = -1;    // top
-  if (pdgid == Wplus)   evtclass = -2;    // W
-  if (pdgid == Z0boson) evtclass = -3;    // Z
+  if ((pdgid > 1000000) &&
+      (pdgid < 3000000)) evtclass =  0;    // susy
+  if (pdgid == topq)     evtclass = -1;    // top
+  if (pdgid == Wplus)    evtclass = -2;    // W
+  if (pdgid == Z0boson)  evtclass = -3;    // Z
+  if (pdgid == Higgs)    evtclass = -4;    // Higgs->other
 
   if (evtclass != -1*numClasses()) return evtclass;
 
@@ -599,10 +601,12 @@ int GenEvtClass::recurseTree(const Candidate &p,
    * Now try classifying event on current particles...
    ***************************************************/
 
-  if (pdgid > 1000000)  evtclass =  0;    // susy
-  if (pdgid == topq)    evtclass = -1;    // top
-  if (pdgid == Wplus)   evtclass = -2;    // W
-  if (pdgid == Z0boson) evtclass = -3;    // Z
+  if ((pdgid > 1000000) &&
+      (pdgid < 3000000)) evtclass =  0;    // susy
+  if (pdgid == topq)     evtclass = -1;    // top
+  if (pdgid == Wplus)    evtclass = -2;    // W
+  if (pdgid == Z0boson)  evtclass = -3;    // Z
+  if (pdgid == Higgs)    evtclass = -4;    // Higgs->other
 
   if (evtclass != -1*numClasses()) return evtclass;
 
