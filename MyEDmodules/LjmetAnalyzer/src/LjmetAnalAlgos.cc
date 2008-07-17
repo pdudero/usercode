@@ -52,6 +52,7 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
 
   cut_jetETminGeV_           = iConfig.getParameter<double>("cut_jetETminGeV");
   cut_minNumJets_            = iConfig.getParameter<int>("cut_minNumJets");
+  cut_METminGeV_             = iConfig.getParameter<int>("cut_METminGeV");
 
   hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
   hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
@@ -111,14 +112,7 @@ LjmetAnalAlgos::beginJob(void)
     bookOneSet("ctAtLeast1e1j", it);
     bookOneSet("ctJetETminGeV", it);
     bookOneSet("ctMinNumJets",  it);
-
-#if 0
-    // Fourth cut is deltaphi(e+bjet,recoTop)
-    bookOneSet("dPhi(e+b,rT)");
-
-    // Fifth cut is minGeV of HT+MET
-    bookOneSet("HT+METminGeV");
-#endif
+    bookOneSet("ctMETminGeV",   it);
   }
 }                                           //  LjmetAnalAlgos::beginJob
 
@@ -471,11 +465,8 @@ LjmetAnalAlgos::applyCutsAndAccount(LjmetAnalHistos::HistoVars_t& vars,
    ***********************************/
   v_cuts[hn++]->Activate(!vars.numElecs || !vars.numJets);
   v_cuts[hn++]->Activate(vars.leadingjetET < cut_jetETminGeV_);
-  v_cuts[hn++]->Activate(vars.numJets < cut_minNumJets_);
-#if 0
-  v_cuts[hn++]->Activate(vars.recoTop_eplusbjet_dphi  > cut_maxDphirTeb_);
-  v_cuts[hn]->Activate  (vars.htplusmet              < cut_minHTplusMETgev_);
-#endif
+  v_cuts[hn++]->Activate(vars.numJets      < cut_minNumJets_);
+  v_cuts[hn++]->Activate(vars.absmet       < cut_METminGeV_);
 
   /*****************
    * Do accounting
