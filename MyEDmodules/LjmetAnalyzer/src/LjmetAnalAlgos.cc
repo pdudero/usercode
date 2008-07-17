@@ -428,7 +428,7 @@ LjmetAnalAlgos::calcVars(const std::vector<reco::CaloJet>& recjets,
   }
 
   if (metIn.size() > 0) {
-    varsOut.absmet = metIn.begin()->sumEt();
+    varsOut.absmet = metIn.begin()->et();
     if (varsOut.numElecs>0)
       varsOut.lemetdphi = deltaPhi(metIn.begin()->phi(),
 				   varsOut.maxElectronPhi);
