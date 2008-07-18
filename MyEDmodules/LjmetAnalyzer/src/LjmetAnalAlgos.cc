@@ -52,7 +52,7 @@ LjmetAnalAlgos::LjmetAnalAlgos(bool verbosity,
 
   cut_jetETminGeV_           = iConfig.getParameter<double>("cut_jetETminGeV");
   cut_minNumJets_            = iConfig.getParameter<int>("cut_minNumJets");
-  cut_METminGeV_             = iConfig.getParameter<int>("cut_METminGeV");
+  cut_METminGeV_             = iConfig.getParameter<double>("cut_METminGeV");
 
   hpars_.ethtmet.nbins = iConfig.getUntrackedParameter<int>("ethtmetNbins");
   hpars_.ethtmet.min   = iConfig.getUntrackedParameter<double>("ethtmetMinGeV");
