@@ -153,27 +153,27 @@ void LjmetAnalHistos::bookHistos(AllHistoParams_t& pars,
 					 pars.numobj.max);
 
   sprintf (name, "leljdRh%s", setid.c_str());
-  sprintf (title, "leading electron*leading jet dR, %s; ", setdescr.c_str()); 
+  sprintf (title, "#DeltaR(leading electron,leading jet), %s; ", setdescr.c_str()); 
   h1f_leljdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
 
   sprintf (name, "lealljdRh%s", setid.c_str());
-  sprintf (title, "leading electron*all jet dR, %s; ", setdescr.c_str()); 
+  sprintf (title, "#DeltaR(leading electron,all jet), %s; ", setdescr.c_str()); 
   h1f_lealljdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
 
   sprintf (name, "lecjdRh%s", setid.c_str());
-  sprintf (title, "leading electron*closest jet dR, %s; ", setdescr.c_str()); 
+  sprintf (title, "#DeltaR(leading electron,closest jet), %s; ", setdescr.c_str()); 
   h1f_lecjdR = new TH1F(name, title, pars.dR.nbins, pars.dR.min, pars.dR.max);
 
   sprintf (name, "leljdphih%s", setid.c_str());
-  sprintf (title, "leading electron*leading jet dphi, %s; ", setdescr.c_str()); 
+  sprintf (title, "#Delta#phi(leading electron,leading jet), %s; ", setdescr.c_str()); 
   h1f_leljdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
   sprintf (name, "lealljdphih%s", setid.c_str());
-  sprintf (title, "leading electron*all jet dphi, %s; ", setdescr.c_str()); 
+  sprintf (title, "#Delta#phi(leading electron,all jet), %s; ", setdescr.c_str()); 
   h1f_lealljdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
   sprintf (name, "leMETdphih%s", setid.c_str());
-  sprintf (title, "leading electron*MET dphi, %s; ", setdescr.c_str()); 
+  sprintf (title, "#Delta#phi(leading electron,MET), %s; ", setdescr.c_str()); 
   h1f_leMETdphi = new TH1F(name, title, pars.dphi.nbins, pars.dphi.min, pars.dphi.max);
 
 }                                         // LjmetAnalHistos::bookHistos
