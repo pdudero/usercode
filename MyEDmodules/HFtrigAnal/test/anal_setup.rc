@@ -1,0 +1,17 @@
+# Set a limit on the number of events to process per run
+EVENTLIMIT=-1
+
+# Mode of operation [LOCAL|GLOBAL]
+# LOCAL     - uses HcalTBSource
+#
+# GLOBAL    - 
+#
+MODE=GLOBAL
+
+# "Printf"-style format string for the input filename -
+#                     allows input of run number only
+#      - include the full path to the file in the string.
+#
+#FORMAT="~/cms/data/tb06/dirTest/h2.%08d.combined.OutServ_0.0.root"
+#FORMAT="HTB_%06d.root"
+FORMAT="/bigspool/usc/USC_%06d.root"
