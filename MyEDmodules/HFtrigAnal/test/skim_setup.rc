@@ -1,0 +1,9 @@
+# Set a limit on the number of events to process per run
+EVENTLIMIT=-1
+
+# Mode of operation
+# Both modes includes external cfi file, skims off HF trigger bits
+# GRECO  - l1 trigger records are already in the event
+# GRAW   - reco L1 global trigger digis first
+#
+MODE=GRAW
