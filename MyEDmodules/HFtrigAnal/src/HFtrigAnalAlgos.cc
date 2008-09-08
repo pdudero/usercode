@@ -55,6 +55,8 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   //eventNumberMin_       = (uint32_t)iConfig.getParameter<int>("eventNumberMin");
   //eventNumberMax_       = (uint32_t)iConfig.getParameter<int>("eventNumberMax");
 
+  adcTrigThreshold_       = (uint32_t)iConfig.getParameter<int>("adcTrigThreshold");
+
   digiSpectrumHp_.nbins = iConfig.getUntrackedParameter<int>   ("digiSpectrumNbins");
   digiSpectrumHp_.min   = iConfig.getUntrackedParameter<double>("digiSpectrumMinADC");
   digiSpectrumHp_.max   = iConfig.getUntrackedParameter<double>("digiSpectrumMaxADC");
@@ -71,10 +73,27 @@ HFtrigAnalAlgos::beginJob(void)
 {
   edm::Service<TFileService> fs;
 
-  DigiSubDir_ = new TFileDirectory(fs->mkdir( "ET_spectra" ));
+  DigiSubDir_ = new TFileDirectory(fs->mkdir( "TPGET_spectra" ));
   RHsubDir_   = new TFileDirectory(fs->mkdir( "RecHitEnergies" ));
 
   //bxhist_ = new TH1F("bxnumhist", "Bunch #", 100, 0, 3600);
+
+#if 0
+  h_inputLUT1_ = new TH1F("inputLUTd1h", "input LUT depth 1",
+			  27,-13.5,13.5);
+
+  h_inputLUT2_ = new TH1F("inputLUTd2h", "input LUT depth 2",
+			  27,-13.5,13.5);
+#endif
+
+  h_CoEinPhiPlus_  = RHsubDir_->make<TH1F>("CoEinPhiPlush", "HFP Center of Energy in Phi;iphi",
+					  72,-0.5,71.5);
+  h_CoEinPhiMinus_ = RHsubDir_->make<TH1F>("CoEinPhiMinush", "HFM Center of Energy in Phi;iphi",
+					  72,-0.5,71.5);
+  h_CoEinEtaPlus_  = RHsubDir_->make<TH1F>("CoEinEtaPlush", "HFP Center of Energy in Eta;ieta",
+					  13,28.5,41.5);
+  h_CoEinEtaMinus_ = RHsubDir_->make<TH1F>("CoEinEtaMinush", "HFM  Center of Energy in Eta;ieta",
+					  13,-41.5,-28.5);
 
   h_totalE_ = RHsubDir_->make<TH1F>("totalEh", "Total RecHit Energy",
 				   rhTotalEnergyHp_.nbins,
@@ -87,7 +106,10 @@ HFtrigAnalAlgos::beginJob(void)
   if (!readLUTfromTextFile()) {
     throw cms::Exception("Reading LUT text file failed");
   }
-  //dumpLUT();
+  dumpLUT();
+
+  detId2Mask_ = HcalDetId(HcalForward,32,67,2);
+
 }                                           // HFtrigAnalAlgos::beginJob
 
 //======================================================================
@@ -103,6 +125,15 @@ void HFtrigAnalAlgos::insertLUTelement(int ieta,int depth, int lutval)
   } else {
     it->second.push_back(lutval);
   }
+#if 0
+  if (depth == 1) {
+    if      (ieta >=  29 ) h_inputLUT1_->Fill(ieta-28,lutval); 
+    else if (ieta <= -29 ) h_inputLUT1_->Fill(ieta+28,lutval);
+  } else if (depth == 2) {
+    if      (ieta >=  29 ) h_inputLUT2_->Fill(ieta-28,lutval); 
+    else if (ieta <= -29 ) h_inputLUT2_->Fill(ieta+28,lutval);
+  }
+#endif
 }
 
 //======================================================================
@@ -121,15 +152,17 @@ bool HFtrigAnalAlgos::readLUTfromTextFile(void)
     vector<string> tokens;
     Tokenize(linein, tokens," \t");
 
-    if (tokens.size() != 52) {
+    if (tokens.size() != 4) { // 52) {
       cerr << "# of entries in line " << nline << " = " << tokens.size() << " - incorrect" << endl;
       return false;
     }
 
     int itok = 0;
     for (int depth=1; depth<=2; depth++) {
-      for (int ieta=-29; ieta>=-41; ieta--) insertLUTelement(ieta,depth,atoi(tokens[itok++].c_str()));
-      for (int ieta= 29; ieta<= 41; ieta++) insertLUTelement(ieta,depth,atoi(tokens[itok++].c_str()));
+      for (int ieta=-29; ieta>=-41; ieta--) insertLUTelement(ieta,depth,atoi(tokens[itok].c_str()));
+      itok++;
+      for (int ieta= 29; ieta<= 41; ieta++) insertLUTelement(ieta,depth,atoi(tokens[itok].c_str()));
+      itok++;
     }
   } // loop over lines in text file
 
@@ -154,15 +187,22 @@ void HFtrigAnalAlgos::dumpLUT(void)
 //======================================================================
 
 TH2F *
-HFtrigAnalAlgos::bookOccHisto(int depth, uint32_t runnum)
+HFtrigAnalAlgos::bookOccHisto(int depth, uint32_t runnum, bool ismaxval)
 {
   edm::Service<TFileService> fs;
 
   char name[80];
   char title[128];
 
-  sprintf(name,"run%dHF_MaxADC_occupancy_depth=%d",runnum,depth);
-  sprintf(title,"Run# %d HF MaxADC occupancy, depth=%d",runnum,depth);
+  if (!depth) return NULL;
+
+  if (ismaxval) {
+    sprintf(name,"run%dHF_MaxADC_occupancy_depth=%d",runnum,depth);
+    sprintf(title,"Run# %d HF MaxADC occupancy, depth=%d",runnum,depth);
+  } else {
+    sprintf(name,"run%dHF_Next2MaxADC_occupancy_depth=%d",runnum,depth);
+    sprintf(title,"Run# %d HF Next2MaxADC occupancy, depth=%d",runnum,depth);
+  }
 
   // HF ietas crunched down on plots so there isn't a gap in between
   TH2F *h_occ   = fs->make<TH2F>( name,name,
@@ -179,7 +219,8 @@ HFtrigAnalAlgos::bookOccHisto(int depth, uint32_t runnum)
     h_occ->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
   }
 
-  m_hOccupancies_[depth] = h_occ;
+  if (ismaxval) m_hOccupancies1_[depth] = h_occ;
+  else          m_hOccupancies2_[depth] = h_occ;
 
   return h_occ;
 }
@@ -192,7 +233,7 @@ HFtrigAnalAlgos::bookSpectrumHisto(IetaDepth_t& id, uint32_t runnum)
   char name[80];
   char title[128];
 
-  sprintf(name,"run%dHF_ieta=%d_depth=%d_Spectrum",
+  sprintf(name,"run%d_HF_ieta=%d_depth=%d_Spectrum",
 	  runnum,id.ieta(),id.depth());
   sprintf(title,"Run# %d HF ieta=%d,depth=%d Spectrum; ET (LUT units)",
 	  runnum,id.ieta(),id.depth());
@@ -271,15 +312,41 @@ HFtrigAnalAlgos::endJob()
 
 //======================================================================
 
+bool HFtrigAnalAlgos::intheSameHFWedge(const HcalDetId& id1,
+				       const HcalDetId& id2)
+{
+  if ((id1.subdet() == HcalForward) &&
+      (id2.subdet() == HcalForward)   )
+    if (id1.zside() == id2.zside()) {
+      int iphi1 = id1.iphi();
+      int iphi2 = id2.iphi();
+      
+      if (iphi1 == iphi2) return true;
+      if (iphi1 < iphi2) iphi1 = (iphi1+2) % 72;
+      else               iphi2 = (iphi2+2) % 72;
+
+      return (iphi1 == iphi2);
+    }
+  return false;
+}
+
+//======================================================================
+
 void HFtrigAnalAlgos::findMaxChannels(const HFDigiCollection& hfdigis,
-				      std::vector<HFDataFrame>& maxdigis,
-				      int& maxval)
+				      HFDataFrame& maxframe,
+				      HFDataFrame& next2maxframe,
+				      int& maxval,
+				      int& next2maxval)
 {
   maxval = -INT_MAX;
+  next2maxval = -INT_MAX;
 
   for (unsigned idig = 0; idig < hfdigis.size (); ++idig) {
     const HFDataFrame& frame = hfdigis[idig];
     HcalDetId detId = frame.id();
+
+    if (detId == detId2Mask_) continue;
+
     int ieta = detId.ieta();
     int iphi = detId.iphi();
     int depth = detId.depth();
@@ -313,81 +380,103 @@ void HFtrigAnalAlgos::findMaxChannels(const HFDigiCollection& hfdigis,
 
     } // loop over samples in digi
 
-    if (max4thisdigi > maxval) {
-      maxdigis.clear();
-      maxval = max4thisdigi;
-      maxdigis.push_back(frame);
-    } else if (max4thisdigi == maxval) {
-      maxdigis.push_back(frame);
+    if (max4thisdigi >= maxval) {
+      if (!intheSameHFWedge(frame.id(),maxframe.id())) {
+	next2maxval   = maxval;
+	next2maxframe = maxframe;
+      }
+      maxval   = max4thisdigi;
+      maxframe = frame;
+    } else if (max4thisdigi >= next2maxval) {
+      if (!intheSameHFWedge(frame.id(),maxframe.id())) {
+	next2maxval   = maxval;
+	next2maxframe = maxframe;
+      }
     }
   } // loop over digi collection
+
+#if 0
+  cout << "Max/Next2Max frames: ";
+  cout << maxframe.id() << " ADC = " << maxval << "; ";
+  cout << next2maxframe.id() << " ADC = " << next2maxval << "; ";
+  cout << endl;
+#endif
 }                                    // HFtrigAnalAlgos::findMaxChannels
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillDigiSpectra(std::vector<HFDataFrame>& maxdigis,
+void HFtrigAnalAlgos::fillDigiSpectra(const HFDataFrame& maxframe,
 				      int& maxadc,
 				      uint32_t runnum)
-
 {
-  // Fill histos for all id's with maximum ADC
+  // Fill histos with maximum ADC
   //
-  for (uint32_t idig=0; idig<maxdigis.size(); idig++) {
-    HcalDetId detId = maxdigis[idig].id();
-    IetaDepth_t id(detId.ieta(),detId.depth());
-    std::map<int,TH1F *>::iterator it = m_hSpectra_.find(id.toCode());
-    TH1F *hp = 0;
+  HcalDetId detId = maxframe.id();
+  IetaDepth_t id(detId.ieta(),detId.depth());
+  std::map<int,TH1F *>::iterator it = m_hSpectra_.find(id.toCode());
+  TH1F *hp = 0;
 
-    if (it == m_hSpectra_.end()) hp = bookSpectrumHisto(id,runnum);
-    else                         hp = it->second;
+  if (it == m_hSpectra_.end()) hp = bookSpectrumHisto(id,runnum);
+  else                         hp = it->second;
 
-    if (hp) {
-      //cout << "Filling ieta=" << id.ieta() << ", depth=" << id.depth();
-      //cout << ", maxadc = " << maxadc << endl;
-      hp->Fill(maxadc);
-    }
+  if (hp) {
+    //cout << "Filling ieta=" << id.ieta() << ", depth=" << id.depth();
+    //cout << ", maxadc = " << maxadc << endl;
+    hp->Fill(maxadc);
   }
 }                                   // HFtrigAnalAlgos::fillDigiSpectra
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillOccupancy(std::vector<HFDataFrame>& maxdigis,
+void HFtrigAnalAlgos::fillOccupancy(const HFDataFrame& maxframe,
+				    const HFDataFrame& next2maxframe,
 				    uint32_t runnum)
 {
-  for (uint32_t idig=0; idig<maxdigis.size(); idig++) {
-    HcalDetId id = maxdigis[idig].id();
+  HcalDetId id = maxframe.id();
 
-    std::map<int,TH2F *>::iterator it = m_hOccupancies_.find(id.depth());
-    TH2F *hp = 0;
-    if (it == m_hOccupancies_.end()) hp = bookOccHisto(id.depth(),runnum);
-    else                             hp = it->second;
+  std::map<int,TH2F *>::iterator it = m_hOccupancies1_.find(id.depth());
+  TH2F *hp = 0;
+  if (it == m_hOccupancies1_.end()) hp = bookOccHisto(id.depth(),runnum);
+  else                              hp = it->second;
 
-    if (hp) {
-      if      (id.ieta() >=  29 ) hp->Fill(id.ieta()-28,id.iphi()); 
-      else if (id.ieta() <= -29 ) hp->Fill(id.ieta()+28,id.iphi());
-      //cout << "Filling ieta=" << id.ieta() << ", iphi=" << id.iphi() << endl;
-    } else {
-      cout << "pointer is zero!";
-      cout << " ieta=" << id.ieta() << ", iphi=" << id.iphi();
-      cout << ", depth = " << id.depth() << endl;
-    }
+  if (hp) {
+    if      (id.ieta() >=  29 ) hp->Fill(id.ieta()-28,id.iphi()); 
+    else if (id.ieta() <= -29 ) hp->Fill(id.ieta()+28,id.iphi());
+    //cout << "Filling ieta=" << id.ieta() << ", iphi=" << id.iphi() << endl;
+  } else {
+    cout << "pointer is zero!";
+    cout << " ieta=" << id.ieta() << ", iphi=" << id.iphi();
+    cout << ", depth = " << id.depth() << endl;
+  }
+
+  id = next2maxframe.id();
+
+  it = m_hOccupancies2_.find(id.depth());
+  hp = 0;
+  if (it == m_hOccupancies2_.end()) hp = bookOccHisto(id.depth(),runnum,false);
+  else                              hp = it->second;
+
+  if (hp) {
+    if      (id.ieta() >=  29 ) hp->Fill(id.ieta()-28,id.iphi()); 
+    else if (id.ieta() <= -29 ) hp->Fill(id.ieta()+28,id.iphi());
+    //cout << "Filling ieta=" << id.ieta() << ", iphi=" << id.iphi() << endl;
+  } else {
+    cout << "pointer is zero!";
+    cout << " ieta=" << id.ieta() << ", iphi=" << id.iphi();
+    cout << ", depth = " << id.depth() << endl;
   }
 }                                     //  HFtrigAnalAlgos::fillOccupancy
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillPulseProfile(std::vector<HFDataFrame>& maxdigis)
+void HFtrigAnalAlgos::fillPulseProfile(const HFDataFrame& maxframe)
 {
-  for (unsigned idig = 0; idig < maxdigis.size (); ++idig) {
-    const HFDataFrame& frame = maxdigis[idig];
+  for (int isample = 0; isample < std::min(10,maxframe.size()); ++isample) {
+    int rawadc = maxframe[isample].adc();
+    h_PulseProfileMax_->Fill(isample,rawadc);
 
-    for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
-      int rawadc = frame[isample].adc();
-      h_PulseProfileMax_->Fill(isample,rawadc);
-
-    } // loop over samples in digi
-  } // loop over digi collection
-}                                    // HFtrigAnalAlgos::findMaxChannels
+  } // loop over samples in digi
+}                                   // HFtrigAnalAlgos::fillPulseProfile
 
 //======================================================================
 
@@ -413,16 +502,59 @@ void HFtrigAnalAlgos::fillRhHistos(const HFRecHitCollection& hfrechits,
   else
     h1p = v_ePerEventHistos_[nkevents];
 
+  // Total energy plots
+  //
+  float sumEtimesPhiPl = 0.0;
+  float sumEtimesPhiMn = 0.0;
+  float sumEtimesEtaPl = 0.0;
+  float sumEtimesEtaMn = 0.0;
+  float totalEplus     = 0.0;
+  float totalEminus    = 0.0;
+
   for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
-    const HFRecHit& rh = hfrechits[ihit];
-    if (rh.energy() > minGeVperRecHit_)
-      totalE += rh.energy();
+    const HFRecHit& rh  = hfrechits[ihit];
+    const HcalDetId& id = rh.id();
+    float rhenergy      = rh.energy();
+
+    if (rhenergy > minGeVperRecHit_) {
+      totalE += rhenergy;
+
+      if (id.zside() > 0) {
+	sumEtimesPhiPl += rhenergy * id.iphi();
+	sumEtimesEtaPl += rhenergy * id.ieta();
+	totalEplus     += rhenergy;
+      } else {
+	sumEtimesPhiMn += rhenergy * id.iphi();
+	sumEtimesEtaMn += rhenergy * id.ieta();
+	totalEminus    += rhenergy;
+      }
+    }
   }
 
   h1p->Fill(evtnum,totalE);
 
   h_totalE_->Fill(totalE);
 
+  if (totalEminus != 0.0) {
+    h_CoEinPhiMinus_->Fill(sumEtimesPhiMn/totalEminus);
+    h_CoEinEtaMinus_->Fill(sumEtimesEtaMn/totalEminus);
+  }
+  if (totalEplus != 0.0) {
+    h_CoEinPhiPlus_->Fill(sumEtimesPhiPl/totalEplus);
+    h_CoEinEtaPlus_->Fill(sumEtimesEtaPl/totalEplus);
+  }
+
+
+  // Center of energy plots
+  //
+  for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
+    const HFRecHit& rh = hfrechits[ihit];
+    if (rh.energy() > minGeVperRecHit_)
+      totalE += rh.energy();
+  }
+
+  // Event display plotting
+  //
   if (totalE >  totalRHenergyThresh4Plotting_) {
     TH2F *h2p = book2dEnergyHisto(evtnum,runnum);
 
@@ -447,13 +579,24 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 			      uint32_t evtnum,
 			      uint32_t runnum)
 {
-  std::vector<HFDataFrame> maxdigis;
-  int maxadc;
+  //std::vector<HFDataFrame> maxdigis;
+  HFDataFrame maxframe, next2maxframe;
+  int maxadc, next2maxadc;
 
-  findMaxChannels(hfdigis,maxdigis,maxadc);
-  fillDigiSpectra(maxdigis,maxadc,runnum);
-  fillPulseProfile(maxdigis);
-  fillOccupancy(maxdigis,runnum);
+  findMaxChannels(hfdigis,maxframe, next2maxframe, maxadc, next2maxadc);
+  //findMaxChannels(hfdigis,maxdigis,maxadc);
+
+  if (maxadc < adcTrigThreshold_) {
+    cout << " maxadc = " << maxadc << " less than adcTrigThreshold_ " << adcTrigThreshold_;
+    cout << "; HF Digi Collection size = " << hfdigis.size() << endl;
+  } else if (evtnum == 1) 
+    cout << "HF Digi Collection size = " << hfdigis.size() << endl;
+
+  if (maxadc < 5) return;
+
+  fillDigiSpectra(maxframe,maxadc,runnum);
+  fillPulseProfile(maxframe);
+  fillOccupancy(maxframe,next2maxframe,runnum);
   fillRhHistos(hfrechits,evtnum,runnum);
   //fillBxNum(bxnum);
 }

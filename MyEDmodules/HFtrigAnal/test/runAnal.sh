@@ -19,6 +19,7 @@ fi
 ARG1=$1
 #OUTPUTFILE=$2
 OUTPUTFILE=run${1}-anal.root
+INCLUDEFILE=`printf "MyEDmodules.HFtrigAnal.run%dfiles_cfi" ${ARG1}`
 
 if [[ -e ./anal_setup.rc ]] 
 then
@@ -55,13 +56,13 @@ process.maxEvents = cms.untracked.PSet(
 process.MessageLogger.cerr.INFO.limit = 500
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.hfreco.firstSample  = 1
-process.hfreco.samplesToAdd = 2
+process.hfreco.samplesToAdd = 8
 
 EOF
 
 ### Mode-dependent part
 
-if [[ "$MODE" == "LOCAL" ]]
+if [[ "$MODE" == "LOCAL" || "$MODE" == "GSKIM" ]]
 then
 
 # ARG1 determines the file selection mode
@@ -77,6 +78,8 @@ fi
 
 echo $FILE
 
+if [[ "$MODE" == "LOCAL" ]]
+then
 cat >> ${CFGFILE}<<EOF
 process.source = cms.Source("HcalTBSource",
     streams = cms.untracked.vstring('HCAL_DCC718', 
@@ -88,16 +91,48 @@ process.source = cms.Source("HcalTBSource",
     fileNames = cms.untracked.vstring('file:${FILE}')
 )
 EOF
-elif [[ "$MODE" == "GLOBAL" ]] 
+elif [[ "$MODE" == "GSKIM" ]]
+then
+cat >> ${CFGFILE}<<EOF
+process.source = cms.Source("PoolSource",
+    fileNames = cms.untracked.vstring('file:${FILE}')
+)
+EOF
+fi
+elif [[ "$MODE" == "GRECO" ]] 
     then
 cat >> ${CFGFILE}<<EOF
-process.load("MyEDmodules.HFtrigAnal.test.globalFiles2Anal_cfi")
+process.load("${INCLUDEFILE}")
 
 process.trigFilt = cms.EDFilter("HcalTechTriggerFilt",
     gtDigiLabel     = cms.untracked.InputTag("hltGtDigis"),
-    techTriggerBits = cms.vint32(25)
+    techTriggerBits = cms.vint32(9)
 )
 EOF
+elif [[ "$MODE" == "GRAW" ]]
+    then
+cat >> ${CFGFILE}<<EOF
+process.load("L1TriggerConfig.L1GtConfigProducers.L1GtConfig_cff")
+process.load("L1TriggerConfig.L1ScalesProducers.L1MuTriggerScalesConfig_cff")
+process.load("L1TriggerConfig.L1ScalesProducers.L1MuTriggerPtScaleConfig_cff")
+process.load("L1TriggerConfig.L1ScalesProducers.L1MuGMTScalesConfig_cff")
+process.load("L1TriggerConfig.GMTConfigProducers.L1MuGMTParametersConfig_cff")
+
+process.hltGtDigis = cms.EDProducer( "L1GlobalTriggerRawToDigi",
+     DaqGtInputTag = cms.InputTag( "source" ),
+     DaqGtFedId = cms.untracked.int32( 813 ),
+     ActiveBoardsMask = cms.uint32( 0x101 ),
+     UnpackBxInEvent = cms.int32( 1 )
+)
+
+process.load("MyEDmodules.HFtrigAnal.globalFiles2Anal_cfi")
+
+process.trigFilt = cms.EDFilter("HcalTechTriggerFilt",
+    gtDigiLabel     = cms.untracked.InputTag("hltGtDigis"),
+    techTriggerBits = cms.vint32(9)
+)
+EOF
+
 else
   echo Unknown mode '$MODE'
   exit
@@ -112,26 +147,28 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
     hfDigiLabel   = cms.untracked.InputTag("hcalDigis"),
     hfrechitLabel = cms.untracked.InputTag("hfreco"),
 
-    lutFileName = cms.untracked.string('inputLUTcoder_CRUZET_part4_v3_1_HFonly.csv'),
+    lutFileName = cms.untracked.string('inputLUTcoder_one_shot.csv'),
     verbosity = cms.untracked.bool(False),
 
     digiSampleWindowMin = cms.int32(0),
     digiSampleWindowMax = cms.int32(9),
 
+    adcTrigThreshold   = cms.int32(12),
+
     digiSpectrumNbins  = cms.untracked.int32(100),
     digiSpectrumMinADC = cms.untracked.double(-0.5),
     digiSpectrumMaxADC = cms.untracked.double(499.5),
 
-    minGeVperRecHit            = cms.double(6.0),
+    minGeVperRecHit            = cms.double(1000.0),
     totalEthresh4eventPlotting = cms.double(2000.0),
 
     # min/max event numbers to plot detailed RH energies
     eventNumberMax     = cms.int32(480),
     eventNumberMin     = cms.int32(470),
 
-    rhTotalEnergyNbins  = cms.untracked.int32(100),
+    rhTotalEnergyNbins  = cms.untracked.int32(110),
     rhTotalEnergyMinGeV = cms.untracked.double(0.0),
-    rhTotalEnergyMaxGeV = cms.untracked.double(8000.0)
+    rhTotalEnergyMaxGeV = cms.untracked.double(11000.0)
 )
 
 process.hcalConditions = cms.ESSource("PoolDBESSource",
@@ -176,16 +213,21 @@ process.es_hardcode = cms.ESSource("HcalHardcodeCalibrations",
 )
 EOF99
 
-if [[ "$MODE" == "LOCAL" ]]
+if [[ "$MODE" == "LOCAL" || "$MODE" == "GSKIM" ]]
 then
 cat >> ${CFGFILE}<<EOF999
 process.p = cms.Path(process.hcalDigis*process.hfreco*process.trigAnal)
 EOF999
-elif [[ "$MODE" == "GLOBAL" ]] 
+elif [[ "$MODE" == "GRECO" ]] 
 then
-cat >> ${CFGFILE}<<EOF9999
+cat >> ${CFGFILE}<<EOF999
 process.p = cms.Path(process.trigFilt*process.hcalDigis*process.hfreco*process.trigAnal)
-EOF9999
+EOF999
+elif [[ "$MODE" == "GRAW" ]] 
+then
+cat >> ${CFGFILE}<<EOF999
+process.p = cms.Path(process.hltGtDigis*process.trigFilt*process.hcalDigis*process.hfreco*process.trigAnal)
+EOF999
 fi
 
 # run cmsRun

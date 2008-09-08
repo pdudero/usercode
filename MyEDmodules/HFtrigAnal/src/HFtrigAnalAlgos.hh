@@ -31,15 +31,21 @@ public:
 
 private:
 
+  bool intheSameHFWedge  (const HcalDetId& id1,const HcalDetId& id2);
+
   void findMaxChannels   (const HFDigiCollection& hfdigis,
-			  std::vector<HFDataFrame>& maxdigis,
-			  int& maxadc);
-  void fillDigiSpectra   (std::vector<HFDataFrame>& maxdigis,
+			  HFDataFrame& maxframe,
+			  HFDataFrame& next2maxframe,
+			  int& maxval,
+			  int& next2maxval);
+  void fillDigiSpectra   (const HFDataFrame& maxframe,
 			  int& maxadc,
 			  uint32_t runnum);
-  void fillOccupancy     (std::vector<HFDataFrame>& maxdigis,
-			  uint32_t   runnum);
-  void fillPulseProfile  (std::vector<HFDataFrame>& maxdigis);
+  void fillOccupancy     (const HFDataFrame& maxframe,
+			  const HFDataFrame& next2maxframe,
+			  uint32_t runnum);
+  void fillPulseProfile  (const HFDataFrame& maxframe);
+
   void fillBxNum         (uint32_t bxnum);
   void fillRhHistos      (const HFRecHitCollection& hfrechits,
 			  uint32_t evtnum,
@@ -74,12 +80,14 @@ private:
   };
 
   TH1F *bookSpectrumHisto  (IetaDepth_t& id, uint32_t runnum);
-  TH2F *bookOccHisto       (int depth, uint32_t runnum);
+
+  TH2F *bookOccHisto       (int depth, uint32_t runnum, bool ismaxval=true);
   TH1F *bookEperEventHisto (uint32_t nkevents, uint32_t runnum);
   TH2F *book2dEnergyHisto  (uint32_t evtnum, uint32_t runnum);
 
   // ----------member data ---------------------------
 
+  // parameters
   bool                          verbose_;
   std::string                   outRootFileName_;
   std::string                   lutFileName_;
@@ -92,17 +100,31 @@ private:
   uint32_t                      eventNumberMax_;
   double                        minGeVperRecHit_;
   double                        totalRHenergyThresh4Plotting_;
+  uint32_t                      adcTrigThreshold_;
 
   TFileDirectory               *DigiSubDir_;
   TFileDirectory               *RHsubDir_;
 
+  // histos
   TH1F                         *bxhist_;
   TH1F                         *h_totalE_;
+  TH1F                         *h_inputLUT1_;
+  TH1F                         *h_inputLUT2_;
   TH1F                         *h_PulseProfileMax_;
+
+  TH1F                         *h_CoEinPhiPlus_;
+  TH1F                         *h_CoEinPhiMinus_;
+  TH1F                         *h_CoEinEtaPlus_;
+  TH1F                         *h_CoEinEtaMinus_;
+
   std::vector<TH1F *>           v_ePerEventHistos_;
   std::map<int,TH1F *>          m_hSpectra_;
-  std::map<int,TH2F *>          m_hOccupancies_;
+  std::map<int,TH2F *>          m_hOccupancies1_;
+  std::map<int,TH2F *>          m_hOccupancies2_;
+
   std::map<int,std::vector<int> > m_LUT_;
+
+  HcalDetId                     detId2Mask_;
 };
 
 #endif // _HFTRIGANALALGOS_HH

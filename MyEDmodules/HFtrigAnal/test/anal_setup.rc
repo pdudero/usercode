@@ -1,12 +1,15 @@
 # Set a limit on the number of events to process per run
 EVENTLIMIT=-1
 
-# Mode of operation [LOCAL|GLOBAL]
-# LOCAL     - uses HcalTBSource
+# Mode of operation
+# LOCAL  - for local runs, uses HcalTBSource
 #
-# GLOBAL    - 
+# GRECO  - PoolSource,includes external cfi file,assumes L1 global trigger digis in file
+# GRAW   - NewEventStreamFileReader,includes external cfi file, reco's L1 global trigger digis
+# GSKIM  - PoolSource,takes local file definition below, assumes events already skimmed
 #
-MODE=GLOBAL
+MODE=GSKIM
+#MODE=GRAW
 
 # "Printf"-style format string for the input filename -
 #                     allows input of run number only
@@ -14,4 +17,6 @@ MODE=GLOBAL
 #
 #FORMAT="~/cms/data/tb06/dirTest/h2.%08d.combined.OutServ_0.0.root"
 #FORMAT="HTB_%06d.root"
-FORMAT="/bigspool/usc/USC_%06d.root"
+#FORMAT="/bigspool/usc/USC_%06d.root"
+#FORMAT="run%5d-skim.root"
+FORMAT="/bigspool/processed/GlobalRAFF.%5d.filter_pm4.root"
