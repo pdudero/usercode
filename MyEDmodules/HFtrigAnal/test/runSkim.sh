@@ -17,7 +17,7 @@ then
 fi
 
 ARG1=$1
-OUTPUTFILE=run${1}-skim.root
+OUTPUTFILE=run${1}-hfttskim.root
 INCLUDEFILE=`printf "MyEDmodules.HFtrigAnal.run%dfiles_cfi" ${ARG1}`
 
 

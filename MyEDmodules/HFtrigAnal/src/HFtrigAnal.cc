@@ -90,7 +90,8 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
   edm::EventID eventId = fEvent.id();
   uint32_t runNer = eventId.run ();
   uint32_t eventNumber = eventId.event ();
-  uint32_t bxnum = 0; //fEvent.bunchCrossing ();
+  uint32_t bxnum = fEvent.bunchCrossing ();
+  //cout << bxnum << endl;
   if (runN==0) runN=runNer;
   eventN++;
 

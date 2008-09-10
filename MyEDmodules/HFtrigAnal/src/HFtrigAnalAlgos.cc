@@ -48,7 +48,7 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   sampleWindowLeft_    = iConfig.getParameter<int>("digiSampleWindowMin");
   sampleWindowRight_   = iConfig.getParameter<int>("digiSampleWindowMax");
 
-  minGeVperRecHit_   = iConfig.getParameter<double>("minGeVperRecHit");
+  minGeVperRecHit_     = iConfig.getParameter<double>("minGeVperRecHit");
 
   totalRHenergyThresh4Plotting_ = iConfig.getParameter<double>("totalEthresh4eventPlotting");
 
@@ -64,9 +64,19 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   rhTotalEnergyHp_.nbins= iConfig.getUntrackedParameter<int>   ("rhTotalEnergyNbins");
   rhTotalEnergyHp_.min  = iConfig.getUntrackedParameter<double>("rhTotalEnergyMinGeV");
   rhTotalEnergyHp_.max  = iConfig.getUntrackedParameter<double>("rhTotalEnergyMaxGeV");
-}
+
+}                                    // HFtrigAnalAlgos::HFtrigAnalAlgos
 
 //======================================================================
+#define NUMEBINS 46
+static const double logEbins[NUMEBINS+1] = {
+  0.0,10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0,
+  100.0,200.0,300.0,400.0,500.0,600.0,700.0,800.0,900.0,
+  1000.0,2000.0,3000.0,4000.0,5000.0,6000.0,7000.0,8000.0,9000.0,
+  10000.0,20000.0,30000.0,40000.0,50000.0,60000.0,70000.0,80000.0,90000.0,
+  100000.0,200000.0,300000.0,400000.0,500000.0,600000.0,700000.0,800000.0,900000.0,
+  1000000.0
+};
 
 void
 HFtrigAnalAlgos::beginJob(void)
@@ -75,33 +85,6 @@ HFtrigAnalAlgos::beginJob(void)
 
   DigiSubDir_ = new TFileDirectory(fs->mkdir( "TPGET_spectra" ));
   RHsubDir_   = new TFileDirectory(fs->mkdir( "RecHitEnergies" ));
-
-  //bxhist_ = new TH1F("bxnumhist", "Bunch #", 100, 0, 3600);
-
-#if 0
-  h_inputLUT1_ = new TH1F("inputLUTd1h", "input LUT depth 1",
-			  27,-13.5,13.5);
-
-  h_inputLUT2_ = new TH1F("inputLUTd2h", "input LUT depth 2",
-			  27,-13.5,13.5);
-#endif
-
-  h_CoEinPhiPlus_  = RHsubDir_->make<TH1F>("CoEinPhiPlush", "HFP Center of Energy in Phi;iphi",
-					  72,-0.5,71.5);
-  h_CoEinPhiMinus_ = RHsubDir_->make<TH1F>("CoEinPhiMinush", "HFM Center of Energy in Phi;iphi",
-					  72,-0.5,71.5);
-  h_CoEinEtaPlus_  = RHsubDir_->make<TH1F>("CoEinEtaPlush", "HFP Center of Energy in Eta;ieta",
-					  13,28.5,41.5);
-  h_CoEinEtaMinus_ = RHsubDir_->make<TH1F>("CoEinEtaMinush", "HFM  Center of Energy in Eta;ieta",
-					  13,-41.5,-28.5);
-
-  h_totalE_ = RHsubDir_->make<TH1F>("totalEh", "Total RecHit Energy",
-				   rhTotalEnergyHp_.nbins,
-				   rhTotalEnergyHp_.min,
-				   rhTotalEnergyHp_.max);
-  h_PulseProfileMax_ = fs->make<TH1F>("pulseProfileMaxADC",
-				      "Pulse Profile from max ADC",
-				      11,-0.5,10.5);
 
   if (!readLUTfromTextFile()) {
     throw cms::Exception("Reading LUT text file failed");
@@ -134,7 +117,7 @@ void HFtrigAnalAlgos::insertLUTelement(int ieta,int depth, int lutval)
     else if (ieta <= -29 ) h_inputLUT2_->Fill(ieta+28,lutval);
   }
 #endif
-}
+}                                   // HFtrigAnalAlgos::insertLUTelement
 
 //======================================================================
 
@@ -186,6 +169,73 @@ void HFtrigAnalAlgos::dumpLUT(void)
 
 //======================================================================
 
+void
+HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
+{
+  edm::Service<TFileService> fs;
+  char name[80];
+  char title[128];
+
+  sprintf(name,"run%dbxnumh",runnum);
+  sprintf(title,"Run #%d Bunch #s", runnum);
+  bxhist_ = fs->make<TH1F>(name,title, 3601, -0.5, 3600.5);
+
+#if 0
+  h_inputLUT1_ = new TH1F("inputLUTd1h", "input LUT depth 1",
+			  27,-13.5,13.5);
+
+  h_inputLUT2_ = new TH1F("inputLUTd2h", "input LUT depth 2",
+			  27,-13.5,13.5);
+#endif
+
+  sprintf(name,"run%dCoEinPhiPlush",runnum);
+  sprintf(title,"HFP Center of Energy in Phi, Run #%d;iphi", runnum);
+  h_CoEinPhiPlus_  = RHsubDir_->make<TH1F>(name, title,72,-0.5,71.5);
+
+  sprintf(name,"run%dCoEinPhiMinush",runnum);
+  sprintf(title,"HFM Center of Energy in Phi, Run #%d;iphi", runnum);
+  h_CoEinPhiMinus_ = RHsubDir_->make<TH1F>(name,title,72,-0.5,71.5);
+
+  sprintf(name,"run%dCoEinEtaPlush",runnum);
+  sprintf(title,"HFP Center of Energy in Eta, Run #%d;ieta", runnum);
+  h_CoEinEtaPlus_  = RHsubDir_->make<TH1F>(name,title,13,28.5,41.5);
+
+  sprintf(name,"run%dCoEinEtaMinush",runnum);
+  sprintf(title,"HFM Center of Energy in Eta, Run #%d;ieta", runnum);
+  h_CoEinEtaMinus_ = RHsubDir_->make<TH1F>(name,title,13,-41.5,-28.5);
+
+  sprintf(name,"run%dtotalEh",runnum);
+  sprintf(title,"Total HF RecHit Energy, Run #%d;GeV", runnum);
+  h_totalE_ = RHsubDir_->make<TH1F>(name, title, 46,logEbins);
+#if 0
+				    rhTotalEnergyHp_.nbins,
+				    rhTotalEnergyHp_.min,
+				    rhTotalEnergyHp_.max);
+#endif
+
+  sprintf(name,"run%dtotalEperEtah",runnum);
+  sprintf(title,"Total HF RecHit Energy vs Eta, Run #%d;ieta", runnum);
+  h_totEvsIeta_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+
+  // ...but renumber the ticks so there's no confusion.
+  for (int ibin=1; ibin<=13; ibin++) {
+    ostringstream binlabel;
+    binlabel<<(ibin-42); h_totEvsIeta_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str()); binlabel.str("");
+    binlabel<<(ibin+28); h_totEvsIeta_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+  }
+
+  sprintf(name,"run%dtotalEperPhih",runnum);
+  sprintf(title,"Total HF RecHit Energy vs Phi, Run #%d;iphi", runnum);
+  h_totEvsIphi_ = RHsubDir_->make<TH1F>(name,title, 72,-0.5,71.5);
+
+  sprintf(name,"run%dpulseProfileMaxADC",runnum);
+  sprintf(title,"HF Pulse Profile from max ADC, Run #%d", runnum);
+  h_PulseProfileMax_ = fs->make<TH1F>(name,title,11,-0.5,10.5);
+
+}                                   // HFtrigAnalAlgos::bookPerRunHistos
+
+//======================================================================
+
 TH2F *
 HFtrigAnalAlgos::bookOccHisto(int depth, uint32_t runnum, bool ismaxval)
 {
@@ -223,7 +273,7 @@ HFtrigAnalAlgos::bookOccHisto(int depth, uint32_t runnum, bool ismaxval)
   else          m_hOccupancies2_[depth] = h_occ;
 
   return h_occ;
-}
+}                                       // HFtrigAnalAlgos::bookOccHisto
 
 //======================================================================
 
@@ -312,6 +362,20 @@ HFtrigAnalAlgos::endJob()
 
 //======================================================================
 
+void HFtrigAnalAlgos::filterRHs(const HFRecHitCollection& unfiltrh,
+				std::vector<HFRecHit>& filtrh)
+{
+  HFRecHitCollection::const_iterator it;
+
+  for (it=unfiltrh.begin(); it!=unfiltrh.end(); it++){
+    if ((it->id().iphi() != 67) &&
+	(it->energy() > minGeVperRecHit_))
+      filtrh.push_back(*it);
+  }
+}                                        //  HFtrigAnalAlgos::filterRHs
+
+//======================================================================
+
 bool HFtrigAnalAlgos::intheSameHFWedge(const HcalDetId& id1,
 				       const HcalDetId& id2)
 {
@@ -328,7 +392,7 @@ bool HFtrigAnalAlgos::intheSameHFWedge(const HcalDetId& id1,
       return (iphi1 == iphi2);
     }
   return false;
-}
+}                                   // HFtrigAnalAlgos::intheSameHFWedge
 
 //======================================================================
 
@@ -345,7 +409,8 @@ void HFtrigAnalAlgos::findMaxChannels(const HFDigiCollection& hfdigis,
     const HFDataFrame& frame = hfdigis[idig];
     HcalDetId detId = frame.id();
 
-    if (detId == detId2Mask_) continue;
+    if (detId.iphi() == 67) continue;
+    //if (detId == detId2Mask_) continue;
 
     int ieta = detId.ieta();
     int iphi = detId.iphi();
@@ -482,12 +547,12 @@ void HFtrigAnalAlgos::fillPulseProfile(const HFDataFrame& maxframe)
 
 void HFtrigAnalAlgos::fillBxNum(uint32_t bxnum)
 {
-  //bxhist_->Fill((float)bxnum);
+  bxhist_->Fill((float)bxnum);
 }
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillRhHistos(const HFRecHitCollection& hfrechits,
+void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
 				   uint32_t evtnum,
 				   uint32_t runnum)
 {
@@ -511,30 +576,42 @@ void HFtrigAnalAlgos::fillRhHistos(const HFRecHitCollection& hfrechits,
   float totalEplus     = 0.0;
   float totalEminus    = 0.0;
 
+  // total energy first
+  //
+  for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit)
+    totalE += hfrechits[ihit].energy();
+
+  if (totalE < 500.0) return;
+
+  h1p->Fill(evtnum,totalE);
+  h_totalE_->Fill(totalE);
+
   for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
     const HFRecHit& rh  = hfrechits[ihit];
     const HcalDetId& id = rh.id();
+    int   ieta          = id.ieta();
+    int   iphi          = id.iphi();
     float rhenergy      = rh.energy();
 
-    if (rhenergy > minGeVperRecHit_) {
-      totalE += rhenergy;
+    if      (ieta >=  29 ) h_totEvsIeta_->Fill(ieta-28,rhenergy); 
+    else if (ieta <= -29 ) h_totEvsIeta_->Fill(ieta+28,rhenergy);
+    h_totEvsIphi_->Fill(iphi,rhenergy);
 
+    if (rhenergy > 1000.0) {
       if (id.zside() > 0) {
-	sumEtimesPhiPl += rhenergy * id.iphi();
-	sumEtimesEtaPl += rhenergy * id.ieta();
+	sumEtimesPhiPl += rhenergy * iphi;
+	sumEtimesEtaPl += rhenergy * ieta;
 	totalEplus     += rhenergy;
       } else {
-	sumEtimesPhiMn += rhenergy * id.iphi();
-	sumEtimesEtaMn += rhenergy * id.ieta();
+	sumEtimesPhiMn += rhenergy * iphi;
+	sumEtimesEtaMn += rhenergy * ieta;
 	totalEminus    += rhenergy;
       }
     }
   }
 
-  h1p->Fill(evtnum,totalE);
-
-  h_totalE_->Fill(totalE);
-
+  // Center of energy plots
+  //
   if (totalEminus != 0.0) {
     h_CoEinPhiMinus_->Fill(sumEtimesPhiMn/totalEminus);
     h_CoEinEtaMinus_->Fill(sumEtimesEtaMn/totalEminus);
@@ -542,15 +619,6 @@ void HFtrigAnalAlgos::fillRhHistos(const HFRecHitCollection& hfrechits,
   if (totalEplus != 0.0) {
     h_CoEinPhiPlus_->Fill(sumEtimesPhiPl/totalEplus);
     h_CoEinEtaPlus_->Fill(sumEtimesEtaPl/totalEplus);
-  }
-
-
-  // Center of energy plots
-  //
-  for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
-    const HFRecHit& rh = hfrechits[ihit];
-    if (rh.energy() > minGeVperRecHit_)
-      totalE += rh.energy();
   }
 
   // Event display plotting
@@ -561,6 +629,7 @@ void HFtrigAnalAlgos::fillRhHistos(const HFRecHitCollection& hfrechits,
     for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
       const HFRecHit& rh = hfrechits[ihit];
       HcalDetId detId = rh.id();
+
       int ieta2fill = 0;
       if      (detId.ieta() >=  29 ) ieta2fill = detId.ieta()-28;
       else if (detId.ieta() <= -29 ) ieta2fill = detId.ieta()+28;
@@ -583,6 +652,11 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
   HFDataFrame maxframe, next2maxframe;
   int maxadc, next2maxadc;
 
+  if (s_runs_.find(runnum) == s_runs_.end()) {
+    bookPerRunHistos(runnum);
+    s_runs_.insert(runnum);
+  }
+
   findMaxChannels(hfdigis,maxframe, next2maxframe, maxadc, next2maxadc);
   //findMaxChannels(hfdigis,maxdigis,maxadc);
 
@@ -594,9 +668,13 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 
   if (maxadc < 5) return;
 
+  std::vector<HFRecHit> filtrh;
+  filterRHs(hfrechits, filtrh);
   fillDigiSpectra(maxframe,maxadc,runnum);
   fillPulseProfile(maxframe);
   fillOccupancy(maxframe,next2maxframe,runnum);
-  fillRhHistos(hfrechits,evtnum,runnum);
-  //fillBxNum(bxnum);
-}
+  fillRhHistos(filtrh,evtnum,runnum);
+  fillBxNum(bxnum);
+}                                            // HFtrigAnalAlgos::analyze
+
+//======================================================================

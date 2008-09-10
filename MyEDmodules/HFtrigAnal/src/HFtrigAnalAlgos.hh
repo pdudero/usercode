@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <set>
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
@@ -47,7 +48,7 @@ private:
   void fillPulseProfile  (const HFDataFrame& maxframe);
 
   void fillBxNum         (uint32_t bxnum);
-  void fillRhHistos      (const HFRecHitCollection& hfrechits,
+  void fillRhHistos      (const std::vector<HFRecHit>& hfrechits,
 			  uint32_t evtnum,
 			  uint32_t runnum);
 
@@ -79,8 +80,10 @@ private:
     double max;
   };
 
+  void  filterRHs          (const HFRecHitCollection& unfiltrh,
+			    std::vector<HFRecHit>& filtrh);
   TH1F *bookSpectrumHisto  (IetaDepth_t& id, uint32_t runnum);
-
+  void  bookPerRunHistos   (uint32_t runnum);
   TH2F *bookOccHisto       (int depth, uint32_t runnum, bool ismaxval=true);
   TH1F *bookEperEventHisto (uint32_t nkevents, uint32_t runnum);
   TH2F *book2dEnergyHisto  (uint32_t evtnum, uint32_t runnum);
@@ -89,6 +92,7 @@ private:
 
   // parameters
   bool                          verbose_;
+  std::set<int>                 s_runs_;
   std::string                   outRootFileName_;
   std::string                   lutFileName_;
   int                           sampleWindowLeft_;
@@ -108,6 +112,8 @@ private:
   // histos
   TH1F                         *bxhist_;
   TH1F                         *h_totalE_;
+  TH1F                         *h_totEvsIeta_;
+  TH1F                         *h_totEvsIphi_;
   TH1F                         *h_inputLUT1_;
   TH1F                         *h_inputLUT2_;
   TH1F                         *h_PulseProfileMax_;

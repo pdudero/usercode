@@ -1,16 +1,13 @@
 # Set a limit on the number of events to process per run
 EVENTLIMIT=-1
 
-# Mode of operation
-# LOCAL  - for local runs, uses HcalTBSource
+# Modes of operation
+# LOCAL  - use local file format string FORMAT
+# GLOBAL - use include py file.
 #
-# GRECO  - PoolSource,includes external cfi file,assumes L1 global trigger digis in file
-# GRAW   - NewEventStreamFileReader,includes external cfi file, reco's L1 global trigger digis
-# GSKIM  - PoolSource,takes local file definition below, assumes events already skimmed
+FILEMODE=LOCAL
 #
-MODE=GSKIM
-#MODE=GRAW
-
+#
 # "Printf"-style format string for the input filename -
 #                     allows input of run number only
 #      - include the full path to the file in the string.
@@ -18,5 +15,19 @@ MODE=GSKIM
 #FORMAT="~/cms/data/tb06/dirTest/h2.%08d.combined.OutServ_0.0.root"
 #FORMAT="HTB_%06d.root"
 #FORMAT="/bigspool/usc/USC_%06d.root"
-#FORMAT="run%5d-skim.root"
-FORMAT="/bigspool/processed/GlobalRAFF.%5d.filter_pm4.root"
+FORMAT="run%5d-rhskim.root"
+#FORMAT="/bigspool/processed/GlobalRAFF.%5d.filter_pm4.root"
+
+# Assumes files are skimmed already
+# HCAL     - for local runs, uses HcalTBSource
+# POOL     - NewEventStreamFileReader,includes external cfi file, reco's L1 global trigger digis
+#
+SOURCE=POOL
+
+# RAW    - do full reco
+# RECO   - reco is inside
+#
+MODE=RECO
+#
+#
+LUTFILENAME=inputLUTcoder_one_shot.csv
