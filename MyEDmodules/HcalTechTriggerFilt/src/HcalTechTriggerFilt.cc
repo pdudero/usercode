@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Wed Aug 27 02:54:39 CEST 2008
-// $Id$
+// $Id: HcalTechTriggerFilt.cc,v 1.1 2008/08/27 03:18:25 dudero Exp $
 //
 //
 
@@ -21,6 +21,7 @@
 // system include files
 #include <memory>
 #include <vector>
+#include <iostream>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -50,8 +51,10 @@ private:
 
   edm::InputTag    gtDigiLabel_;
   std::vector<int> techTrigBitVec_;
+  int              nevt_;
   int              npassed_;
   int              nfilt_;
+  std::vector<int> v_ntriggers_;
 };
 
 //
@@ -67,12 +70,16 @@ private:
 //
 HcalTechTriggerFilt::HcalTechTriggerFilt(const edm::ParameterSet& iConfig) :
   gtDigiLabel_(iConfig.getUntrackedParameter<edm::InputTag>("gtDigiLabel")),
-  techTrigBitVec_(iConfig.getParameter<std::vector<int> >("techTriggerBits"))
+  techTrigBitVec_(iConfig.getParameter<std::vector<int> >("techTriggerBits")),
+  nevt_(0),npassed_(0),nfilt_(0)
 {
    //now do what ever initialization is needed
 
   if (!techTrigBitVec_.size())
     throw cms::Exception("HcalTechTriggerFilt: Empty trigger bit vector in setup");
+
+  v_ntriggers_.resize(64,0);
+
 }
 
 
@@ -149,17 +156,33 @@ std::vector<bool> HFtrigAnal::determineTriggers(const edm::Event& iEvent)
 bool
 HcalTechTriggerFilt::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  nevt_++;
+
   edm::Handle< L1GlobalTriggerReadoutRecord > gtRecord;
 
-  try {
+  //  try {
     iEvent.getByLabel(gtDigiLabel_, gtRecord);
+#if 0
   }
   catch(const cms::Exception&) {
     edm::LogWarning("HFtrigAnal::analyze") <<
       "Global trigger bits not found, running local mode"<< std::endl;
+    return true;
   }
-      
+#endif
   TechnicalTriggerWord ttw = gtRecord->technicalTriggerWord();
+
+#if 0
+  if (ttw.size() != v_ntriggers_.size()) {
+    std::cout << "HcalTechTriggerFilt: ttw.size() = " << ttw.size() << std::endl;
+    if (ttw.size() > v_ntriggers_.size())
+      v_ntriggers_.resize(ttw.size(),0);
+  }
+#endif
+
+  // count up triggers
+  for (uint32_t i=0; i<ttw.size(); i++)
+    if (ttw[i]) v_ntriggers_[i]++;
 
   bool techtriggered=false;
   for (uint32_t i=0; i<techTrigBitVec_.size(); i++) {
@@ -178,16 +201,18 @@ HcalTechTriggerFilt::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 void 
 HcalTechTriggerFilt::beginJob(const edm::EventSetup&)
 {
-  npassed_ = 0;
-  nfilt_   = 0;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 HcalTechTriggerFilt::endJob() {
   using namespace std;
+  cout << "HcalTechTriggerFilt: #events counted  = " << nevt_    << endl;
   cout << "HcalTechTriggerFilt: #events passed   = " << npassed_ << endl;
   cout << "HcalTechTriggerFilt: #events filtered = " << nfilt_   << endl;
+  cout << "HcalTechTriggerFilt: trigger bit breakdown: " << endl;
+  for (uint32_t i=0; i<v_ntriggers_.size(); i++)
+    cout << "\tTrigger bit " << i << ": " <<  v_ntriggers_[i] << " triggers" << endl;
 }
 
 //define this as a plug-in
