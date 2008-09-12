@@ -10,6 +10,7 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/InputTag.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
 #include "MyEDmodules/HFtrigAnal/src/HFtrigAnalAlgos.hh"
 
 class TFile;
@@ -90,8 +91,29 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
   edm::EventID eventId = fEvent.id();
   uint32_t runNer = eventId.run ();
   uint32_t eventNumber = eventId.event ();
-  uint32_t bxnum = fEvent.bunchCrossing ();
-  //cout << bxnum << endl;
+
+  uint32_t lumiBlock = fEvent.luminosityBlock();
+
+  int bxCross = fEvent.bunchCrossing();
+  boost::uint16_t bxCrossHw = 0;
+  if ((bxCross & 0xFFF) == bxCross) {
+    bxCrossHw = static_cast<boost::uint16_t> (bxCross);
+  } else {
+#if 0
+    bxCrossHw = 0; // Bx number too large, set to 0!
+    LogDebug("HFtrigAnal::analyze")
+      << "\nBunch cross number [hex] = "
+      << std::hex << bxCross
+      << "\n  larger than 12 bits. Set to 0! \n"
+      << std::dec << std::endl;
+#endif
+
+    // Get the bunch number out of the trigger record:
+    edm::Handle< L1GlobalTriggerReadoutRecord > gtRecord;
+    if (fEvent.getByLabel("gtDigis", gtRecord))
+      bxCrossHw = gtRecord->gtFdlWord().bxNr();
+  }
+
   if (runN==0) runN=runNer;
   eventN++;
 
@@ -117,7 +139,7 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
     return;
   }
 
-  algo_->analyze(*hfdigis,*hfrechits, bxnum, eventNumber, runNer);
+  algo_->analyze(*hfdigis,*hfrechits, bxCrossHw, eventNumber, runNer, lumiBlock);
 
 }
 

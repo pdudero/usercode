@@ -13,6 +13,13 @@ using namespace std;
 
 // <use name=FWCore/ServiceRegistry> # GF: Not sure whether really needed...
 
+class compareADC {
+public:
+  bool operator()(const HFtrigAnalAlgos::triggerWedge_t& w1,
+		  const HFtrigAnalAlgos::triggerWedge_t& w2) const {
+    return w1.maxadc>w2.maxadc;
+  }
+};//needed for sorting by maxadc
 
 //======================================================================
 // Got this from
@@ -43,7 +50,10 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
                                const edm::ParameterSet& iConfig) :
   verbose_(verbosity)
 {
-  lutFileName_     = iConfig.getUntrackedParameter<string>("lutFileName");
+  vector<int> v_maskidnumbers;
+  vector<int> v_validBXnumbers;
+
+  lutFileName_         = iConfig.getUntrackedParameter<string>("lutFileName");
 
   sampleWindowLeft_    = iConfig.getParameter<int>("digiSampleWindowMin");
   sampleWindowRight_   = iConfig.getParameter<int>("digiSampleWindowMax");
@@ -56,6 +66,8 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   //eventNumberMax_       = (uint32_t)iConfig.getParameter<int>("eventNumberMax");
 
   adcTrigThreshold_       = (uint32_t)iConfig.getParameter<int>("adcTrigThreshold");
+  v_maskidnumbers         = iConfig.getParameter<vector<int> > ("detIds2Mask");
+  v_validBXnumbers        = iConfig.getParameter<vector<int> > ("validBxNumbers");
 
   digiSpectrumHp_.nbins = iConfig.getUntrackedParameter<int>   ("digiSpectrumNbins");
   digiSpectrumHp_.min   = iConfig.getUntrackedParameter<double>("digiSpectrumMinADC");
@@ -64,6 +76,16 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   rhTotalEnergyHp_.nbins= iConfig.getUntrackedParameter<int>   ("rhTotalEnergyNbins");
   rhTotalEnergyHp_.min  = iConfig.getUntrackedParameter<double>("rhTotalEnergyMinGeV");
   rhTotalEnergyHp_.max  = iConfig.getUntrackedParameter<double>("rhTotalEnergyMaxGeV");
+
+  nWedgesHp_.nbins      = iConfig.getUntrackedParameter<int>   ("nWedgesPlotNbins");
+  nWedgesHp_.min        = iConfig.getUntrackedParameter<double>("nWedgesPlotMin");
+  nWedgesHp_.max        = iConfig.getUntrackedParameter<double>("nWedgesPlotMax");
+
+  if (!convertIdNumbers(v_maskidnumbers, detIds2mask_))
+    throw cms::Exception("Invalid detID vector");
+
+  for (uint32_t i=0; i<v_validBXnumbers.size(); i++)
+    s_validBxNums_.insert((uint16_t)v_validBXnumbers[i]);
 
 }                                    // HFtrigAnalAlgos::HFtrigAnalAlgos
 
@@ -91,19 +113,48 @@ HFtrigAnalAlgos::beginJob(void)
   }
   dumpLUT();
 
-  detId2Mask_ = HcalDetId(HcalForward,32,67,2);
-
 }                                           // HFtrigAnalAlgos::beginJob
 
 //======================================================================
 
-void HFtrigAnalAlgos::insertLUTelement(int ieta,int depth, int lutval)
+bool HFtrigAnalAlgos::convertIdNumbers(std::vector<int>& v_maskidnumbers,
+				       std::vector<HcalDetId>& detIds2mask)
+{
+  // convert det ID numbers to valid detIds:
+  if (v_maskidnumbers.empty() || (v_maskidnumbers.size()%3)) {
+    return false;
+  }
+  for (uint32_t i=0; i<v_maskidnumbers.size(); i+=3) {
+    int ieta = v_maskidnumbers[i];
+    int iphi = v_maskidnumbers[i+1];
+    int depth = v_maskidnumbers[i+2];
+    if ((abs(ieta) < 29) || (abs(ieta) > 41)) return false;
+    if (    (iphi  <  0) ||    (iphi   > 71)) return false;
+    if (   (depth !=  1) &&    (depth !=  2)) return false;
+    HcalDetId id(HcalForward,ieta,iphi,depth);
+    detIds2mask.push_back(id);
+  }
+  return true;
+}                                   // HFtrigAnalAlgos::convertIdNumbers
+
+//======================================================================
+
+bool HFtrigAnalAlgos::maskedId(const HcalDetId& id)
+{
+  for (uint32_t i=0; i<detIds2mask_.size(); i++)
+    if (id == detIds2mask_[i]) return true;
+  return false;
+}
+
+//======================================================================
+
+void HFtrigAnalAlgos::insertLUTelement(int ieta,int depth, uint32_t lutval)
 {
   IetaDepth_t id(ieta,depth);
 
-  map<int,vector<int> >::iterator it = m_LUT_.find(id.toCode());
+  map<int,vector<uint32_t> >::iterator it = m_LUT_.find(id.toCode());
   if (it == m_LUT_.end()) {
-    vector<int> v(1,lutval);
+    vector<uint32_t> v(1,lutval);
     m_LUT_[id.toCode()] = v;
   } else {
     it->second.push_back(lutval);
@@ -136,16 +187,15 @@ bool HFtrigAnalAlgos::readLUTfromTextFile(void)
     Tokenize(linein, tokens," \t");
 
     if (tokens.size() != 4) { // 52) {
-      cerr << "# of entries in line " << nline << " = " << tokens.size() << " - incorrect" << endl;
+      cerr << "# of entries in line " << nline << " = ";
+      cerr << tokens.size() << " - incorrect" << endl;
       return false;
     }
 
-    int itok = 0;
-    for (int depth=1; depth<=2; depth++) {
-      for (int ieta=-29; ieta>=-41; ieta--) insertLUTelement(ieta,depth,atoi(tokens[itok].c_str()));
-      itok++;
-      for (int ieta= 29; ieta<= 41; ieta++) insertLUTelement(ieta,depth,atoi(tokens[itok].c_str()));
-      itok++;
+    int i=0;
+    for (int dp=1; dp<=2; dp++) {
+      for (int ie=-29; ie>=-41; ie--) insertLUTelement(ie,dp,atoi(tokens[i].c_str())); i++;
+      for (int ie= 29; ie<= 41; ie++) insertLUTelement(ie,dp,atoi(tokens[i].c_str())); i++;
     }
   } // loop over lines in text file
 
@@ -156,7 +206,7 @@ bool HFtrigAnalAlgos::readLUTfromTextFile(void)
 
 void HFtrigAnalAlgos::dumpLUT(void)
 {
-  map<int,vector<int> >::iterator it;
+  map<int,vector<uint32_t> >::iterator it;
   for (it = m_LUT_.begin();
        it != m_LUT_.end();
        it++) {
@@ -178,7 +228,11 @@ HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
 
   sprintf(name,"run%dbxnumh",runnum);
   sprintf(title,"Run #%d Bunch #s", runnum);
-  bxhist_ = fs->make<TH1F>(name,title, 3601, -0.5, 3600.5);
+  bxhist_ = fs->make<TH1S>(name,title, 3601, -0.5, 3600.5);
+
+  sprintf(name,"run%dlumisegh",runnum);
+  sprintf(title,"Run #%d Lumi Segment #s", runnum);
+  lumisegh_ = fs->make<TH1S>(name,title, 100, -0.5, 99.5);
 
 #if 0
   h_inputLUT1_ = new TH1F("inputLUTd1h", "input LUT depth 1",
@@ -213,24 +267,38 @@ HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
 				    rhTotalEnergyHp_.max);
 #endif
 
-  sprintf(name,"run%dtotalEperEtah",runnum);
-  sprintf(title,"Total HF RecHit Energy vs Eta, Run #%d;ieta", runnum);
-  h_totEvsIeta_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+  sprintf(name,"run%dEperEtah",runnum);
+  sprintf(title,"HF RecHit Energy vs Eta, Run #%d;ieta", runnum);
+  h_EvsIeta_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
 
   // ...but renumber the ticks so there's no confusion.
   for (int ibin=1; ibin<=13; ibin++) {
     ostringstream binlabel;
-    binlabel<<(ibin-42); h_totEvsIeta_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str()); binlabel.str("");
-    binlabel<<(ibin+28); h_totEvsIeta_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+    binlabel<<(ibin-42); h_EvsIeta_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str()); binlabel.str("");
+    binlabel<<(ibin+28); h_EvsIeta_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
   }
 
-  sprintf(name,"run%dtotalEperPhih",runnum);
-  sprintf(title,"Total HF RecHit Energy vs Phi, Run #%d;iphi", runnum);
-  h_totEvsIphi_ = RHsubDir_->make<TH1F>(name,title, 72,-0.5,71.5);
+  sprintf(name,"run%dEperPhih",runnum);
+  sprintf(title,"HF RecHit Energy vs Phi, Run #%d;iphi", runnum);
+  h_EvsIphi_ = RHsubDir_->make<TH1F>(name,title, 72,-0.5,71.5);
 
   sprintf(name,"run%dpulseProfileMaxADC",runnum);
   sprintf(title,"HF Pulse Profile from max ADC, Run #%d", runnum);
   h_PulseProfileMax_ = fs->make<TH1F>(name,title,11,-0.5,10.5);
+
+  sprintf(name,"run%dnWedgesOverThreshGoodBx",runnum);
+  sprintf(title,"HF #Wedges Over Threshold, Signal, Run #%d", runnum);
+  h_nWedgesOverThreshGoodBx_ = fs->make<TH1F>(name,title,
+					      nWedgesHp_.nbins,
+					      nWedgesHp_.min,
+					      nWedgesHp_.max);
+
+  sprintf(name,"run%dnWedgesOverThreshBadBx",runnum);
+  sprintf(title,"HF #Wedges Over Threshold, Noise, Run #%d", runnum);
+  h_nWedgesOverThreshBadBx_  = fs->make<TH1F>(name,title,
+					      nWedgesHp_.nbins,
+					      nWedgesHp_.min,
+					      nWedgesHp_.max);
 
 }                                   // HFtrigAnalAlgos::bookPerRunHistos
 
@@ -368,7 +436,7 @@ void HFtrigAnalAlgos::filterRHs(const HFRecHitCollection& unfiltrh,
   HFRecHitCollection::const_iterator it;
 
   for (it=unfiltrh.begin(); it!=unfiltrh.end(); it++){
-    if ((it->id().iphi() != 67) &&
+    if (!maskedId(it->id()) && 
 	(it->energy() > minGeVperRecHit_))
       filtrh.push_back(*it);
   }
@@ -376,89 +444,80 @@ void HFtrigAnalAlgos::filterRHs(const HFRecHitCollection& unfiltrh,
 
 //======================================================================
 
-bool HFtrigAnalAlgos::intheSameHFWedge(const HcalDetId& id1,
-				       const HcalDetId& id2)
+uint32_t HFtrigAnalAlgos::lookupLinearizerLUTval(IetaDepth_t& id, int rawadc)
 {
-  if ((id1.subdet() == HcalForward) &&
-      (id2.subdet() == HcalForward)   )
-    if (id1.zside() == id2.zside()) {
-      int iphi1 = id1.iphi();
-      int iphi2 = id2.iphi();
-      
-      if (iphi1 == iphi2) return true;
-      if (iphi1 < iphi2) iphi1 = (iphi1+2) % 72;
-      else               iphi2 = (iphi2+2) % 72;
+#if 0
+  int capid = frame[isample].capid ();
+  double linear_ADC = frame[isample].nominal_fC();
+  double nominal_fC = detId.subdet () == HcalForward ? 2.6 *  linear_ADC : linear_ADC;
+#endif
 
-      return (iphi1 == iphi2);
-    }
-  return false;
-}                                   // HFtrigAnalAlgos::intheSameHFWedge
+  map<int,vector<uint32_t> >::const_iterator it = m_LUT_.find(id.toCode());
+  if (it == m_LUT_.end()) {
+    cout << "LUT entry for id " << id.ieta() << " " << id.depth();
+    cout << " not found." << endl;
+    throw cms::Exception("LUT entry for id not found");
+  }
+
+  return (it->second[rawadc]);
+}                             // HFtrigAnalAlgos::lookupLinearizerLUTval
 
 //======================================================================
 
-void HFtrigAnalAlgos::findMaxChannels(const HFDigiCollection& hfdigis,
-				      HFDataFrame& maxframe,
-				      HFDataFrame& next2maxframe,
-				      int& maxval,
-				      int& next2maxval)
+void HFtrigAnalAlgos::findMaxWedges(const HFDigiCollection& hfdigis,
+				    std::vector<triggerWedge_t>& sortedWedges)
 {
-  maxval = -INT_MAX;
-  next2maxval = -INT_MAX;
-
+  // First collect the highest ADC value (from LUT output) per wedge
+  //
+  std::map<int,triggerWedge_t> m_wedges;
   for (unsigned idig = 0; idig < hfdigis.size (); ++idig) {
     const HFDataFrame& frame = hfdigis[idig];
     HcalDetId detId = frame.id();
 
-    if (detId.iphi() == 67) continue;
-    //if (detId == detId2Mask_) continue;
+    if (maskedId(detId)) continue;
 
-    int ieta = detId.ieta();
-    int iphi = detId.iphi();
+    int ieta  = detId.ieta();
+    int zside = detId.zside();
+    int iphi  = detId.iphi();
     int depth = detId.depth();
     IetaDepth_t id(ieta,depth); // for LUT lookup
+    HFwedgeID_t wid(iphi,zside);
 
     if (verbose_) std::cout <<"HF digi # " <<idig<<": eta/phi/depth: "
 			   <<ieta<<'/'<<iphi<<'/'<< depth << std::endl;
     int isample;
-    int max4thisdigi=-INT_MAX;
+    uint32_t max4thisdigi=0;
+    int maxsamplenum = -1;
     for (isample = std::max(0,sampleWindowLeft_);
 	 isample <= std::min(sampleWindowRight_,frame.size()-1);
 	 ++isample) {
-      int rawadc = frame[isample].adc();
-#if 0
-      int capid = frame[isample].capid ();
-      double linear_ADC = frame[isample].nominal_fC();
-      double nominal_fC = detId.subdet () == HcalForward ? 2.6 *  linear_ADC : linear_ADC;
-#endif
 
-      map<int,vector<int> >::const_iterator it = m_LUT_.find(id.toCode());
-      if (it == m_LUT_.end()) {
-	cout << "LUT entry for id " << id.ieta() << " " << id.depth();
-	cout << " not found." << endl;
-	throw cms::Exception("LUT entry for id not found");
-      }
+      uint32_t lutval = lookupLinearizerLUTval(id,frame[isample].adc());
 
-      int lutval = it->second[rawadc];
-
-      if (lutval > max4thisdigi)
+      if (lutval > max4thisdigi) {
 	max4thisdigi = lutval;
-
+	maxsamplenum = isample;
+      }
     } // loop over samples in digi
+      
+    triggerWedge_t twedge(wid,frame,max4thisdigi,maxsamplenum);
+    std::map<int,triggerWedge_t>::iterator it =  m_wedges.find(wid.id());
 
-    if (max4thisdigi >= maxval) {
-      if (!intheSameHFWedge(frame.id(),maxframe.id())) {
-	next2maxval   = maxval;
-	next2maxframe = maxframe;
-      }
-      maxval   = max4thisdigi;
-      maxframe = frame;
-    } else if (max4thisdigi >= next2maxval) {
-      if (!intheSameHFWedge(frame.id(),maxframe.id())) {
-	next2maxval   = maxval;
-	next2maxframe = maxframe;
-      }
-    }
+    if (it == m_wedges.end()) m_wedges.insert(std::pair<int,triggerWedge_t>(wid.id(),twedge));
+    else if (max4thisdigi > it->second.maxadc) it->second = twedge;
+
   } // loop over digi collection
+
+  // Now push these into the wedge collection and sort:
+  sortedWedges.clear();
+  std::map<int,triggerWedge_t>::iterator it;
+  for (it =  m_wedges.begin(); it != m_wedges.end(); it++)
+    sortedWedges.push_back(it->second);
+
+  // sort by decreasing maxADC
+  //
+  std::sort(sortedWedges.begin(), sortedWedges.end(), compareADC());
+
 
 #if 0
   cout << "Max/Next2Max frames: ";
@@ -466,17 +525,46 @@ void HFtrigAnalAlgos::findMaxChannels(const HFDigiCollection& hfdigis,
   cout << next2maxframe.id() << " ADC = " << next2maxval << "; ";
   cout << endl;
 #endif
-}                                    // HFtrigAnalAlgos::findMaxChannels
+}                                      // HFtrigAnalAlgos::findMaxWedges
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillDigiSpectra(const HFDataFrame& maxframe,
-				      int& maxadc,
+void HFtrigAnalAlgos::dumpWedges(std::vector<triggerWedge_t>& wedges)
+{
+  cout << " =======> Wedges: <========" << endl;
+  for (uint32_t i = 0; i<wedges.size(); i++) {
+    cout << i << ": wid = "          << wedges[i].wid.id();
+    cout      << ", "                << wedges[i].frame.id();
+    cout      << ", maxadc = "       << wedges[i].maxadc;
+    cout      << ", maxsamplenum = " << wedges[i].maxsamplenum << endl;
+  }
+}
+
+//======================================================================
+
+void HFtrigAnalAlgos::fillNwedges(std::vector<triggerWedge_t>& sortedWedges,
+				  uint16_t bxnum)
+{
+  int nwedgesOverThresh = 0;
+  for (uint32_t i = 0; i<sortedWedges.size(); i++) {
+    if (sortedWedges[i].maxadc < adcTrigThreshold_) break;
+    nwedgesOverThresh++;
+  }
+  if (s_validBxNums_.find(bxnum) == s_validBxNums_.end())
+    h_nWedgesOverThreshBadBx_->Fill(nwedgesOverThresh);
+  else
+    h_nWedgesOverThreshGoodBx_->Fill(nwedgesOverThresh);
+
+}                                       //  HFtrigAnalAlgos::fillNwedges
+
+//======================================================================
+
+void HFtrigAnalAlgos::fillDigiSpectra(const triggerWedge_t& maxwedge,
 				      uint32_t runnum)
 {
   // Fill histos with maximum ADC
   //
-  HcalDetId detId = maxframe.id();
+  HcalDetId detId = maxwedge.frame.id();
   IetaDepth_t id(detId.ieta(),detId.depth());
   std::map<int,TH1F *>::iterator it = m_hSpectra_.find(id.toCode());
   TH1F *hp = 0;
@@ -487,17 +575,16 @@ void HFtrigAnalAlgos::fillDigiSpectra(const HFDataFrame& maxframe,
   if (hp) {
     //cout << "Filling ieta=" << id.ieta() << ", depth=" << id.depth();
     //cout << ", maxadc = " << maxadc << endl;
-    hp->Fill(maxadc);
+    hp->Fill(maxwedge.maxadc);
   }
 }                                   // HFtrigAnalAlgos::fillDigiSpectra
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillOccupancy(const HFDataFrame& maxframe,
-				    const HFDataFrame& next2maxframe,
+void HFtrigAnalAlgos::fillOccupancy(const std::vector<triggerWedge_t>& sortedWedges,
 				    uint32_t runnum)
 {
-  HcalDetId id = maxframe.id();
+  HcalDetId id = sortedWedges[0].frame.id();
 
   std::map<int,TH2F *>::iterator it = m_hOccupancies1_.find(id.depth());
   TH2F *hp = 0;
@@ -514,7 +601,9 @@ void HFtrigAnalAlgos::fillOccupancy(const HFDataFrame& maxframe,
     cout << ", depth = " << id.depth() << endl;
   }
 
-  id = next2maxframe.id();
+  if (sortedWedges.size() <= 1) return;
+
+  id = sortedWedges[1].frame.id();
 
   it = m_hOccupancies2_.find(id.depth());
   hp = 0;
@@ -545,9 +634,9 @@ void HFtrigAnalAlgos::fillPulseProfile(const HFDataFrame& maxframe)
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillBxNum(uint32_t bxnum)
+void HFtrigAnalAlgos::fillBxNum(uint16_t bxnum)
 {
-  bxhist_->Fill((float)bxnum);
+  bxhist_->Fill(bxnum);
 }
 
 //======================================================================
@@ -581,7 +670,8 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
   for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit)
     totalE += hfrechits[ihit].energy();
 
-  if (totalE < 500.0) return;
+  //if (totalE < 500.0) return;
+  //cout << "evtnum = " << evtnum << endl;
 
   h1p->Fill(evtnum,totalE);
   h_totalE_->Fill(totalE);
@@ -593,9 +683,9 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
     int   iphi          = id.iphi();
     float rhenergy      = rh.energy();
 
-    if      (ieta >=  29 ) h_totEvsIeta_->Fill(ieta-28,rhenergy); 
-    else if (ieta <= -29 ) h_totEvsIeta_->Fill(ieta+28,rhenergy);
-    h_totEvsIphi_->Fill(iphi,rhenergy);
+    if      (ieta >=  29 ) h_EvsIeta_->Fill(ieta-28,rhenergy); 
+    else if (ieta <= -29 ) h_EvsIeta_->Fill(ieta+28,rhenergy);
+    h_EvsIphi_->Fill(iphi,rhenergy);
 
     if (rhenergy > 1000.0) {
       if (id.zside() > 0) {
@@ -644,21 +734,26 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
 
 void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 			      const HFRecHitCollection& hfrechits,
-			      uint32_t bxnum,
+			      uint16_t bxnum,
 			      uint32_t evtnum,
-			      uint32_t runnum)
+			      uint32_t runnum,
+			      uint32_t lsnum)
 {
   //std::vector<HFDataFrame> maxdigis;
   HFDataFrame maxframe, next2maxframe;
-  int maxadc, next2maxadc;
+  uint32_t maxadc;
 
   if (s_runs_.find(runnum) == s_runs_.end()) {
     bookPerRunHistos(runnum);
     s_runs_.insert(runnum);
   }
 
-  findMaxChannels(hfdigis,maxframe, next2maxframe, maxadc, next2maxadc);
-  //findMaxChannels(hfdigis,maxdigis,maxadc);
+  std::vector<triggerWedge_t> sortedWedges;
+
+  findMaxWedges(hfdigis, sortedWedges);
+  dumpWedges(sortedWedges);
+
+  maxadc = sortedWedges[0].maxadc;
 
   if (maxadc < adcTrigThreshold_) {
     cout << " maxadc = " << maxadc << " less than adcTrigThreshold_ " << adcTrigThreshold_;
@@ -668,11 +763,16 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 
   if (maxadc < 5) return;
 
+  lumisegh_->Fill(lsnum);
+
+  fillNwedges(sortedWedges,bxnum);
+
+  fillDigiSpectra(sortedWedges[0],runnum);
+  fillPulseProfile(sortedWedges[0].frame);
+  fillOccupancy(sortedWedges,runnum);
+
   std::vector<HFRecHit> filtrh;
   filterRHs(hfrechits, filtrh);
-  fillDigiSpectra(maxframe,maxadc,runnum);
-  fillPulseProfile(maxframe);
-  fillOccupancy(maxframe,next2maxframe,runnum);
   fillRhHistos(filtrh,evtnum,runnum);
   fillBxNum(bxnum);
 }                                            // HFtrigAnalAlgos::analyze

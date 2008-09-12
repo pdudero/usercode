@@ -13,11 +13,46 @@
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 
 #include "TH1F.h"
+#include "TH1S.h"
 #include "TH2F.h"
 #include "TFile.h"
 
 class HFtrigAnalAlgos {
 public:
+
+  class HFwedgeID_t {
+  public:
+    // assign iphi of wedge to be the iphi between the
+    // two grouped phis. 1/71 gets iphi 72 so to distinguish
+    // plus and minus sides.
+    //
+    HFwedgeID_t (int iniphi, int inzside) {
+      if      ((iniphi % 4) == 3)   iphi_ = iniphi+1;
+      else if ((iniphi % 4) == 1) {
+	iphi_ = iniphi-1;
+	if (iphi_ <= 0) iphi_ += 72;
+      }
+      iphi_ *= inzside;
+    }
+    HFwedgeID_t (int codediphi) : iphi_(codediphi) {}
+    int id() { return iphi_; }
+    bool operator<(const HFwedgeID_t& right) const {
+      if (iphi_ < right.iphi_) return true;
+      return false;
+    }
+  private:
+    int iphi_;
+  };
+
+  struct triggerWedge_t {
+    triggerWedge_t(HFwedgeID_t& inwid, HFDataFrame inframe, uint32_t inmaxadc, int insamplenum) :
+      wid(inwid), frame(inframe), maxadc(inmaxadc), maxsamplenum(insamplenum) {}
+    HFwedgeID_t  wid;
+    HFDataFrame  frame;
+    uint32_t     maxadc;
+    int          maxsamplenum;
+  };
+
   HFtrigAnalAlgos(bool verbosity,
 		  const edm::ParameterSet& iConfig);
 
@@ -26,35 +61,14 @@ public:
 
   void analyze(const HFDigiCollection&   hfdigis,
 	       const HFRecHitCollection& hfrechits,
-	       uint32_t   bxnum,
-	       uint32_t   evtnum,
-	       uint32_t   runnum);
+	       boost::uint16_t   bxnum,
+	       boost::uint32_t   evtnum,
+	       boost::uint32_t   runnum,
+	       boost::uint32_t   lsnum);
 
 private:
 
-  bool intheSameHFWedge  (const HcalDetId& id1,const HcalDetId& id2);
-
-  void findMaxChannels   (const HFDigiCollection& hfdigis,
-			  HFDataFrame& maxframe,
-			  HFDataFrame& next2maxframe,
-			  int& maxval,
-			  int& next2maxval);
-  void fillDigiSpectra   (const HFDataFrame& maxframe,
-			  int& maxadc,
-			  uint32_t runnum);
-  void fillOccupancy     (const HFDataFrame& maxframe,
-			  const HFDataFrame& next2maxframe,
-			  uint32_t runnum);
-  void fillPulseProfile  (const HFDataFrame& maxframe);
-
-  void fillBxNum         (uint32_t bxnum);
-  void fillRhHistos      (const std::vector<HFRecHit>& hfrechits,
-			  uint32_t evtnum,
-			  uint32_t runnum);
-
-  bool readLUTfromTextFile(void);
-  void insertLUTelement(int ieta,int depth, int lutval);
-  void dumpLUT(void);
+  // ---------- internal types ---------------------------
 
   class IetaDepth_t {
   public:
@@ -80,6 +94,39 @@ private:
     double max;
   };
 
+  // ---------- internal methods ---------------------------
+
+  bool convertIdNumbers  (std::vector<int>& v_maskidnumbers,
+			  std::vector<HcalDetId>& detIds2mask);
+
+  bool maskedId          (const HcalDetId& id);
+
+  bool intheSameHFWedge  (const HcalDetId& id1,const HcalDetId& id2);
+
+  void findMaxWedges     (const HFDigiCollection& hfdigis,
+			  std::vector<triggerWedge_t>& sortedWedges);
+
+  void dumpWedges        (std::vector<triggerWedge_t>& wedges);
+
+  void fillNwedges       (std::vector<triggerWedge_t>& sortedWedges,
+			  uint16_t bxnum);
+
+  void fillDigiSpectra   (const triggerWedge_t& maxwedge,
+			  uint32_t runnum);
+  void fillOccupancy     (const std::vector<triggerWedge_t>& sortedWedges,
+			  uint32_t runnum);
+  void fillPulseProfile  (const HFDataFrame& maxframe);
+
+  void fillBxNum         (boost::uint16_t bxnum);
+  void fillRhHistos      (const std::vector<HFRecHit>& hfrechits,
+			  uint32_t evtnum,
+			  uint32_t runnum);
+
+  bool readLUTfromTextFile(void);
+  void insertLUTelement(int ieta,int depth, uint32_t lutval);
+  void dumpLUT(void);
+  uint32_t lookupLinearizerLUTval(IetaDepth_t& id, int rawadc);
+
   void  filterRHs          (const HFRecHitCollection& unfiltrh,
 			    std::vector<HFRecHit>& filtrh);
   TH1F *bookSpectrumHisto  (IetaDepth_t& id, uint32_t runnum);
@@ -92,7 +139,9 @@ private:
 
   // parameters
   bool                          verbose_;
-  std::set<int>                 s_runs_;
+  std::set<uint32_t>            s_runs_;
+  std::set<uint16_t>            s_validBxNums_;
+  std::vector<HcalDetId>        detIds2mask_;
   std::string                   outRootFileName_;
   std::string                   lutFileName_;
   int                           sampleWindowLeft_;
@@ -100,24 +149,26 @@ private:
   HistoParams_t                 digiSpectrumHp_;
   HistoParams_t                 ePerEventHp_;
   HistoParams_t                 rhTotalEnergyHp_;
+  HistoParams_t                 nWedgesHp_;
   uint32_t                      eventNumberMin_;
   uint32_t                      eventNumberMax_;
   double                        minGeVperRecHit_;
   double                        totalRHenergyThresh4Plotting_;
   uint32_t                      adcTrigThreshold_;
-
   TFileDirectory               *DigiSubDir_;
   TFileDirectory               *RHsubDir_;
 
   // histos
-  TH1F                         *bxhist_;
+  TH1S                         *bxhist_;
+  TH1S                         *lumisegh_;
   TH1F                         *h_totalE_;
-  TH1F                         *h_totEvsIeta_;
-  TH1F                         *h_totEvsIphi_;
+  TH1F                         *h_EvsIeta_;
+  TH1F                         *h_EvsIphi_;
   TH1F                         *h_inputLUT1_;
   TH1F                         *h_inputLUT2_;
   TH1F                         *h_PulseProfileMax_;
-
+  TH1F                         *h_nWedgesOverThreshGoodBx_;
+  TH1F                         *h_nWedgesOverThreshBadBx_;
   TH1F                         *h_CoEinPhiPlus_;
   TH1F                         *h_CoEinPhiMinus_;
   TH1F                         *h_CoEinEtaPlus_;
@@ -128,9 +179,7 @@ private:
   std::map<int,TH2F *>          m_hOccupancies1_;
   std::map<int,TH2F *>          m_hOccupancies2_;
 
-  std::map<int,std::vector<int> > m_LUT_;
-
-  HcalDetId                     detId2Mask_;
+  std::map<int,std::vector<uint32_t> > m_LUT_;
 };
 
 #endif // _HFTRIGANALALGOS_HH
