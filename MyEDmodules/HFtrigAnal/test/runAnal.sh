@@ -16,15 +16,15 @@ then
     exit
 fi
 
-ARG1=$1
-#OUTPUTFILE=$2
-OUTPUTFILE=run${1}-anal.root
-INCLUDEFILE=`printf "MyEDmodules.HFtrigAnal.run%dfiles_cfi" ${ARG1}`
-
 if [[ -e ./anal_setup.rc ]] 
 then
     source ./anal_setup.rc
 fi
+
+ARG1=$1
+#OUTPUTFILE=$2
+OUTPUTFILE=../results/run${1}-anal.root
+INCLUDEFILE=`printf "${FORMAT}" ${ARG1}`
 
 if (( ${#EVENTLIMIT} == 0 )) 
 then
@@ -62,7 +62,7 @@ EOF
 
 ### Mode-dependent part
 
-if [[ "$FILEMODE" == "LOCAL" ]]
+if [[ "${FILEMODE}" == "LOCAL" ]]
 then
 
 # ARG1 determines the file selection mode
@@ -78,7 +78,7 @@ fi
 
 echo $FILE
 
-if [[ "$SOURCE" == "HCAL" ]]
+if [[ "${SOURCE}" == "HCAL" ]]
 then
 cat >> ${CFGFILE}<<EOF
 process.source = cms.Source("HcalTBSource",
@@ -91,7 +91,7 @@ process.source = cms.Source("HcalTBSource",
     fileNames = cms.untracked.vstring('file:${FILE}')
 )
 EOF
-elif [[ "$SOURCE" == "POOL" ]]
+elif [[ "${SOURCE}" == "POOL" ]]
 then
 cat >> ${CFGFILE}<<EOF
 process.source = cms.Source("PoolSource",
@@ -100,14 +100,14 @@ process.source = cms.Source("PoolSource",
 EOF
 fi
 
-elif [[ "$FILEMODE" == "GLOBAL" ]] 
+elif [[ "${FILEMODE}" == "GLOBAL" ]] 
     then
 cat >> ${CFGFILE}<<EOF
 process.load("${INCLUDEFILE}")
 EOF
 fi
 
-if [[ "MODE" == "RAW" ]]
+if [[ "${MODE}" == "RAW" ]]
     then
 cat >> ${CFGFILE}<<EOF
 process.hcalConditions = cms.ESSource("PoolDBESSource",
@@ -155,7 +155,7 @@ elif [[ "$MODE" == "RECO" ]]
     then
 echo Assume reco products in input.
 else
-  echo Unknown mode '$MODE'
+  echo Unknown mode "${MODE}"
   exit
 fi    
 
@@ -176,6 +176,14 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
 
     adcTrigThreshold   = cms.int32(12),
 
+    detIds2Mask        = cms.vint32(-31,25,1,
+                                     35,67,1,
+                                     30,67,2,
+                                     32,67,2,
+                                     36,67,2),
+
+    validBxNumbers     = cms.vint32(2618,2619,2620,2621,2622,2623,2624),
+
     digiSpectrumNbins  = cms.untracked.int32(100),
     digiSpectrumMinADC = cms.untracked.double(-0.5),
     digiSpectrumMaxADC = cms.untracked.double(499.5),
@@ -189,7 +197,11 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
 
     rhTotalEnergyNbins  = cms.untracked.int32(110),
     rhTotalEnergyMinGeV = cms.untracked.double(0.0),
-    rhTotalEnergyMaxGeV = cms.untracked.double(11000.0)
+    rhTotalEnergyMaxGeV = cms.untracked.double(11000.0),
+
+    nWedgesPlotNbins  = cms.untracked.int32(21),
+    nWedgesPlotMin    = cms.untracked.double(-0.5),
+    nWedgesPlotMax    = cms.untracked.double(20.5)
 )
 EOF99
 

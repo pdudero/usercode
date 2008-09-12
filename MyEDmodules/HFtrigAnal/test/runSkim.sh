@@ -16,15 +16,16 @@ then
     exit
 fi
 
-ARG1=$1
-OUTPUTFILE=run${1}-hfttskim.root
-INCLUDEFILE=`printf "MyEDmodules.HFtrigAnal.run%dfiles_cfi" ${ARG1}`
-
-
 if [[ -e ./skim_setup.rc ]] 
 then
     source ./skim_setup.rc
 fi
+
+ARG1=$1
+OUTPUTFILE=../results/run${1}-hfttskim.root
+INCLUDEFILE=`printf "${FORMAT}" ${ARG1}`
+
+echo Including file $INCLUDEFILE
 
 if (( ${#EVENTLIMIT} == 0 )) 
 then
@@ -51,7 +52,7 @@ EOF
 
 ### Mode-dependent part
 
-if [[ "$MODE" == "GRAW" ]]
+if [[ "$MODE" == "RAW" ]]
     then
 cat >> ${CFGFILE}<<EOF
 process.load("L1TriggerConfig.L1GtConfigProducers.L1GtConfig_cff")
@@ -60,14 +61,16 @@ process.load("L1TriggerConfig.L1ScalesProducers.L1MuTriggerPtScaleConfig_cff")
 process.load("L1TriggerConfig.L1ScalesProducers.L1MuGMTScalesConfig_cff")
 process.load("L1TriggerConfig.GMTConfigProducers.L1MuGMTParametersConfig_cff")
 
-process.hltGtDigis = cms.EDProducer( "L1GlobalTriggerRawToDigi",
+process.gtDigis = cms.EDProducer( "L1GlobalTriggerRawToDigi",
      DaqGtInputTag = cms.InputTag( "source" ),
      DaqGtFedId = cms.untracked.int32( 813 ),
      ActiveBoardsMask = cms.uint32( 0x101 ),
      UnpackBxInEvent = cms.int32( 1 )
 )
 EOF
-
+elif [[ "$MODE" == "RECO" ]]
+    then
+echo Assume reco products in input.
 else
   echo Unknown mode '$MODE'
   exit
@@ -79,7 +82,7 @@ cat >> ${CFGFILE}<<EOF99
 process.load("${INCLUDEFILE}")
 
 process.trigFilt = cms.EDFilter("HcalTechTriggerFilt",
-    gtDigiLabel     = cms.untracked.InputTag("hltGtDigis"),
+    gtDigiLabel     = cms.untracked.InputTag("gtDigis"),
     techTriggerBits = cms.vint32(9)
 )
 
@@ -92,15 +95,16 @@ process.out = cms.OutputModule("PoolOutputModule",
 
 EOF99
 
-if [[ "$MODE" == "GRECO" ]] 
+if [[ "$MODE" == "RECO" ]] 
 then
 cat >> ${CFGFILE}<<EOF999
 process.p = cms.Path(process.trigFilt)
+process.o = cms.EndPath(process.out)
 EOF999
-elif [[ "$MODE" == "GRAW" ]] 
+elif [[ "$MODE" == "RAW" ]] 
 then
 cat >> ${CFGFILE}<<EOF999
-process.p = cms.Path(process.hltGtDigis*process.trigFilt)
+process.p = cms.Path(process.gtDigis*process.trigFilt)
 process.o = cms.EndPath(process.out)
 EOF999
 fi
