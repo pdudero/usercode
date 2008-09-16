@@ -81,6 +81,10 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   nWedgesHp_.min        = iConfig.getUntrackedParameter<double>("nWedgesPlotMin");
   nWedgesHp_.max        = iConfig.getUntrackedParameter<double>("nWedgesPlotMax");
 
+  lumiSegHp_.nbins      = iConfig.getUntrackedParameter<int>   ("lumiSegPlotNbins");
+  lumiSegHp_.min        = iConfig.getUntrackedParameter<double>("lumiSegPlotMin");
+  lumiSegHp_.max        = iConfig.getUntrackedParameter<double>("lumiSegPlotMax");
+
   if (!convertIdNumbers(v_maskidnumbers, detIds2mask_))
     throw cms::Exception("Invalid detID vector");
 
@@ -228,11 +232,21 @@ HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
 
   sprintf(name,"run%dbxnumh",runnum);
   sprintf(title,"Run #%d Bunch #s", runnum);
-  bxhist_ = fs->make<TH1S>(name,title, 3601, -0.5, 3600.5);
+  h_bx_ = fs->make<TH1S>(name,title, 3601, -0.5, 3600.5);
 
   sprintf(name,"run%dlumisegh",runnum);
   sprintf(title,"Run #%d Lumi Segment #s", runnum);
-  lumisegh_ = fs->make<TH1S>(name,title, 100, -0.5, 99.5);
+  h_lumiseg_ = fs->make<TH1S>(name,title, 
+			      lumiSegHp_.nbins,
+			      lumiSegHp_.min,
+			      lumiSegHp_.max);
+
+  sprintf(name,"run%dlumisegGoodBxh",runnum);
+  sprintf(title,"Run #%d Lumi Segment #s, Good BX only", runnum);
+  h_lumisegGoodBx_ = fs->make<TH1S>(name,title, 
+				    lumiSegHp_.nbins,
+				    lumiSegHp_.min,
+				    lumiSegHp_.max);
 
 #if 0
   h_inputLUT1_ = new TH1F("inputLUTd1h", "input LUT depth 1",
@@ -260,25 +274,69 @@ HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
 
   sprintf(name,"run%dtotalEh",runnum);
   sprintf(title,"Total HF RecHit Energy, Run #%d;GeV", runnum);
-  h_totalE_ = RHsubDir_->make<TH1F>(name, title, 46,logEbins);
-#if 0
-				    rhTotalEnergyHp_.nbins,
-				    rhTotalEnergyHp_.min,
-				    rhTotalEnergyHp_.max);
-#endif
+  h_totalE_ = RHsubDir_->make<TH1F>(name, title, NUMEBINS,logEbins);
 
   sprintf(name,"run%dEperEtah",runnum);
   sprintf(title,"HF RecHit Energy vs Eta, Run #%d;ieta", runnum);
   h_EvsIeta_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
 
+  sprintf(name,"run%dEperEtaLT3h; ieta; GeV",runnum);
+  sprintf(title,"HF Tower Energy vs. Eta for <3 Towers with E>20GeV, Run #%d;ieta", runnum);
+  h_EvsIeta_nTlt3_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+
+  sprintf(name,"run%dEperEtahLT5h; ieta; GeV",runnum);
+  sprintf(title,"HF Tower Energy vs. Eta for <5 Towers with E>20GeV, Run #%d;ieta", runnum);
+  h_EvsIeta_nTlt5_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+
+  sprintf(name,"run%dEperEtahGE5h; ieta; GeV",runnum);
+  sprintf(title,"HF Tower Energy vs. Eta for >=5 Towers with E>20GeV, Run #%d;ieta", runnum);
+  h_EvsIeta_nTge5_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+
+  sprintf(name,"run%dEperEtaNonPMTh; ieta; GeV",runnum);
+  sprintf(title,"HF RecHit Energy vs Eta for 'non-PMT' Events, , Run #%d;ieta", runnum);
+  h_EvsIetaNonPMT_ = RHsubDir_->make<TH1F>(name, title, 27,-13.5,13.5);
+
   // ...but renumber the ticks so there's no confusion.
   for (int ibin=1; ibin<=13; ibin++) {
     ostringstream binlabel;
-    binlabel<<(ibin-42); h_EvsIeta_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str()); binlabel.str("");
-    binlabel<<(ibin+28); h_EvsIeta_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+    binlabel<<(ibin-42);
+    h_EvsIeta_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str());
+    h_EvsIeta_nTlt3_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str());
+    h_EvsIeta_nTlt5_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str());
+    h_EvsIeta_nTge5_->GetXaxis()->SetBinLabel(ibin,binlabel.str().c_str());
+    binlabel.str("");
+    binlabel<<(ibin+28);
+    h_EvsIeta_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+    h_EvsIeta_nTlt3_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+    h_EvsIeta_nTlt5_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
+    h_EvsIeta_nTge5_->GetXaxis()->SetBinLabel(ibin+14,binlabel.str().c_str());
   }
 
-  sprintf(name,"run%dEperPhih",runnum);
+  sprintf(name,"run%dnLongVsShortLT3h; Short GeV; Long GeV",runnum);
+  sprintf(title,"Long vs. Short Energy for <3 Towers with E>20GeV, Run #%d", runnum);
+  h_LongVsShortE_nTlt3_ = RHsubDir_->make<TH2F>(name, title, 
+						50,0.0,500.0,
+						50,0.0,500.0);
+
+  sprintf(name,"run%dnLongVsShortLT5h; Short GeV; Long GeV",runnum);
+  sprintf(title,"Long vs. Short Energy for <5 Towers with E>20GeV, Run #%d", runnum);
+  h_LongVsShortE_nTlt5_ = RHsubDir_->make<TH2F>(name, title,
+						50,0.0,500.0,
+						50,0.0,500.0);
+
+  sprintf(name,"run%dnLongVsShortGE5h; Short GeV; Long GeV",runnum);
+  sprintf(title,"Long vs. Short Energy for >=5 Towers with E>20GeV, Run #%d", runnum);
+  h_LongVsShortE_nTge5_ = RHsubDir_->make<TH2F>(name, title,
+						50,0.0,500.0,
+						50,0.0,500.0);
+
+  sprintf(name,"run%dnLongVsShorth; Short GeV; Long GeV",runnum);
+  sprintf(title,"Long vs. Short Energy for Towers with E>20GeV, Run #%d", runnum);
+  h_LongVsShortE_ = RHsubDir_->make<TH2F>(name, title,
+					  50,0.0,500.0,
+					  50,0.0,500.0);
+
+  sprintf(name,"run%dEperPhih; iphi; GeV",runnum);
   sprintf(title,"HF RecHit Energy vs Phi, Run #%d;iphi", runnum);
   h_EvsIphi_ = RHsubDir_->make<TH1F>(name,title, 72,-0.5,71.5);
 
@@ -299,6 +357,28 @@ HFtrigAnalAlgos::bookPerRunHistos(uint32_t runnum)
 					      nWedgesHp_.nbins,
 					      nWedgesHp_.min,
 					      nWedgesHp_.max);
+
+  sprintf(name,"run%dnPlusMinusTriggerGoodBx",runnum);
+  sprintf(title,"Two HF Wedges Coincidence Classification, Run #%d", runnum);
+  h_PlusMinusTrigger_ = fs->make<TH1F>(name, title, 5, -2.5,2.5);
+  h_PlusMinusTrigger_->GetXaxis()->SetBinLabel(2,"Minus-Minus");
+  h_PlusMinusTrigger_->GetXaxis()->SetBinLabel(3,"Minus-Plus");
+  h_PlusMinusTrigger_->GetXaxis()->SetBinLabel(4,"Plus-Plus");
+
+  sprintf(name,"run%dnTowersOverThreshGoodBx",runnum);
+  sprintf(title,"HF #Towers Over Threshold, Run #%d", runnum);
+  h_nTowersOverThresh_  = fs->make<TH1F>(name,title,
+					 nWedgesHp_.nbins,
+					 nWedgesHp_.min,
+					 nWedgesHp_.max);
+
+  sprintf(name,"run%dnPlusMinusTriggerBadBx",runnum);
+  sprintf(title,"Two HF Wedges Coincidence Classification, Bad BX#, Run #%d", runnum);
+  h_PlusMinusTriggerBadBx_ = fs->make<TH1F>(name, title, 5, -2.5,2.5);
+  h_PlusMinusTriggerBadBx_->GetXaxis()->SetBinLabel(2,"Minus-Minus");
+  h_PlusMinusTriggerBadBx_->GetXaxis()->SetBinLabel(3,"Minus-Plus");
+  h_PlusMinusTriggerBadBx_->GetXaxis()->SetBinLabel(4,"Plus-Plus");
+
 
 }                                   // HFtrigAnalAlgos::bookPerRunHistos
 
@@ -426,6 +506,9 @@ HFtrigAnalAlgos::book2dEnergyHisto(uint32_t evtnum, uint32_t runnum)
 void
 HFtrigAnalAlgos::endJob()
 {
+  for (int i=1; i<=h_totalE_->GetNbinsX(); i++) {
+    h_totalE_->SetBinContent(i, h_totalE_->GetBinContent(i)/h_totalE_->GetBinWidth(i));
+  }
 }
 
 //======================================================================
@@ -545,15 +628,30 @@ void HFtrigAnalAlgos::dumpWedges(std::vector<triggerWedge_t>& wedges)
 void HFtrigAnalAlgos::fillNwedges(std::vector<triggerWedge_t>& sortedWedges,
 				  uint16_t bxnum)
 {
-  int nwedgesOverThresh = 0;
+  int nWedgesOverThresh = 0;
+  int nWedgesOverThreshPlus = 0;
+  int nWedgesOverThreshMinus = 0;
   for (uint32_t i = 0; i<sortedWedges.size(); i++) {
     if (sortedWedges[i].maxadc < adcTrigThreshold_) break;
-    nwedgesOverThresh++;
+    nWedgesOverThresh++;
+    if (sortedWedges[i].wid.id() < 0) nWedgesOverThreshMinus++;
+    else                              nWedgesOverThreshPlus++;
   }
-  if (s_validBxNums_.find(bxnum) == s_validBxNums_.end())
-    h_nWedgesOverThreshBadBx_->Fill(nwedgesOverThresh);
-  else
-    h_nWedgesOverThreshGoodBx_->Fill(nwedgesOverThresh);
+  if (s_validBxNums_.find(bxnum) == s_validBxNums_.end()) {
+    h_nWedgesOverThreshBadBx_->Fill(nWedgesOverThresh);
+
+    if (nWedgesOverThreshPlus  > 1)  h_PlusMinusTriggerBadBx_->Fill(1);
+    if (nWedgesOverThreshMinus > 1)  h_PlusMinusTriggerBadBx_->Fill(-1);
+    if (nWedgesOverThreshPlus &&
+	nWedgesOverThreshMinus   )   h_PlusMinusTriggerBadBx_->Fill(0);
+  } else {
+    h_nWedgesOverThreshGoodBx_->Fill(nWedgesOverThresh);
+
+    if (nWedgesOverThreshPlus  > 1)  h_PlusMinusTrigger_->Fill(1);
+    if (nWedgesOverThreshMinus > 1)  h_PlusMinusTrigger_->Fill(-1);
+    if (nWedgesOverThreshPlus &&
+	nWedgesOverThreshMinus   )   h_PlusMinusTrigger_->Fill(0);
+  }
 
 }                                       //  HFtrigAnalAlgos::fillNwedges
 
@@ -634,13 +732,6 @@ void HFtrigAnalAlgos::fillPulseProfile(const HFDataFrame& maxframe)
 
 //======================================================================
 
-void HFtrigAnalAlgos::fillBxNum(uint16_t bxnum)
-{
-  bxhist_->Fill(bxnum);
-}
-
-//======================================================================
-
 void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
 				   uint32_t evtnum,
 				   uint32_t runnum)
@@ -676,6 +767,8 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
   h1p->Fill(evtnum,totalE);
   h_totalE_->Fill(totalE);
 
+  map<int,TowerEnergies_t> m_TowerEnergies;
+
   for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
     const HFRecHit& rh  = hfrechits[ihit];
     const HcalDetId& id = rh.id();
@@ -697,6 +790,23 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
 	sumEtimesEtaMn += rhenergy * ieta;
 	totalEminus    += rhenergy;
       }
+    }
+
+    // add up tower energies
+    IetaIphi_t ieip(id.ieta(),id.iphi());
+    map<int,TowerEnergies_t>::iterator it = m_TowerEnergies.find(ieip.toCode());
+    TowerEnergies_t tower;
+
+    if (it == m_TowerEnergies.end()) {
+      tower.totalE = rhenergy;
+      if      (id.depth() == 1) tower.longE  = rhenergy;
+      else if (id.depth() == 2) tower.shortE = rhenergy;
+      m_TowerEnergies[ieip.toCode()] = tower;
+    }
+    else {
+      it->second.totalE += rhenergy;
+      if      (id.depth() == 1) it->second.longE  += rhenergy;
+      else if (id.depth() == 2) it->second.shortE += rhenergy;
     }
   }
 
@@ -728,6 +838,37 @@ void HFtrigAnalAlgos::fillRhHistos(const std::vector<HFRecHit>& hfrechits,
 	h2p->Fill(ieta2fill,(detId.iphi()+detId.depth()-1),rh.energy());
     }
   }
+
+  // Tower Energy plots, count up # towers over threshold
+  map<int,TowerEnergies_t>::const_iterator it;
+  int ntowers = 0;
+  for (it  = m_TowerEnergies.begin();
+       it != m_TowerEnergies.end(); it++) {
+    if (it->second.totalE > 20.0) ntowers++;
+  }
+
+  h_nTowersOverThresh_->Fill(ntowers);
+
+  for (it  = m_TowerEnergies.begin();
+       it != m_TowerEnergies.end(); it++) {
+    IetaIphi_t ieip(it->first);
+    int ie2f = 0;
+    if      (ieip.ieta() >=  29 ) ie2f = ieip.ieta()-28;
+    else if (ieip.ieta() <= -29 ) ie2f = ieip.ieta()+28;
+
+    TowerEnergies_t t = it->second;
+    if (it->second.totalE > 20.0) {
+      if      (ntowers < 3) {h_EvsIeta_nTlt3_->Fill(ie2f,t.totalE);h_LongVsShortE_nTlt3_->Fill(t.shortE,t.longE);}
+      else if (ntowers < 5) {h_EvsIeta_nTlt5_->Fill(ie2f,t.totalE);h_LongVsShortE_nTlt5_->Fill(t.shortE,t.longE);}
+      else                  {h_EvsIeta_nTge5_->Fill(ie2f,t.totalE);h_LongVsShortE_nTge5_->Fill(t.shortE,t.longE);}
+      h_LongVsShortE_->Fill(t.shortE,t.longE);
+
+      if ((t.shortE > 10.0) && (t.longE> 10.0)) {
+	h_EvsIetaNonPMT_->Fill(ie2f,t.totalE);
+      }
+    }
+  }
+
 }                                       // HFtrigAnalAlgos::fillRhHistos
 
 //======================================================================
@@ -751,7 +892,7 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
   std::vector<triggerWedge_t> sortedWedges;
 
   findMaxWedges(hfdigis, sortedWedges);
-  dumpWedges(sortedWedges);
+  //dumpWedges(sortedWedges);
 
   maxadc = sortedWedges[0].maxadc;
 
@@ -763,7 +904,11 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 
   if (maxadc < 5) return;
 
-  lumisegh_->Fill(lsnum);
+  h_bx_->Fill(bxnum);
+  h_lumiseg_->Fill(lsnum);
+
+  if (s_validBxNums_.find(bxnum) != s_validBxNums_.end())
+    h_lumisegGoodBx_->Fill(lsnum);
 
   fillNwedges(sortedWedges,bxnum);
 
@@ -773,8 +918,8 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
 
   std::vector<HFRecHit> filtrh;
   filterRHs(hfrechits, filtrh);
-  fillRhHistos(filtrh,evtnum,runnum);
-  fillBxNum(bxnum);
+  if (s_validBxNums_.find(bxnum) != s_validBxNums_.end())
+    fillRhHistos(filtrh,evtnum,runnum);
 }                                            // HFtrigAnalAlgos::analyze
 
 //======================================================================

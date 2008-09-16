@@ -74,7 +74,7 @@ private:
   public:
     inline int sign(int x) const { return ((x<0) ? -1 : 1); }
     IetaDepth_t (int inieta, int indepth) : ieta_(inieta), depth_(indepth) {}
-    IetaDepth_t (uint code) { ieta_ = code/10; depth_ = abs(code)%10; }
+    IetaDepth_t (int code) { ieta_ = code/10; depth_ = abs(code)%10; }
     int toCode (void) const { return (ieta_*10)+(sign(ieta_)*depth_); }
     int ieta   (void) const { return ieta_; }
     int depth  (void) const { return depth_; }
@@ -86,6 +86,31 @@ private:
   private:
     int ieta_;
     int depth_;
+  };
+
+  class IetaIphi_t {
+  public:
+    inline int sign(int x) const { return ((x<0) ? -1 : 1); }
+    IetaIphi_t (int inieta, int iniphi) : ieta_(inieta), iphi_(iniphi) {}
+    IetaIphi_t (int code) { ieta_ = code/100; iphi_ = abs(code)%100; }
+    int toCode (void) const { return (ieta_*100)+(sign(ieta_)*iphi_); }
+    int ieta   (void) const { return ieta_; }
+    int iphi  (void) const { return iphi_; }
+    bool operator<(const IetaIphi_t& right) const {
+      if (ieta_ < right.ieta_) return true;
+      else if (iphi_ < right.iphi_) return true;
+      return false;
+    }
+  private:
+    int ieta_;
+    int iphi_;
+  };
+
+  struct TowerEnergies_t {
+    TowerEnergies_t () : totalE(0.0), longE(0.0), shortE(0.0) {}
+    double totalE;
+    double longE;
+    double shortE;
   };
 
   struct HistoParams_t {
@@ -117,7 +142,6 @@ private:
 			  uint32_t runnum);
   void fillPulseProfile  (const HFDataFrame& maxframe);
 
-  void fillBxNum         (boost::uint16_t bxnum);
   void fillRhHistos      (const std::vector<HFRecHit>& hfrechits,
 			  uint32_t evtnum,
 			  uint32_t runnum);
@@ -150,6 +174,7 @@ private:
   HistoParams_t                 ePerEventHp_;
   HistoParams_t                 rhTotalEnergyHp_;
   HistoParams_t                 nWedgesHp_;
+  HistoParams_t                 lumiSegHp_;
   uint32_t                      eventNumberMin_;
   uint32_t                      eventNumberMax_;
   double                        minGeVperRecHit_;
@@ -159,16 +184,28 @@ private:
   TFileDirectory               *RHsubDir_;
 
   // histos
-  TH1S                         *bxhist_;
-  TH1S                         *lumisegh_;
+  TH1S                         *h_bx_;
+  TH1S                         *h_lumiseg_;
+  TH1S                         *h_lumisegGoodBx_;
   TH1F                         *h_totalE_;
   TH1F                         *h_EvsIeta_;
+  TH1F                         *h_EvsIeta_nTlt3_;
+  TH1F                         *h_EvsIeta_nTlt5_;
+  TH1F                         *h_EvsIeta_nTge5_;
+  TH1F                         *h_EvsIetaNonPMT_;
+  TH2F                         *h_LongVsShortE_nTlt3_;
+  TH2F                         *h_LongVsShortE_nTlt5_;
+  TH2F                         *h_LongVsShortE_nTge5_;
+  TH2F                         *h_LongVsShortE_;
   TH1F                         *h_EvsIphi_;
   TH1F                         *h_inputLUT1_;
   TH1F                         *h_inputLUT2_;
   TH1F                         *h_PulseProfileMax_;
   TH1F                         *h_nWedgesOverThreshGoodBx_;
   TH1F                         *h_nWedgesOverThreshBadBx_;
+  TH1F                         *h_nTowersOverThresh_;
+  TH1F                         *h_PlusMinusTrigger_;
+  TH1F                         *h_PlusMinusTriggerBadBx_;
   TH1F                         *h_CoEinPhiPlus_;
   TH1F                         *h_CoEinPhiMinus_;
   TH1F                         *h_CoEinEtaPlus_;
