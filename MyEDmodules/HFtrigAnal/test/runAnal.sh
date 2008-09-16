@@ -182,7 +182,8 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
                                      32,67,2,
                                      36,67,2),
 
-    validBxNumbers     = cms.vint32(2618,2619,2620,2621,2622,2623,2624),
+    #validBxNumbers     = cms.vint32(2618,2619,2620,2621,2622,2623,2624),
+    validBxNumbers     = cms.vint32(900,901,904),
 
     digiSpectrumNbins  = cms.untracked.int32(100),
     digiSpectrumMinADC = cms.untracked.double(-0.5),
@@ -201,7 +202,11 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
 
     nWedgesPlotNbins  = cms.untracked.int32(21),
     nWedgesPlotMin    = cms.untracked.double(-0.5),
-    nWedgesPlotMax    = cms.untracked.double(20.5)
+    nWedgesPlotMax    = cms.untracked.double(20.5),
+
+    lumiSegPlotNbins  = cms.untracked.int32(160),
+    lumiSegPlotMin    = cms.untracked.double(-0.5),
+    lumiSegPlotMax    = cms.untracked.double(159.5)
 )
 EOF99
 

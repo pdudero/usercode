@@ -8,5 +8,9 @@ EVENTLIMIT=-1
 #
 MODE=RAW
 
-FORMAT="MyEDmodules.HFtrigAnal.run%dfiles_cfi"
-#FORMAT="MyEDmodules.HFtrigAnal.run%donefile_cfi"
+PREFIX="MyEDmodules.HFtrigAnal."
+SUFFIX="_files_cfi"
+#
+#FORMAT="run%d"
+FORMAT="run%d_ls%03d-%03d"
+#FORMAT="run%donefile_cfi"

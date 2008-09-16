@@ -331,10 +331,13 @@ void plotIntegratedWedges(vector<HistInfo_t>& v_histinfo,
   gPad->SetLeftMargin(0.1);
   gPad->SetFillColor(10);
 
-  TLegend *leg = new TLegend(0.4,0.7,0.95,0.9, "Tech Trig 9, Lumi Segments 44-48");
+  char name[80];
+  sprintf(name,", Run #%d",runnum);
+  titlestr += string(name);
+
+  TLegend *leg = new TLegend(0.4,0.7,0.95,0.9, "Tech Trig 9, Lumi Segments 58-149");
 
   for (uint32_t i=0; i<v_histinfo.size(); i++) {
-    char name[80];
     TH1F  *hp     = (TH1F *)v_histinfo[i].p;
     int    nbinsx = hp->GetNbinsX();
     double minx   = hp->GetXaxis()->GetXmin();
@@ -380,6 +383,66 @@ void plotIntegratedWedges(vector<HistInfo_t>& v_histinfo,
 
 //======================================================================
 
+void  plotLumi(vector<HistInfo_t>& v_histinfo,
+	       string titlestr,
+	       int runnum,
+	       bool saveplots)
+{
+  cout <<"plotLumi, plotting ";
+  cout << v_histinfo.size() << " histos" << endl;
+  if (!v_histinfo.size()) {
+    return;
+  }
+
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat(0);
+  //gStyle->SetTitleW(0.95);
+
+  TCanvas *c1 = new TCanvas("LumiSections","LumiSections", 800,600);
+  //c1->SetLogy();
+  gPad->SetRightMargin(0.05);
+  gPad->SetLeftMargin(0.1);
+  gPad->SetFillColor(10);
+
+  char name[80];
+  sprintf(name,", Run #%d",runnum);
+  titlestr += string(name);
+
+  TLegend *leg = new TLegend(0.2,0.7,0.5,0.9); //, "Tech Trig 9, Lumi Segments 58-149");
+
+  for (uint32_t i=0; i<v_histinfo.size(); i++) {
+    TH1F  *hp     = (TH1F *)v_histinfo[i].p;
+
+    hp->SetLineColor((i+1));
+    hp->SetLineWidth(2);
+
+    if (!i) {
+      hp->SetXTitle("Lumi Section");
+      hp->GetXaxis()->CenterTitle();
+      hp->GetYaxis()->CenterTitle();
+      hp->GetYaxis()->SetTitleOffset(1.2);
+      hp->GetXaxis()->SetLabelSize(0.03);
+      hp->GetYaxis()->SetLabelSize(0.03);
+
+      hp->Draw();
+    }
+    else
+      hp->Draw("SAME");
+
+    leg->AddEntry(hp,v_histinfo[i].descr.c_str(),"L");
+  }
+
+  leg->Draw();
+  //leg->SetTextSize(20);
+
+  if (saveplots) {
+    string plotstr("lumisections.png");
+    c1->SaveAs(plotstr.c_str());
+  }
+}
+
+//======================================================================
+
 void plotHFtrigs(const char* rootfile,
 		 int runnum,
 		 bool saveplots=false)
@@ -417,9 +480,19 @@ void plotHFtrigs(const char* rootfile,
 #endif
   v_hi.clear();
   v_hi.resize(2);
-  getOneHisto(file,v_hi[0],"run62096nWedgesOverThreshGoodBx");
-  getOneHisto(file,v_hi[1],"run62096nWedgesOverThreshBadBx");
-  v_hi[0].descr = string("In Bx Window 2618-2624");
+  getOneHisto(file,v_hi[0],"run%dnWedgesOverThreshGoodBx",runnum);
+  getOneHisto(file,v_hi[1],"run%dnWedgesOverThreshBadBx",runnum);
+  v_hi[0].descr = string("In Bx Window 900,901,904");
   v_hi[1].descr = string("Outside Bx Window");
-  plotIntegratedWedges(v_hi, "Trigger Efficiency vs. Coincidence Multiplicity, Run #62096", runnum, saveplots);
+  plotIntegratedWedges(v_hi, "Trigger Efficiency vs. Coincidence Multiplicity", runnum, saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dlumisegh",runnum);
+  getOneHisto(file,v_hi[1],"run%dlumisegGoodBxh",runnum);
+  v_hi[0].descr = string("All");
+  v_hi[1].descr = string("In Bx Window");
+  plotLumi(v_hi, "#Events per Lumi Section", runnum, saveplots);
+
+  //getOneHisto(file,
 }

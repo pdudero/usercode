@@ -22,10 +22,12 @@ then
 fi
 
 ARG1=$1
-OUTPUTFILE=../results/run${1}-hfttskim.root
-INCLUDEFILE=`printf "${FORMAT}" ${ARG1}`
+RUNSPEC=`printf "${FORMAT}" $*`
+INCLUDEFILE="${PREFIX}${RUNSPEC}${SUFFIX}"
+OUTPUTFILE=../results/${RUNSPEC}-hfttskim.root
 
 echo Including file $INCLUDEFILE
+echo Writing file $OUTPUTFILE
 
 if (( ${#EVENTLIMIT} == 0 )) 
 then
