@@ -10,7 +10,8 @@
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "MyEDmodules/HFtrigAnal/src/linearizerLUT.hh"
+#include "MyEDmodules/HFtrigAnal/src/HFtrigAnalHistos.hh"
 
 #include "TH1F.h"
 #include "TH1S.h"
@@ -70,24 +71,6 @@ private:
 
   // ---------- internal types ---------------------------
 
-  class IetaDepth_t {
-  public:
-    inline int sign(int x) const { return ((x<0) ? -1 : 1); }
-    IetaDepth_t (int inieta, int indepth) : ieta_(inieta), depth_(indepth) {}
-    IetaDepth_t (int code) { ieta_ = code/10; depth_ = abs(code)%10; }
-    int toCode (void) const { return (ieta_*10)+(sign(ieta_)*depth_); }
-    int ieta   (void) const { return ieta_; }
-    int depth  (void) const { return depth_; }
-    bool operator<(const IetaDepth_t& right) const {
-      if (depth_ < right.depth_) return true;
-      else if (ieta_ < right.ieta_) return true;
-      return false;
-    }
-  private:
-    int ieta_;
-    int depth_;
-  };
-
   class IetaIphi_t {
   public:
     inline int sign(int x) const { return ((x<0) ? -1 : 1); }
@@ -107,19 +90,16 @@ private:
   };
 
   struct TowerEnergies_t {
-    TowerEnergies_t () : totalE(0.0), longE(0.0), shortE(0.0) {}
+    TowerEnergies_t () : ieip(0,0), totalE(0.0), longE(0.0), shortE(0.0) {}
+    IetaIphi_t ieip;
     double totalE;
     double longE;
     double shortE;
   };
 
-  struct HistoParams_t {
-    int nbins;
-    double min;
-    double max;
-  };
-
   // ---------- internal methods ---------------------------
+
+  inline bool isGoodBx   (uint16_t bxnum);
 
   bool convertIdNumbers  (std::vector<int>& v_maskidnumbers,
 			  std::vector<HcalDetId>& detIds2mask);
@@ -133,31 +113,35 @@ private:
 
   void dumpWedges        (std::vector<triggerWedge_t>& wedges);
 
-  void fillNwedges       (std::vector<triggerWedge_t>& sortedWedges,
+  void countNwedgesOver  (uint32_t threshold,
+			  std::vector<triggerWedge_t>& sortedWedges,
+			  int& nWtotal,
+			  int& nWplus,
+			  int& nWminus);
+
+  void doNwedges         (std::vector<triggerWedge_t>& sortedWedges,
 			  uint16_t bxnum);
 
-  void fillDigiSpectra   (const triggerWedge_t& maxwedge,
+  void doDigiSpectra     (const triggerWedge_t& maxwedge,
 			  uint32_t runnum);
-  void fillOccupancy     (const std::vector<triggerWedge_t>& sortedWedges,
+  void doOccupancy       (const std::vector<triggerWedge_t>& sortedWedges,
 			  uint32_t runnum);
-  void fillPulseProfile  (const HFDataFrame& maxframe);
+  void doPulseProfile    (const HFDataFrame& maxframe);
 
-  void fillRhHistos      (const std::vector<HFRecHit>& hfrechits,
+  void sumEnergies       (const std::vector<HFRecHit>& hfrechits,
+			  std::map<int,TowerEnergies_t>& m_TowerEnergies,
+			  float& totalE,
+			  float& coEinPhiMinus,
+			  float& coEinEtaMinus,
+			  float& coEinPhiPlus,
+			  float& coEinEtaPlus);
+
+  void doRhHistos        (const std::vector<HFRecHit>& hfrechits,
 			  uint32_t evtnum,
 			  uint32_t runnum);
 
-  bool readLUTfromTextFile(void);
-  void insertLUTelement(int ieta,int depth, uint32_t lutval);
-  void dumpLUT(void);
-  uint32_t lookupLinearizerLUTval(IetaDepth_t& id, int rawadc);
-
-  void  filterRHs          (const HFRecHitCollection& unfiltrh,
-			    std::vector<HFRecHit>& filtrh);
-  TH1F *bookSpectrumHisto  (IetaDepth_t& id, uint32_t runnum);
-  void  bookPerRunHistos   (uint32_t runnum);
-  TH2F *bookOccHisto       (int depth, uint32_t runnum, bool ismaxval=true);
-  TH1F *bookEperEventHisto (uint32_t nkevents, uint32_t runnum);
-  TH2F *book2dEnergyHisto  (uint32_t evtnum, uint32_t runnum);
+  void filterRHs         (const HFRecHitCollection& unfiltrh,
+			  std::vector<HFRecHit>& filtrh);
 
   // ----------member data ---------------------------
 
@@ -166,57 +150,17 @@ private:
   std::set<uint32_t>            s_runs_;
   std::set<uint16_t>            s_validBxNums_;
   std::vector<HcalDetId>        detIds2mask_;
-  std::string                   outRootFileName_;
-  std::string                   lutFileName_;
   int                           sampleWindowLeft_;
   int                           sampleWindowRight_;
-  HistoParams_t                 digiSpectrumHp_;
-  HistoParams_t                 ePerEventHp_;
-  HistoParams_t                 rhTotalEnergyHp_;
-  HistoParams_t                 nWedgesHp_;
-  HistoParams_t                 lumiSegHp_;
   uint32_t                      eventNumberMin_;
   uint32_t                      eventNumberMax_;
   double                        minGeVperRecHit_;
   double                        totalRHenergyThresh4Plotting_;
   uint32_t                      adcTrigThreshold_;
-  TFileDirectory               *DigiSubDir_;
-  TFileDirectory               *RHsubDir_;
 
-  // histos
-  TH1S                         *h_bx_;
-  TH1S                         *h_lumiseg_;
-  TH1S                         *h_lumisegGoodBx_;
-  TH1F                         *h_totalE_;
-  TH1F                         *h_EvsIeta_;
-  TH1F                         *h_EvsIeta_nTlt3_;
-  TH1F                         *h_EvsIeta_nTlt5_;
-  TH1F                         *h_EvsIeta_nTge5_;
-  TH1F                         *h_EvsIetaNonPMT_;
-  TH2F                         *h_LongVsShortE_nTlt3_;
-  TH2F                         *h_LongVsShortE_nTlt5_;
-  TH2F                         *h_LongVsShortE_nTge5_;
-  TH2F                         *h_LongVsShortE_;
-  TH1F                         *h_EvsIphi_;
-  TH1F                         *h_inputLUT1_;
-  TH1F                         *h_inputLUT2_;
-  TH1F                         *h_PulseProfileMax_;
-  TH1F                         *h_nWedgesOverThreshGoodBx_;
-  TH1F                         *h_nWedgesOverThreshBadBx_;
-  TH1F                         *h_nTowersOverThresh_;
-  TH1F                         *h_PlusMinusTrigger_;
-  TH1F                         *h_PlusMinusTriggerBadBx_;
-  TH1F                         *h_CoEinPhiPlus_;
-  TH1F                         *h_CoEinPhiMinus_;
-  TH1F                         *h_CoEinEtaPlus_;
-  TH1F                         *h_CoEinEtaMinus_;
-
-  std::vector<TH1F *>           v_ePerEventHistos_;
-  std::map<int,TH1F *>          m_hSpectra_;
-  std::map<int,TH2F *>          m_hOccupancies1_;
-  std::map<int,TH2F *>          m_hOccupancies2_;
-
-  std::map<int,std::vector<uint32_t> > m_LUT_;
+  HFtrigAnalHistos             *histos_;
+  linearizerLUT                *lut_;
+  int                           nTotalNonPMTevents_;
 };
 
 #endif // _HFTRIGANALALGOS_HH
