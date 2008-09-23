@@ -106,7 +106,7 @@ bool HFtrigAnalAlgos::convertIdNumbers(std::vector<int>& v_maskidnumbers,
 				       std::vector<HcalDetId>& detIds2mask)
 {
   // convert det ID numbers to valid detIds:
-  if (v_maskidnumbers.empty() || (v_maskidnumbers.size()%3)) {
+  if (v_maskidnumbers.size()%3) {
     return false;
   }
   for (uint32_t i=0; i<v_maskidnumbers.size(); i+=3) {
@@ -272,7 +272,7 @@ void HFtrigAnalAlgos::doNwedges(std::vector<triggerWedge_t>& sortedWedges,
     else if (!nWedgesOverThresh)
       break;
   }
-}                                       //  HFtrigAnalAlgos::fillNwedges
+}                                         //  HFtrigAnalAlgos::doNwedges
 
 //======================================================================
 
@@ -283,7 +283,7 @@ void HFtrigAnalAlgos::doDigiSpectra(const triggerWedge_t& maxwedge,
   histos_->fillDigiSpectra(detId.ieta(),detId.depth(),
 			   maxwedge.maxadc,runnum);
 
-}                                   // HFtrigAnalAlgos::doDigiSpectra
+}                                      // HFtrigAnalAlgos::doDigiSpectra
 
 //======================================================================
 
@@ -298,7 +298,7 @@ void HFtrigAnalAlgos::doOccupancy(const vector<triggerWedge_t>& sortedWedges,
 
   histos_->fillOccupancyHistos(idA, idB, runnum);
 
-}                                     //  HFtrigAnalAlgos::doOccupancy
+}                                       //  HFtrigAnalAlgos::doOccupancy
 
 //======================================================================
 
@@ -310,7 +310,7 @@ void HFtrigAnalAlgos::doPulseProfile(const HFDataFrame& maxframe)
 
   histos_->fillPulseProfileHisto(v_samples);
 
-}                                   // HFtrigAnalAlgos::doPulseProfile
+}                                     // HFtrigAnalAlgos::doPulseProfile
 
 //======================================================================
 
@@ -445,36 +445,49 @@ void HFtrigAnalAlgos::doRhHistos(const std::vector<HFRecHit>& hfrechits,
 
   histos_->fillNtowersHisto(ntowers);
 
+  bool confirmedHit = false;
   for (it  = m_TowerEnergies.begin();
        it != m_TowerEnergies.end(); it++) {
     IetaIphi_t ieip(it->first);
     TowerEnergies_t t = it->second;
     histos_->fillTowerEhistos(ntowers, ieip.ieta(),t.totalE, t.shortE, t.longE);
-  }
 
-  //  now we're looking for a pair of PMT hits, one in plus and one in minus:
-
-  bool pmPMTevent = false;
-  int   dltIphi=0,  dltIeta=0;
-  float avgIphi=0., avgIeta=0.;
-  if (v_PMThits.size() == 2) {
-    IetaIphi_t ieip0 = v_PMThits[0].ieip;
-    IetaIphi_t ieip1 = v_PMThits[1].ieip;
-    if ( ((ieip0.ieta() < 0) && (ieip1.ieta() > 0)) ||
-	 ((ieip1.ieta() < 0) && (ieip0.ieta() > 0))   ) {
-      dltIphi    = deltaIphi(ieip0.iphi(),ieip1.iphi());
-      dltIeta    = abs(abs(ieip0.ieta()) - abs(ieip1.ieta()));
-      avgIphi    = averageIphi(ieip0.iphi(),ieip1.iphi());
-      avgIeta    = (float)(abs(ieip0.ieta()) + abs(ieip1.ieta()))/2.0;
-      pmPMTevent = true;
+    if ((t.shortE > 10.0) && (t.longE> 10.0)) { // "confirmed hit" = real detector hit
+      confirmedHit = true;
     }
   }
 
-  histos_->fillPMTeventHistos(pmPMTevent,
-			      dltIphi,dltIeta,
-			      avgIphi,avgIeta,
-			      v_PMThits.size());
+  if (confirmedHit)
+    nTotalNonPMTevents_++;
+  else {
+    //  calc pair-wise delta eta and phi PMT hit pairs, keeping
+    //  same-side and opposite-side separated.
+    //
+    vector<HFtrigAnalHistos::deltaAvg_t> v_opPMTdas, v_ssPMTdas;
 
+    for (uint32_t i=0; i<v_PMThits.size()-1; i++) {
+      for (uint32_t j=i+1; j< v_PMThits.size(); j++) {
+	IetaIphi_t ieip0 = v_PMThits[i].ieip;
+	IetaIphi_t ieip1 = v_PMThits[j].ieip;
+	
+	HFtrigAnalHistos::deltaAvg_t da;
+
+	da.deltaIeta = abs(abs(ieip0.ieta()) - abs(ieip1.ieta()));
+	da.deltaIphi = deltaIphi(ieip0.iphi(),ieip1.iphi());
+	da.avgIeta   = (float)(abs(ieip0.ieta()) + abs(ieip1.ieta()))/2.0;
+	da.avgIphi   = averageIphi(ieip0.iphi(),ieip1.iphi());
+
+	if ( ((ieip0.ieta() < 0) && (ieip1.ieta() > 0)) ||
+	     ((ieip1.ieta() < 0) && (ieip0.ieta() > 0))   ) {
+	  v_opPMTdas.push_back(da);
+	} else {
+	  v_ssPMTdas.push_back(da);
+	}
+      }
+    }
+
+    histos_->fillPMTeventHistos(v_ssPMTdas,v_opPMTdas,v_PMThits.size());
+  }
 }                                         // HFtrigAnalAlgos::doRhHistos
 
 //======================================================================

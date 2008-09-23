@@ -139,6 +139,18 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
     return;
   }
 
+  if (!hfdigis->size()) {
+    edm::LogWarning("HFtrigAnal::analyze") <<
+      "HF digi collection with size 0!"<< std::endl;
+    return;
+  }
+
+  if (!hfrechits->size()) {
+    edm::LogWarning("HFtrigAnal::analyze") <<
+      "HF rechit collection with size 0!"<< std::endl;
+    return;
+  }
+
   algo_->analyze(*hfdigis,*hfrechits, bxCrossHw, eventNumber, runNer, lumiBlock);
 
 }

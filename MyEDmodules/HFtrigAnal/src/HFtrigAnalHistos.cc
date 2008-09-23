@@ -244,30 +244,49 @@ HFtrigAnalHistos::bookPerRunHistos(uint32_t runnum)
   sprintf(title,"# PMT hits per event, Run #%d", runnum);
   h_nPMThits_ = fs->make<TH1F>(name, title, 51, -0.5,50.5);
 
+  sprintf(name,"run%dnPMTsamesideHits",runnum);
+  sprintf(title,"# PMT same-side hits per event, Run #%d", runnum);
+  h_nPMTsamesideHits_ = fs->make<TH1F>(name, title, 51, -0.5,50.5);
+
+  sprintf(name,"run%dnPMTopposideHits",runnum);
+  sprintf(title,"# PMT opposite-side hits per event, Run #%d", runnum);
+  h_nPMTopposideHits_ = fs->make<TH1F>(name, title, 51, -0.5,50.5);
+
   sprintf(name,"run%dnPMThitsDeltaIphi",runnum);
-  sprintf(title,"#Delta i#phi(+HF,-HF) PMT hit pairs, Run #%d", runnum);
+  sprintf(title,"#Delta i#phi(+HF,-HF) PMT hit pairs, Run #%d; #Delta i#phi", runnum);
   h_PMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
 
   sprintf(name,"run%dnPMThitsDeltaIeta",runnum);
-  sprintf(title,"#Delta i#eta(+HF,-HF) PMT hit pairs, Run #%d", runnum);
+  sprintf(title,"#Delta i#eta(+HF,-HF) PMT hit pairs, Run #%d; #Delta i#eta", runnum);
   h_PMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 14, -0.5,13.5);
 
   sprintf(name,"run%dnPMThitsAvgIphi",runnum);
-  sprintf(title,"Avg i#phi(+HF,-HF) PMT hit pairs, Run #%d", runnum);
-  h_PMThitsAvgIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
+  sprintf(title,"Avg i#phi(+HF,-HF) PMT hit pairs, Run #%d; Avg i#phi", runnum);
+  h_PMThitsAvgIphi_ = fs->make<TH1F>(name, title, 72, -0.5,71.5);
 
   sprintf(name,"run%dnPMThitsAvgIeta",runnum);
-  sprintf(title,"Avg i#eta(+HF,-HF) PMT hit pairs, Run #%d", runnum);
+  sprintf(title,"Avg i#eta(+HF,-HF) PMT hit pairs, Run #%d; Avg i#eta", runnum);
   h_PMThitsAvgIeta_ = fs->make<TH1F>(name, title, 13,28.5,41.5);
 
-  sprintf(name,"run%dnPMThitClass",runnum);
-  sprintf(title,"PMT hit event classification, Run #%d", runnum);
-  h_PMThitClassification_ = fs->make<TH1F>(name, title, 5, -0.5,4.5);
-  h_PMThitClassification_->GetXaxis()->SetBinLabel(1,"No PMT hits");
-  h_PMThitClassification_->GetXaxis()->SetBinLabel(2,"Only 1 hit");
-  h_PMThitClassification_->GetXaxis()->SetBinLabel(3,"Plus-Minus hits");
-  h_PMThitClassification_->GetXaxis()->SetBinLabel(4,"Same side hits");
-  h_PMThitClassification_->GetXaxis()->SetBinLabel(5,"More than 2 hits");
+  sprintf(name,"run%dnPMThitsSameSideDeltaIphi",runnum);
+  sprintf(title,
+"#Delta i#phi(wedge1,wedge2) same-side PMT hit pairs, Run #%d; #Delta i#phi", runnum);
+  h_samesidePMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
+
+  sprintf(name,"run%dnPMThitsSameSideDeltaIeta",runnum);
+  sprintf(title,
+"#Delta i#eta(wedge1,wedge2) same-side PMT hit pairs, Run #%d; #Delta i#eta", runnum);
+  h_samesidePMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 14, -0.5,13.5);
+
+  sprintf(name,"run%dnPMThitsSameSideAvgIphi",runnum);
+  sprintf(title,
+"Avg i#phi(wedge1,wedge2) same-side PMT hit pairs, Run #%d; Avg i#phi", runnum);
+  h_samesidePMThitsAvgIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
+
+  sprintf(name,"run%dnPMThitsSameSideAvgIeta",runnum);
+  sprintf(title,
+"Avg i#eta(wedge1,wedge2) same-side PMT hit pairs, Run #%d; Avg i#eta", runnum);
+  h_samesidePMThitsAvgIeta_ = fs->make<TH1F>(name, title, 13, 28.5, 41.5);
 
 }                                   // HFtrigAnalHistos::bookPerRunHistos
 
@@ -575,31 +594,27 @@ HFtrigAnalHistos::fillNtowersHisto(int ntowers)
 //======================================================================
 
 void
-HFtrigAnalHistos::fillPMTeventHistos(bool     pmPMTevent,
-				     int      deltaIphi,
-				     int      deltaIeta,
-				     float    avgIphi,
-				     float    avgIeta,
-				     uint32_t nPMThits)
+HFtrigAnalHistos::fillPMTeventHistos (std::vector<deltaAvg_t>& sameSidePMTpairs,
+				      std::vector<deltaAvg_t>& oppoSidePMTpairs,
+				      uint32_t nPMThits)
 {
   h_nPMThits_->Fill(nPMThits);
+  h_nPMTsamesideHits_->Fill(sameSidePMTpairs.size());
+  h_nPMTopposideHits_->Fill(oppoSidePMTpairs.size());
 
-  if (pmPMTevent) {
-    h_PMThitsDeltaIphi_->Fill(deltaIphi);
-    h_PMThitsDeltaIeta_->Fill(deltaIeta);
-    h_PMThitsAvgIphi_->Fill(avgIphi);
-    h_PMThitsAvgIeta_->Fill(avgIeta);
-    h_PMThitClassification_->Fill(2);
+  for (uint32_t i=0; i<oppoSidePMTpairs.size(); i++) {
+    h_PMThitsDeltaIphi_->Fill(oppoSidePMTpairs[i].deltaIphi);
+    h_PMThitsDeltaIeta_->Fill(oppoSidePMTpairs[i].deltaIeta);
+    h_PMThitsAvgIphi_->Fill(oppoSidePMTpairs[i].avgIphi);
+    h_PMThitsAvgIeta_->Fill(oppoSidePMTpairs[i].avgIeta);
   }
-  else if (nPMThits == 2) 
-    h_PMThitClassification_->Fill(3); // same-side hit
-  else if (nPMThits == 1)
-    h_PMThitClassification_->Fill(1); // only 1 hit
-  else if (nPMThits == 0)
-    h_PMThitClassification_->Fill(1); // no hits
-  else
-    h_PMThitClassification_->Fill(4); // more than 2 hits
 
+  for (uint32_t i=0; i<sameSidePMTpairs.size(); i++) {
+    h_samesidePMThitsDeltaIphi_->Fill(sameSidePMTpairs[i].deltaIphi);
+    h_samesidePMThitsDeltaIeta_->Fill(sameSidePMTpairs[i].deltaIeta);
+    h_samesidePMThitsAvgIphi_->Fill(sameSidePMTpairs[i].avgIphi);
+    h_samesidePMThitsAvgIeta_->Fill(sameSidePMTpairs[i].avgIeta);
+  }
 }                                // HFtrigAnalHistos::fillPMTeventHistos
 
 //======================================================================
@@ -626,8 +641,8 @@ HFtrigAnalHistos::endJob(int nTotalNonPMTevents)
     h_totalE_->SetBinContent(i, h_totalE_->GetBinContent(i)/h_totalE_->GetBinWidth(i));
   }
 
-  h_trigEffvsThresh_->Scale(1.0/h_trigEffvsThresh_->GetBinContent(1));
-  h_trigEffvsThreshBadBx_->Scale(1.0/h_trigEffvsThreshBadBx_->GetBinContent(1));
+  h_trigEffvsThresh_->Scale(1.0/h_bx_->GetEntries());
+  h_trigEffvsThreshBadBx_->Scale(1.0/h_bx_->GetEntries());
 
   h_EvsIetaNonPMT_->Scale(1.0/(double)nTotalNonPMTevents);
 

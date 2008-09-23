@@ -18,6 +18,13 @@
 class HFtrigAnalHistos {
 public:
 
+  struct deltaAvg_t {
+    int deltaIeta;
+    int deltaIphi;
+    float avgIeta;
+    float avgIphi;
+  };
+
   HFtrigAnalHistos(const edm::ParameterSet& iConfig);
 
   void beginJob                 (void);
@@ -61,11 +68,8 @@ public:
 
   void fillNtowersHisto         (int ntowers);
 
-  void fillPMTeventHistos       (bool     pmPMTevent,
-				 int      deltaIphi,
-				 int      deltaIeta,
-				 float    avgIphi,
-				 float    avgIeta,
+  void fillPMTeventHistos       (std::vector<deltaAvg_t>& sameSidePMTpairs,
+				 std::vector<deltaAvg_t>& oppoSidePMTpairs,
 				 uint32_t nPMThits);
 
   void fillEvtInfoHistos        (uint16_t bxnum,
@@ -154,10 +158,16 @@ private:
   TH1F                         *h_CoEinEtaMinus_;
 
   TH1F                         *h_nPMThits_;
+  TH1F                         *h_nPMTsamesideHits_;
+  TH1F                         *h_nPMTopposideHits_;
   TH1F                         *h_PMThitsAvgIeta_;
   TH1F                         *h_PMThitsAvgIphi_;
   TH1F                         *h_PMThitsDeltaIphi_;
   TH1F                         *h_PMThitsDeltaIeta_;
+  TH1F                         *h_samesidePMThitsDeltaIphi_;
+  TH1F                         *h_samesidePMThitsDeltaIeta_;
+  TH1F                         *h_samesidePMThitsAvgIphi_;
+  TH1F                         *h_samesidePMThitsAvgIeta_;
   TH1F                         *h_PMThitClassification_;
 
   std::vector<TH1F *>           v_ePerEventHistos_;
