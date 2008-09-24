@@ -420,7 +420,7 @@ void plotTriggerEffHists(vector<HistInfo_t>& v_histinfo,
 
     if (!i) {
       hp->SetXTitle("Threshold (LUT counts)");
-      hp->SetYTitle("Fraction of events passed");
+      hp->SetYTitle("Fraction of events from run passed");
       hp->GetXaxis()->CenterTitle();
       hp->GetYaxis()->CenterTitle();
       hp->GetYaxis()->SetTitleOffset(1.2);
@@ -505,6 +505,161 @@ void  plotLumi(vector<HistInfo_t>& v_histinfo,
 
 //======================================================================
 
+void plotPMThistos(vector<HistInfo_t>& v_histinfo,
+		   string titlestr,
+		   int runnum,
+		   string plotopts,
+		   bool saveplots)
+{
+  cout <<"plotPMThistos, plotting ";
+  cout << v_histinfo.size() << " histos" << endl;
+  if (!v_histinfo.size()) {
+    return;
+  }
+
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat(0);
+  //gStyle->SetTitleW(0.95);
+
+  TCanvas *c1 = new TCanvas(titlestr.c_str(),titlestr.c_str(), 800,600);
+  //c1->SetLogy();
+  gPad->SetRightMargin(0.05);
+  gPad->SetLeftMargin(0.1);
+  gPad->SetFillColor(10);
+
+  char name[80];
+  sprintf(name,", Run #%d",runnum);
+  titlestr += string(name);
+
+  TLegend *leg = new TLegend(0.7,0.7,0.95,0.9); //, "Tech Trig 9, Lumi Segments 58-149");
+
+  for (uint32_t i=0; i<v_histinfo.size(); i++) {
+    TH1F  *hp     = (TH1F *)v_histinfo[i].p;
+
+    hp->SetLineColor((i+1));
+    hp->SetLineWidth(2);
+    hp->SetMarkerStyle(20+(i*5));
+
+    if (!i) {
+      hp->SetTitle(titlestr.c_str());
+      hp->GetXaxis()->CenterTitle();
+      hp->GetYaxis()->CenterTitle();
+      hp->GetYaxis()->SetTitleOffset(1.2);
+      hp->GetXaxis()->SetLabelSize(0.03);
+      hp->GetYaxis()->SetLabelSize(0.03);
+
+      hp->Draw(plotopts.c_str());
+    }
+    else {
+      string po(plotopts + "SAME");
+      hp->Draw(po.c_str());
+    }
+
+    if (plotopts.length())
+      leg->AddEntry(hp,v_histinfo[i].descr.c_str(),plotopts.c_str());
+    else
+      leg->AddEntry(hp,v_histinfo[i].descr.c_str(),"L");
+  }
+
+  leg->Draw();
+  //leg->SetTextSize(20);
+
+  if (saveplots) {
+    string plotstr("pmt.png");
+    c1->SaveAs(plotstr.c_str());
+  }
+}
+
+//======================================================================
+static const double theHFEtaBounds[] = {
+  -5.191, -4.889, -4.716, -4.538, -4.363, -4.191, -4.013,
+  -3.839, -3.664, -3.489, -3.314, -3.139, -2.964, -2.853, 
+  2.853, 2.964, 3.139, 3.314, 3.489, 3.664, 3.839, 
+  4.013, 4.191, 4.363, 4.538, 4.716, 4.889, 5.191
+};
+
+static const double theHFradii_mm[] = {
+  9999.9, // this first entry is bogus
+  1300.0, 1162.0, 975.0, 818.0, 686.0, 576.0, 483.0,
+  406.0,340.0, 286.0, 240.0, 201.0, 169.0, 125.0
+};
+
+void calcAreaCorrection(std::vector<double>& v_areaCorr)
+{
+  double maxfactor =0.0;
+  for (int i=0; i<14; i++) {
+    double r1 = theHFradii_mm[i];
+    double r2 = theHFradii_mm[i+1];
+    double areafactor = 1.0/(r1*r1 - r2*r2);
+    v_areaCorr.push_back(areafactor);
+    if (areafactor > maxfactor) maxfactor = areafactor;
+
+    printf ("%2d %7.1lf %7.1lf %10.2e %10.2e\n", i, r1, r2, areafactor, maxfactor);
+  }
+  for (uint32_t i = 0; i<v_areaCorr.size(); i++) 
+    v_areaCorr[i] /= maxfactor;
+}
+
+void  prettifyEtaPlot(vector<HistInfo_t>& v_histinfo,
+		      string titlestr,
+		      int runnum,
+		      bool saveplots)
+{
+  cout <<"prettifyEtaPlot" << endl;
+
+  TH1F *h_ieta    = (TH1F *)v_histinfo[0].p;
+  TH1F *h_physEta     = new TH1F("physEtah",h_ieta->GetTitle(),27,theHFEtaBounds);
+  TH1F *h_physEtaCorr = new TH1F("physEtaCorrh",h_ieta->GetTitle(),27,theHFEtaBounds);
+
+  std::vector<double> v_areaCorr;
+  calcAreaCorrection(v_areaCorr);
+
+  for (int ibin=1; ibin<=27; ibin++) {  // -41 -> -29, X=empty bin, 29->41
+    float binc = h_ieta->GetBinContent(ibin);
+    h_physEta->SetBinContent(ibin,binc);
+    int corrindex = abs(ibin-14);
+    float corrfactor = (float)v_areaCorr[corrindex];
+    h_physEtaCorr->SetBinContent(ibin, binc*corrfactor);
+    printf("%2d: %5.1f %7.5f\n", ibin, binc, corrfactor);
+  }
+			     
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat(0);
+  //gStyle->SetTitleW(0.95);
+
+  TCanvas *c1 = new TCanvas("Uncorrected","Uncorrected", 800,600);
+  //c1->SetLogy();
+  gPad->SetRightMargin(0.05);
+  gPad->SetLeftMargin(0.1);
+  gPad->SetFillColor(10);
+
+  h_physEta->SetXTitle("#eta");
+  h_physEta->SetYTitle("GeV");
+  h_physEta->GetXaxis()->CenterTitle();
+  h_physEta->GetYaxis()->CenterTitle();
+  h_physEta->SetLineWidth(2);
+  h_physEta->GetXaxis()->SetRangeUser(-5.0,5.0);
+
+  h_physEta->Draw();
+
+  TCanvas *c2 = new TCanvas("Corrected","Corrected", 800,600);
+  //c1->SetLogy();
+  gPad->SetRightMargin(0.05);
+  gPad->SetLeftMargin(0.1);
+  gPad->SetFillColor(10);
+
+  h_physEtaCorr->SetXTitle("#eta");
+  h_physEtaCorr->SetYTitle("GeV");
+  h_physEtaCorr->GetXaxis()->CenterTitle();
+  h_physEtaCorr->GetYaxis()->CenterTitle();
+  h_physEtaCorr->SetLineWidth(2);
+  h_physEtaCorr->GetXaxis()->SetRangeUser(-5.0,5.0);
+
+  h_physEtaCorr->Draw();
+}                                                    //  prettifyEtaPlot
+
+//======================================================================
+
 void plotHFtrigs(const char* rootfile,
 		 int runnum,
 		 bool saveplots=false)
@@ -523,9 +678,9 @@ void plotHFtrigs(const char* rootfile,
   getOneHisto(file, v_hi[0], "run%dHF_MaxADC_occupancy_depth=%d",runnum,1);
   getOneHisto(file, v_hi[1], "run%dHF_MaxADC_occupancy_depth=%d",runnum,2);
 
-  //plotVecOnOneCanvas(v_hi,"HF MaxADC Occupancies", "COLZ",0,saveplots);
+  plotVecOnOneCanvas(v_hi,"HF MaxADC Occupancies", "COLZ",0,saveplots);
 
-  //return;
+  return;
 
   v_hi.clear();
   vector<HistInfo_t> v_nohottowers;
@@ -547,7 +702,7 @@ void plotHFtrigs(const char* rootfile,
   v_hi[0].descr = string("In Bx Window 900,901,904");
   v_hi[1].descr = string("Outside Bx Window");
   plotIntegratedWedges(v_hi, "Trigger Efficiency vs. Coincidence Multiplicity", runnum, saveplots);
-#endif
+
   v_hi.clear();
   v_hi.resize(2);
   getOneHisto(file,v_hi[0],"run%dTriggerEfficiencyVsThreshGoodBx",runnum);
@@ -564,5 +719,50 @@ void plotHFtrigs(const char* rootfile,
   v_hi[1].descr = string("In Bx Window");
   plotLumi(v_hi, "#Events per Lumi Section", runnum, saveplots);
 
-  //getOneHisto(file,
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dnPMThits",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMTsamesideHits",runnum);
+  getOneHisto(file,v_hi[2],"run%dnPMTopposideHits",runnum);
+  v_hi[0].descr = string("Total Individual hits");
+  v_hi[1].descr = string("Same Side Pairings");
+  v_hi[2].descr = string("Opposite Side Pairings");
+  plotPMThistos(v_hi, "# PMT hits per event", runnum,"P",saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMThitsSameSideDeltaIeta",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMThitsDeltaIeta",runnum);
+  v_hi[0].descr = string("Same Side");
+  v_hi[1].descr = string("Opposite Side");
+  plotPMThistos(v_hi, "#Delta i#eta(wedge1,wedge2) PMT hit pairs", runnum, "",saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMThitsSameSideDeltaIphi",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMThitsDeltaIphi",runnum);
+  v_hi[0].descr = string("Same Side");
+  v_hi[1].descr = string("Opposite Side");
+  plotPMThistos(v_hi, "#Delta i#phi(wedge1,wedge2) PMT hit pairs", runnum,"", saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMThitsSameSideAvgIeta",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMThitsAvgIeta",runnum);
+  v_hi[0].descr = string("Same Side");
+  v_hi[1].descr = string("Opposite Side");
+  plotPMThistos(v_hi, "Avg i#eta(wedge1,wedge2) PMT hit pairs", runnum, "",saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMThitsSameSideAvgIphi",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMThitsAvgIphi",runnum);
+  v_hi[0].descr = string("Same Side");
+  v_hi[1].descr = string("Opposite Side");
+  plotPMThistos(v_hi, "Avg i#phi(wedge1,wedge2) PMT hit pairs", runnum,"", saveplots);
+#endif
+  v_hi.clear();
+  v_hi.resize(1);
+  getOneHisto(file,v_hi[0],"run%dEperEtaNonPMTh",runnum);
+  prettifyEtaPlot(v_hi,"c1",runnum,saveplots);
 }
