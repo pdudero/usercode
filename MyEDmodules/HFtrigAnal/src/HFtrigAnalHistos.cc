@@ -254,11 +254,11 @@ HFtrigAnalHistos::bookPerRunHistos(uint32_t runnum)
 
   sprintf(name,"run%dnPMThitsDeltaIphi",runnum);
   sprintf(title,"#Delta i#phi(+HF,-HF) PMT hit pairs, Run #%d; #Delta i#phi", runnum);
-  h_PMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
+  h_PMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -37.0,37.0);
 
   sprintf(name,"run%dnPMThitsDeltaIeta",runnum);
   sprintf(title,"#Delta i#eta(+HF,-HF) PMT hit pairs, Run #%d; #Delta i#eta", runnum);
-  h_PMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 14, -0.5,13.5);
+  h_PMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 27, -13.5,13.5);
 
   sprintf(name,"run%dnPMThitsAvgIphi",runnum);
   sprintf(title,"Avg i#phi(+HF,-HF) PMT hit pairs, Run #%d; Avg i#phi", runnum);
@@ -271,12 +271,12 @@ HFtrigAnalHistos::bookPerRunHistos(uint32_t runnum)
   sprintf(name,"run%dnPMThitsSameSideDeltaIphi",runnum);
   sprintf(title,
 "#Delta i#phi(wedge1,wedge2) same-side PMT hit pairs, Run #%d; #Delta i#phi", runnum);
-  h_samesidePMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -0.5,36.5);
+  h_samesidePMThitsDeltaIphi_ = fs->make<TH1F>(name, title, 37, -37.0,37.0);
 
   sprintf(name,"run%dnPMThitsSameSideDeltaIeta",runnum);
   sprintf(title,
 "#Delta i#eta(wedge1,wedge2) same-side PMT hit pairs, Run #%d; #Delta i#eta", runnum);
-  h_samesidePMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 14, -0.5,13.5);
+  h_samesidePMThitsDeltaIeta_ = fs->make<TH1F>(name, title, 27, -13.5,13.5);
 
   sprintf(name,"run%dnPMThitsSameSideAvgIphi",runnum);
   sprintf(title,
