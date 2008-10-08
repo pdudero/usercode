@@ -23,7 +23,7 @@ fi
 
 ARG1=$1
 #OUTPUTFILE=$2
-OUTPUTFILE=../results/run${1}-anal.root
+OUTPUTFILE=`printf "${OUTPUTFILEFMT}" ${ARG1} ${ARG1}`
 INCLUDEFILE=`printf "${FORMAT}" ${ARG1}`
 
 if (( ${#EVENTLIMIT} == 0 )) 
@@ -33,7 +33,7 @@ fi
 
 #### common head part of Config File
 ### create the file
-CFGFILE=/tmp/runCMSSWReco_${USER}.py
+CFGFILE=/tmp/runCMSSWReco_${USER}_$$.py
 cat > ${CFGFILE}<<EOF
 import FWCore.ParameterSet.Config as cms
 
@@ -223,4 +223,5 @@ EOF999
 fi
 
 # run cmsRun
-cmsRun ${CFGFILE}
+# cmsRun ${CFGFILE}
+callgrind --instr-atstart=no cmsRun ${CFGFILE}
