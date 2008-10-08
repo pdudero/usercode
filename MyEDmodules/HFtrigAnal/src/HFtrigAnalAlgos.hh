@@ -130,11 +130,12 @@ private:
 
   void sumEnergies       (const std::vector<HFRecHit>& hfrechits,
 			  std::map<int,TowerEnergies_t>& m_TowerEnergies,
-			  float& totalE,
-			  float& coEinPhiMinus,
-			  float& coEinEtaMinus,
-			  float& coEinPhiPlus,
-			  float& coEinEtaPlus);
+			  float& totalE);
+
+  void doEventDisplayHistos (const std::vector<HFRecHit>& hfrechits,
+			     int evtnum,int runnum,float totalE);
+
+  void doPMThistos       (std::vector<TowerEnergies_t>& v_PMThits);
 
   void doRhHistos        (const std::vector<HFRecHit>& hfrechits,
 			  uint32_t evtnum,

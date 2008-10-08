@@ -23,11 +23,23 @@ public:
 };//needed for sorting by maxadc
 
 //======================================================================
-
-static int deltaIphi(int iphi1, int iphi2)
+// gives delta iphi in range 0-36, doesn't check if iphi1, iphi2 in range
+//
+static int deltaIphiUnsigned(int iphi1, int iphi2)
 {
   int dPhi=abs(iphi1-iphi2);
   if (dPhi>36) dPhi=72-dPhi;
+  return dPhi;
+}
+
+//======================================================================
+// gives delta iphi in range -36->35, doesn't check if iphi1, iphi2 in range
+//
+static int deltaIphiSigned(int iphi1, int iphi2)
+{
+  int dPhi=iphi2-iphi1;
+  if (dPhi<-36) dPhi += 72;
+  if (dPhi> 35) dPhi -= 72;
   return dPhi;
 }
 
@@ -316,11 +328,7 @@ void HFtrigAnalAlgos::doPulseProfile(const HFDataFrame& maxframe)
 
 void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
 				  map<int,TowerEnergies_t>& m_TowerEnergies,
-				  float& totalE,
-				  float& coEinPhiMinus,
-				  float& coEinEtaMinus,
-				  float& coEinPhiPlus,
-				  float& coEinEtaPlus)
+				  float& totalE)
 {
   // Total energy plots
   //
@@ -378,34 +386,21 @@ void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
 
   // Center of energy plots
   //
-  coEinPhiMinus = (totalEminus != 0.0) ? (sumEtimesPhiMn/totalEminus) : -1.0;
-  coEinEtaMinus = (totalEminus != 0.0) ? (sumEtimesEtaMn/totalEminus) :  0.0;
-  coEinPhiPlus  = (totalEplus  != 0.0) ? (sumEtimesPhiPl/totalEplus)  : -1.0;
-  coEinEtaPlus  = (totalEplus  != 0.0) ? (sumEtimesEtaPl/totalEplus)  :  0.0;
+  float coEinPhiMinus = (totalEminus != 0.0) ? (sumEtimesPhiMn/totalEminus) : -1.0;
+  float coEinEtaMinus = (totalEminus != 0.0) ? (sumEtimesEtaMn/totalEminus) :  0.0;
+  float coEinPhiPlus  = (totalEplus  != 0.0) ? (sumEtimesPhiPl/totalEplus)  : -1.0;
+  float coEinEtaPlus  = (totalEplus  != 0.0) ? (sumEtimesEtaPl/totalEplus)  :  0.0;
+
+  histos_->fillCenterOfEnergyHistos(coEinPhiMinus,coEinPhiPlus,
+				    coEinEtaMinus,coEinEtaPlus);
 
 }                                        // HFtrigAnalAlgos::sumEnergies
 
 //======================================================================
 
-void HFtrigAnalAlgos::doRhHistos(const std::vector<HFRecHit>& hfrechits,
-				   uint32_t evtnum,
-				   uint32_t runnum)
+void HFtrigAnalAlgos::doEventDisplayHistos(const std::vector<HFRecHit>& hfrechits,
+					   int evtnum,int runnum,float totalE)
 {
-  map<int,TowerEnergies_t> m_TowerEnergies;
-
-  float totalE;
-  float coEinPhiMinus;
-  float coEinEtaMinus;
-  float coEinPhiPlus;
-  float coEinEtaPlus;
-
-  sumEnergies(hfrechits, m_TowerEnergies,
-	      totalE, coEinPhiMinus, coEinEtaMinus, coEinPhiPlus, coEinEtaPlus);
-
-  histos_->fillTotalEnergyHistos(evtnum,runnum,totalE);
-  histos_->fillCenterOfEnergyHistos(coEinPhiMinus,coEinPhiPlus,
-				    coEinEtaMinus,coEinEtaPlus);
-
   // Event display plotting
   //
   if (totalE >  totalRHenergyThresh4Plotting_) {
@@ -423,71 +418,106 @@ void HFtrigAnalAlgos::doRhHistos(const std::vector<HFRecHit>& hfrechits,
 	h2p->Fill(ieta2fill,(detId.iphi()+detId.depth()-1),rh.energy());
     }
   }
+}                               // HFtrigAnalAlgos::doEventDisplayHistos
+
+//======================================================================
+
+void HFtrigAnalAlgos::doPMThistos(vector<TowerEnergies_t>& v_PMThits)
+{
+  //  calc pair-wise delta eta and phi PMT hit pairs, keeping
+  //  same-side and opposite-side separated. Plot delta ieta,delta iphi
+  //
+  vector<HFtrigAnalHistos::deltaAvg_t> v_opPMTdas, v_ssPMTdas;
+
+  for (uint32_t i=0; i<v_PMThits.size()-1; i++) {
+    for (uint32_t j=i+1; j< v_PMThits.size(); j++) {
+      IetaIphi_t ieip0 = v_PMThits[i].ieip;
+      IetaIphi_t ieip1 = v_PMThits[j].ieip;
+      double   totalE0 = v_PMThits[i].totalE;
+      double   totalE1 = v_PMThits[j].totalE;
+	
+      HFtrigAnalHistos::deltaAvg_t da;
+
+      da.avgIeta   = (float)(abs(ieip0.ieta()) + abs(ieip1.ieta()))/2.0;
+      da.avgIphi   = averageIphi(ieip0.iphi(),ieip1.iphi());
+
+      if ( (ieip0.ieta() < 0) && (ieip1.ieta() > 0) ) {
+	da.deltaIeta = abs(ieip1.ieta()) - abs(ieip0.ieta());
+	da.deltaIphi = deltaIphiSigned(ieip0.iphi(),ieip1.iphi());
+	v_opPMTdas.push_back(da);
+      } else
+      if ( (ieip1.ieta() < 0) && (ieip0.ieta() > 0) ) {
+	da.deltaIeta = abs(ieip0.ieta()) - abs(ieip1.ieta());
+	da.deltaIphi = deltaIphiSigned(ieip1.iphi(),ieip0.iphi());
+	v_opPMTdas.push_back(da);
+      } else                      // same side, order by decreasing energy
+      if (totalE0>totalE1) {
+	da.deltaIeta = abs(ieip1.ieta()) - abs(ieip0.ieta());
+	da.deltaIphi = deltaIphiSigned(ieip0.iphi(),ieip1.iphi());
+	v_ssPMTdas.push_back(da);
+      } else {
+	da.deltaIeta = abs(ieip0.ieta()) - abs(ieip1.ieta());
+	da.deltaIphi = deltaIphiSigned(ieip0.iphi(),ieip1.iphi());
+	v_ssPMTdas.push_back(da);
+      }
+    }
+  }
+
+  histos_->fillPMTeventHistos(v_ssPMTdas,v_opPMTdas,v_PMThits.size());
+
+}                                        // HFtrigAnalAlgos::doPMThistos
+
+//======================================================================
+
+void HFtrigAnalAlgos::doRhHistos(const std::vector<HFRecHit>& hfrechits,
+				   uint32_t evtnum,
+				   uint32_t runnum)
+{
+  map<int,TowerEnergies_t> m_TowerEnergies;
+  float totalE;
+
+  sumEnergies(hfrechits, m_TowerEnergies, totalE);
+
+  histos_->fillTotalEnergyHistos(evtnum,runnum,totalE);
+
+  doEventDisplayHistos(hfrechits,evtnum,runnum,totalE);
 
   // Tower Energy plots:
   // 1) count up # towers over threshold
   // 2) collect PMT hits
   //
+  bool confirmedHit = false;
   vector<TowerEnergies_t> v_PMThits;
   map<int,TowerEnergies_t>::const_iterator it;
   int ntowers = 0;
   for (it  = m_TowerEnergies.begin();
        it != m_TowerEnergies.end(); it++) {
     TowerEnergies_t t = it->second;
-    if (t.totalE > 20.0) ntowers++;
+    if (t.totalE > 50.0) ntowers++;
 
     // collect all towers with PMT hits:
-    if (((t.shortE > 20.0) && (t.longE  < 10.0)) ||
-	((t.longE  > 20.0) && (t.shortE < 10.0))   ) { // PMT hit?
+    if (((t.shortE > 50.0) && (t.longE  < 10.0)) ||
+	((t.longE  > 50.0) && (t.shortE < 10.0))   ) { // PMT hit?
       v_PMThits.push_back(t);
+    } else
+    if ((t.shortE > 10.0) && (t.longE> 10.0)) {
+      confirmedHit = true; // real detector hit
     }
   }
 
   histos_->fillNtowersHisto(ntowers);
 
-  bool confirmedHit = false;
   for (it  = m_TowerEnergies.begin();
        it != m_TowerEnergies.end(); it++) {
     IetaIphi_t ieip(it->first);
     TowerEnergies_t t = it->second;
     histos_->fillTowerEhistos(ntowers, ieip.ieta(),t.totalE, t.shortE, t.longE);
-
-    if ((t.shortE > 10.0) && (t.longE> 10.0)) { // "confirmed hit" = real detector hit
-      confirmedHit = true;
-    }
   }
 
   if (confirmedHit)
     nTotalNonPMTevents_++;
-  else {
-    //  calc pair-wise delta eta and phi PMT hit pairs, keeping
-    //  same-side and opposite-side separated.
-    //
-    vector<HFtrigAnalHistos::deltaAvg_t> v_opPMTdas, v_ssPMTdas;
-
-    for (uint32_t i=0; i<v_PMThits.size()-1; i++) {
-      for (uint32_t j=i+1; j< v_PMThits.size(); j++) {
-	IetaIphi_t ieip0 = v_PMThits[i].ieip;
-	IetaIphi_t ieip1 = v_PMThits[j].ieip;
-	
-	HFtrigAnalHistos::deltaAvg_t da;
-
-	da.deltaIeta = abs(abs(ieip0.ieta()) - abs(ieip1.ieta()));
-	da.deltaIphi = deltaIphi(ieip0.iphi(),ieip1.iphi());
-	da.avgIeta   = (float)(abs(ieip0.ieta()) + abs(ieip1.ieta()))/2.0;
-	da.avgIphi   = averageIphi(ieip0.iphi(),ieip1.iphi());
-
-	if ( ((ieip0.ieta() < 0) && (ieip1.ieta() > 0)) ||
-	     ((ieip1.ieta() < 0) && (ieip0.ieta() > 0))   ) {
-	  v_opPMTdas.push_back(da);
-	} else {
-	  v_ssPMTdas.push_back(da);
-	}
-      }
-    }
-
-    histos_->fillPMTeventHistos(v_ssPMTdas,v_opPMTdas,v_PMThits.size());
-  }
+  else 
+    doPMThistos(v_PMThits);
 }                                         // HFtrigAnalAlgos::doRhHistos
 
 //======================================================================
