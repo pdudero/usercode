@@ -37,5 +37,8 @@ MODE=RAW
 LUTFILENAME=inputLUTcoder_one_shot.csv
 #LUTFILENAME=inputLUTcoder_CRUZET_part4_v3_1_HFonly.csv
 
-#OUTPUTFILEFMT="../results/%d/run%d-anal.root"
-OUTPUTFILEFMT="../results/temp.root"
+OUTPUTFILEFMT="../results/%d/run%d-anal.root"
+#OUTPUTFILEFMT="../results/temp.root"
+
+#FILTFILE=MyEDmodules.HFtrigAnal.runInfoFilt_62232bgtight_cfi
+#FILTFILE=MyEDmodules.HFtrigAnal.runInfoFilt_62232_InterestingLS_cfi
