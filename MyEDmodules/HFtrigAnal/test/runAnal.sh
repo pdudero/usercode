@@ -33,7 +33,7 @@ fi
 
 #### common head part of Config File
 ### create the file
-CFGFILE=/tmp/runCMSSWReco_${USER}_$$.py
+CFGFILE=/tmp/runCMSSWanal_${USER}_$$.py
 cat > ${CFGFILE}<<EOF
 import FWCore.ParameterSet.Config as cms
 
@@ -43,6 +43,8 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
 
 process.load("RecoLocalCalo.HcalRecProducers.HcalSimpleReconstructor_hf_cfi")
+
+process.load("Configuration.StandardSequences.Geometry_cff")
 
 process.TFileService = cms.Service("TFileService",
     closeFileFast = cms.untracked.bool(True),
@@ -110,46 +112,13 @@ fi
 if [[ "${MODE}" == "RAW" ]]
     then
 cat >> ${CFGFILE}<<EOF
-process.hcalConditions = cms.ESSource("PoolDBESSource",
-    DBParameters = cms.PSet(
-        messageLevel = cms.untracked.int32(0)
-    ),
-    timetype = cms.string('runnumber'),
-    toGet = cms.VPSet(cms.PSet(
-        record = cms.string('HcalPedestalsRcd'),
-        tag = cms.string('hcal_pedestals_fC_v3_mc')
-    ), 
-        cms.PSet(
-            record = cms.string('HcalPedestalWidthsRcd'),
-            tag = cms.string('hcal_widths_fC_v3')
-        ), 
-        cms.PSet(
-            record = cms.string('HcalElectronicsMapRcd'),
-            tag = cms.string('official_emap_v5_080208')
-        ), 
-        cms.PSet(
-            record = cms.string('HcalGainsRcd'),
-            tag = cms.string('hcal_gains_v2_cosmics_magoff')
-        ), 
-        cms.PSet(
-            record = cms.string('HcalQIEDataRcd'),
-            tag = cms.string('qie_normalmode_v3')
-        ), 
-        cms.PSet(
-            record = cms.string('HcalRespCorrsRcd'),
-            tag = cms.string('hcal_respcorr_trivial_mc')
-        )),
-    connect = cms.string('frontier://Frontier/CMS_COND_20X_HCAL'),
-    siteLocalConfig = cms.untracked.bool(False)
-)
-
-process.HcalDbProducer = cms.ESProducer("HcalDbProducer")
-
-process.es_hardcode = cms.ESSource("HcalHardcodeCalibrations",
-    toGet = cms.untracked.vstring('GainWidths', 
-        'channelQuality', 
-        'ZSThresholds')
-)
+# Conditions (Global Tag is used here):
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.connect = "frontier://PromptProd/CMS_COND_21X_GLOBALTAG"
+# KH
+#process.GlobalTag.globaltag = "CRUZET4_V4P::All"
+process.GlobalTag.globaltag = "CRUZET4_V5P::All"
+process.prefer("GlobalTag")
 EOF
 elif [[ "$MODE" == "RECO" ]]
     then
@@ -159,8 +128,19 @@ else
   exit
 fi    
 
+FILTPATH=
+if (( ${#FILTFILE} > 0 ))
+then
+FILTPATH="process.runinfoFilt*"
+cat >> ${CFGFILE}<<EOF
+process.load('${FILTFILE}')
+EOF
+fi
+
 #### common tail part of Config File
 cat >> ${CFGFILE}<<EOF99
+
+process.dump = cms.EDAnalyzer("HcalRecHitDump")
 
 # analysis
 
@@ -189,8 +169,16 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
     digiSpectrumMinADC = cms.untracked.double(-0.5),
     digiSpectrumMaxADC = cms.untracked.double(499.5),
 
-    minGeVperRecHit            = cms.double(10.0),
-    totalEthresh4eventPlotting = cms.double(2000.0),
+    minGeVperRecHitShort       = cms.double(3.0),
+    minGeVperRecHitLong        = cms.double(5.0),
+    minGeVperTower             = cms.double(12.0),
+    minGeVperRecHit4PMT        = cms.double(25.0),
+    totalEthresh4eventPlotting = cms.double(1000.0),
+    shortEwindowMinGeV         = cms.double(30.0),
+    shortEwindowMaxGeV         = cms.double(1000.0),
+
+    maxGeVperRecHit4BeamGasMedium = cms.double(200.0),
+    maxGeVperRecHit4BeamGasTight  = cms.double(100.0),
 
     # min/max event numbers to plot detailed RH energies
     eventNumberMax     = cms.int32(480),
@@ -199,6 +187,10 @@ process.trigAnal  = cms.EDAnalyzer("HFtrigAnal",
     rhTotalEnergyNbins  = cms.untracked.int32(110),
     rhTotalEnergyMinGeV = cms.untracked.double(0.0),
     rhTotalEnergyMaxGeV = cms.untracked.double(11000.0),
+
+    towerEnergyNbins  = cms.untracked.int32(100),
+    towerEnergyMinGeV = cms.untracked.double(0.0),
+    towerEnergyMaxGeV = cms.untracked.double(200),
 
     nWedgesPlotNbins  = cms.untracked.int32(21),
     nWedgesPlotMin    = cms.untracked.double(-0.5),
@@ -213,15 +205,15 @@ EOF99
 if [[ "$MODE" == "RAW" ]]
 then
 cat >> ${CFGFILE}<<EOF999
-process.p = cms.Path(process.hcalDigis*process.hfreco*process.trigAnal)
+process.p = cms.Path(${FILTPATH}process.hcalDigis*process.hfreco*process.trigAnal)
 EOF999
 elif [[ "$MODE" == "RECO" ]] 
 then
 cat >> ${CFGFILE}<<EOF999
-process.p = cms.Path(process.trigAnal)
+process.p = cms.Path(${FILTPATH}process.trigAnal)
 EOF999
 fi
 
 # run cmsRun
-# cmsRun ${CFGFILE}
-callgrind --instr-atstart=no cmsRun ${CFGFILE}
+cmsRun ${CFGFILE}
+#callgrind --instr-atstart=no cmsRun ${CFGFILE}
