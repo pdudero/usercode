@@ -1,7 +1,5 @@
 // Analysis of HF trigger
 //
-#include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
-#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
@@ -10,7 +8,11 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/InputTag.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
+#include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
+#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "MyEDmodules/HFtrigAnal/src/HFtrigAnalAlgos.hh"
 
 class TFile;
@@ -87,12 +89,19 @@ void HFtrigAnal::endJob(void)
 
 void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup) {
 
+  HFtrigAnalEvent_t evt;
+
+  edm::ESHandle<CaloGeometry> pG;
+  fSetup.get<CaloGeometryRecord>().get(pG);
+  const CaloGeometry* geo = pG.product();
+
+  algo_->setGeom(geo);
+
   // event ID
   edm::EventID eventId = fEvent.id();
-  uint32_t runNer = eventId.run ();
-  uint32_t eventNumber = eventId.event ();
-
-  uint32_t lumiBlock = fEvent.luminosityBlock();
+  evt.runnum  = eventId.run ();
+  evt.evtnum  = eventId.event ();
+  evt.lsnum   = fEvent.luminosityBlock();
 
   int bxCross = fEvent.bunchCrossing();
   boost::uint16_t bxCrossHw = 0;
@@ -114,7 +123,9 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
       bxCrossHw = gtRecord->gtFdlWord().bxNr();
   }
 
-  if (runN==0) runN=runNer;
+  evt.bxnum = bxCrossHw;
+
+  if (runN==0) runN=evt.runnum;
   eventN++;
 
   edm::Handle<HFDigiCollection> hfdigis;
@@ -151,7 +162,9 @@ void HFtrigAnal::analyze(const edm::Event& fEvent, const edm::EventSetup& fSetup
     return;
   }
 
-  algo_->analyze(*hfdigis,*hfrechits, bxCrossHw, eventNumber, runNer, lumiBlock);
+  evt.hfdigis = (*hfdigis);
+  evt.hfrechits = (*hfrechits);
+  algo_->analyze(evt);
 
 }
 
