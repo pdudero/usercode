@@ -12,6 +12,8 @@
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "MyEDmodules/HFtrigAnal/src/linearizerLUT.hh"
 #include "MyEDmodules/HFtrigAnal/src/HFtrigAnalHistos.hh"
+#include "MyEDmodules/HFtrigAnal/src/HFtrigAnalSupportTypes.hh"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 
 #include "TH1F.h"
 #include "TH1S.h"
@@ -21,81 +23,19 @@
 class HFtrigAnalAlgos {
 public:
 
-  class HFwedgeID_t {
-  public:
-    // assign iphi of wedge to be the iphi between the
-    // two grouped phis. 1/71 gets iphi 72 so to distinguish
-    // plus and minus sides.
-    //
-    HFwedgeID_t (int iniphi, int inzside) {
-      if      ((iniphi % 4) == 3)   iphi_ = iniphi+1;
-      else if ((iniphi % 4) == 1) {
-	iphi_ = iniphi-1;
-	if (iphi_ <= 0) iphi_ += 72;
-      }
-      iphi_ *= inzside;
-    }
-    HFwedgeID_t (int codediphi) : iphi_(codediphi) {}
-    int id() { return iphi_; }
-    bool operator<(const HFwedgeID_t& right) const {
-      if (iphi_ < right.iphi_) return true;
-      return false;
-    }
-  private:
-    int iphi_;
-  };
-
-  struct triggerWedge_t {
-    triggerWedge_t(HFwedgeID_t& inwid, HFDataFrame inframe, uint32_t inmaxadc, int insamplenum) :
-      wid(inwid), frame(inframe), maxadc(inmaxadc), maxsamplenum(insamplenum) {}
-    HFwedgeID_t  wid;
-    HFDataFrame  frame;
-    uint32_t     maxadc;
-    int          maxsamplenum;
-  };
-
   HFtrigAnalAlgos(bool verbosity,
 		  const edm::ParameterSet& iConfig);
 
   void beginJob(void);
   void endJob();
 
-  void analyze(const HFDigiCollection&   hfdigis,
-	       const HFRecHitCollection& hfrechits,
-	       boost::uint16_t   bxnum,
-	       boost::uint32_t   evtnum,
-	       boost::uint32_t   runnum,
-	       boost::uint32_t   lsnum);
+  void setGeom(const CaloGeometry* geo) { histos_->setGeom(geo); }
+
+  void analyze(HFtrigAnalEvent_t& ev);
 
 private:
 
   // ---------- internal types ---------------------------
-
-  class IetaIphi_t {
-  public:
-    inline int sign(int x) const { return ((x<0) ? -1 : 1); }
-    IetaIphi_t (int inieta, int iniphi) : ieta_(inieta), iphi_(iniphi) {}
-    IetaIphi_t (int code) { ieta_ = code/100; iphi_ = abs(code)%100; }
-    int toCode (void) const { return (ieta_*100)+(sign(ieta_)*iphi_); }
-    int ieta   (void) const { return ieta_; }
-    int iphi  (void) const { return iphi_; }
-    bool operator<(const IetaIphi_t& right) const {
-      if (ieta_ < right.ieta_) return true;
-      else if (iphi_ < right.iphi_) return true;
-      return false;
-    }
-  private:
-    int ieta_;
-    int iphi_;
-  };
-
-  struct TowerEnergies_t {
-    TowerEnergies_t () : ieip(0,0), totalE(0.0), longE(0.0), shortE(0.0) {}
-    IetaIphi_t ieip;
-    double totalE;
-    double longE;
-    double shortE;
-  };
 
   // ---------- internal methods ---------------------------
 
@@ -108,8 +48,7 @@ private:
 
   bool intheSameHFWedge  (const HcalDetId& id1,const HcalDetId& id2);
 
-  void findMaxWedges     (const HFDigiCollection& hfdigis,
-			  std::vector<triggerWedge_t>& sortedWedges);
+  void findMaxWedges     (HFtrigAnalEvent_t& ev);
 
   void dumpWedges        (std::vector<triggerWedge_t>& wedges);
 
@@ -126,23 +65,32 @@ private:
 			  uint32_t runnum);
   void doOccupancy       (const std::vector<triggerWedge_t>& sortedWedges,
 			  uint32_t runnum);
-  void doPulseProfile    (const HFDataFrame& maxframe);
 
-  void sumEnergies       (const std::vector<HFRecHit>& hfrechits,
-			  std::map<int,TowerEnergies_t>& m_TowerEnergies,
-			  float& totalE);
+  void doPulseProfile    (const HFDataFrame&             maxframe);
 
-  void doEventDisplayHistos (const std::vector<HFRecHit>& hfrechits,
-			     int evtnum,int runnum,float totalE);
+  void sumEnergies       (const std::vector<HFRecHit>&   hfrechits,
+			  std::vector<TowerEnergies_t>&  v_towers,
+			  float&                         totalE);
 
-  void doPMThistos       (std::vector<TowerEnergies_t>& v_PMThits);
+  void doEventDisplays   (const std::vector<HFRecHit>&   hfrechits,
+			  int                            evtnum,
+			  int                            runnum,
+			  float                          totalE);
 
-  void doRhHistos        (const std::vector<HFRecHit>& hfrechits,
-			  uint32_t evtnum,
-			  uint32_t runnum);
+  bool towerConfirmedHit (const TowerEnergies_t& tower);
 
-  void filterRHs         (const HFRecHitCollection& unfiltrh,
-			  std::vector<HFRecHit>& filtrh);
+  void filterTowers      (const
+			  std::vector<TowerEnergies_t>&  v_towers,
+			  std::vector<TowerEnergies_t>&  v_towersOverThresh,
+			  std::vector<TowerEnergies_t>&  v_PMThits,
+			  bool&                          oneConfirmedHit,
+			  double&                        maxGeVfound);
+
+  void doPMThistos       (HFtrigAnalEvent_t& ev);
+  void doRhHistos        (HFtrigAnalEvent_t& ev);
+
+  void filterRHs         (const HFRecHitCollection&      unfiltrh,
+			  std::vector<HFRecHit>&         filtrh);
 
   // ----------member data ---------------------------
 
@@ -155,9 +103,16 @@ private:
   int                           sampleWindowRight_;
   uint32_t                      eventNumberMin_;
   uint32_t                      eventNumberMax_;
-  double                        minGeVperRecHit_;
+  double                        minGeVperRecHitShort_;
+  double                        minGeVperRecHitLong_;
+  double                        maxGeVperRecHit4BeamGasMedium_;
+  double                        maxGeVperRecHit4BeamGasTight_;
+  double                        minGeVperRecHit4PMT_;
+  double                        minGeVperTower_;
   double                        totalRHenergyThresh4Plotting_;
   uint32_t                      adcTrigThreshold_;
+  double                        shortEwindowMinGeV_;
+  double                        shortEwindowMaxGeV_;
 
   HFtrigAnalHistos             *histos_;
   linearizerLUT                *lut_;
