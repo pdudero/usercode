@@ -154,6 +154,7 @@ void plotVecOnOneCanvas(std::vector<HistInfo_t>& v_histinfo,
 			string titlestr,
 			const char *drawstring,
 			int optstats,
+			bool logscale,
 			bool saveplots)
 {
   if (!v_histinfo.size()) return;
@@ -162,25 +163,41 @@ void plotVecOnOneCanvas(std::vector<HistInfo_t>& v_histinfo,
 
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(optstats);
+  gStyle->SetStatX(.98);
+  gStyle->SetStatY(0.92);
+  gStyle->SetStatW(0.25);
+  gStyle->SetStatH(0.2);
+
   gStyle->SetPalette(1,0);
 
+  uint32_t numplots = v_histinfo.size();
+
   TCanvas *c1 = new TCanvas(titlestr.c_str(),titlestr.c_str(),
-			    //v_histinfo.size()*400,400);
-			    900,600);
-  c1->Divide(2);
+			    numplots*500,500);
+
+  c1->Divide(numplots);
   
-  for (unsigned int i=0; i<v_histinfo.size(); i++) {
-    TH2F *h2p = (TH2F *)v_histinfo[i].p;
+  for (unsigned int i=0; i<numplots; i++) {
+    TH1F *h1p = (TH1F *)v_histinfo[i].p;
     c1->cd(i+1);
     gPad->SetFillColor(10);
-    gPad->SetTopMargin(0.04);
-    gPad->SetRightMargin(0.12);
-    gPad->SetLeftMargin(0.1);
-    gPad->SetBottomMargin(.1);
+    gPad->SetTopMargin(0.08);
+    gPad->SetRightMargin(0.02);
+    gPad->SetLeftMargin(0.07);
+    gPad->SetBottomMargin(.12);
+    if (logscale) gPad->SetLogy();
 
-    h2p->GetXaxis()->SetTitle("ieta"); h2p->GetXaxis()->CenterTitle();
-    h2p->GetYaxis()->SetTitle("iphi"); h2p->GetYaxis()->CenterTitle();
-    h2p->Draw(drawstring);
+    //h1p->GetXaxis()->SetTitle("ieta");
+    //h1p->GetYaxis()->SetTitle("iphi");
+    h1p->GetXaxis()->CenterTitle();
+    h1p->GetYaxis()->CenterTitle();
+    h1p->GetXaxis()->SetTitleOffset(1.2);
+
+#if 0
+    if (!i)  h1p->SetTitle("Tower Energy Avg, Beam-Gas Events, Run #62232");
+    else     h1p->SetTitle("Tower Energy Max, Beam-Gas Events, Run #62232");
+#endif
+    h1p->Draw(drawstring);
   }
 
   c1->cd();
@@ -515,8 +532,7 @@ void  plotLumi(HistInfo_t& hiAllBx,
 void plotPMThistos(vector<HistInfo_t>& v_histinfo,
 		   string titlestr,
 		   int runnum,
-		   string plotopts,
-		   double thresholdGeV)
+		   string plotopts)
 {
   cout <<"plotPMThistos, plotting ";
   cout << v_histinfo.size() << " histos" << endl;
@@ -529,7 +545,6 @@ void plotPMThistos(vector<HistInfo_t>& v_histinfo,
   //gStyle->SetTitleW(0.95);
 
   TCanvas *c1 = new TCanvas(titlestr.c_str(),titlestr.c_str(), 800,600);
-  //c1->SetLogy();
   gPad->SetRightMargin(0.05);
   gPad->SetLeftMargin(0.1);
   gPad->SetFillColor(10);
@@ -571,10 +586,10 @@ void plotPMThistos(vector<HistInfo_t>& v_histinfo,
   leg->Draw();
   //leg->SetTextSize(20);
 
-  TText *tt = new TText();
-  tt->SetTextSize(.025);
-  sprintf(name,"(Threshold=%4.1f GeV)",thresholdGeV);
-  tt->DrawTextNDC(0.75,0.81,name);
+  //TText *tt = new TText();
+  //tt->SetTextSize(.025);
+  //sprintf(name,"(Threshold=%4.1f GeV)",thresholdGeV);
+  //tt->DrawTextNDC(0.75,0.81,name);
 }                                                       // plotPMThistos
 
 //======================================================================
@@ -615,7 +630,9 @@ static const double theHFetaBounds[] = {
 
 TH1F *ieta2PhysEtaHisto(TH1F *h_ieta)
 {
-  TH1F *h_physEta= new TH1F("physEtah",h_ieta->GetTitle(),27,theHFetaBounds);
+  string physname = string(h_ieta->GetName()) + "_phys";
+
+  TH1F *h_physEta= new TH1F(physname.c_str(),h_ieta->GetTitle(),27,theHFetaBounds);
   for (int ibin=1; ibin<=27; ibin++) {  // -41 -> -29, X=empty bin, 29->41
     float binc = h_ieta->GetBinContent(ibin);
     h_physEta->SetBinContent(ibin,binc);
@@ -697,20 +714,22 @@ void drawEtaHisto(TH1F *h_eta, const char *ctitle)
 
 //======================================================================
 
-void  prettifyEtaPlot(vector<HistInfo_t>& v_histinfo)
+void  prettifyEtaPlot(HistInfo_t& hi)
   //		      string titlestr,
   //		      int runnum,
   //		      bool saveplots)
 {
   cout <<"prettifyEtaPlot" << endl;
 
-  TH1F *h_ieta    = (TH1F *)v_histinfo[0].p;
+  TH1F *h_ieta    = (TH1F *)hi.p;
 
   TH1F *h_physEta     = ieta2PhysEtaHisto(h_ieta);
   TH1F *h_physEtaCorr = genAreaCorrectedEtaHisto(h_physEta);
 
-  drawEtaHisto(h_physEta, "Uncorrected");
-  drawEtaHisto(h_physEtaCorr, "Corrected");
+  string titlestr = string(h_physEta->GetName()) + "_uncor";
+  drawEtaHisto(h_physEta, titlestr.c_str());
+  titlestr = string(h_physEta->GetName()) + "_cor";
+  drawEtaHisto(h_physEtaCorr, titlestr.c_str());
 }                                                    //  prettifyEtaPlot
 
 //======================================================================
@@ -733,7 +752,7 @@ void plotHFtrigs(const char* rootfile,
   getOneHisto(file, v_hi[0], "run%dHF_MaxADC_occupancy_depth=%d",runnum,1);
   getOneHisto(file, v_hi[1], "run%dHF_MaxADC_occupancy_depth=%d",runnum,2);
 
-  plotVecOnOneCanvas(v_hi,"HF MaxADC Occupancies", "COLZ",0,saveplots);
+  plotVecOnOneCanvas(v_hi,"HF MaxADC Occupancies", "COLZ",0,false,saveplots);
 
   return;
 
@@ -766,6 +785,7 @@ void plotHFtrigs(const char* rootfile,
   v_hi[1].descr = string("Outside Bx Window");
   plotTriggerEffHists(v_hi, "Trigger Efficiency vs. Threshold", runnum, saveplots);
 #endif
+#if 0
   v_hi.clear();
   v_hi.resize(2);
   getOneHisto(file,v_hi[0],"run%dlumisegh",runnum);
@@ -773,7 +793,7 @@ void plotHFtrigs(const char* rootfile,
   v_hi[0].descr = string("All");
   v_hi[1].descr = string("In Bx Window");
   plotLumi(v_hi[0], v_hi[1], "#Events per Lumi Section", runnum, saveplots);
-#if 0
+
   v_hi.clear();
   v_hi.resize(3);
   getOneHisto(file,v_hi[0],"run%dnPMThits",runnum);
@@ -817,8 +837,93 @@ void plotHFtrigs(const char* rootfile,
   plotPMThistos(v_hi, "Avg i#phi(wedge1,wedge2) PMT hit pairs", runnum,"", 50.0);
 
   v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMThitsPlus",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMThitsMinus",runnum);
+  v_hi[0].descr = string("HF+");
+  v_hi[1].descr = string("HF-");
+  plotPMThistos(v_hi, "#PMT hits on each side", runnum,"");
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dePMThitsPlus",runnum);
+  getOneHisto(file,v_hi[1],"run%dePMThitsMinus",runnum);
+  v_hi[0].descr = string("HF+");
+  v_hi[1].descr = string("HF-");
+  plotPMThistos(v_hi, "PMT Energy on each side", runnum,"");
+#endif
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dnPMTasym",runnum);
+  getOneHisto(file,v_hi[1],"run%dnPMTasymBadBx",runnum);
+  plotPMThistos(v_hi, "PMT hit # asymmetry",runnum,"");
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dePMTasym",runnum);
+  getOneHisto(file,v_hi[1],"run%dePMTasymBadBx",runnum);
+  plotPMThistos(v_hi, "PMT hit Energy asymmetry",runnum,"");
+
+#if 0
+  v_hi.clear();
   v_hi.resize(1);
-  getOneHisto(file,v_hi[0],"run%dEperEtaNonPMTh",runnum);
-  prettifyEtaPlot(v_hi); // ,"c1",runnum,saveplots);
+  getOneHisto(file,v_hi[0],"run%dEperEtaBGmediumh",runnum);
+  prettifyEtaPlot(v_hi[0]); // ,"c1",runnum,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dnBGhitsLooseVsLS",runnum);
+  getOneHisto(file,v_hi[1],"run%dnBGhitsMediumVsLS",runnum);
+  getOneHisto(file,v_hi[2],"run%dnBGhitsTightVsLS",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasHitsvsLumiSection", "BOX",1111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dEperEtaBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEperEtaBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%dEperEtaBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasHitsvsLumiSection", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dEspectrumBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEspectrumBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%dEspectrumBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasEnergySpectrum", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dEmaxBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEmaxBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%dEmaxBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasMaxTowerEnergy", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dEavgBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEavgBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%dEavgBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasTowerAverageEnergy", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%dEweightedEtaBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEweightedEtaBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%dEweightedEtaBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasEnergyWeightedEta", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(3);
+  getOneHisto(file,v_hi[0],"run%d2ndMomEweightedEtaBGlooseh",runnum);
+  getOneHisto(file,v_hi[1],"run%d2ndMomEweightedEtaBGmediumh",runnum);
+  getOneHisto(file,v_hi[2],"run%d2ndMomEweightedEtaBGtighth",runnum);
+  plotVecOnOneCanvas(v_hi,"2ndMomentEnergyWeightedEta", "",111111,false,saveplots);
+
+  v_hi.clear();
+  v_hi.resize(2);
+  getOneHisto(file,v_hi[0],"run%dEavgBGmediumh",runnum);
+  getOneHisto(file,v_hi[1],"run%dEmaxBGmediumh",runnum);
+  plotVecOnOneCanvas(v_hi,"Beam-GasTowerEnergy", "",1110,false,saveplots);
 #endif
 }
