@@ -16,8 +16,8 @@ using namespace std;
 
 class compareADC {
 public:
-  bool operator()(const HFtrigAnalAlgos::triggerWedge_t& w1,
-		  const HFtrigAnalAlgos::triggerWedge_t& w2) const {
+  bool operator()(const triggerWedge_t& w1,
+		  const triggerWedge_t& w2) const {
     return w1.maxadc>w2.maxadc;
   }
 };//needed for sorting by maxadc
@@ -72,19 +72,28 @@ HFtrigAnalAlgos::HFtrigAnalAlgos(bool verbosity,
   vector<int> v_maskidnumbers;
   vector<int> v_validBXnumbers;
 
-  sampleWindowLeft_    = iConfig.getParameter<int>("digiSampleWindowMin");
-  sampleWindowRight_   = iConfig.getParameter<int>("digiSampleWindowMax");
+  sampleWindowLeft_        = iConfig.getParameter<int>("digiSampleWindowMin");
+  sampleWindowRight_       = iConfig.getParameter<int>("digiSampleWindowMax");
 
-  minGeVperRecHit_     = iConfig.getParameter<double>("minGeVperRecHit");
+  minGeVperRecHitLong_     = iConfig.getParameter<double>("minGeVperRecHitLong");
+  minGeVperRecHitShort_    = iConfig.getParameter<double>("minGeVperRecHitShort");
+  minGeVperTower_          = iConfig.getParameter<double>("minGeVperTower");
 
-  totalRHenergyThresh4Plotting_ = iConfig.getParameter<double>("totalEthresh4eventPlotting");
+  maxGeVperRecHit4BeamGasMedium_ = iConfig.getParameter<double>("maxGeVperRecHit4BeamGasMedium");
+  maxGeVperRecHit4BeamGasTight_  = iConfig.getParameter<double>("maxGeVperRecHit4BeamGasTight");
+  totalRHenergyThresh4Plotting_  = iConfig.getParameter<double>("totalEthresh4eventPlotting");
 
-  //eventNumberMin_       = (uint32_t)iConfig.getParameter<int>("eventNumberMin");
-  //eventNumberMax_       = (uint32_t)iConfig.getParameter<int>("eventNumberMax");
+  minGeVperRecHit4PMT_     = iConfig.getParameter<double>("minGeVperRecHit4PMT");
 
-  adcTrigThreshold_       = (uint32_t)iConfig.getParameter<int>("adcTrigThreshold");
-  v_maskidnumbers         = iConfig.getParameter<vector<int> > ("detIds2Mask");
-  v_validBXnumbers        = iConfig.getParameter<vector<int> > ("validBxNumbers");
+  //eventNumberMin_        = (uint32_t)iConfig.getParameter<int>("eventNumberMin");
+  //eventNumberMax_        = (uint32_t)iConfig.getParameter<int>("eventNumberMax");
+
+  adcTrigThreshold_        = (uint32_t)iConfig.getParameter<int>("adcTrigThreshold");
+  v_maskidnumbers          = iConfig.getParameter<vector<int> > ("detIds2Mask");
+  v_validBXnumbers         = iConfig.getParameter<vector<int> > ("validBxNumbers");
+
+  shortEwindowMinGeV_      =  iConfig.getParameter<double>("shortEwindowMinGeV");
+  shortEwindowMaxGeV_      =  iConfig.getParameter<double>("shortEwindowMaxGeV");
 
   if (!convertIdNumbers(v_maskidnumbers, detIds2mask_))
     throw cms::Exception("Invalid detID vector");
@@ -148,7 +157,7 @@ bool HFtrigAnalAlgos::maskedId(const HcalDetId& id)
 void
 HFtrigAnalAlgos::endJob()
 {
-  histos_->endJob(nTotalNonPMTevents_);
+  histos_->endJob();
 }
 
 //======================================================================
@@ -159,22 +168,24 @@ void HFtrigAnalAlgos::filterRHs(const HFRecHitCollection& unfiltrh,
   HFRecHitCollection::const_iterator it;
 
   for (it=unfiltrh.begin(); it!=unfiltrh.end(); it++){
+    double threshold =
+      (it->id().depth() == 1) ? minGeVperRecHitLong_ : minGeVperRecHitShort_;
+      
     if (!maskedId(it->id()) && 
-	(it->energy() > minGeVperRecHit_))
+	(it->energy() > threshold))
       filtrh.push_back(*it);
   }
 }                                        //  HFtrigAnalAlgos::filterRHs
 
 //======================================================================
 
-void HFtrigAnalAlgos::findMaxWedges(const HFDigiCollection& hfdigis,
-				    std::vector<triggerWedge_t>& sortedWedges)
+void HFtrigAnalAlgos::findMaxWedges(HFtrigAnalEvent_t& ev)
 {
   // First collect the highest ADC value (from LUT output) per wedge
   //
   std::map<int,triggerWedge_t> m_wedges;
-  for (unsigned idig = 0; idig < hfdigis.size (); ++idig) {
-    const HFDataFrame& frame = hfdigis[idig];
+  for (unsigned idig = 0; idig < ev.hfdigis.size (); ++idig) {
+    const HFDataFrame& frame = ev.hfdigis[idig];
     HcalDetId detId = frame.id();
 
     int zside = detId.zside();
@@ -205,14 +216,14 @@ void HFtrigAnalAlgos::findMaxWedges(const HFDigiCollection& hfdigis,
   } // loop over digi collection
 
   // Now push these into the wedge collection and sort:
-  sortedWedges.clear();
+  ev.sortedWedges.clear();
   std::map<int,triggerWedge_t>::iterator it;
   for (it =  m_wedges.begin(); it != m_wedges.end(); it++)
-    sortedWedges.push_back(it->second);
+    ev.sortedWedges.push_back(it->second);
 
   // sort by decreasing maxADC
   //
-  std::sort(sortedWedges.begin(), sortedWedges.end(), compareADC());
+  std::sort(ev.sortedWedges.begin(), ev.sortedWedges.end(), compareADC());
 
 
 #if 0
@@ -327,9 +338,11 @@ void HFtrigAnalAlgos::doPulseProfile(const HFDataFrame& maxframe)
 //======================================================================
 
 void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
-				  map<int,TowerEnergies_t>& m_TowerEnergies,
+				  vector<TowerEnergies_t>& v_towers,
 				  float& totalE)
 {
+  map<int,TowerEnergies_t> m_TowerEnergies;
+
   // Total energy plots
   //
   float sumEtimesPhiPl = 0.0;
@@ -338,6 +351,8 @@ void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
   float sumEtimesEtaMn = 0.0;
   float totalEplus     = 0.0;
   float totalEminus    = 0.0;
+
+  totalE = 0.0;
 
   for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
     const HFRecHit& rh  = hfrechits[ihit];
@@ -371,6 +386,11 @@ void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
 
     tower.ieip = ieip;
 
+    if (verbose_) {
+      cout << "adding RecHit id " << id << " " << rhenergy << " GeV to tower (";
+      cout << tower.ieip.ieta() << "," << tower.ieip.iphi() << ")" << endl;
+    }
+
     if (it == m_TowerEnergies.end()) {
       tower.totalE = rhenergy;
       if      (id.depth() == 1) tower.longE  = rhenergy;
@@ -383,6 +403,12 @@ void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
       else if (id.depth() == 2) it->second.shortE += rhenergy;
     }
   }
+
+  map<int,TowerEnergies_t>::iterator it;
+  for (it  = m_TowerEnergies.begin();
+       it != m_TowerEnergies.end(); it++)
+    v_towers.push_back(it->second);
+
 
   // Center of energy plots
   //
@@ -398,8 +424,8 @@ void HFtrigAnalAlgos::sumEnergies(const std::vector<HFRecHit>& hfrechits,
 
 //======================================================================
 
-void HFtrigAnalAlgos::doEventDisplayHistos(const std::vector<HFRecHit>& hfrechits,
-					   int evtnum,int runnum,float totalE)
+void HFtrigAnalAlgos::doEventDisplays(const std::vector<HFRecHit>& hfrechits,
+				      int evtnum,int runnum,float totalE)
 {
   // Event display plotting
   //
@@ -408,35 +434,89 @@ void HFtrigAnalAlgos::doEventDisplayHistos(const std::vector<HFRecHit>& hfrechit
 
     for (unsigned ihit = 0; ihit < hfrechits.size (); ++ihit) {
       const HFRecHit& rh = hfrechits[ihit];
-      HcalDetId detId = rh.id();
+      HcalDetId detId    = rh.id();
 
       int ieta2fill = 0;
       if      (detId.ieta() >=  29 ) ieta2fill = detId.ieta()-28;
       else if (detId.ieta() <= -29 ) ieta2fill = detId.ieta()+28;
 
-      if (rh.energy() > minGeVperRecHit_)
-	h2p->Fill(ieta2fill,(detId.iphi()+detId.depth()-1),rh.energy());
+      h2p->Fill(ieta2fill,(detId.iphi()+detId.depth()-1),rh.energy());
     }
   }
-}                               // HFtrigAnalAlgos::doEventDisplayHistos
+}                                    // HFtrigAnalAlgos::doEventDisplays
 
 //======================================================================
 
-void HFtrigAnalAlgos::doPMThistos(vector<TowerEnergies_t>& v_PMThits)
+bool HFtrigAnalAlgos::towerConfirmedHit(const TowerEnergies_t& tower)
+{
+  double shortminGeV = max(minGeVperRecHitShort_,(tower.longE)/10.0);
+  double longminGeV  = max(minGeVperRecHitLong_, (tower.longE)/5.0);
+
+  return ((tower.longE  >= longminGeV) &&
+	  (tower.shortE >= shortminGeV)   );
+}
+
+//======================================================================
+
+void HFtrigAnalAlgos::filterTowers(const
+				   vector<TowerEnergies_t>&  v_towers,
+				   vector<TowerEnergies_t>&  v_towersOverThresh,
+				   vector<TowerEnergies_t>&  v_PMThits,
+				   bool&                     oneConfirmedHit,
+				   double&                   maxGeVfound)
+{
+  // Tower Energy plots:
+  // 1) collect towers over threshold
+  // 2) collect PMT hits
+  // 3) determine if there's a confirmed hit
+  //
+  oneConfirmedHit = false;
+  maxGeVfound     = 0.0;
+
+  v_towersOverThresh.clear();
+
+  for (uint32_t i=0; i<v_towers.size(); i++) {
+    const TowerEnergies_t& t = v_towers[i];
+    bool confirmedHit  = false;
+
+    confirmedHit    = towerConfirmedHit(t);
+    oneConfirmedHit = oneConfirmedHit || confirmedHit;
+
+    if (confirmedHit) {
+
+      // poor mans attempt at counting cluster cores...
+      if (t.totalE > minGeVperTower_) // used for beam-gas cluster counting
+	v_towersOverThresh.push_back(t);
+
+      if (t.shortE > maxGeVfound) maxGeVfound = t.shortE;
+      if (t.longE  > maxGeVfound) maxGeVfound = t.longE;
+
+    } else {
+      // collect all towers with PMT hits:
+      if ((t.shortE > minGeVperRecHit4PMT_) ||
+	  (t.longE  > minGeVperRecHit4PMT_)   )
+	v_PMThits.push_back(t);
+    }
+  }
+}                                       // HFtrigAnalAlgos::filterTowers
+
+//======================================================================
+
+void HFtrigAnalAlgos::doPMThistos(HFtrigAnalEvent_t& ev)
 {
   //  calc pair-wise delta eta and phi PMT hit pairs, keeping
   //  same-side and opposite-side separated. Plot delta ieta,delta iphi
   //
-  vector<HFtrigAnalHistos::deltaAvg_t> v_opPMTdas, v_ssPMTdas;
-
-  for (uint32_t i=0; i<v_PMThits.size()-1; i++) {
-    for (uint32_t j=i+1; j< v_PMThits.size(); j++) {
-      IetaIphi_t ieip0 = v_PMThits[i].ieip;
-      IetaIphi_t ieip1 = v_PMThits[j].ieip;
-      double   totalE0 = v_PMThits[i].totalE;
-      double   totalE1 = v_PMThits[j].totalE;
+  vector<deltaAvg_t> v_opPMTdas, v_ssPMTdas;
+#if 0
+  for (uint32_t i=0; i<ev.PMThits.size()-1; i++) {
+    for (uint32_t j=i+1; j< ev.PMThits.size(); j++) {
+      IetaIphi_t& ieip0 = ev.PMThits[i].ieip;
+      IetaIphi_t& ieip1 = ev.PMThits[j].ieip;
+      double    totalE0 = ev.PMThits[i].totalE;
+      double    totalE1 = ev.PMThits[j].totalE;
 	
-      HFtrigAnalHistos::deltaAvg_t da;
+      deltaAvg_t da;
 
       da.avgIeta   = (float)(abs(ieip0.ieta()) + abs(ieip1.ieta()))/2.0;
       da.avgIphi   = averageIphi(ieip0.iphi(),ieip1.iphi());
@@ -462,88 +542,88 @@ void HFtrigAnalAlgos::doPMThistos(vector<TowerEnergies_t>& v_PMThits)
       }
     }
   }
-
-  histos_->fillPMTeventHistos(v_ssPMTdas,v_opPMTdas,v_PMThits.size());
+#endif
+  histos_->fillPMTeventHistos(ev.PMThits,v_ssPMTdas,v_opPMTdas,ev.lsnum,ev.isGoodBx);
 
 }                                        // HFtrigAnalAlgos::doPMThistos
 
 //======================================================================
 
-void HFtrigAnalAlgos::doRhHistos(const std::vector<HFRecHit>& hfrechits,
-				   uint32_t evtnum,
-				   uint32_t runnum)
+void HFtrigAnalAlgos::doRhHistos(HFtrigAnalEvent_t& ev)
 {
-  map<int,TowerEnergies_t> m_TowerEnergies;
-  float totalE;
+  vector<TowerEnergies_t>  v_towers;
+  float                    totalE;
+  double                   maxHitGeV;
+  bool                     confirmedHit = false;
 
-  sumEnergies(hfrechits, m_TowerEnergies, totalE);
+  sumEnergies(ev.filtrh, v_towers, totalE);
 
-  histos_->fillTotalEnergyHistos(evtnum,runnum,totalE);
+  filterTowers(v_towers, ev.towersOverThresh, ev.PMThits,
+	       confirmedHit, maxHitGeV);
 
-  doEventDisplayHistos(hfrechits,evtnum,runnum,totalE);
+  histos_->fillTowerEhistos(ev.towersOverThresh.size(),v_towers,ev.isGoodBx);
 
-  // Tower Energy plots:
-  // 1) count up # towers over threshold
-  // 2) collect PMT hits
-  //
-  bool confirmedHit = false;
-  vector<TowerEnergies_t> v_PMThits;
-  map<int,TowerEnergies_t>::const_iterator it;
-  int ntowers = 0;
-  for (it  = m_TowerEnergies.begin();
-       it != m_TowerEnergies.end(); it++) {
-    TowerEnergies_t t = it->second;
-    if (t.totalE > 50.0) ntowers++;
+  if (ev.isGoodBx) {
+    histos_->fillTotalEnergyHistos(ev.evtnum,ev.runnum,totalE);
 
-    // collect all towers with PMT hits:
-    if (((t.shortE > 50.0) && (t.longE  < 10.0)) ||
-	((t.longE  > 50.0) && (t.shortE < 10.0))   ) { // PMT hit?
-      v_PMThits.push_back(t);
-    } else
-    if ((t.shortE > 10.0) && (t.longE> 10.0)) {
-      confirmedHit = true; // real detector hit
+    doEventDisplays(ev.filtrh,ev.evtnum,ev.runnum,totalE);
+
+    histos_->fillnTowersOverThresh(ev.towersOverThresh.size());
+
+    // look at long E distribution for high shortE towers
+    // - helps determine cutoff between confirmed/unconfirmed hits
+    //
+    for (uint32_t i=0; i<v_towers.size(); i++) {
+      TowerEnergies_t& t = v_towers[i];
+      if ((t.shortE > shortEwindowMinGeV_) &&
+	  (t.shortE < shortEwindowMaxGeV_)   )
+	histos_->fillLongEhisto(t.longE);
+    }
+
+    // BEAM-GAS HISTOS:
+    // Tight: no pmt,     no hits over ~100, at least 5 towers over threshold
+    // Medium: no pmt,    no hits over ~200, at least 3 towers over threshold
+    // Loose: allow 1-2 pmt, hits over ~100, at least 3 towers over threshold
+    //
+    if ((ev.towersOverThresh.size() > 2) &&
+	(ev.PMThits.size()          < 3)    ) {             // Loose
+      histos_->fillLooseBeamGasHistos(ev);
+
+      if (!ev.PMThits.size() &&
+	  (maxHitGeV < maxGeVperRecHit4BeamGasMedium_)) {   // Medium
+	histos_->fillMediumBeamGasHistos(ev);
+
+	if ((ev.towersOverThresh.size() > 4) &&
+	    (maxHitGeV < maxGeVperRecHit4BeamGasTight_))    // Tight
+	  histos_->fillTightBeamGasHistos(ev);
+      }
     }
   }
 
-  histos_->fillNtowersHisto(ntowers);
-
-  for (it  = m_TowerEnergies.begin();
-       it != m_TowerEnergies.end(); it++) {
-    IetaIphi_t ieip(it->first);
-    TowerEnergies_t t = it->second;
-    histos_->fillTowerEhistos(ntowers, ieip.ieta(),t.totalE, t.shortE, t.longE);
+  if (confirmedHit) {
+    if (ev.isGoodBx) nTotalNonPMTevents_++;
   }
-
-  if (confirmedHit)
-    nTotalNonPMTevents_++;
   else 
-    doPMThistos(v_PMThits);
+    doPMThistos(ev);
 }                                         // HFtrigAnalAlgos::doRhHistos
 
 //======================================================================
 
-void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
-			      const HFRecHitCollection& hfrechits,
-			      uint16_t bxnum,
-			      uint32_t evtnum,
-			      uint32_t runnum,
-			      uint32_t lsnum)
+void HFtrigAnalAlgos::analyze(HFtrigAnalEvent_t& ev)
 {
   //std::vector<HFDataFrame> maxdigis;
   HFDataFrame maxframe, next2maxframe;
   uint32_t maxadc;
 
-  if (notInSet<uint32_t>(s_runs_,runnum)) {
-    histos_->bookPerRunHistos(runnum);
-    s_runs_.insert(runnum);
+  if (notInSet<uint32_t>(s_runs_,ev.runnum)) {
+    histos_->bookPerRunHistos(ev.runnum);
+    s_runs_.insert(ev.runnum);
   }
 
-  std::vector<triggerWedge_t> sortedWedges;
-
-  findMaxWedges(hfdigis, sortedWedges);
+  findMaxWedges(ev);
   //dumpWedges(sortedWedges);
 
-  maxadc = sortedWedges[0].maxadc;
+  maxadc = ev.sortedWedges[0].maxadc;
 #if 0
   if (maxadc < adcTrigThreshold_) {
     cout << " maxadc = " << maxadc << " less than adcTrigThreshold_ " << adcTrigThreshold_;
@@ -554,17 +634,16 @@ void HFtrigAnalAlgos::analyze(const HFDigiCollection&   hfdigis,
   if (maxadc < 5) return;
 #endif
 
-  histos_->fillEvtInfoHistos(bxnum,lsnum,isGoodBx(bxnum));
+  ev.isGoodBx = isGoodBx(ev.bxnum);
+  histos_->fillEvtInfoHistos(ev);
 
-  doNwedges      (sortedWedges,bxnum);
-  doDigiSpectra  (sortedWedges[0],runnum);
-  doPulseProfile (sortedWedges[0].frame);
-  doOccupancy    (sortedWedges,runnum);
+  doNwedges      (ev.sortedWedges,ev.bxnum);
+  doDigiSpectra  (ev.sortedWedges[0],ev.runnum);
+  doPulseProfile (ev.sortedWedges[0].frame);
+  doOccupancy    (ev.sortedWedges,ev.runnum);
 
-  std::vector<HFRecHit> filtrh;
-  filterRHs(hfrechits, filtrh);
-  if (isGoodBx(bxnum))
-    doRhHistos(filtrh,evtnum,runnum);
+  filterRHs(ev.hfrechits,ev.filtrh);
+  doRhHistos(ev);
 }                                            // HFtrigAnalAlgos::analyze
 
 //======================================================================
