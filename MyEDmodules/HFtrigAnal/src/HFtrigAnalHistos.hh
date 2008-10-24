@@ -116,6 +116,7 @@ private:
     double Eavg;
     double EweightedEta;
     double EweightedPhi;
+    double EweightedPhiMag2;
     double EweightedEta2ndMom;
     double EweightedPhi2ndMom;
   };
@@ -141,6 +142,8 @@ private:
   TH1F *bookEperEventHisto (uint32_t nkevents, uint32_t runnum);
   void fillBeamGasHistos   (const HFtrigAnalEvent_t& ev,
 			    BeamGasHistos_t& BG);
+  void dumpBGevents        (std::vector<BeamGasInfo_t>& v_bginfo,
+			    std::string criterion);
 
   // ----------member data ---------------------------
 

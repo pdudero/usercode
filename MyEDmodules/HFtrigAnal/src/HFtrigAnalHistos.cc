@@ -5,6 +5,7 @@
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/GeometryVector/interface/Phi.h"
+#include "DataFormats/GeometryVector/interface/Basic2DVector.h"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -303,19 +304,19 @@ HFtrigAnalHistos::bookPerRunHistos(uint32_t runnum)
   sprintf(title,
 	  "Energy-weighted Phi, Beam-Gas Events, Loose Criteria, Run #%d;#phi",
 	  runnum);
-  bgloose_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 40,-0.5,3.5);
+  bgloose_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 70,-3.5,3.5);
 
   sprintf(name,"run%dEweightedPhiBGmediumh",runnum);
   sprintf(title,
 	  "Energy-weighted Phi, Beam-Gas Events, Medium Criteria, Run #%d;#phi",
 	  runnum);
-  bgmedium_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 40,-0.5,3.5);
+  bgmedium_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 70,-3.5,3.5);
 
   sprintf(name,"run%dEweightedPhiBGtighth",runnum);
   sprintf(title,
 	  "Energy-weighted Phi, Beam-Gas Events, Tight Criteria, Run #%d;#phi",
 	  runnum);
-  bgtight_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 40,-0.5,3.5);
+  bgtight_.h_EweightedPhi = BGsubDir_->make<TH1F>(name, title, 70,-3.5,3.5);
 
   sprintf(name,"run%d2ndMomEweightedEtaBGlooseh",runnum);
   sprintf(title,
@@ -945,8 +946,9 @@ HFtrigAnalHistos::fillBeamGasHistos(const HFtrigAnalEvent_t& ev,
 {
   double sumE            = 0.0;
   double sumEplus        = 0.0;
-  double sumEweightedPhi = 0.0;
   double sumEweightedEta = 0.0;
+
+  Basic2DVector<double> sumEweightedPhi;
 
   BeamGasInfo_t bgi(ev.runnum,ev.lsnum,ev.evtnum,ev.bxnum);
 
@@ -960,8 +962,12 @@ HFtrigAnalHistos::fillBeamGasHistos(const HFtrigAnalEvent_t& ev,
       getEtaPhi(twr.ieip,eta,phi);
 
       sumEweightedEta += eta*twr.totalE;
-      sumEweightedPhi += phi*twr.totalE;
-      sumEplus += twr.totalE;
+      sumEplus        += twr.totalE;
+
+      Basic2DVector<double>::Polar EpolarV(twr.totalE, phi);
+      Basic2DVector<double> vecE(EpolarV.x(),EpolarV.y());
+
+      sumEweightedPhi += vecE;
     }
 
     // Energy spectrum
@@ -987,9 +993,15 @@ HFtrigAnalHistos::fillBeamGasHistos(const HFtrigAnalEvent_t& ev,
 
   if (sumEplus > 0.0) {
     bgi.EweightedEta = sumEweightedEta/sumEplus;
-    bgi.EweightedPhi = sumEweightedPhi/sumEplus;
     BG.h_EweightedEta->Fill(bgi.EweightedEta);
-    BG.h_EweightedPhi->Fill(bgi.EweightedPhi);
+
+    sumEweightedPhi /= sumEplus;
+    bgi.EweightedPhiMag2 = sumEweightedPhi.mag2();
+    bgi.EweightedPhi = 0.0;
+    if (bgi.EweightedPhiMag2 > 0.01) {
+      bgi.EweightedPhi = sumEweightedPhi.barePhi();
+      BG.h_EweightedPhi->Fill(bgi.EweightedPhi);
+    }
 
     // Now for the 2nd moment histos
     //
@@ -1004,14 +1016,17 @@ HFtrigAnalHistos::fillBeamGasHistos(const HFtrigAnalEvent_t& ev,
 	getEtaPhi(twr.ieip,eta,phi);
 
 	sum2ndMomEta += twr.totalE * sqr<double>(eta-bgi.EweightedEta);
-	sum2ndMomPhi += twr.totalE * sqr<double>(phi-bgi.EweightedPhi);
+
+	if (bgi.EweightedPhiMag2 > 0.01)
+	  sum2ndMomPhi += twr.totalE * sqr<double>(phi-bgi.EweightedPhi);
       }
     }
     bgi.EweightedEta2ndMom = sum2ndMomEta/sumEplus;
-    bgi.EweightedPhi2ndMom = sum2ndMomPhi/sumEplus;
-
     BG.h_2ndMomEweightedEta->Fill(bgi.EweightedEta2ndMom);
-    BG.h_2ndMomEweightedPhi->Fill(bgi.EweightedPhi2ndMom);
+
+    bgi.EweightedPhi2ndMom = sum2ndMomPhi/sumEplus;
+    if (bgi.EweightedPhiMag2 > 0.01)
+      BG.h_2ndMomEweightedPhi->Fill(bgi.EweightedPhi2ndMom);
   }
 
   BG.v_bginfo.push_back(bgi);
@@ -1123,6 +1138,28 @@ HFtrigAnalHistos::fillLongEhisto(double longE)
 //======================================================================
 
 void
+HFtrigAnalHistos::dumpBGevents(vector<BeamGasInfo_t>& v_bginfo, string criterion)
+{
+  char s[128];
+  cout << "============================";
+  cout << criterion << " Beam-Gas Events ";
+  cout << "============================" << endl;
+  cout <<
+ "Run # LS# Event #  BX# Nt Emax(GeV) Eavg(GeV) <Eta>E <Phi>E  Mag2  2ndMomEta 2ndMomPhi";
+  cout << endl;
+  for (uint32_t i=0; i<v_bginfo.size(); i++) {
+    BeamGasInfo_t& bg = v_bginfo[i];
+    sprintf (s,"%d %3d %7d %4d %2d %9.1f %9.1f %6.3f %6.3f %6.3f %9.3f %9.3f\n",
+	     bg.runnum,bg.lsnum,bg.evnum,bg.bxnum,bg.ntowOverThresh,bg.Emax,bg.Eavg,
+	     bg.EweightedEta,bg.EweightedPhi,bg.EweightedPhiMag2,
+	     bg.EweightedEta2ndMom,bg.EweightedPhi2ndMom);
+    cout << s;
+  }
+}                                      // HFtrigAnalHistos::dumpBGevents
+
+//======================================================================
+
+void
 HFtrigAnalHistos::endJob(void)
 {
   h_EvsIeta_->Scale(1.0/h_totalE_->GetEntries());
@@ -1144,34 +1181,7 @@ HFtrigAnalHistos::endJob(void)
   bgmedium_.h_EvsIeta->Scale(1.0/(double)bgmedium_.h_nHitsVsLumiSection->GetEntries());
   bgtight_.h_EvsIeta->Scale(1.0/(double)bgtight_.h_nHitsVsLumiSection->GetEntries());
 
-  char s[128];
-  cout << "============================ Loose Beam-Gas Events ============================" << endl;
-  cout << "Run # LS# Event #  BX# Nt Emax(GeV) Eavg(GeV) <Eta>E <Phi>E 2ndMomEta 2ndMomPhi" << endl;
-  for (uint32_t i=0; i<bgloose_.v_bginfo.size(); i++) {
-    BeamGasInfo_t& bg = bgloose_.v_bginfo[i];
-    sprintf (s,"%d %3d %7d %4d %2d %9.1f %9.1f %6.3f %6.3f %9.3f %9.3f\n",
-	     bg.runnum,bg.lsnum,bg.evnum,bg.bxnum,bg.ntowOverThresh,bg.Emax,bg.Eavg,
-	     bg.EweightedEta,bg.EweightedPhi,bg.EweightedEta2ndMom,bg.EweightedPhi2ndMom);
-    cout << s;
-  }
-
-  cout << "=========================== Medium Beam-Gas Events ============================" << endl;
-  cout << "Run # LS# Event #  BX# Nt Emax(GeV) Eavg(GeV) <Eta>E <Phi>E 2ndMomEta 2ndMomPhi" << endl;
-  for (uint32_t i=0; i<bgmedium_.v_bginfo.size(); i++) {
-    BeamGasInfo_t& bg = bgmedium_.v_bginfo[i];
-    sprintf (s,"%d %3d %7d %4d %2d %9.1f %9.1f %6.3f %6.3f %9.3f %9.3f\n",
-	     bg.runnum,bg.lsnum,bg.evnum,bg.bxnum,bg.ntowOverThresh,bg.Emax,bg.Eavg,
-	     bg.EweightedEta,bg.EweightedPhi,bg.EweightedEta2ndMom,bg.EweightedPhi2ndMom);
-    cout << s;
-  }
-
-  cout << "============================ Tight Beam-Gas Events ============================" << endl;
-  cout << "Run # LS# Event #  BX# Nt Emax(GeV) Eavg(GeV) <Eta>E <Phi>E 2ndMomEta 2ndMomPhi" << endl;
-  for (uint32_t i=0; i<bgtight_.v_bginfo.size(); i++) {
-    BeamGasInfo_t& bg = bgtight_.v_bginfo[i];
-    sprintf (s,"%d %3d %7d %4d %2d %9.1f %9.1f %6.3f %6.3f %9.3f %9.3f\n",
-	     bg.runnum,bg.lsnum,bg.evnum,bg.bxnum,bg.ntowOverThresh,bg.Emax,bg.Eavg,
-	     bg.EweightedEta,bg.EweightedPhi,bg.EweightedEta2ndMom,bg.EweightedPhi2ndMom);
-    cout << s;
-  }
+  dumpBGevents(bgloose_.v_bginfo, "Loose");
+  dumpBGevents(bgmedium_.v_bginfo,"Medium");
+  dumpBGevents(bgtight_.v_bginfo, "Tight");
 }
