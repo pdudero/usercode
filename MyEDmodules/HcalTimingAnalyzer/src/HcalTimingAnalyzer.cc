@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalyzer.cc,v 1.1 2009/03/17 08:52:18 dudero Exp $
+// $Id: HcalTimingAnalyzer.cc,v 1.2 2009/03/26 00:55:11 dudero Exp $
 //
 //
 
@@ -256,7 +256,7 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
 
   // CaloTowers
-  edm::Handle<CaloTowersCollection> towers;
+  edm::Handle<CaloTowerCollection> towers;
   if (!iEvent.getByLabel(twrLabel_,towers)) {
     edm::LogWarning("HcalTimingAnalyzer::analyze") <<
       "Calo Towers not found"<< std::endl;
@@ -359,7 +359,7 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if (havetowers) {
     for (unsigned itwr = 0; itwr < towers->size (); ++itwr) {
       const CaloTower& twr = (*towers)[itwr];
-      h2f_ctTimingVsE_->Fill(twr->hadEnergy(),towr->hcalTime());
+      h2f_ctTimingVsE_->Fill(twr.hadEnergy(),twr.hcalTime());
 
     } // loop over towers
   } // if have towers
