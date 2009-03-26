@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id$
+// $Id: HcalTimingAnalyzer.cc,v 1.1 2009/03/17 08:52:18 dudero Exp $
 //
 //
 
@@ -38,6 +38,7 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/METReco/interface/CaloMET.h"
 #include "DataFormats/METReco/interface/CaloMETCollection.h"
+#include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
 
 #include "MyEDmodules/HcalTimingAnalyzer/src/inSet.hh"
 
@@ -77,6 +78,7 @@ private:
   edm::InputTag      hbheRechitLabel_;
   edm::InputTag      hfRechitLabel_;
   edm::InputTag      metLabel_;
+  edm::InputTag      twrLabel_;
   double             minHitGeVHB_;
   double             minHitGeVHE_;
   double             minHitGeVHO_;
@@ -92,6 +94,8 @@ private:
   TH1F *h_caloMet_Met_, *h_caloMet_Phi_, *h_caloMet_SumEt_;
 
   TH2F *h2f_rhEmap_;
+  TH2F *h2f_rhTimingVsE_;
+  TH2F *h2f_ctTimingVsE_;
 };
 
 //
@@ -111,6 +115,7 @@ HcalTimingAnalyzer::HcalTimingAnalyzer(const edm::ParameterSet& iConfig) :
   hbheRechitLabel_(iConfig.getUntrackedParameter<edm::InputTag>("hbheRechitLabel")),
   hfRechitLabel_(iConfig.getUntrackedParameter<edm::InputTag>("hfRechitLabel")),
   metLabel_(iConfig.getUntrackedParameter<edm::InputTag>("metLabel")),
+  twrLabel_(iConfig.getUntrackedParameter<edm::InputTag>("twrLabel")),
   minHitGeVHB_(iConfig.getParameter<double>("minHitGeVHB")),
   minHitGeVHE_(iConfig.getParameter<double>("minHitGeVHE")),
   minHitGeVHO_(iConfig.getParameter<double>("minHitGeVHO")),
@@ -182,8 +187,15 @@ void HcalTimingAnalyzer::bookPerRunHistos(const uint32_t rn)
 				     100,recHitEscaleMinGeV_,recHitEscaleMaxGeV_);
 
   h2f_rhEmap_      = book2d(dir,rn,"h_rhEperIetaIphi", "HBHE RecHit Energy Map",
-				83, -41.5, 41.5,
-				72, 0.5,72.5);
+			    83, -41.5, 41.5,
+			    72, 0.5,72.5);
+
+  h2f_rhTimingVsE_ = book2d(dir,rn,"h_rhTimingVsE", "HBHE RecHit Timing vs. Energy",
+			    100,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+			    101,-100.5,100.5);
+  h2f_ctTimingVsE_ = book2d(dir,rn,"h_ctTimingVsE", "Calo Tower Timing vs. Energy",
+			    100,recHitEscaleMinGeV_,5*recHitEscaleMaxGeV_,
+			    101,-100.5,100.5);
 }
 //======================================================================
 
@@ -210,7 +222,8 @@ void
 HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
-  bool havedigis = true;
+  bool havedigis  = true;
+  bool havetowers = true;
 
   edm::EventID eventId = iEvent.id();
   uint32_t runn   = eventId.run ();
@@ -240,6 +253,14 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     edm::LogWarning("HcalTimingAnalyzer::analyze") <<
       "Rechits not found"<< std::endl;
     return;
+  }
+
+  // CaloTowers
+  edm::Handle<CaloTowersCollection> towers;
+  if (!iEvent.getByLabel(twrLabel_,towers)) {
+    edm::LogWarning("HcalTimingAnalyzer::analyze") <<
+      "Calo Towers not found"<< std::endl;
+    havetowers = false;
   }
 
   // MET
@@ -277,22 +298,26 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   for (unsigned irh = 0; irh < hbherechits->size (); ++irh) {
     const HBHERecHit& rh = (*hbherechits)[irh];
     HcalDetId detId = rh.id();
+    double time     = rh.time();
+    double energy   = rh.energy();
     TH1F *hp = 0;
     if (detId.subdet() == HcalBarrel) hp = (detId.zside() > 0) ? h_hbpt : h_hbmt;
     if (detId.subdet() == HcalEndcap) hp = (detId.zside() > 0) ? h_hept : h_hemt;
 
-    if (hp) hp->Fill(rh.time());
+    if (hp) hp->Fill(time);
 
-    h_rhTimesAll_->Fill(rh.time());
-    h_rhEnergiesAll_->Fill(rh.energy());
+    h_rhTimesAll_->Fill(time);
+    h_rhEnergiesAll_->Fill(energy);
 
     double minHitGeV = lookupThresh(rh.id());
 
-    if (rh.energy() > minHitGeV) {
+    if (energy > minHitGeV) {
       s_idsOverThresh.insert(rh.id());
-      h_rhTimesFlt_->Fill(rh.time());
-      h_rhEnergiesFlt_->Fill(rh.energy());
-      h2f_rhEmap_->Fill(rh.id().ieta(), rh.id().iphi(),rh.energy());
+      h_rhTimesFlt_->Fill(time);
+      h_rhEnergiesFlt_->Fill(energy);
+      h2f_rhEmap_->Fill(rh.id().ieta(), rh.id().iphi(),energy);
+
+      h2f_rhTimingVsE_->Fill(energy,time);
     }
 
   } // loop over rechits
@@ -329,6 +354,15 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       } // loop over samples in digi
     } // loop over digi
   } // if have digis
+
+
+  if (havetowers) {
+    for (unsigned itwr = 0; itwr < towers->size (); ++itwr) {
+      const CaloTower& twr = (*towers)[itwr];
+      h2f_ctTimingVsE_->Fill(twr->hadEnergy(),towr->hcalTime());
+
+    } // loop over towers
+  } // if have towers
 
   // MET
   h_caloMet_Met_->Fill(calomet->pt());
