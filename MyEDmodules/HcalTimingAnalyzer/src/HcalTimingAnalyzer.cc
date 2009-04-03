@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalyzer.cc,v 1.2 2009/03/26 00:55:11 dudero Exp $
+// $Id: HcalTimingAnalyzer.cc,v 1.3 2009/03/26 01:21:38 dudero Exp $
 //
 //
 
@@ -224,6 +224,7 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   using namespace edm;
   bool havedigis  = true;
   bool havetowers = true;
+  bool havemet    = true;
 
   edm::EventID eventId = iEvent.id();
   uint32_t runn   = eventId.run ();
@@ -264,11 +265,12 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
 
   // MET
-  const CaloMET *calomet;
   edm::Handle < CaloMETCollection > recmet;
-  iEvent.getByLabel(metLabel_, recmet);
-  const CaloMETCollection *metCol = recmet.product();
-  calomet = &(metCol->front());
+  if (!iEvent.getByLabel(metLabel_, recmet)) {
+    edm::LogWarning("HcalTimingAnalyzer::analyze") <<
+      "Calo MET not found"<< std::endl;
+    havemet = false;
+  }
 
   TH1F *h_hbp = 0;
   TH1F *h_hep = 0;
@@ -365,11 +367,12 @@ HcalTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   } // if have towers
 
   // MET
-  h_caloMet_Met_->Fill(calomet->pt());
-  h_caloMet_Phi_->Fill(calomet->phi());
-  h_caloMet_SumEt_->Fill(calomet->sumEt());
-
-
+  if (havemet) {
+    const CaloMET *calomet = &(recmet.product()->front());
+    h_caloMet_Met_->Fill(calomet->pt());
+    h_caloMet_Phi_->Fill(calomet->phi());
+    h_caloMet_SumEt_->Fill(calomet->sumEt());
+  }
 }
 
 
