@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id:$
+// $Id: myAnalCut.hh,v 1.1 2009/04/09 22:12:43 dudero Exp $
 //
 //
 
@@ -41,8 +41,6 @@ public:
   inline int                  nEvents()     const { return evtCount_; }
   inline myAnalHistos        *histos()      const { return pHistos_;  }
   inline const std::string&   description() const { return cutdescr_; }
-
-  void bookHistos(std::vector<myAnalHistos::HistoParams_t>& v_hpars);
 
   inline void Activate(bool val) { active_ = val; }
   
