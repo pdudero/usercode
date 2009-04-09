@@ -1,0 +1,12 @@
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/MessageLogger>
+<use name=DataFormats/HcalDigi>
+<use name=DataFormats/HcalRecHit>
+<use name=DataFormats/CaloTowers>
+<use name=DataFormats/METReco>
+<use name=SimDataFormats/CaloHit>
+<use name=PhysicsTools/UtilAlgos>
+<export>
+   <lib name=MyEDmodulesMyAnalUtilities>
+</export>
