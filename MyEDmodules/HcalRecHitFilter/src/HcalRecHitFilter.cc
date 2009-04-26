@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Dudero
 //         Created:  Mon Mar  2 02:37:12 CST 2009
-// $Id$
+// $Id: HcalRecHitFilter.cc,v 1.1 2009/04/19 13:50:51 dudero Exp $
 //
 //
 
@@ -35,6 +35,7 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 
+#include "TRandom3.h"
 
 //
 // class declaration
@@ -60,19 +61,37 @@ private:
     return ((hittime >= minRecoTimeNs_) &&
 	    (hittime <= maxRecoTimeNs_)   );
   }
+  double smearedTime(const HBHERecHit& unsmearedRH) const;
+  void   dumpEnvelope(void) const;
       
   // ----------member data ---------------------------
 
+  edm::InputTag            hbherecotag_;
+  edm::InputTag            hfrecotag_;
+  edm::InputTag            horecotag_;
   double                   minRecoTimeNs_;
   double                   maxRecoTimeNs_;
   int                      subdet_;
   int                      subdetOther_;
   std::vector<HcalDetId>   detIds2mask_;
+
+  std::vector<std::pair<double,double> >  smearEnvelope_;
+
+  TRandom3                *rand_;
 };
 
 //
 // constants, enums and typedefs
 //
+
+template <class T>
+class comparePair1 {
+public:
+  bool operator()(const T& h1,
+                  const T& h2) const {
+    return (h1.first < h2.first);
+  }
+};
 
 
 //
@@ -83,6 +102,9 @@ private:
 // constructors and destructor
 //
 HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
+  hbherecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hbheLabel",(edm::InputTag)"")),
+  hfrecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hfLabel",(edm::InputTag)"")),
+  horecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hoLabel",(edm::InputTag)"")),
   minRecoTimeNs_(iConfig.getParameter<double>("minRecoTimeNs")),
   maxRecoTimeNs_(iConfig.getParameter<double>("maxRecoTimeNs"))
 {
@@ -115,12 +137,51 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
   
   for (uint32_t i=0; i<detIds2mask_.size(); i++)
     std::cout << "Masking " << detIds2mask_[i] << std::endl;
-}
 
+  std::vector<double> v_smearEnv;
+
+  v_smearEnv  = iConfig.getParameter<std::vector<double> > ("smearEnvelope");
+
+  if (v_smearEnv.size()) {
+    if (v_smearEnv.size() & 1)
+      throw cms::Exception("Invalid smearEnvelope vector");
+  
+    rand_ = new TRandom3();
+
+    for (uint32_t i = 0; i<v_smearEnv.size(); i+=2) {
+      double energy     = v_smearEnv[i];
+      double smearsigma = v_smearEnv[i+1];
+      if (smearsigma <= 0.0)
+	throw cms::Exception("nonpositive smearEnvelope sigma encountered");
+    
+      smearEnvelope_.push_back(std::pair<double,double>(energy,smearsigma));
+    }
+
+    //sort in order of increasing energy
+    std::sort(smearEnvelope_.begin(),
+	      smearEnvelope_.end(),
+	      comparePair1<std::pair<double,double> >());
+
+    dumpEnvelope();
+  }
+}
 
 //======================================================================
 
-bool HcalRecHitFilter::maskedId(const HcalDetId& id)
+void
+HcalRecHitFilter::dumpEnvelope(void) const
+{
+  std::cout << "Smear Envelope:" << std::endl;
+  std::cout << "GeV\tSigma" << std::endl;
+  for (uint32_t i=0; i<smearEnvelope_.size(); i++) {
+    std::cout << smearEnvelope_[i].first << "\t" << smearEnvelope_[i].second << std::endl;
+  }
+}
+
+//======================================================================
+
+bool
+HcalRecHitFilter::maskedId(const HcalDetId& id)
 {
   for (uint32_t i=0; i<detIds2mask_.size(); i++)
     if (id == detIds2mask_[i]) return true;
@@ -164,29 +225,75 @@ HcalRecHitFilter::convertIdNumbers(std::vector<int>& v_maskidnumbers,
 
 //======================================================================
 
+double
+HcalRecHitFilter::smearedTime(const HBHERecHit& unsmearedRH) const
+{
+  double unsmearedTime = unsmearedRH.time();
+  double energy        = unsmearedRH.energy();
+  double smearsigma;
+  uint32_t i=0;
+
+  for (i=0; i<smearEnvelope_.size(); i++)
+    if (smearEnvelope_[i].first > energy)
+	break;
+
+  // Smearing starts at the first energy listed in the envelope.
+  if (!i) return unsmearedTime;
+  // No interpolation after the last energy in the envelope!
+  else if (i == smearEnvelope_.size())
+    smearsigma = smearEnvelope_[i-1].second;
+  else {
+    double energy1 = smearEnvelope_[i-1].first;
+    double sigma1  = smearEnvelope_[i-1].second;
+    double energy2 = smearEnvelope_[i].first;
+    double sigma2  = smearEnvelope_[i].second;
+
+    smearsigma = sigma1 + ((sigma2-sigma1)*(energy-energy1)/(energy2-energy1));
+
+    //char s[80];
+    //sprintf (s,"(%6.1f,%6.3f) (%6.1f,%6.3f) %6.1f %6.3f\n",energy1,sigma1,energy2,sigma2,energy,smearsigma);
+    //std::cout << s;
+  }
+
+  double smearedTime = unsmearedTime + rand_->Gaus(0.0,smearsigma);
+
+  //std::cout << "Before: " << unsmearedTime << "; After: " << smearedTime << std::endl;
+
+  return (smearedTime);
+}
+
+//======================================================================
+
 // ------------ method called to produce the data  ------------
 void
 HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
 
+  bool doSmear = (smearEnvelope_.size() > 0);
+
   if (subdet_ == HcalBarrel || subdet_ == HcalEndcap) {
     Handle<HBHERecHitCollection> hbhein;
-    if (iEvent.getByLabel("hbhereco",hbhein)) {
+    if (iEvent.getByLabel(hbherecotag_,hbhein)) {
       std::auto_ptr<HBHERecHitCollection> hbheout(new HBHERecHitCollection);
 
       for (uint32_t i=0; i < hbhein->size(); i++) {
 	const HBHERecHit& rh= (*hbhein)[i];
+	double rhtime = rh.time();
+
+	if (doSmear)
+	  rhtime = smearedTime(rh);
+
 	if (!maskedId(rh.id()) &&
-	    inTime(rh.time()))
-	  hbheout->push_back(rh);
+	    inTime(rhtime))
+	  hbheout->push_back(HBHERecHit(rh.id(),rh.energy(),rhtime));
       }
       iEvent.put(hbheout);
     }
   }
   else if (subdet_ == HcalOuter) {
     Handle<HORecHitCollection> hoin;
-    if (iEvent.getByLabel("horeco",hoin)) {
+    if (iEvent.getByLabel(horecotag_,hoin)) {
       std::auto_ptr<HORecHitCollection> hoout(new HORecHitCollection);
 
       for (uint32_t i=0; i < hoin->size(); i++) {
@@ -200,7 +307,7 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   else if (subdet_ == HcalForward) {
     Handle<HFRecHitCollection> hfin;
-    if (iEvent.getByLabel("hfreco",hfin)) {
+    if (iEvent.getByLabel(hfrecotag_,hfin)) {
       std::auto_ptr<HFRecHitCollection> hfout(new HFRecHitCollection);
 
       for (uint32_t i=0; i < hfin->size(); i++) {
