@@ -1,63 +1,107 @@
 import FWCore.ParameterSet.Config as cms
 
-hbherecofilt6 = cms.EDProducer('HcalRecHitFilter',
+hbhesmear = cms.EDProducer('HcalRecHitFilter',
+     hbheLabel = cms.untracked.InputTag("hbhereco"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble( #Energy   ss
+                                    4.00,  1.703,
+                                    6.50,  1.685,
+                                   10.00,  1.756,
+                                   13.00,  1.906,
+                                   14.50,  1.957,
+                                   20.50,  2.142,
+                                   23.50,  2.045,
+                                   30.00,  1.809,
+                                   37.00,  1.664,
+                                   44.50,  1.519,
+                                   56.00,  1.425,
+                                   63.50,  1.348,
+                                   81.00,  1.192,
+                                   88.50,  1.130,
+                                  114.50,  1.144,
+                                  175.50,  1.070,
+                                  350.00,  1.043),
+     Subdetector = cms.string("HBHE"),
+     minRecoTimeNs = cms.double(-1e99),
+     maxRecoTimeNs = cms.double(1e99)
+)
+
+hbherecofilt6 = cms.EDProducer('HcalRecHitFilter',
+     hbheLabel = cms.untracked.InputTag("hbhesmear"),
+     detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HBHE"),
      minRecoTimeNs = cms.double(9.5),
      maxRecoTimeNs = cms.double(15.5)
 )
 
 horecofilt6 = cms.EDProducer('HcalRecHitFilter',
+     hoLabel = cms.untracked.InputTag("horeco"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HO"),
      minRecoTimeNs = cms.double(9.5),
      maxRecoTimeNs = cms.double(15.5)
 )
 
 hfrecofilt6 = cms.EDProducer('HcalRecHitFilter',
+     hfLabel = cms.untracked.InputTag("hfreco"),
      detIds2Mask = cms.vint32(-32,45,2),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HF"),
      minRecoTimeNs = cms.double(9.5),
      maxRecoTimeNs = cms.double(15.5)
 )
 
 hbherecofilt10 = cms.EDProducer('HcalRecHitFilter',
+     hbheLabel = cms.untracked.InputTag("hbhesmear"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HBHE"),
      minRecoTimeNs = cms.double(7.5),
      maxRecoTimeNs = cms.double(17.5)
 )
 
 horecofilt10 = cms.EDProducer('HcalRecHitFilter',
+     hoLabel = cms.untracked.InputTag("horeco"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HO"),
      minRecoTimeNs = cms.double(7.5),
      maxRecoTimeNs = cms.double(17.5)
 )
 
 hfrecofilt10 = cms.EDProducer('HcalRecHitFilter',
+     hfLabel = cms.untracked.InputTag("hfreco"),
      detIds2Mask = cms.vint32(-32,45,2),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HF"),
      minRecoTimeNs = cms.double(7.5),
      maxRecoTimeNs = cms.double(17.5)
 )
 
 hbherecofilt25 = cms.EDProducer('HcalRecHitFilter',
+     hbheLabel = cms.untracked.InputTag("hbhesmear"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HBHE"),
      minRecoTimeNs = cms.double(0.0),
      maxRecoTimeNs = cms.double(25.0)
 )
 
 horecofilt25 = cms.EDProducer('HcalRecHitFilter',
+     hoLabel = cms.untracked.InputTag("horeco"),
      detIds2Mask = cms.vint32(),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HO"),
      minRecoTimeNs = cms.double(0.0),
      maxRecoTimeNs = cms.double(25.0)
 )
 
 hfrecofilt25 = cms.EDProducer('HcalRecHitFilter',
+     hfLabel = cms.untracked.InputTag("hfreco"),
      detIds2Mask = cms.vint32(-32,45,2),
+     smearEnvelope = cms.vdouble(),
      Subdetector = cms.string("HF"),
      minRecoTimeNs = cms.double(0.0),
      maxRecoTimeNs = cms.double(25.0)

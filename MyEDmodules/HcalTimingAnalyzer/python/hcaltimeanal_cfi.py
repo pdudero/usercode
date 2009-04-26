@@ -20,5 +20,14 @@ myan = cms.EDAnalyzer('HcalTimingAnalyzer',
     minHitGeVHF2 = cms.double(1.8),
 
     recHitEscaleMinGeV = cms.double(-0.5),
-    recHitEscaleMaxGeV = cms.double(400.5)
+    recHitEscaleMaxGeV = cms.double(400.5),
+    recHitTscaleNbins  = cms.int32(201),
+    recHitTscaleMinNs  = cms.double(-100.5),
+    recHitTscaleMaxNs  = cms.double(100.5),
+
+    simHitTscaleNbins  = cms.int32(501),
+    simHitTscaleMinNs  = cms.double(-10.5),
+    simHitTscaleMaxNs  = cms.double(40.5),
+
+    simHitEnergyMinGeVthreshold = cms.double(0.5)
 )
