@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id$
+// $Id: HcalTimingAnalAlgos.cc,v 1.1 2009/04/09 21:55:48 dudero Exp $
 //
 //
 
@@ -48,8 +48,15 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   minHitGeVHO_(iConfig.getParameter<double>("minHitGeVHO")),
   minHitGeVHF1_(iConfig.getParameter<double>("minHitGeVHF1")),
   minHitGeVHF2_(iConfig.getParameter<double>("minHitGeVHF2")),
+  recHitTscaleNbins_(iConfig.getParameter<int>("recHitTscaleNbins")),
+  recHitTscaleMinNs_(iConfig.getParameter<double>("recHitTscaleMinNs")),
+  recHitTscaleMaxNs_(iConfig.getParameter<double>("recHitTscaleMaxNs")),
   recHitEscaleMinGeV_(iConfig.getParameter<double>("recHitEscaleMinGeV")),
   recHitEscaleMaxGeV_(iConfig.getParameter<double>("recHitEscaleMaxGeV")),
+  simHitTscaleNbins_(iConfig.getParameter<int>("simHitTscaleNbins")),
+  simHitTscaleMinNs_(iConfig.getParameter<double>("simHitTscaleMinNs")),
+  simHitTscaleMaxNs_(iConfig.getParameter<double>("simHitTscaleMaxNs")),
+  simHitEnergyMinGeVthreshold_(iConfig.getParameter<double>("simHitEnergyMinGeVthreshold")),
   rundescr_(iConfig.getUntrackedParameter<std::string>("runDescription",""))
 {
 
@@ -114,11 +121,15 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   std::string runstrt =
     (rn>10000) ? "[RUN:" + o.str() + "]" : "[" + rundescr_ + "]";
 
+  /*****************************************
+   * 1-D HISTOGRAMS FIRST:                 *
+   *****************************************/
+  hpars.nbinsy = 0;
+
   st_avgPulse_ = "pulse" + runstrn;
   hpars.name   = st_avgPulse_;
   hpars.title  = "HBHE Average Pulse Shape " + runstrt;
   hpars.nbinsx = 10;
-  hpars.nbinsy = 0;
   hpars.minx   = -0.5;
   hpars.maxx   =  9.5;
 
@@ -126,16 +137,16 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_rhTimes_ = "RHTimes" + runstrn;
   hpars.name   = st_rhTimes_;
-  hpars.title  = "HBHE RecHit Times " + runstrt;
-  hpars.nbinsx = 201;
-  hpars.minx   = -100.5;
-  hpars.maxx   =  100.5;
+  hpars.title  = "HBHE RecHit Times " + runstrt + "; Rechit Time (ns)";
+  hpars.nbinsx = recHitTscaleNbins_;
+  hpars.minx   = recHitTscaleMinNs_;
+  hpars.maxx   = recHitTscaleMaxNs_;
 
   v_hpars.push_back(hpars);
 
   st_rhEnergies_ = "RHEnergies" + runstrn;
   hpars.name   = st_rhEnergies_;
-  hpars.title  = "HBHE RecHit Energies " + runstrt;
+  hpars.title  = "HBHE RecHit Energies " + runstrt + "; Rechit Energy (GeV)";
   hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars.minx   = recHitEscaleMinGeV_;
   hpars.maxx   = recHitEscaleMaxGeV_;
@@ -144,16 +155,16 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_shTimes_ = "SHTimes" + runstrn;
   hpars.name   = st_shTimes_;
-  hpars.title  = "Hcal SimHit Times " + runstrt;
-  hpars.nbinsx = 100;
-  hpars.minx   =  0.;
-  hpars.maxx   =  1000.;
+  hpars.title  = "Hcal SimHit Times " + runstrt + "; Simhit Time (ns)";
+  hpars.nbinsx = simHitTscaleNbins_;
+  hpars.minx   = simHitTscaleMinNs_;
+  hpars.maxx   = simHitTscaleMaxNs_;
 
   v_hpars.push_back(hpars);
 
   st_shEnergies_ = "SHEnergies" + runstrn;
   hpars.name   = st_shEnergies_;
-  hpars.title  = "HBHE SimHit Energies " + runstrt;
+  hpars.title  = "HBHE SimHit Energies " + runstrt + "; Simhit Energy * 200)";
   hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars.minx   = recHitEscaleMinGeV_;
   hpars.maxx   = recHitEscaleMaxGeV_;
@@ -162,7 +173,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_caloMet_Met_ = "h_caloMet_Met" + runstrn;
   hpars.name   = st_caloMet_Met_;
-  hpars.title  = "MET from CaloTowers " + runstrt;
+  hpars.title  = "MET from CaloTowers " + runstrt + "; MET (GeV)";
   hpars.nbinsx = 100;
   hpars.minx   = 0.;
   hpars.maxx   = recHitEscaleMaxGeV_;
@@ -171,7 +182,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_caloMet_Phi_ = "h_caloMet_Phi" + runstrn;
   hpars.name   = st_caloMet_Phi_;
-  hpars.title  = "MET #phi from CaloTowers " + runstrt;
+  hpars.title  = "MET #phi from CaloTowers " + runstrt + "; MET phi (rad)";
   hpars.nbinsx = 100;
   hpars.minx   =  -4.;
   hpars.maxx   =   4.;
@@ -180,16 +191,20 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_caloMet_SumEt_ = "h_caloMet_SumEt" + runstrn;
   hpars.name   = st_caloMet_SumEt_;
-  hpars.title  = "SumET from CaloTowers " + runstrt;
+  hpars.title  = "SumET from CaloTowers " + runstrt + "; SumET (GeV)";
   hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars.minx   = recHitEscaleMinGeV_;
   hpars.maxx   = recHitEscaleMaxGeV_;
 
   v_hpars.push_back(hpars);
 
+  /*****************************************
+   * 2-D HISTOGRAMS AFTER:                 *
+   *****************************************/
+
   st_rhEmap_   = "h_rhEperIetaIphi" + runstrn;
   hpars.name   = st_rhEmap_;
-  hpars.title  = "HBHE RecHit Energy Map " + runstrt;
+  hpars.title  = "HBHE RecHit Energy Map " + runstrt + "; ieta; iphi";
   hpars.nbinsx =  83;
   hpars.minx   =  -41.5;
   hpars.maxx   =   41.5;
@@ -201,37 +216,37 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_rhTimingVsE_ = "h_rhTimingVsE" + runstrn;
   hpars.name   = st_rhTimingVsE_;
-  hpars.title  = "HBHE RecHit Timing vs. Energy " + runstrt;
+  hpars.title  = "HBHE RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
   hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars.minx   = recHitEscaleMinGeV_;
   hpars.maxx   = recHitEscaleMaxGeV_;
-  hpars.nbinsy =  201;
-  hpars.miny   = -100.5;
-  hpars.maxy   =  100.5;
+  hpars.nbinsy = recHitTscaleNbins_;
+  hpars.miny   = recHitTscaleMinNs_;
+  hpars.maxy   = recHitTscaleMaxNs_;
 
   v_hpars.push_back(hpars);
 
   st_shTimingVsE_ = "h_shTimingVsE" + runstrn;
   hpars.name   = st_shTimingVsE_;
-  hpars.title  = "Hcal SimHit Timing vs. Energy " + runstrt;
-  hpars.nbinsx =  100;
-  hpars.minx   =   0.;
+  hpars.title  = "Hcal SimHit Timing vs. Energy " + runstrt + "; Simhit Energy * 200; Simhit Time (ns)";
+  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_) + 1;
+  hpars.minx   =  -0.5;
   hpars.maxx   = recHitEscaleMaxGeV_;
-  hpars.nbinsy =  100;
-  hpars.miny   =     0.;
-  hpars.maxy   =  1000.;
+  hpars.nbinsy = simHitTscaleNbins_;
+  hpars.miny   = simHitTscaleMinNs_;
+  hpars.maxy   = simHitTscaleMaxNs_;
 
   v_hpars.push_back(hpars);
 
   st_ctTimingVsE_ = "h_ctTimingVsE" + runstrn;
   hpars.name   = st_ctTimingVsE_;
-  hpars.title  = "Calo Tower Timing vs. Energy " + runstrt;
+  hpars.title  = "Calo Tower Timing vs. Energy " + runstrt + "; Tower Energy (GeV); Tower Time (ns)";
   hpars.nbinsx =  100;
   hpars.minx   = recHitEscaleMinGeV_;
   hpars.maxx   = 5*recHitEscaleMaxGeV_;
-  hpars.nbinsy =  201;
-  hpars.miny   = -100.5;
-  hpars.maxy   =  100.5;
+  hpars.nbinsy = recHitTscaleNbins_;
+  hpars.miny   = recHitTscaleMinNs_;
+  hpars.maxy   = recHitTscaleMaxNs_;
 
   v_hpars.push_back(hpars);
 
@@ -381,11 +396,13 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       const PCaloHit& sh = simhits[ish];
 
       double htime    = sh.time();
-      double energy   = sh.energy();
+      double energy   = sh.energy() * 200;
 
-      cutNone_->histos()->fill1d(st_shTimes_,htime);
-      cutNone_->histos()->fill1d(st_shEnergies_,energy);
-      cutNone_->histos()->fill2d(st_shTimingVsE_,energy,htime);
+      if (energy > simHitEnergyMinGeVthreshold_) {
+	cutNone_->histos()->fill1d(st_shTimes_,htime);
+	cutNone_->histos()->fill1d(st_shEnergies_,energy);
+	cutNone_->histos()->fill2d(st_shTimingVsE_,energy,htime);
+      }
       
     } // loop over simhits
   }

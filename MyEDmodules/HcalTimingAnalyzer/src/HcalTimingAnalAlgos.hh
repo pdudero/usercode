@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.4 2009/04/03 16:35:31 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.1 2009/04/09 21:55:48 dudero Exp $
 //
 //
 
@@ -80,9 +80,16 @@ private:
   double             minHitGeVHO_;
   double             minHitGeVHF1_;
   double             minHitGeVHF2_;
+  uint32_t           recHitTscaleNbins_;
+  double             recHitTscaleMinNs_;
+  double             recHitTscaleMaxNs_;
   double             recHitEscaleMinGeV_;
   double             recHitEscaleMaxGeV_;
-  std::string rundescr_;
+  uint32_t           simHitTscaleNbins_;
+  double             simHitTscaleMinNs_;
+  double             simHitTscaleMaxNs_;
+  double             simHitEnergyMinGeVthreshold_;
+  std::string        rundescr_;
 
   HcalDetId tgtTwrId_;
 
