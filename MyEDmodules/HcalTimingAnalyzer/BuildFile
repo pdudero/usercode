@@ -5,7 +5,7 @@
 <use name=DataFormats/HcalDetId>
 <use name=DataFormats/HcalDigi>
 <use name=DataFormats/HcalRecHit>
-<use name=DataFormats/CaloTower>
+<use name=DataFormats/CaloTowers>
 <use name=PhysicsTools/UtilAlgos>
 <flags EDM_PLUGIN=1>
 <export>
