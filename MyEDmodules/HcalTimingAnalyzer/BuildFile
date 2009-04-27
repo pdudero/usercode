@@ -6,7 +6,10 @@
 <use name=DataFormats/HcalDigi>
 <use name=DataFormats/HcalRecHit>
 <use name=DataFormats/CaloTowers>
+<use name=DataFormats/METReco>
+<use name=SimDataFormats/CaloHit>
 <use name=PhysicsTools/UtilAlgos>
+<use name=MyEDmodules/MyAnalUtilities>
 <flags EDM_PLUGIN=1>
 <export>
    <lib name=MyEDmodulesHcalTimingAnalyzer>
