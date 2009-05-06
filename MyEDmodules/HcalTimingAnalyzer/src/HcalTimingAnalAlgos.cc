@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.1 2009/04/09 21:55:48 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.2 2009/04/26 23:19:24 dudero Exp $
 //
 //
 
@@ -27,8 +27,9 @@
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 
-#include "TH1F.h"
-#include "TH2F.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TProfile2D.h"
 
 //
 // constants, enums and typedefs
@@ -111,9 +112,12 @@ HcalTimingAnalAlgos::convertIdNumbers(std::vector<int>& v_idnumbers,
 
 void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 {
-  std::vector<myAnalHistos::HistoParams_t> v_hpars; 
+  std::vector<myAnalHistos::HistoParams_t> v_hpars1d; 
+  std::vector<myAnalHistos::HistoParams_t> v_hpars2d; 
+  std::vector<myAnalHistos::HistoParams_t> v_hpars2dprof;
 
-  myAnalHistos::HistoParams_t hpars;
+  myAnalHistos::HistoParams_t hpars1d;
+  myAnalHistos::HistoParams_t hpars2d;
 
   stringstream o; o<<rn;
 
@@ -124,137 +128,181 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   /*****************************************
    * 1-D HISTOGRAMS FIRST:                 *
    *****************************************/
-  hpars.nbinsy = 0;
+  hpars1d.nbinsy = 0;
 
   st_avgPulse_ = "pulse" + runstrn;
-  hpars.name   = st_avgPulse_;
-  hpars.title  = "HBHE Average Pulse Shape " + runstrt;
-  hpars.nbinsx = 10;
-  hpars.minx   = -0.5;
-  hpars.maxx   =  9.5;
+  hpars1d.name   = st_avgPulse_;
+  hpars1d.title  = "HBHE Average Pulse Shape " + runstrt;
+  hpars1d.nbinsx = 10;
+  hpars1d.minx   = -0.5;
+  hpars1d.maxx   =  9.5;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_rhTimes_ = "RHTimes" + runstrn;
-  hpars.name   = st_rhTimes_;
-  hpars.title  = "HBHE RecHit Times " + runstrt + "; Rechit Time (ns)";
-  hpars.nbinsx = recHitTscaleNbins_;
-  hpars.minx   = recHitTscaleMinNs_;
-  hpars.maxx   = recHitTscaleMaxNs_;
+  hpars1d.name   = st_rhTimes_;
+  hpars1d.title  = "HBHE RecHit Times " + runstrt + "; Rechit Time (ns)";
+  hpars1d.nbinsx = recHitTscaleNbins_;
+  hpars1d.minx   = recHitTscaleMinNs_;
+  hpars1d.maxx   = recHitTscaleMaxNs_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_rhEnergies_ = "RHEnergies" + runstrn;
-  hpars.name   = st_rhEnergies_;
-  hpars.title  = "HBHE RecHit Energies " + runstrt + "; Rechit Energy (GeV)";
-  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
-  hpars.minx   = recHitEscaleMinGeV_;
-  hpars.maxx   = recHitEscaleMaxGeV_;
+  hpars1d.name   = st_rhEnergies_;
+  hpars1d.title  = "HBHE RecHit Energies " + runstrt + "; Rechit Energy (GeV)";
+  hpars1d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars1d.minx   = recHitEscaleMinGeV_;
+  hpars1d.maxx   = recHitEscaleMaxGeV_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_shTimes_ = "SHTimes" + runstrn;
-  hpars.name   = st_shTimes_;
-  hpars.title  = "Hcal SimHit Times " + runstrt + "; Simhit Time (ns)";
-  hpars.nbinsx = simHitTscaleNbins_;
-  hpars.minx   = simHitTscaleMinNs_;
-  hpars.maxx   = simHitTscaleMaxNs_;
+  hpars1d.name   = st_shTimes_;
+  hpars1d.title  = "Hcal SimHit Times " + runstrt + "; Simhit Time (ns)";
+  hpars1d.nbinsx = simHitTscaleNbins_;
+  hpars1d.minx   = simHitTscaleMinNs_;
+  hpars1d.maxx   = simHitTscaleMaxNs_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_shEnergies_ = "SHEnergies" + runstrn;
-  hpars.name   = st_shEnergies_;
-  hpars.title  = "HBHE SimHit Energies " + runstrt + "; Simhit Energy * 200)";
-  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
-  hpars.minx   = recHitEscaleMinGeV_;
-  hpars.maxx   = recHitEscaleMaxGeV_;
+  hpars1d.name   = st_shEnergies_;
+  hpars1d.title  = "HBHE SimHit Energies " + runstrt + "; Simhit Energy * 200)";
+  hpars1d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars1d.minx   = recHitEscaleMinGeV_;
+  hpars1d.maxx   = recHitEscaleMaxGeV_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_caloMet_Met_ = "h_caloMet_Met" + runstrn;
-  hpars.name   = st_caloMet_Met_;
-  hpars.title  = "MET from CaloTowers " + runstrt + "; MET (GeV)";
-  hpars.nbinsx = 100;
-  hpars.minx   = 0.;
-  hpars.maxx   = recHitEscaleMaxGeV_;
+  hpars1d.name   = st_caloMet_Met_;
+  hpars1d.title  = "MET from CaloTowers " + runstrt + "; MET (GeV)";
+  hpars1d.nbinsx = 100;
+  hpars1d.minx   = 0.;
+  hpars1d.maxx   = recHitEscaleMaxGeV_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_caloMet_Phi_ = "h_caloMet_Phi" + runstrn;
-  hpars.name   = st_caloMet_Phi_;
-  hpars.title  = "MET #phi from CaloTowers " + runstrt + "; MET phi (rad)";
-  hpars.nbinsx = 100;
-  hpars.minx   =  -4.;
-  hpars.maxx   =   4.;
+  hpars1d.name   = st_caloMet_Phi_;
+  hpars1d.title  = "MET #phi from CaloTowers " + runstrt + "; MET phi (rad)";
+  hpars1d.nbinsx = 100;
+  hpars1d.minx   =  -4.;
+  hpars1d.maxx   =   4.;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   st_caloMet_SumEt_ = "h_caloMet_SumEt" + runstrn;
-  hpars.name   = st_caloMet_SumEt_;
-  hpars.title  = "SumET from CaloTowers " + runstrt + "; SumET (GeV)";
-  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
-  hpars.minx   = recHitEscaleMinGeV_;
-  hpars.maxx   = recHitEscaleMaxGeV_;
+  hpars1d.name   = st_caloMet_SumEt_;
+  hpars1d.title  = "SumET from CaloTowers " + runstrt + "; SumET (GeV)";
+  hpars1d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars1d.minx   = recHitEscaleMinGeV_;
+  hpars1d.maxx   = recHitEscaleMaxGeV_;
 
-  v_hpars.push_back(hpars);
+  v_hpars1d.push_back(hpars1d);
 
   /*****************************************
    * 2-D HISTOGRAMS AFTER:                 *
    *****************************************/
 
   st_rhEmap_   = "h_rhEperIetaIphi" + runstrn;
-  hpars.name   = st_rhEmap_;
-  hpars.title  = "HBHE RecHit Energy Map " + runstrt + "; ieta; iphi";
-  hpars.nbinsx =  83;
-  hpars.minx   =  -41.5;
-  hpars.maxx   =   41.5;
-  hpars.nbinsy =  72;
-  hpars.miny   =    0.5;
-  hpars.maxy   =   72.5;
+  hpars2d.name   = st_rhEmap_;
+  hpars2d.title  = "HBHE RecHit Energy Map " + runstrt + "; ieta; iphi";
+  hpars2d.nbinsx =  83;
+  hpars2d.minx   =  -41.5;
+  hpars2d.maxx   =   41.5;
+  hpars2d.nbinsy =  72;
+  hpars2d.miny   =    0.5;
+  hpars2d.maxy   =   72.5;
 
-  v_hpars.push_back(hpars);
+  v_hpars2d.push_back(hpars2d);
+
+  st_rhTmap_   = "h_rhTperIetaIphi" + runstrn;
+  hpars2d.name   = st_rhTmap_;
+  hpars2d.title  = "HBHE RecHit Time Map " + runstrt + "; ieta; iphi";
+  hpars2d.nbinsx =  83;
+  hpars2d.minx   =  -41.5;
+  hpars2d.maxx   =   41.5;
+  hpars2d.nbinsy =  72;
+  hpars2d.miny   =    0.5;
+  hpars2d.maxy   =   72.5;
+
+  v_hpars2d.push_back(hpars2d);
 
   st_rhTimingVsE_ = "h_rhTimingVsE" + runstrn;
-  hpars.name   = st_rhTimingVsE_;
-  hpars.title  = "HBHE RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
-  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
-  hpars.minx   = recHitEscaleMinGeV_;
-  hpars.maxx   = recHitEscaleMaxGeV_;
-  hpars.nbinsy = recHitTscaleNbins_;
-  hpars.miny   = recHitTscaleMinNs_;
-  hpars.maxy   = recHitTscaleMaxNs_;
+  hpars2d.name   = st_rhTimingVsE_;
+  hpars2d.title  = "HBHE RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = recHitTscaleNbins_;
+  hpars2d.miny   = recHitTscaleMinNs_;
+  hpars2d.maxy   = recHitTscaleMaxNs_;
 
-  v_hpars.push_back(hpars);
+  v_hpars2d.push_back(hpars2d);
 
   st_shTimingVsE_ = "h_shTimingVsE" + runstrn;
-  hpars.name   = st_shTimingVsE_;
-  hpars.title  = "Hcal SimHit Timing vs. Energy " + runstrt + "; Simhit Energy * 200; Simhit Time (ns)";
-  hpars.nbinsx = (uint32_t)(recHitEscaleMaxGeV_) + 1;
-  hpars.minx   =  -0.5;
-  hpars.maxx   = recHitEscaleMaxGeV_;
-  hpars.nbinsy = simHitTscaleNbins_;
-  hpars.miny   = simHitTscaleMinNs_;
-  hpars.maxy   = simHitTscaleMaxNs_;
+  hpars2d.name   = st_shTimingVsE_;
+  hpars2d.title  = "Hcal SimHit Timing vs. Energy " + runstrt + "; Simhit Energy * 200; Simhit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_) + 1;
+  hpars2d.minx   =  -0.5;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = simHitTscaleNbins_;
+  hpars2d.miny   = simHitTscaleMinNs_;
+  hpars2d.maxy   = simHitTscaleMaxNs_;
 
-  v_hpars.push_back(hpars);
+  v_hpars2d.push_back(hpars2d);
 
   st_ctTimingVsE_ = "h_ctTimingVsE" + runstrn;
-  hpars.name   = st_ctTimingVsE_;
-  hpars.title  = "Calo Tower Timing vs. Energy " + runstrt + "; Tower Energy (GeV); Tower Time (ns)";
-  hpars.nbinsx =  100;
-  hpars.minx   = recHitEscaleMinGeV_;
-  hpars.maxx   = 5*recHitEscaleMaxGeV_;
-  hpars.nbinsy = recHitTscaleNbins_;
-  hpars.miny   = recHitTscaleMinNs_;
-  hpars.maxy   = recHitTscaleMaxNs_;
+  hpars2d.name   = st_ctTimingVsE_;
+  hpars2d.title  = "Calo Tower Timing vs. Energy " + runstrt + "; Tower Energy (GeV); Tower Time (ns)";
+  hpars2d.nbinsx =  100;
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = 5*recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = recHitTscaleNbins_;
+  hpars2d.miny   = recHitTscaleMinNs_;
+  hpars2d.maxy   = recHitTscaleMaxNs_;
 
-  v_hpars.push_back(hpars);
+  v_hpars2d.push_back(hpars2d);
 
-  cutNone_->histos()->book(v_hpars);
-  cutMaxHitOnly_->histos()->book(v_hpars);
-  cutTgtTwrOnly_->histos()->book(v_hpars);
-  cutMinHitGeV_->histos()->book(v_hpars);
-  cutAll_->histos()->book(v_hpars);
+  /*****************************************
+   * 2-D PROFILES:                         *
+   *****************************************/
+
+  st_rhTprof_    = "h_rhTperIetaIphiProf" + runstrn;
+  hpars2d.name   = st_rhTprof_;
+  hpars2d.title  = "HBHE RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.nbinsx =  83;
+  hpars2d.minx   =  -41.5;
+  hpars2d.maxx   =   41.5;
+  hpars2d.nbinsy =  72;
+  hpars2d.miny   =    0.5;
+  hpars2d.maxy   =   72.5;
+
+  v_hpars2dprof.push_back(hpars2d);
+
+  /*****************************************
+   * BOOK 'EM, DANNO...                    *
+   *****************************************/
+
+  cutNone_->histos()->book1d<TH1D>(v_hpars1d);
+  cutMaxHitOnly_->histos()->book1d<TH1D>(v_hpars1d);
+  cutTgtTwrOnly_->histos()->book1d<TH1D>(v_hpars1d);
+  cutMinHitGeV_->histos()->book1d<TH1D>(v_hpars1d);
+  cutAll_->histos()->book1d<TH1D>(v_hpars1d);
+
+  cutNone_->histos()->book2d<TH2D>(v_hpars2d);
+  cutMaxHitOnly_->histos()->book2d<TH2D>(v_hpars2d);
+  cutTgtTwrOnly_->histos()->book2d<TH2D>(v_hpars2d);
+  cutMinHitGeV_->histos()->book2d<TH2D>(v_hpars2d);
+  cutAll_->histos()->book2d<TH2D>(v_hpars2d);
+
+  cutNone_->histos()->book2d<TProfile2D>(v_hpars2dprof);
+  cutMaxHitOnly_->histos()->book2d<TProfile2D>(v_hpars2dprof);
+  cutTgtTwrOnly_->histos()->book2d<TProfile2D>(v_hpars2dprof);
+  cutMinHitGeV_->histos()->book2d<TProfile2D>(v_hpars2dprof);
+  cutAll_->histos()->book2d<TProfile2D>(v_hpars2dprof);
 
 }                                                    // bookPerRunHistos
 
@@ -331,29 +379,35 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
     if (hp) hp->Fill(htime);
 
-    cutNone_->histos()->fill1d(st_rhTimes_,htime);
-    cutNone_->histos()->fill1d(st_rhEnergies_,energy);
-    cutNone_->histos()->fill2d(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-    cutNone_->histos()->fill2d(st_rhTimingVsE_,energy,htime);
+    cutNone_->histos()->fill1d<TH1D>(st_rhTimes_,htime);
+    cutNone_->histos()->fill1d<TH1D>(st_rhEnergies_,energy);
+    cutNone_->histos()->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
+    cutNone_->histos()->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+    cutNone_->histos()->fill2d<TH2D>(st_rhTmap_,rh.id().ieta(),rh.id().iphi(),htime);
+    cutNone_->histos()->fill2d<TProfile2D>(st_rhTprof_,rh.id().ieta(),rh.id().iphi(),htime);
 
     double minHitGeV = lookupThresh(rh.id());
 
     if (energy > maxrh.energy()) maxrh = rh;
 
     if (detId == tgtTwrId_) {
-      cutTgtTwrOnly_->histos()->fill1d(st_rhTimes_,htime);
-      cutTgtTwrOnly_->histos()->fill1d(st_rhEnergies_,energy);
-      cutTgtTwrOnly_->histos()->fill2d(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-      cutTgtTwrOnly_->histos()->fill2d(st_rhTimingVsE_,energy,htime);
+      cutTgtTwrOnly_->histos()->fill1d<TH1D>(st_rhTimes_,htime);
+      cutTgtTwrOnly_->histos()->fill1d<TH1D>(st_rhEnergies_,energy);
+      cutTgtTwrOnly_->histos()->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
+      cutTgtTwrOnly_->histos()->fill2d<TH2D>(st_rhTmap_,rh.id().ieta(),rh.id().iphi(),htime);
+      cutTgtTwrOnly_->histos()->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+      cutTgtTwrOnly_->histos()->fill2d<TProfile2D>(st_rhTprof_,rh.id().ieta(),rh.id().iphi(),htime);
     }
 
     if (energy > minHitGeV) {
       s_idsOverThresh.insert(rh.id());
 
-      cutMinHitGeV_->histos()->fill1d(st_rhTimes_,htime);
-      cutMinHitGeV_->histos()->fill1d(st_rhEnergies_,energy);
-      cutMinHitGeV_->histos()->fill2d(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-      cutMinHitGeV_->histos()->fill2d(st_rhTimingVsE_,energy,htime);
+      cutMinHitGeV_->histos()->fill1d<TH1D>(st_rhTimes_,htime);
+      cutMinHitGeV_->histos()->fill1d<TH1D>(st_rhEnergies_,energy);
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhTmap_,rh.id().ieta(),rh.id().iphi(),htime);
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+      cutMinHitGeV_->histos()->fill2d<TProfile2D>(st_rhTprof_,rh.id().ieta(),rh.id().iphi(),htime);
     }
   } // loop over rechits
 
@@ -362,17 +416,20 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     double energy   = maxrh.energy();
     HcalDetId maxId = maxrh.id();
 
-    cutMaxHitOnly_->histos()->fill1d(st_rhTimes_,htime);
-    cutMaxHitOnly_->histos()->fill1d(st_rhEnergies_,energy);
-    cutMaxHitOnly_->histos()->fill2d(st_rhEmap_,maxId.ieta(),maxId.iphi(),energy);
-    cutMaxHitOnly_->histos()->fill2d(st_rhTimingVsE_,energy,htime);
+    cutMaxHitOnly_->histos()->fill1d<TH1D>(st_rhTimes_,htime);
+    cutMaxHitOnly_->histos()->fill1d<TH1D>(st_rhEnergies_,energy);
+    cutMaxHitOnly_->histos()->fill2d<TH2D>(st_rhEmap_,maxId.ieta(),maxId.iphi(),energy);
+    cutMaxHitOnly_->histos()->fill2d<TH2D>(st_rhTmap_,maxId.ieta(),maxId.iphi(),htime);
+    cutMaxHitOnly_->histos()->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+    cutMaxHitOnly_->histos()->fill2d<TProfile2D>(st_rhTprof_,maxId.ieta(),maxId.iphi(),htime);
 
     if ((energy > lookupThresh(maxId)) &&
 	(maxId == tgtTwrId_)) {
-      cutAll_->histos()->fill1d(st_rhTimes_,htime);
-      cutAll_->histos()->fill1d(st_rhEnergies_,energy);
-      cutAll_->histos()->fill2d(st_rhEmap_,maxId.ieta(),maxId.iphi(),energy);
-      cutAll_->histos()->fill2d(st_rhTimingVsE_,energy,htime);
+      cutAll_->histos()->fill1d<TH1D>(st_rhTimes_,htime);
+      cutAll_->histos()->fill1d<TH1D>(st_rhEnergies_,energy);
+      cutAll_->histos()->fill2d<TH2D>(st_rhEmap_,maxId.ieta(),maxId.iphi(),energy);
+      cutAll_->histos()->fill2d<TH2D>(st_rhTmap_,maxId.ieta(),maxId.iphi(),htime);
+      cutAll_->histos()->fill2d<TProfile2D>(st_rhTprof_,maxId.ieta(),maxId.iphi(),htime);
     }
   }
 
@@ -383,7 +440,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     double minHitGeV = lookupThresh(rh.id());
 
     if (rh.energy() > minHitGeV) {
-      cutMinHitGeV_->histos()->fill2d(st_rhEmap_,rh.id().ieta(),rh.id().iphi()+rh.id().depth()-1,rh.energy());
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi()+rh.id().depth()-1,rh.energy());
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhTmap_,rh.id().ieta(),rh.id().iphi()+rh.id().depth()-1,rh.time());
+      cutMinHitGeV_->histos()->fill2d<TProfile2D>(st_rhTprof_,rh.id().ieta(),rh.id().iphi()+rh.id().depth()-1,rh.time());
     }
 
   } // loop over HF rechits
@@ -399,9 +458,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       double energy   = sh.energy() * 200;
 
       if (energy > simHitEnergyMinGeVthreshold_) {
-	cutNone_->histos()->fill1d(st_shTimes_,htime);
-	cutNone_->histos()->fill1d(st_shEnergies_,energy);
-	cutNone_->histos()->fill2d(st_shTimingVsE_,energy,htime);
+	cutNone_->histos()->fill1d<TH1D>(st_shTimes_,htime);
+	cutNone_->histos()->fill1d<TH1D>(st_shEnergies_,energy);
+	cutNone_->histos()->fill2d<TH2D>(st_shTimingVsE_,energy,htime);
       }
       
     } // loop over simhits
@@ -419,10 +478,10 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 	int rawadc = frame[isample].adc();
 	if (hp) hp->Fill(isample,rawadc);
 
-	cutNone_->histos()->fill1d(st_avgPulse_,isample,rawadc);
+	cutNone_->histos()->fill1d<TH1D>(st_avgPulse_,isample,rawadc);
 
 	if (inSet<HcalDetId>(s_idsOverThresh,detId))
-	  cutMinHitGeV_->histos()->fill1d(st_avgPulse_,isample,rawadc);
+	  cutMinHitGeV_->histos()->fill1d<TH1D>(st_avgPulse_,isample,rawadc);
 
       } // loop over samples in digi
     } // loop over digi
@@ -432,7 +491,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
   if (ed.towers().isValid()) {
     for (unsigned itwr = 0; itwr < ed.towers()->size (); ++itwr) {
       const CaloTower& twr = (*(ed.towers()))[itwr];
-      cutMinHitGeV_->histos()->fill2d(st_ctTimingVsE_,twr.hadEnergy(),twr.hcalTime());
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_ctTimingVsE_,twr.hadEnergy(),twr.hcalTime());
 
     } // loop over towers
   } // if have towers
@@ -440,9 +499,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
   // MET
   if (ed.recmet().isValid()) {
     const CaloMET *calomet = &(ed.recmet().product()->front());
-    cutMinHitGeV_->histos()->fill1d(st_caloMet_Met_,calomet->pt());
-    cutMinHitGeV_->histos()->fill1d(st_caloMet_Phi_,calomet->phi());
-    cutMinHitGeV_->histos()->fill1d(st_caloMet_SumEt_,calomet->sumEt());
+    cutMinHitGeV_->histos()->fill1d<TH1D>(st_caloMet_Met_,calomet->pt());
+    cutMinHitGeV_->histos()->fill1d<TH1D>(st_caloMet_Phi_,calomet->phi());
+    cutMinHitGeV_->histos()->fill1d<TH1D>(st_caloMet_SumEt_,calomet->sumEt());
   }
 }
 
