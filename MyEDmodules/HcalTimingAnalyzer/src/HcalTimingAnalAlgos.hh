@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.2 2009/04/26 23:19:24 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.3 2009/05/06 19:45:10 dudero Exp $
 //
 //
 
@@ -67,11 +67,20 @@ private:
   std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;
 
   std::string st_rhEmap_;
-  std::string st_rhTmap_;
-  std::string st_rhTprof_;
+  std::string st_rhTprofd1_;
+  std::string st_rhTprofd2_;
+  std::string st_rhTprofd3_;
+  std::string st_rhTprofd4_;
   std::string st_rhTimingVsE_;
   std::string st_shTimingVsE_;
-  std::string st_ctTimingVsE_;
+  std::string st_ctHcalTvstwrE_;
+  std::string st_ctEcalTvstwrE_;
+  std::string st_ctEcalTvsHcalT_;
+  std::string st_ctHcalTvstwrEg_;
+  std::string st_ctEcalTvstwrEg_;
+  std::string st_ctEcalTvsHcalTg_;
+  std::string st_ctWeightTvsE_;
+  std::string st_ctTprof_;
 
   std::set<uint32_t> s_events2anal_;
   std::set<uint32_t> s_runs_;
@@ -82,11 +91,14 @@ private:
   double             minHitGeVHO_;
   double             minHitGeVHF1_;
   double             minHitGeVHF2_;
-  uint32_t           recHitTscaleNbins_;
-  double             recHitTscaleMinNs_;
-  double             recHitTscaleMaxNs_;
-  double             recHitEscaleMinGeV_;
-  double             recHitEscaleMaxGeV_;
+  uint32_t           ecalRecHitTscaleNbins_;
+  double             ecalRecHitTscaleMinNs_;
+  double             ecalRecHitTscaleMaxNs_;
+  uint32_t           hcalRecHitTscaleNbins_;
+  double             hcalRecHitTscaleMinNs_;
+  double             hcalRecHitTscaleMaxNs_;
+  double             hcalRecHitEscaleMinGeV_;
+  double             hcalRecHitEscaleMaxGeV_;
   uint32_t           simHitTscaleNbins_;
   double             simHitTscaleMinNs_;
   double             simHitTscaleMaxNs_;
