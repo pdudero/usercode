@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id$
+// $Id: myEventData.cc,v 1.1 2009/04/09 22:12:04 dudero Exp $
 //
 //
 
@@ -40,13 +40,24 @@
 // constructors and destructor
 //
 myEventData::myEventData(const edm::ParameterSet& edPset) :
-  hbheDigiLabel_(edPset.getUntrackedParameter<edm::InputTag>("hbheDigiLabel",edm::InputTag(""))),
-  hbheRechitLabel_(edPset.getUntrackedParameter<edm::InputTag>("hbheRechitLabel",edm::InputTag(""))),
-  hfRechitLabel_(edPset.getUntrackedParameter<edm::InputTag>("hfRechitLabel",edm::InputTag(""))),
-  simHitLabel_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
-  metLabel_(edPset.getUntrackedParameter<edm::InputTag>("metLabel",edm::InputTag(""))),
-  twrLabel_(edPset.getUntrackedParameter<edm::InputTag>("twrLabel",edm::InputTag("")))
+  hbheDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheDigiLabel",edm::InputTag(""))),
+  hbheRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheRechitLabel",edm::InputTag(""))),
+  hfRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hfRechitLabel",edm::InputTag(""))),
+  hoRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hoRechitLabel",edm::InputTag(""))),
+  simHitTag_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
+  metTag_(edPset.getUntrackedParameter<edm::InputTag>("metLabel",edm::InputTag(""))),
+  twrTag_(edPset.getUntrackedParameter<edm::InputTag>("twrLabel",edm::InputTag(""))),
+  verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
+  if (verbose_) {
+    cout << "hbheDigiTag_   = " << hbheDigiTag_   << endl;
+    cout << "hbheRechitTag_ = " << hbheRechitTag_ << endl;
+    cout << "hfRechitTag_   = " << hfRechitTag_   << endl;
+    cout << "hoRechitTag_   = " << hoRechitTag_   << endl;
+    cout << "simHitTag_     = " << simHitTag_     << endl;
+    cout << "metTag_        = " << metTag_        << endl;
+    cout << "twrTag_        = " << twrTag_        << endl;
+  }
 }
 
 
@@ -66,39 +77,57 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   runn_    = eventId_.run();
   evtn_    = eventId_.event();
 
-  if (!iEvent.getByLabel(hbheDigiLabel_,hbhedigis_)) {
-    edm::LogWarning("myEventData::get") <<
-      "Digis not found"<< std::endl;
-  }
+  if (hbheDigiTag_.label().size())
+    if(!iEvent.getByLabel(hbheDigiTag_,hbhedigis_)) {
+      edm::LogWarning("myEventData::get") <<
+	"Digis not found, "<< hbheDigiTag_ << std::endl;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got HBHE digis "<< hbheDigiTag_ << std::endl;
 
-  iEvent.getByLabel(simHitLabel_, hsimhits_);
- 
-  if (!hsimhits_.isValid()) {
-    edm::LogWarning("myEventData::get") <<
-      "Simhits not found"<< std::endl;
-  }
+  if (simHitTag_.label().size())
+    if (!iEvent.getByLabel(simHitTag_, hsimhits_)) {
+      edm::LogWarning("myEventData::get") <<
+	"Simhits not found, " << simHitTag_ << std::endl;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got sim hits " << simHitTag_ << std::endl;
 
-  if (!iEvent.getByLabel(hbheRechitLabel_,hbherechits_)) {
-    edm::LogWarning("myEventData::get") <<
-      "Rechits not found"<< std::endl;
-    return;
-  }
+  if (hbheRechitTag_.label().size())
+    if (!iEvent.getByLabel(hbheRechitTag_,hbherechits_)) {
+      edm::LogWarning("myEventData::get") <<
+	"HBHE Rechits not found, " << hbheRechitTag_  << std::endl;
+      return;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got HBHE Rechits " << hbheRechitTag_ << std::endl;
 
-  if (!iEvent.getByLabel(hfRechitLabel_,hfrechits_)) {
-    edm::LogWarning("myEventData::get") <<
-      "Rechits not found"<< std::endl;
-    return;
-  }
+  if (hfRechitTag_.label().size())
+    if (!iEvent.getByLabel(hfRechitTag_,hfrechits_)) {
+      edm::LogWarning("myEventData::get") <<
+	"HF Rechits not found, " << hfRechitTag_ << std::endl;
+      return;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got HF Rechits " << hfRechitTag_ << std::endl;
+  
+  if (hoRechitTag_.label().size())
+    if (!iEvent.getByLabel(hoRechitTag_,horechits_)) {
+      edm::LogWarning("myEventData::get") <<
+	"HO Rechits not found, " << hoRechitTag_ << std::endl;
+      return;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got HO Rechits " << hoRechitTag_ << std::endl;
 
   // CaloTowers
-  if (!iEvent.getByLabel(twrLabel_,towers_)) {
-    edm::LogWarning("myEventData::get") <<
-      "Calo Towers not found"<< std::endl;
-  }
-
+  if (twrTag_.label().size())
+    if (!iEvent.getByLabel(twrTag_,towers_)) {
+      edm::LogWarning("myEventData::get") <<
+	"Calo Towers not found, " << twrTag_ << std::endl;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got Calo Towers " << twrTag_ << std::endl;
+  
   // MET
-  if (!iEvent.getByLabel(metLabel_, recmet_)) {
-    edm::LogWarning("myEventData::get") <<
-      "Calo MET not found"<< std::endl;
-  }
+  if (metTag_.label().size())
+    if (!iEvent.getByLabel(metTag_, recmet_)) {
+      edm::LogWarning("myEventData::get") <<
+	"Calo MET not found, " << metTag_ << std::endl;
+    } else if (verbose_) 
+      edm::LogInfo("myEventData::get") << "Got Calo MET " << metTag_ << std::endl;
 }
