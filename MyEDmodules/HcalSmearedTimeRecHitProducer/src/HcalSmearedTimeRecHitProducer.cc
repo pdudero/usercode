@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell Dudero
 //         Created:  Thu May 14 21:27:19 CEST 2009
-// $Id$
+// $Id: HcalSmearedTimeRecHitProducer.cc,v 1.1 2009/05/16 16:58:06 dudero Exp $
 //
 //
 
@@ -138,11 +138,7 @@ HcalSmearedTimeRecHitProducer::HcalSmearedTimeRecHitProducer(const edm::Paramete
   } else if (subdet_=HcalBarrel) {
     // default smear Envelope:
 
-    smearEnvelope_.push_back(std::pair<double,double> ( 4.00, 1.700));
-    smearEnvelope_.push_back(std::pair<double,double>(  6.50, 1.800));
-    smearEnvelope_.push_back(std::pair<double,double>( 10.00, 1.900));
-    smearEnvelope_.push_back(std::pair<double,double>( 13.00, 2.000));
-    smearEnvelope_.push_back(std::pair<double,double>( 15.00, 2.100));
+    smearEnvelope_.push_back(std::pair<double,double> ( 4.00, 2.200));
     smearEnvelope_.push_back(std::pair<double,double>( 20.00, 2.200));
     smearEnvelope_.push_back(std::pair<double,double>( 25.00, 1.950));
     smearEnvelope_.push_back(std::pair<double,double>( 30.00, 1.809));
