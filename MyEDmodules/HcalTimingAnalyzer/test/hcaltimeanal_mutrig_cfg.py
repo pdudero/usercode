@@ -24,13 +24,18 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff")
+process.myanunfilt.recHitEscaleMaxGeV  = cms.double(150.5)
+process.myanfilt6.recHitEscaleMaxGeV   = cms.double(150.5)
+process.myanfilt10.recHitEscaleMaxGeV  = cms.double(150.5)
+process.myanfilt1ts.recHitEscaleMaxGeV = cms.double(150.5)
+process.myanfilt4ts.recHitEscaleMaxGeV = cms.double(150.5)
 
 #-----------------------------
 # Hcal Conditions: from Global Conditions Tag
 #-----------------------------
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.GlobalTag.connect = 'frontier://Frontier/CMS_COND_21X_GLOBALTAG'
-process.GlobalTag.globaltag = 'CRAFT_V4P::All' # or any other appropriate
+process.GlobalTag.globaltag = 'CRAFT_ALL_V9::All' # or any other appropriate
 process.prefer("GlobalTag")
 
 # L1 GT EventSetup
@@ -40,10 +45,7 @@ process.load("L1Trigger.Skimmer.l1Filter_cfi")
 process.l1Filter.algorithms = cms.vstring("L1_SingleMuOpen")
 
 #process.p = cms.Path(process.l1Filter*process.hcalDigis*process.myan)
-process.p = cms.Path(process.l1Filter*
-                     process.myanunfilt+
-                     process.filt6+
-                     process.filt10)
+process.p = cms.Path(process.l1Filter*process.allfilts)
 
 process.out = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(

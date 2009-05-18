@@ -1,6 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-
 process = cms.Process("MyAnal")
 
 process.load("Configuration.StandardSequences.Geometry_cff")
@@ -12,9 +11,9 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to useru
     fileNames = cms.untracked.vstring(
-#'/store/data/Commissioning08/Cosmics/RECO/CRAFT_ALL_V9_225-v2/0002/CA3CF466-E7F9-DD11-AF70-003048679006.root'
+'/store/data/Commissioning08/Cosmics/RECO/CRAFT_ALL_V9_225-v2/0002/CA3CF466-E7F9-DD11-AF70-003048679006.root'
 #'/store/data/Commissioning08/Cosmics/RAW-RECO/CRAFT_ALL_V9_TrackingPointing_225-v3/0006/E45FEB6E-A0FF-DD11-B5ED-00304867C0FC.root'
-'/store/data/Commissioning08/Cosmics/RECO/CRAFT_ALL_V9_225-v2/0002/1AC595AF-BFFA-DD11-A899-0030486792B6.root'
+#'/store/data/Commissioning08/Cosmics/RECO/CRAFT_ALL_V9_225-v2/0002/1AC595AF-BFFA-DD11-A899-0030486792B6.root'
     )
 )
 
@@ -30,7 +29,7 @@ process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff")
 #-----------------------------
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.GlobalTag.connect = 'frontier://Frontier/CMS_COND_21X_GLOBALTAG'
-process.GlobalTag.globaltag = 'CRAFT_V4P::All' # or any other appropriate
+process.GlobalTag.globaltag = 'CRAFT_ALL_V9::All' # or any other appropriate
 process.prefer("GlobalTag")
 
 # L1 GT EventSetup
@@ -41,10 +40,7 @@ process.load("L1Trigger.Skimmer.l1Filter_cfi")
 process.l1Filter.algorithms = cms.vstring("L1_SingleEG5_00001")
 
 #process.p = cms.Path(process.l1Filter*process.hcalDigis*process.myan)
-process.p = cms.Path(process.l1Filter*
-                     process.myanunfilt+
-                     process.filt6+
-                     process.filt10)
+process.p = cms.Path(process.l1Filter*process.allfilts)
 
 process.out = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(
