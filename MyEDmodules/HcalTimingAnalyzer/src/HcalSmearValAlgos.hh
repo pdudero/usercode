@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalSmearValAlgos.hh,v 1.3 2009/05/06 19:45:10 dudero Exp $
+// $Id: HcalSmearValAlgos.hh,v 1.1 2009/05/17 18:58:27 dudero Exp $
 //
 //
 
@@ -57,16 +57,14 @@ private:
 
   template <class Hit, class Col>
   void
-  compareHits(typename edm::Handle<Col> unsmearedHits, typename edm::Handle<Col> smearedHits);
+  compareHits(typename edm::Handle<Col> unsmearedHits,
+	      typename edm::Handle<Col> smearedHits);
 
   // ----------member data ---------------------------
 
   myAnalCut *cutNone_;
 
   // Names of histos
-  std::string st_rhTimes_,  st_rhEnergies_;
-  std::string st_avgPulse_;
-  std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;
 
   std::string st_rhTprofd1_;
   std::string st_rhTprofd2_;
@@ -76,8 +74,12 @@ private:
   std::string st_deltaTprofd2_;
   std::string st_deltaTprofd3_;
   std::string st_deltaTprofd4_;
-  std::string st_rhTimingVsE_;
-  std::string st_deltaTvsE_;
+  std::string st_hbheTimingVsE_;
+  std::string st_hfTimingVsE_;
+  std::string st_hoTimingVsE_;
+  std::string st_hbheDeltaTvsE_;
+  std::string st_hfDeltaTvsE_;
+  std::string st_hoDeltaTvsE_;
 
   std::set<uint32_t> s_runs_;
 
@@ -103,17 +105,27 @@ private:
 
 template <class Hit, class Col>
 void
-HcalSmearValAlgos::compareHits(typename edm::Handle<Col> unsmearedHits, typename edm::Handle<Col> smearedHits)
+HcalSmearValAlgos::compareHits(typename edm::Handle<Col> unsmearedHits,
+			       typename edm::Handle<Col> smearedHits)
 {
-  if (smearedHits.isValid() &&
-      unsmearedHits.isValid() ) {
+  if (!unsmearedHits.isValid())
+    edm::LogWarning("Unsmeared Rechit collection handle not valid!");
+  else if (!smearedHits.isValid())
+    edm::LogWarning("Smeared Rechit collection handle not valid!");
+  else {
+    if (smearedHits->size() != unsmearedHits->size() )
+      edm::LogWarning("Rechit collection sizes not the same: ") <<
+	unsmearedHits->size() << " != " << smearedHits->size() << endl;
+
     for (unsigned iunsm = 0, ism=0;
-	 iunsm < unsmearedHits->size() && ism < smearedHits->size();
+	 (iunsm < unsmearedHits->size()) &&
+	   (ism < smearedHits->size());
 	 ++iunsm, ++ism) {
       const Hit& unsmrh = (*(unsmearedHits))[iunsm];
       const Hit& smrh   = (*(smearedHits))[ism];
 
-      if (smrh.id() != unsmrh.id()) throw cms::Exception("the rechits aren't tracking, man!") << endl;
+      if (smrh.id() != unsmrh.id())
+	throw cms::Exception("the rechits aren't tracking, man!") << endl;
 
       HcalDetId detId = smrh.id();
       double htime    = smrh.time();
@@ -124,8 +136,29 @@ HcalSmearValAlgos::compareHits(typename edm::Handle<Col> unsmearedHits, typename
       int    depth    = detId.depth();
 
       myAnalHistos *myAH = cutNone_->histos();
-      myAH->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
-      myAH->fill2d<TH2D>(st_deltaTvsE_,energy,deltaT);
+
+      // time vs. energy by subdetector:
+
+      switch(detId.subdet()) {
+      case HcalBarrel: 
+      case HcalEndcap: 
+	myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
+	myAH->fill2d<TH2D>(st_hbheDeltaTvsE_,energy,deltaT);
+	break;
+      case HcalForward: 
+	myAH->fill2d<TH2D>(st_hfTimingVsE_,energy,htime);
+	myAH->fill2d<TH2D>(st_hfDeltaTvsE_,energy,deltaT);
+	break;
+      case HcalOuter: 
+	myAH->fill2d<TH2D>(st_hoTimingVsE_,energy,htime);
+	myAH->fill2d<TH2D>(st_hoDeltaTvsE_,energy,deltaT);
+	break;
+      default:
+	edm::LogWarning("subdet not covered: ") << detId << endl;
+	break;
+      }
+
+      // depth-based timing profiles:
 
       std::string st_rhTprof, st_deltaTprof;
       switch(depth) {

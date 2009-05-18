@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalSmearValAlgos.cc,v 1.3 2009/05/06 19:45:10 dudero Exp $
+// $Id: HcalSmearValAlgos.cc,v 1.1 2009/05/17 18:58:27 dudero Exp $
 //
 //
 
@@ -87,8 +87,8 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
    * 2-D HISTOGRAMS AFTER:                 *
    *****************************************/
 
-  st_rhTimingVsE_ = "h_rhTimingVsE" + runstrn;
-  hpars2d.name   = st_rhTimingVsE_;
+  st_hbheTimingVsE_ = "h2d_hbheTimingVsE" + runstrn;
+  hpars2d.name   = st_hbheTimingVsE_;
   hpars2d.title  = "HBHE RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
   hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars2d.minx   = recHitEscaleMinGeV_;
@@ -99,9 +99,57 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_deltaTvsE_ = "h_rhDeltaTvsE" + runstrn;
-  hpars2d.name   =   st_deltaTvsE_;
+  st_hoTimingVsE_ = "h2d_hoTimingVsE" + runstrn;
+  hpars2d.name   = st_hoTimingVsE_;
+  hpars2d.title  = "HO RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = recHitTscaleNbins_;
+  hpars2d.miny   = recHitTscaleMinNs_;
+  hpars2d.maxy   = recHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hfTimingVsE_ = "h2d_hfTimingVsE" + runstrn;
+  hpars2d.name   = st_hfTimingVsE_;
+  hpars2d.title  = "HF RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = recHitTscaleNbins_;
+  hpars2d.miny   = recHitTscaleMinNs_;
+  hpars2d.maxy   = recHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hbheDeltaTvsE_  = "h2d_hbheDeltaTvsE" + runstrn;
+  hpars2d.name   = st_hbheDeltaTvsE_;
   hpars2d.title  = "HBHE DeltaT (Smear-Unsmear) vs. Energy " + runstrt + "; Rechit Energy (GeV); SmearT-UnsmearT (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = deltaTscaleNbins_;
+  hpars2d.miny   = deltaTscaleMinNs_;
+  hpars2d.maxy   = deltaTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hoDeltaTvsE_  = "h2d_hoDeltaTvsE" + runstrn;
+  hpars2d.name   = st_hoDeltaTvsE_;
+  hpars2d.title  = "HO DeltaT (Smear-Unsmear) vs. Energy " + runstrt + "; Rechit Energy (GeV); SmearT-UnsmearT (ns)";
+  hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  hpars2d.minx   = recHitEscaleMinGeV_;
+  hpars2d.maxx   = recHitEscaleMaxGeV_;
+  hpars2d.nbinsy = deltaTscaleNbins_;
+  hpars2d.miny   = deltaTscaleMinNs_;
+  hpars2d.maxy   = deltaTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hfDeltaTvsE_  = "h2d_hfDeltaTvsE" + runstrn;
+  hpars2d.name   = st_hfDeltaTvsE_;
+  hpars2d.title  = "HF DeltaT (Smear-Unsmear) vs. Energy " + runstrt + "; Rechit Energy (GeV); SmearT-UnsmearT (ns)";
   hpars2d.nbinsx = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
   hpars2d.minx   = recHitEscaleMinGeV_;
   hpars2d.maxx   = recHitEscaleMaxGeV_;
@@ -115,7 +163,7 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
    * 2-D PROFILES:                         *
    *****************************************/
 
-  st_rhTprofd1_  = "h_rhTperIetaIphiDepth1Prof" + runstrn;
+  st_rhTprofd1_  = "p2d_rhTperIetaIphiDepth1" + runstrn;
   hpars2d.name   = st_rhTprofd1_;
   hpars2d.title  = "HBEF (Depth 1) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -127,7 +175,7 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd2_  = "h_rhTperIetaIphiDepth2Prof" + runstrn;
+  st_rhTprofd2_  = "p2d_rhTperIetaIphiDepth2" + runstrn;
   hpars2d.name   = st_rhTprofd2_;
   hpars2d.title  = "HBEF (Depth 2) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -139,9 +187,9 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd3_  = "h_rhTperIetaIphiDepth3Prof" + runstrn;
+  st_rhTprofd3_  = "p2d_rhTperIetaIphiDepth3" + runstrn;
   hpars2d.name   = st_rhTprofd3_;
-  hpars2d.title  = "HBEF (Depth 3) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HE (Depth 3) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -151,9 +199,9 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd4_  = "h_rhTperIetaIphiDepth4Prof" + runstrn;
+  st_rhTprofd4_  = "p2d_rhTperIetaIphiDepth4" + runstrn;
   hpars2d.name   = st_rhTprofd4_;
-  hpars2d.title  = "HBEF (Depth 4) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HO (Depth 4) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -163,7 +211,7 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_deltaTprofd1_ = "h_deltaTperIetaIphiDepth1Prof" + runstrn;
+  st_deltaTprofd1_ = "p2d_deltaTperIetaIphiDepth1" + runstrn;
   hpars2d.name     = st_deltaTprofd1_;
   hpars2d.title    = "HBEF (Depth 1) Delta T Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx   =  83;
@@ -175,7 +223,7 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_deltaTprofd2_  = "h_deltaTperIetaIphiDepth2Prof" + runstrn;
+  st_deltaTprofd2_  = "p2d_deltaTperIetaIphiDepth2" + runstrn;
   hpars2d.name   = st_deltaTprofd2_;
   hpars2d.title  = "HBEF (Depth 2) Delta T Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -187,9 +235,9 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_deltaTprofd3_  = "h_deltaTperIetaIphiDepth3Prof" + runstrn;
+  st_deltaTprofd3_  = "p2d_deltaTperIetaIphiDepth3" + runstrn;
   hpars2d.name   = st_deltaTprofd3_;
-  hpars2d.title  = "HBEF (Depth 3) Delta T Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HE (Depth 3) Delta T Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -199,9 +247,9 @@ void HcalSmearValAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_deltaTprofd4_  = "h_deltaTperIetaIphiDepth4Prof" + runstrn;
+  st_deltaTprofd4_  = "p2d_deltaTperIetaIphiDepth4" + runstrn;
   hpars2d.name   = st_deltaTprofd4_;
-  hpars2d.title  = "HBEF (Depth 4) Delta T Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HO (Depth 4) Delta T Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -256,10 +304,13 @@ HcalSmearValAlgos::process(const myEventData& unsmeared,
     bookPerRunHistos(runn);
     s_runs_.insert(runn);
   }
-
-  compareHits<HBHERecHit,HBHERecHitCollection>(unsmeared.hbherechits(),smeared.hbherechits());
-  compareHits<HFRecHit,HFRecHitCollection>(unsmeared.hfrechits(),smeared.hfrechits());
-  compareHits<HORecHit,HORecHitCollection>(unsmeared.horechits(),smeared.horechits());
+      
+  compareHits<HBHERecHit,HBHERecHitCollection>(unsmeared.hbherechits(),
+					       smeared.hbherechits());
+  compareHits<HFRecHit,HFRecHitCollection>(unsmeared.hfrechits(),
+					   smeared.hfrechits());
+  compareHits<HORecHit,HORecHitCollection>(unsmeared.horechits(),
+					   smeared.horechits());
 }
 
 
