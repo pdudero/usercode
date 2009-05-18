@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.1 2009/04/09 22:12:43 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.2 2009/05/06 19:49:14 dudero Exp $
 //
 //
 
@@ -31,6 +31,7 @@
 
 #include "TH1.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 //
 // class declaration
@@ -95,6 +96,7 @@ void myAnalHistos::book1d(const std::vector<HistoParams_t>& v_pars)
   for (uint32_t i=0; i<v_pars.size(); i++) {
     Histo_t histo;
     histo.pars = v_pars[i];
+
     std::cout << "booking histogram " << histo.pars.name << std::endl;
     histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
 				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx);
@@ -109,6 +111,7 @@ void myAnalHistos::book2d(const std::vector<HistoParams_t>& v_pars)
   for (uint32_t i=0; i<v_pars.size(); i++) {
     Histo_t histo;
     histo.pars = v_pars[i];
+
     std::cout << "booking histogram " << histo.pars.name << std::endl;
     histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
 				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx,
@@ -129,6 +132,8 @@ myAnalHistos::fill1d(std::string& hname,double val,double weight)
   if (ith != hm_histos_.end()) {
     T *p = (T *)ith->second.ptr;
     p->Fill(val,weight);
+  } else {
+    edm::LogError("Couldn't find hash for " + hname + "!") << std::endl;
   }
 }
 
@@ -146,6 +151,8 @@ myAnalHistos::fill1d(std::map<std::string,double>& vals)
     if (ith != hm_histos_.end()) {
       T *p = (T *)ith->second.ptr;
       p->Fill(itv->second);
+    } else {
+      edm::LogError("Couldn't find hash for " + itv->first + "!") << std::endl;
     }
   }
 }
@@ -162,6 +169,8 @@ myAnalHistos::fill2d(std::string& hname,double valx,double valy,double weight)
   if (ith != hm_histos_.end()) {
     T *p = (T *)ith->second.ptr;
     p->Fill(valx,valy,weight);
+  } else {
+    edm::LogError("Couldn't find hash for " + hname + "!") << std::endl;
   }
 }
 
@@ -179,6 +188,8 @@ myAnalHistos::fill2d(std::map<std::string,std::pair<double,double> >& vals)
     if (ith != hm_histos_.end()) {
       T *p = (T *)ith->second.ptr;
       p->Fill(itv->second.first,itv->second.second);
+    } else {
+      edm::LogError("Couldn't find hash for " + itv->first + "!") << std::endl;
     }
   }
 }
