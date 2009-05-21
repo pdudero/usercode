@@ -2,11 +2,11 @@ import FWCore.ParameterSet.Config as cms
 
 myan = cms.EDAnalyzer('HcalTimingAnalyzer',
     eventDataPset = cms.untracked.PSet(
-      hbheDigiLabel   = cms.untracked.InputTag("hcalDigis"),
+      simHitLabel     = cms.untracked.InputTag(""), # change it if you want 'em
+      hbheDigiLabel   = cms.untracked.InputTag(""), # change it if you want 'em
       hbheRechitLabel = cms.untracked.InputTag("hbhereco"),
       hfRechitLabel   = cms.untracked.InputTag("hfreco"),
       hoRechitLabel   = cms.untracked.InputTag("horeco"),
-      simHitLabel     = cms.untracked.InputTag("g4SimHits","HcalHits"),
       metLabel        = cms.untracked.InputTag("metNoHF"),
       twrLabel        = cms.untracked.InputTag("towerMaker")
     ),
@@ -30,10 +30,4 @@ myan = cms.EDAnalyzer('HcalTimingAnalyzer',
     hcalRecHitTscaleNbins  = cms.int32(401),
     hcalRecHitTscaleMinNs  = cms.double(-100.5),
     hcalRecHitTscaleMaxNs  = cms.double(100.5),
-
-    simHitTscaleNbins  = cms.int32(501),
-    simHitTscaleMinNs  = cms.double(-10.5),
-    simHitTscaleMaxNs  = cms.double(40.5),
-
-    simHitEnergyMinGeVthreshold = cms.double(0.5)
 )
