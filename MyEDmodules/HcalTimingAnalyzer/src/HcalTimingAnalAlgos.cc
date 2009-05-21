@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.3 2009/05/06 19:45:10 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.4 2009/05/16 21:26:45 dudero Exp $
 //
 //
 
@@ -59,10 +59,6 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   hcalRecHitTscaleMaxNs_(iConfig.getParameter<double>("hcalRecHitTscaleMaxNs")),
   hcalRecHitEscaleMinGeV_(iConfig.getParameter<double>("hcalRecHitEscaleMinGeV")),
   hcalRecHitEscaleMaxGeV_(iConfig.getParameter<double>("hcalRecHitEscaleMaxGeV")),
-  simHitTscaleNbins_(iConfig.getParameter<int>("simHitTscaleNbins")),
-  simHitTscaleMinNs_(iConfig.getParameter<double>("simHitTscaleMinNs")),
-  simHitTscaleMaxNs_(iConfig.getParameter<double>("simHitTscaleMaxNs")),
-  simHitEnergyMinGeVthreshold_(iConfig.getParameter<double>("simHitEnergyMinGeVthreshold")),
   rundescr_(iConfig.getUntrackedParameter<std::string>("runDescription",""))
 {
 
@@ -83,6 +79,26 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   if ((v_tgtid.size() > 0) &&
       !convertIdNumbers(v_tgtid, tgtTwrId_))
     throw cms::Exception("Invalid detID vector");
+
+  edm::ParameterSet edPset =
+    iConfig.getUntrackedParameter<edm::ParameterSet>("eventDataPset");
+
+  edm::InputTag hbheDigiTag =
+    edPset.getUntrackedParameter<edm::InputTag>("hbheDigiLabel",edm::InputTag(""));
+
+  doHBHEdigis_ = hbheDigiTag.label().size() > 0;
+
+  edm::InputTag simHitTag =
+    edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""));
+
+  doSimHits_ = simHitTag.label().size() > 0;
+
+  if (doSimHits_) {
+    simHitTscaleNbins_           = iConfig.getParameter<int>("simHitTscaleNbins");
+    simHitTscaleMinNs_           = iConfig.getParameter<double>("simHitTscaleMinNs");
+    simHitTscaleMaxNs_           = iConfig.getParameter<double>("simHitTscaleMaxNs");
+    simHitEnergyMinGeVthreshold_ = iConfig.getParameter<double>("simHitEnergyMinGeVthreshold");
+  }
 }
 
 //======================================================================
@@ -136,16 +152,27 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
    *****************************************/
   hpars1d.nbinsy = 0;
 
-  st_avgPulse_ = "pulse" + runstrn;
-  hpars1d.name   = st_avgPulse_;
-  hpars1d.title  = "HBHE Average Pulse Shape " + runstrt;
-  hpars1d.nbinsx = 10;
-  hpars1d.minx   = -0.5;
-  hpars1d.maxx   =  9.5;
+  if (doHBHEdigis_) {
+    st_avgPulse_   = "h1d_pulse" + runstrn;
+    hpars1d.name   = st_avgPulse_;
+    hpars1d.title  = "HBHE Average Pulse Shape " + runstrt;
+    hpars1d.nbinsx = 10;
+    hpars1d.minx   = -0.5;
+    hpars1d.maxx   =  9.5;
 
-  v_hpars1d.push_back(hpars1d);
+    v_hpars1d.push_back(hpars1d);
 
-  st_rhTimes_ = "RHTimes" + runstrn;
+    st_hbhedigiColSize_ = "HBHEdigiCollectionSize" + runstrn;
+    hpars1d.name   = st_hbhedigiColSize_;
+    hpars1d.title  = "HBHE Digi Collection Size " + runstrt;
+    hpars1d.nbinsx = 5201; // 72chan/RBX*72RBX = 5184
+    hpars1d.minx   = -0.5;
+    hpars1d.maxx   = 5200.5;
+
+    v_hpars1d.push_back(hpars1d);
+  }
+
+  st_rhTimes_ = "h1d_RHTimes" + runstrn;
   hpars1d.name   = st_rhTimes_;
   hpars1d.title  = "HBHE RecHit Times " + runstrt + "; Rechit Time (ns)";
   hpars1d.nbinsx = hcalRecHitTscaleNbins_;
@@ -154,7 +181,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars1d.push_back(hpars1d);
 
-  st_rhEnergies_ = "RHEnergies" + runstrn;
+  st_rhEnergies_ = "h1d_RHEnergies" + runstrn;
   hpars1d.name   = st_rhEnergies_;
   hpars1d.title  = "HBHE RecHit Energies " + runstrt + "; Rechit Energy (GeV)";
   hpars1d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -163,25 +190,27 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars1d.push_back(hpars1d);
 
-  st_shTimes_ = "SHTimes" + runstrn;
-  hpars1d.name   = st_shTimes_;
-  hpars1d.title  = "Hcal SimHit Times " + runstrt + "; Simhit Time (ns)";
-  hpars1d.nbinsx = simHitTscaleNbins_;
-  hpars1d.minx   = simHitTscaleMinNs_;
-  hpars1d.maxx   = simHitTscaleMaxNs_;
+  if (doSimHits_) {
+    st_shTimes_ = "h1d_SHTimes" + runstrn;
+    hpars1d.name   = st_shTimes_;
+    hpars1d.title  = "Hcal SimHit Times " + runstrt + "; Simhit Time (ns)";
+    hpars1d.nbinsx = simHitTscaleNbins_;
+    hpars1d.minx   = simHitTscaleMinNs_;
+    hpars1d.maxx   = simHitTscaleMaxNs_;
+    
+    v_hpars1d.push_back(hpars1d);
 
-  v_hpars1d.push_back(hpars1d);
+    st_shEnergies_ = "h1d_SHEnergies" + runstrn;
+    hpars1d.name   = st_shEnergies_;
+    hpars1d.title  = "HBHE SimHit Energies " + runstrt + "; Simhit Energy * 200)";
+    hpars1d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+    hpars1d.minx   = hcalRecHitEscaleMinGeV_;
+    hpars1d.maxx   = hcalRecHitEscaleMaxGeV_;
 
-  st_shEnergies_ = "SHEnergies" + runstrn;
-  hpars1d.name   = st_shEnergies_;
-  hpars1d.title  = "HBHE SimHit Energies " + runstrt + "; Simhit Energy * 200)";
-  hpars1d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
-  hpars1d.minx   = hcalRecHitEscaleMinGeV_;
-  hpars1d.maxx   = hcalRecHitEscaleMaxGeV_;
+    v_hpars1d.push_back(hpars1d);
+  }
 
-  v_hpars1d.push_back(hpars1d);
-
-  st_caloMet_Met_ = "h_caloMet_Met" + runstrn;
+  st_caloMet_Met_ = "h1d_caloMet_Met" + runstrn;
   hpars1d.name   = st_caloMet_Met_;
   hpars1d.title  = "MET from CaloTowers " + runstrt + "; MET (GeV)";
   hpars1d.nbinsx = 100;
@@ -190,7 +219,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars1d.push_back(hpars1d);
 
-  st_caloMet_Phi_ = "h_caloMet_Phi" + runstrn;
+  st_caloMet_Phi_ = "h1d_caloMet_Phi" + runstrn;
   hpars1d.name   = st_caloMet_Phi_;
   hpars1d.title  = "MET #phi from CaloTowers " + runstrt + "; MET phi (rad)";
   hpars1d.nbinsx = 100;
@@ -199,7 +228,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars1d.push_back(hpars1d);
 
-  st_caloMet_SumEt_ = "h_caloMet_SumEt" + runstrn;
+  st_caloMet_SumEt_ = "h1d_caloMet_SumEt" + runstrn;
   hpars1d.name   = st_caloMet_SumEt_;
   hpars1d.title  = "SumET from CaloTowers " + runstrt + "; SumET (GeV)";
   hpars1d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -212,9 +241,9 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
    * 2-D HISTOGRAMS AFTER:                 *
    *****************************************/
 
-  st_rhEmap_   = "h_rhEperIetaIphi" + runstrn;
+  st_rhEmap_     = "h2d_rhEperIetaIphi" + runstrn;
   hpars2d.name   = st_rhEmap_;
-  hpars2d.title  = "HBHE RecHit Energy Map " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HBEF RecHit Energy Map ($\Sigma$depths)" + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -224,8 +253,8 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_rhTimingVsE_ = "h_rhTimingVsE" + runstrn;
-  hpars2d.name   = st_rhTimingVsE_;
+  st_hbheTimingVsE_ = "h2d_hbheTimingVsE" + runstrn;
+  hpars2d.name   = st_hbheTimingVsE_;
   hpars2d.title  = "HBHE RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
   hpars2d.minx   = hcalRecHitEscaleMinGeV_;
@@ -236,19 +265,45 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_shTimingVsE_ = "h_shTimingVsE" + runstrn;
-  hpars2d.name   = st_shTimingVsE_;
-  hpars2d.title  = "Hcal SimHit Timing vs. Energy " + runstrt + "; Simhit Energy * 200; Simhit Time (ns)";
-  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_) + 1;
-  hpars2d.minx   =  -0.5;
+  st_hfTimingVsE_ = "h2d_hfTimingVsE" + runstrn;
+  hpars2d.name   = st_hfTimingVsE_;
+  hpars2d.title  = "HF RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
   hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
-  hpars2d.nbinsy = simHitTscaleNbins_;
-  hpars2d.miny   = simHitTscaleMinNs_;
-  hpars2d.maxy   = simHitTscaleMaxNs_;
+  hpars2d.nbinsy = hcalRecHitTscaleNbins_;
+  hpars2d.miny   = hcalRecHitTscaleMinNs_;
+  hpars2d.maxy   = hcalRecHitTscaleMaxNs_;
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctHcalTvstwrE_ = "h_ctHcalTvstwrE" + runstrn;
+  st_hoTimingVsE_ = "h2d_hoTimingVsE" + runstrn;
+  hpars2d.name   = st_hoTimingVsE_;
+  hpars2d.title  = "HO RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
+  hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars2d.nbinsy = hcalRecHitTscaleNbins_;
+  hpars2d.miny   = hcalRecHitTscaleMinNs_;
+  hpars2d.maxy   = hcalRecHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  if (doSimHits_) {
+    st_shTimingVsE_ = "h2d_shTimingVsE" + runstrn;
+    hpars2d.name   = st_shTimingVsE_;
+    hpars2d.title  = "Hcal SimHit Timing vs. Energy " + runstrt + "; Simhit Energy * 200; Simhit Time (ns)";
+    hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_) + 1;
+    hpars2d.minx   =  -0.5;
+    hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+    hpars2d.nbinsy = simHitTscaleNbins_;
+    hpars2d.miny   = simHitTscaleMinNs_;
+    hpars2d.maxy   = simHitTscaleMaxNs_;
+
+    v_hpars2d.push_back(hpars2d);
+  }
+
+  st_ctHcalTvstwrE_ = "h2d_ctHcalTvstwrE" + runstrn;
   hpars2d.name   = st_ctHcalTvstwrE_;
   hpars2d.title  = "Calo Tower HCAL Timing vs. Energy " + runstrt + "; Tower Energy (GeV); HCAL Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -260,7 +315,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctHcalTvstwrEg_ = "h_ctHcalTvstwrEgood" + runstrn;
+  st_ctHcalTvstwrEg_ = "h2d_ctHcalTvstwrEgood" + runstrn;
   hpars2d.name   = st_ctHcalTvstwrEg_;
   hpars2d.title  = "Calo Tower HCAL Timing vs. Energy " + runstrt + "; Tower Energy (GeV); HCAL Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -272,7 +327,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctEcalTvstwrE_ = "h_ctEcalTvstwrE" + runstrn;
+  st_ctEcalTvstwrE_ = "h2d_ctEcalTvstwrE" + runstrn;
   hpars2d.name   = st_ctEcalTvstwrE_;
   hpars2d.title  = "Calo Tower ECAL Timing vs. Energy " + runstrt + "; Tower Energy (GeV); ECAL Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -284,7 +339,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctEcalTvstwrEg_ = "h_ctEcalTvstwrEgood" + runstrn;
+  st_ctEcalTvstwrEg_ = "h2d_ctEcalTvstwrEgood" + runstrn;
   hpars2d.name   = st_ctEcalTvstwrEg_;
   hpars2d.title  = "Calo Tower ECAL Timing vs. Energy " + runstrt + "; Tower Energy (GeV); ECAL Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -296,7 +351,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctEcalTvsHcalT_ = "h_ctEcalTvsHcalT" + runstrn;
+  st_ctEcalTvsHcalT_ = "h2d_ctEcalTvsHcalT" + runstrn;
   hpars2d.name   = st_ctEcalTvsHcalT_;
   hpars2d.title  = "Calo Tower ECAL Time vs. HCAL Time " + runstrt + "; HCAL Time (ns); ECAL Time (ns)";
   hpars2d.nbinsx = 100;      // hcalRecHitTscaleNbins_;
@@ -308,7 +363,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
-  st_ctEcalTvsHcalTg_ = "h_ctEcalTvsHcalTgood" + runstrn;
+  st_ctEcalTvsHcalTg_ = "h2d_ctEcalTvsHcalTgood" + runstrn;
   hpars2d.name   = st_ctEcalTvsHcalTg_;
   hpars2d.title  = "Calo Tower ECAL Time vs. HCAL Time " + runstrt + "; HCAL Time (ns); ECAL Time (ns)";
   hpars2d.nbinsx = hcalRecHitTscaleNbins_;
@@ -321,7 +376,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   v_hpars2d.push_back(hpars2d);
 
 #if 0
-  st_ctWeightTvsE_ = "h_ctWeightTvsE" + runstrn;
+  st_ctWeightTvsE_ = "h2d_ctWeightTvsE" + runstrn;
   hpars2d.name   = st_ctWeightTvsE_;
   hpars2d.title  = "Calo Tower E-Weighted Time vs. Energy " + runstrt + "; Tower Energy (GeV); E-Weighted Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
@@ -338,7 +393,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
    * 2-D PROFILES:                         *
    *****************************************/
 
-  st_rhTprofd1_  = "h_rhTperIetaIphiDepth1Prof" + runstrn;
+  st_rhTprofd1_  = "p2d_rhTperIetaIphiDepth1" + runstrn;
   hpars2d.name   = st_rhTprofd1_;
   hpars2d.title  = "HBEF (Depth 1) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -350,7 +405,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd2_  = "h_rhTperIetaIphiDepth2Prof" + runstrn;
+  st_rhTprofd2_  = "p2d_rhTperIetaIphiDepth2" + runstrn;
   hpars2d.name   = st_rhTprofd2_;
   hpars2d.title  = "HBEF (Depth 2) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -362,7 +417,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd3_  = "h_rhTperIetaIphiDepth3Prof" + runstrn;
+  st_rhTprofd3_  = "p2d_rhTperIetaIphiDepth3" + runstrn;
   hpars2d.name   = st_rhTprofd3_;
   hpars2d.title  = "HBEF (Depth 3) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -374,7 +429,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_rhTprofd4_  = "h_rhTperIetaIphiDepth4Prof" + runstrn;
+  st_rhTprofd4_  = "p2d_rhTperIetaIphiDepth4" + runstrn;
   hpars2d.name   = st_rhTprofd4_;
   hpars2d.title  = "HBEF (Depth 4) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -386,7 +441,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
-  st_ctTprof_    = "h_ctTperIetaIphiProf" + runstrn;
+  st_ctTprof_    = "p2d_ctTperIetaIphiProf" + runstrn;
   hpars2d.name   = st_ctTprof_;
   hpars2d.title  = "Calo Tower Weighted Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
@@ -519,7 +574,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     myAH->fill1d<TH1D>(st_rhTimes_,htime);
     myAH->fill1d<TH1D>(st_rhEnergies_,energy);
     myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,energy);
-    myAH->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+    myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
 
     std::string st_rhTprof;
     switch(depth) {
@@ -550,7 +605,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       myAH->fill1d<TH1D>(st_rhTimes_,htime);
       myAH->fill1d<TH1D>(st_rhEnergies_,energy);
       myAH->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-      myAH->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+      myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
       if (energy > 50.0)
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
     }
@@ -562,11 +617,11 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       myAH->fill1d<TH1D>(st_rhTimes_,htime);
       myAH->fill1d<TH1D>(st_rhEnergies_,energy);
       myAH->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-      myAH->fill2d<TH2D>(st_rhTimingVsE_,energy,htime);
+      myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
       if (energy > 50.0)
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
     }
-  } // loop over rechits
+  } // loop over HBHE rechits
 
   //if (maxrh.id() != HcalDetId::Undefined) {
   if (maxenergy > 0.0) {
@@ -575,7 +630,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     myAH->fill1d<TH1D>(st_rhTimes_,maxtime);
     myAH->fill1d<TH1D>(st_rhEnergies_,maxenergy);
     myAH->fill2d<TH2D>(st_rhEmap_,maxId.ieta(),maxId.iphi(),maxenergy);
-    myAH->fill2d<TH2D>(st_rhTimingVsE_,maxenergy,maxtime);
+    myAH->fill2d<TH2D>(st_hbheTimingVsE_,maxenergy,maxtime);
 
     switch(maxId.depth()) {
     case 1: myAH->fill2d<TProfile2D>(st_rhTprofd1_,maxId.ieta(),maxId.iphi(),maxtime); break;
@@ -619,18 +674,22 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
     double minHitGeV = lookupThresh(detId);
 
+    cutNone_->histos()->fill2d<TH2D>(st_hfTimingVsE_,rh.energy(),rh.time());
+
     if (rh.energy() > minHitGeV) {
       cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhEmap_,
 					    detId.ieta(),
 					    detId.iphi()+detId.depth()-1,
 					    rh.energy());
+
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_hfTimingVsE_,rh.energy(),rh.time());
+
       if (rh.energy() > 50.0)
 	cutMinHitGeV_->histos()->fill2d<TProfile2D>(st_rhTprof,
 						    detId.ieta(),
 						    detId.iphi()+detId.depth()-1,
 						    rh.time());
     }
-
   } // loop over HF rechits
 
   /***************************************************
@@ -647,6 +706,8 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       continue;
     }
 
+    cutNone_->histos()->fill2d<TH2D>(st_hoTimingVsE_,rh.energy(),rh.time());
+
     double minHitGeV = lookupThresh(rh.id());
 
     if (rh.energy() > minHitGeV) {
@@ -654,6 +715,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 					    detId.ieta(),
 					    detId.iphi(),
 					    rh.energy());
+
+      cutMinHitGeV_->histos()->fill2d<TH2D>(st_hoTimingVsE_,rh.energy(),rh.time());
+
       if (rh.energy() > 50.0)
 	cutMinHitGeV_->histos()->fill2d<TProfile2D>(st_rhTprofd4_,
 						    detId.ieta(),
@@ -666,7 +730,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
    *                    SIMHITS                      *
    ***************************************************/
 
-  if (ed.simhits().isValid()) {
+  if (doSimHits_ && ed.simhits().isValid()) {
     std::vector<PCaloHit>  simhits;
     simhits.insert(simhits.end(),ed.simhits()->begin(),ed.simhits()->end());
 
@@ -690,7 +754,11 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
    *                    HBHE DIGIS                   *
    ***************************************************/
 
-  if (ed.hbhedigis().isValid()) {
+  if (doHBHEdigis_ && ed.hbhedigis().isValid()) {
+    // to verify that simulated ZS is working:
+    //
+    cutNone_->histos()->fill1d<TH1D>(st_hbhedigiColSize_,(double)ed.hbhedigis()->size());
+
     for (unsigned idig = 0; idig < ed.hbhedigis()->size (); ++idig) {
       const HBHEDataFrame& frame = (*(ed.hbhedigis()))[idig];
       HcalDetId detId = frame.id();

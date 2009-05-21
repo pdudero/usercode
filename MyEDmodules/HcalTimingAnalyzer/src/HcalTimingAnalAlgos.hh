@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.3 2009/05/06 19:45:10 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.4 2009/05/16 21:26:45 dudero Exp $
 //
 //
 
@@ -60,10 +60,14 @@ private:
   myAnalCut *cutMinHitGeV_;
   myAnalCut *cutAll_;
 
+  bool       doSimHits_;
+  bool       doHBHEdigis_;
+
   // Names of histos
   std::string st_shTimes_,  st_shEnergies_;
   std::string st_rhTimes_,  st_rhEnergies_;
   std::string st_avgPulse_;
+  std::string st_hbhedigiColSize_;
   std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;
 
   std::string st_rhEmap_;
@@ -71,7 +75,9 @@ private:
   std::string st_rhTprofd2_;
   std::string st_rhTprofd3_;
   std::string st_rhTprofd4_;
-  std::string st_rhTimingVsE_;
+  std::string st_hbheTimingVsE_;
+  std::string st_hfTimingVsE_;
+  std::string st_hoTimingVsE_;
   std::string st_shTimingVsE_;
   std::string st_ctHcalTvstwrE_;
   std::string st_ctEcalTvstwrE_;
