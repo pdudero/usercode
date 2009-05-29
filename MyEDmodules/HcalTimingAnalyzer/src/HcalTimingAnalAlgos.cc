@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.4 2009/05/16 21:26:45 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.5 2009/05/21 09:52:41 dudero Exp $
 //
 //
 
@@ -162,7 +162,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
     v_hpars1d.push_back(hpars1d);
 
-    st_hbhedigiColSize_ = "HBHEdigiCollectionSize" + runstrn;
+    st_hbhedigiColSize_ = "h1d_HBHEdigiCollectionSize" + runstrn;
     hpars1d.name   = st_hbhedigiColSize_;
     hpars1d.title  = "HBHE Digi Collection Size " + runstrt;
     hpars1d.nbinsx = 5201; // 72chan/RBX*72RBX = 5184
@@ -171,6 +171,15 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
     v_hpars1d.push_back(hpars1d);
   }
+
+  st_hbheRHColSize_ = "h1d_HBHERecHitCollectionSize" + runstrn;
+  hpars1d.name   = st_hbheRHColSize_;
+  hpars1d.title  = "HBHE RecHit Collection Size " + runstrt;
+  hpars1d.nbinsx = 5201; // 72chan/RBX*72RBX = 5184
+  hpars1d.minx   = -0.5;
+  hpars1d.maxx   = 5200.5;
+  
+  v_hpars1d.push_back(hpars1d);
 
   st_rhTimes_ = "h1d_RHTimes" + runstrn;
   hpars1d.name   = st_rhTimes_;
@@ -243,7 +252,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_rhEmap_     = "h2d_rhEperIetaIphi" + runstrn;
   hpars2d.name   = st_rhEmap_;
-  hpars2d.title  = "HBEF RecHit Energy Map ($\Sigma$depths)" + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HBEF RecHit Energy Map (#Sigma depths)" + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -551,6 +560,11 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
   double  maxenergy = -1e99;
   double  maxtime = -1e99;
 
+  cutNone_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)ed.hbherechits()->size());
+
+  int rechitsOverThresh = 0;
+  //int rechitsInTgtTwr   = 0;
+
   for (unsigned irh = 0; irh < ed.hbherechits()->size (); ++irh) {
     const HBHERecHit& rh = (*(ed.hbherechits()))[irh];
 
@@ -600,6 +614,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     }
 #if 0
     if (detId == tgtTwrId_) {
+      rechitsInTgtTwr++;
       myAnalHistos *myAH = cutTgtTwrOnly_->histos();
     
       myAH->fill1d<TH1D>(st_rhTimes_,htime);
@@ -611,6 +626,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     }
 #endif
     if (energy > minHitGeV) {
+      rechitsOverThresh++;
       s_idsOverThresh.insert(rh.id());
       myAnalHistos *myAH = cutMinHitGeV_->histos();
 
@@ -622,6 +638,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
     }
   } // loop over HBHE rechits
+
+  cutMinHitGeV_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)rechitsOverThresh);
+  //cutTgtTwrOnly_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)rechitsInTgtTwr);
 
   //if (maxrh.id() != HcalDetId::Undefined) {
   if (maxenergy > 0.0) {

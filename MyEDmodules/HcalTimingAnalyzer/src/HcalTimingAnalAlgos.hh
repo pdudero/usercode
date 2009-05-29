@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.4 2009/05/16 21:26:45 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.5 2009/05/21 09:52:41 dudero Exp $
 //
 //
 
@@ -68,6 +68,7 @@ private:
   std::string st_rhTimes_,  st_rhEnergies_;
   std::string st_avgPulse_;
   std::string st_hbhedigiColSize_;
+  std::string st_hbheRHColSize_;
   std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;
 
   std::string st_rhEmap_;
