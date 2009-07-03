@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.2 2009/05/06 19:49:14 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.3 2009/05/18 01:15:06 dudero Exp $
 //
 //
 
@@ -26,10 +26,15 @@
 #include <vector>
 #include <map>
 #include <ext/hash_map>
+#include <iostream>
 
 // user include files
 
-#include "TH1.h"
+#include "TH1D.h"
+#include "TProfile.h"
+#include "TH2D.h"
+#include "TProfile2D.h"
+
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
@@ -53,6 +58,8 @@ public:
   HistoParams_t;
 
   explicit myAnalHistos(const std::string& dirdescr);
+  explicit myAnalHistos(const std::string& dirdescr,
+			TFileDirectory& subdir);
   ~myAnalHistos() {}
 
   template<class T>
@@ -60,14 +67,33 @@ public:
   template<class T>
   void book2d(const std::vector<HistoParams_t>& v_pars);
 
+  template<class T>
+  T *get(const std::string& hname);
+
+#if 0
+  // common usages:
+  void bookTH1D(const std::vector<HistoParams_t>& v_pars) {
+    book1d<TH1D>(v_pars);
+  } 
+  void bookTProfile(const std::vector<HistoParams_t>& v_pars) {
+    book1d<TProfile>(v_pars);
+  }
+  void bookTH2D(const std::vector<HistoParams_t>& v_pars) {
+    book1d<TH2D>(v_pars);
+  }
+  void bookTProfile2D(const std::vector<HistoParams_t>& v_pars) {
+    book1d<TProfile2D>(v_pars);
+  }
+#endif
+
   template <class T>
-  void fill1d(std::map<std::string,double>& vals);
+  void fill1d(const std::map<std::string,double>& vals);
   template <class T>
-  void fill1d(std::string& hname,double val,double weight=1.0);
+  void fill1d(const std::string& hname,double val,double weight=1.0);
   template <class T>
-  void fill2d(std::map<std::string,std::pair<double,double> >& vals);
+  void fill2d(const std::map<std::string,std::pair<double,double> >& vals);
   template <class T>
-  void fill2d(std::string& hname,double valx,double valy,double weight=1.0);
+  void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
 
 private:
 
@@ -97,8 +123,9 @@ void myAnalHistos::book1d(const std::vector<HistoParams_t>& v_pars)
     Histo_t histo;
     histo.pars = v_pars[i];
 
-    std::cout << "booking histogram " << histo.pars.name << std::endl;
-    histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
+    edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
+    histo.ptr = dir_->make <T> (histo.pars.name.c_str(),
+				histo.pars.title.c_str(),
 				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx);
     hm_histos_[histo.pars.name.c_str()] = histo;
   }
@@ -112,7 +139,7 @@ void myAnalHistos::book2d(const std::vector<HistoParams_t>& v_pars)
     Histo_t histo;
     histo.pars = v_pars[i];
 
-    std::cout << "booking histogram " << histo.pars.name << std::endl;
+    edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
     histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
 				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx,
 				histo.pars.nbinsy, histo.pars.miny, histo.pars.maxy);
@@ -124,7 +151,7 @@ void myAnalHistos::book2d(const std::vector<HistoParams_t>& v_pars)
 
 template<class T>
 void
-myAnalHistos::fill1d(std::string& hname,double val,double weight)
+myAnalHistos::fill1d(const std::string& hname,double val,double weight)
 {
   myHashmap_t::const_iterator ith;
 
@@ -133,7 +160,8 @@ myAnalHistos::fill1d(std::string& hname,double val,double weight)
     T *p = (T *)ith->second.ptr;
     p->Fill(val,weight);
   } else {
-    edm::LogError("Couldn't find hash for " + hname + "!") << std::endl;
+    edm::LogError("Couldn't find hash for " + hname + "! ") 
+      << val << "\t" << weight << std::endl;
   }
 }
 
@@ -141,7 +169,7 @@ myAnalHistos::fill1d(std::string& hname,double val,double weight)
 
 template<class T>
 void
-myAnalHistos::fill1d(std::map<std::string,double>& vals)
+myAnalHistos::fill1d(const std::map<std::string,double>& vals)
 {
   std::map<std::string,double>::const_iterator itv;
   for (itv = vals.begin(); itv != vals.end(); itv++) {
@@ -161,7 +189,7 @@ myAnalHistos::fill1d(std::map<std::string,double>& vals)
 
 template<class T>
 void
-myAnalHistos::fill2d(std::string& hname,double valx,double valy,double weight)
+myAnalHistos::fill2d(const std::string& hname,double valx,double valy,double weight)
 {
   myHashmap_t::const_iterator ith;
 
@@ -170,7 +198,8 @@ myAnalHistos::fill2d(std::string& hname,double valx,double valy,double weight)
     T *p = (T *)ith->second.ptr;
     p->Fill(valx,valy,weight);
   } else {
-    edm::LogError("Couldn't find hash for " + hname + "!") << std::endl;
+    edm::LogError("Couldn't find hash for " + hname + "!")
+      << valx << "\t" << valy << "\t" << weight << std::endl;
   }
 }
 
@@ -178,7 +207,7 @@ myAnalHistos::fill2d(std::string& hname,double valx,double valy,double weight)
 
 template<class T>
 void
-myAnalHistos::fill2d(std::map<std::string,std::pair<double,double> >& vals)
+myAnalHistos::fill2d(const std::map<std::string,std::pair<double,double> >& vals)
 {
   std::map<std::string,std::pair<double,double> >::const_iterator itv;
   for (itv = vals.begin(); itv != vals.end(); itv++) {
@@ -192,6 +221,19 @@ myAnalHistos::fill2d(std::map<std::string,std::pair<double,double> >& vals)
       edm::LogError("Couldn't find hash for " + itv->first + "!") << std::endl;
     }
   }
+}
+
+//======================================================================
+
+template<class T>
+T *
+myAnalHistos::get(const std::string& hname)
+{
+  T *p = (T *)NULL;
+  myHashmap_t::const_iterator ith = hm_histos_.find(hname.c_str());
+  if (ith != hm_histos_.end())
+    p = (T *)ith->second.ptr;
+  return p;
 }
 
 #endif // _MYANALHISTOS
