@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalCut.hh,v 1.1 2009/04/09 22:12:43 dudero Exp $
+// $Id: myAnalCut.hh,v 1.2 2009/04/09 22:15:14 dudero Exp $
 //
 //
 
@@ -26,6 +26,8 @@
 
 // user include files
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
 
 //
@@ -33,9 +35,17 @@
 //
 class myAnalCut {
 public:
-  myAnalCut(const int cutnum,const std::string& descr) :
+  myAnalCut(const int cutnum,
+	    const std::string& descr, 
+	    const std::string& rootdirname=std::string("") ) :
     active_(false), cutnum_(cutnum), evtCount_(0), cutdescr_(descr)
-  { pHistos_ = new myAnalHistos(descr); }
+  { if (rootdirname.size()) {
+      edm::Service<TFileService> fs;
+      TFileDirectory rootDir = fs->mkdir(rootdirname);
+      pHistos_ = new myAnalHistos(descr,rootDir);
+    } else
+      pHistos_ = new myAnalHistos(descr);
+  }
 
   inline bool                 isActive()    const { return active_;   }
   inline int                  nEvents()     const { return evtCount_; }
