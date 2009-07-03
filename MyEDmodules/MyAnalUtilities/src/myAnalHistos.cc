@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.cc,v 1.1 2009/04/09 22:12:03 dudero Exp $
+// $Id: myAnalHistos.cc,v 1.2 2009/05/06 19:49:15 dudero Exp $
 //
 //
 
@@ -39,4 +39,13 @@ myAnalHistos::myAnalHistos(const std::string& dirdescr)
 {
   edm::Service<TFileService> fs;
   dir_ = new TFileDirectory(fs->mkdir(dirdescr));
+}
+
+//
+// constructors and destructor
+//
+myAnalHistos::myAnalHistos(const std::string& dirdescr,
+			   TFileDirectory& subdir)
+{
+  dir_ = new TFileDirectory(subdir.mkdir(dirdescr));
 }
