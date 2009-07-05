@@ -6,7 +6,8 @@ hbheRHfilter = cms.EDProducer('HcalRecHitFilter',
      smearEnvelope = cms.vdouble(),
      Subdetector   = cms.string("HBHE"),
      minRecoTimeNs = cms.double(-1e99),
-     maxRecoTimeNs = cms.double(1e99)
+     maxRecoTimeNs = cms.double(1e99),
+     timeShiftNs   = cms.double(0.0)
 )
 
 hfRHfilter = cms.EDProducer('HcalRecHitFilter',
@@ -15,7 +16,8 @@ hfRHfilter = cms.EDProducer('HcalRecHitFilter',
      smearEnvelope = cms.vdouble(),
      Subdetector   = cms.string("HF"),
      minRecoTimeNs = cms.double(-1e99),
-     maxRecoTimeNs = cms.double(1e99)
+     maxRecoTimeNs = cms.double(1e99),
+     timeShiftNs   = cms.double(0.0)
 )
 
 hoRHfilter = cms.EDProducer('HcalRecHitFilter',
@@ -24,5 +26,6 @@ hoRHfilter = cms.EDProducer('HcalRecHitFilter',
      smearEnvelope = cms.vdouble(),
      Subdetector   = cms.string("HO"),
      minRecoTimeNs = cms.double(-1e99),
-     maxRecoTimeNs = cms.double(1e99)
+     maxRecoTimeNs = cms.double(1e99),
+     timeShiftNs   = cms.double(0.0)
 )
