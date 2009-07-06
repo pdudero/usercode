@@ -56,21 +56,18 @@ private:
 
   bool maskedId          (const HcalDetId& id);
 
-
-  inline bool inTime(double hittime) {
-    return ((hittime >= minRecoTimeNs_) &&
-	    (hittime <= maxRecoTimeNs_)   );
-  }
-  double smearedTime(const HBHERecHit& unsmearedRH) const;
-  void   dumpEnvelope(void) const;
+  double smearTime   (const double energy, const double time) const;
+  bool   inTime      (const CaloRecHit& rh) const;
+  void   dumpEnvelope(const std::vector<std::pair<double,double> >& env,
+		      const std::string& descr) const;
       
   // ----------member data ---------------------------
 
   edm::InputTag            hbherecotag_;
   edm::InputTag            hfrecotag_;
   edm::InputTag            horecotag_;
-  double                   minRecoTimeNs_;
-  double                   maxRecoTimeNs_;
+  double                   timeWindowCenterNs_;
+  double                   timeWindowGain_; // 0-1
   int                      subdet_;
   int                      subdetOther_;
   std::vector<HcalDetId>   detIds2mask_;
@@ -108,8 +105,8 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
   hbherecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hbheLabel",(edm::InputTag)"")),
   hfrecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hfLabel",(edm::InputTag)"")),
   horecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hoLabel",(edm::InputTag)"")),
-  minRecoTimeNs_(iConfig.getParameter<double>("minRecoTimeNs")),
-  maxRecoTimeNs_(iConfig.getParameter<double>("maxRecoTimeNs")),
+  timeWindowCenterNs_(iConfig.getParameter<double>("timeWindowCenterNs")),
+  timeWindowGain_(iConfig.getParameter<double>("timeWindowGain")),
   timeShiftNs_(iConfig.getParameter<double>("timeShiftNs"))
 {
   //register your products
@@ -139,10 +136,12 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
   if (!convertIdNumbers(v_maskidnumbers, detIds2mask_))
     throw cms::Exception("Invalid detID vector");
 
+  /***************************************************
+   * PROCESS SMEARING ENVELOPE
+   **************************************************/
+
   std::vector<double> v_tsmearEnv;
-
-  v_tsmearEnv  = iConfig.getParameter<std::vector<double> > ("smearEnvelope");
-
+  v_tsmearEnv  = iConfig.getParameter<std::vector<double> > ("tsmearEnvelope");
   if (v_tsmearEnv.size()) {
     if (v_tsmearEnv.size() & 1)
       throw cms::Exception("Invalid tsmearEnvelope vector");
@@ -162,20 +161,47 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
     std::sort(tsmearEnvelope_.begin(),
 	      tsmearEnvelope_.end(),
 	      comparePair1<std::pair<double,double> >());
+  }
 
-    dumpEnvelope();
+  /***************************************************
+   * PROCESS FILTERING ENVELOPE
+   **************************************************/
+
+  std::vector<double> v_tfilterEnv;
+  v_tfilterEnv  = iConfig.getParameter<std::vector<double> > ("tfilterEnvelope");
+  if (v_tfilterEnv.size()) {
+    if (v_tfilterEnv.size() & 1)
+      throw cms::Exception("Invalid tfilterEnvelope vector");
+
+    for (uint32_t i = 0; i<v_tfilterEnv.size(); i+=2) {
+      double energy     = v_tfilterEnv[i];
+      double tfilterlim = v_tfilterEnv[i+1];
+      if (tfilterlim <= 0.0)
+	throw cms::Exception("nonpositive tfilterEnvelope limit encountered");
+    
+      tfilterEnvelope_.push_back(std::pair<double,double>(energy,tfilterlim));
+    }
+
+    //sort in order of increasing energy
+    std::sort(tfilterEnvelope_.begin(),
+	      tfilterEnvelope_.end(),
+	      comparePair1<std::pair<double,double> >());
   }
 }                                  // HcalRecHitFilter::HcalRecHitFilter
 
 //======================================================================
 
 void
-HcalRecHitFilter::dumpEnvelope(void) const
+HcalRecHitFilter::dumpEnvelope(const std::vector<std::pair<double,double> >& env,
+			       const std::string& descr) const
 {
-  std::cout << "Smear Envelope:" << std::endl;
-  std::cout << "GeV\tSigma" << std::endl;
-  for (uint32_t i=0; i<tsmearEnvelope_.size(); i++) {
-    std::cout << tsmearEnvelope_[i].first << "\t" << tsmearEnvelope_[i].second << std::endl;
+  if (!env.size()) std::cout << descr << " is empty" << std::endl;
+  else {
+    std::cout << descr << ":" << std::endl;
+    std::cout << "E (GeV)\tT (ns)" << std::endl;
+    for (uint32_t i=0; i<env.size(); i++) {
+      std::cout << env[i].first << "\t" << env[i].second << std::endl;
+    }
   }
 }
 
@@ -227,10 +253,8 @@ HcalRecHitFilter::convertIdNumbers(std::vector<int>& v_maskidnumbers,
 //======================================================================
 
 double
-HcalRecHitFilter::smearedTime(const HBHERecHit& unsmearedRH) const
+HcalRecHitFilter::smearTime(const double energy, const double unsmearedTime) const
 {
-  double unsmearedTime = unsmearedRH.time();
-  double energy        = unsmearedRH.energy();
   double tsmearsigma;
   uint32_t i=0;
 
@@ -265,6 +289,50 @@ HcalRecHitFilter::smearedTime(const HBHERecHit& unsmearedRH) const
 
 //======================================================================
 
+bool
+HcalRecHitFilter::inTime(const CaloRecHit& rh) const
+{
+  double rhtime  = rh.time();
+  double energy  = rh.energy();
+  double twinmax, twinmin;
+  uint32_t i=0;
+
+  if (!tfilterEnvelope_.size()) // no envelope, so always "in time"
+    return true;
+
+  if (energy  < tfilterEnvelope_[0].second)
+    twinmax = tfilterEnvelope_[0].second;
+  else {
+    for (i=0; i<tfilterEnvelope_.size(); i++)
+      if (tfilterEnvelope_[i].first > energy)
+	break;
+
+    if (i == tfilterEnvelope_.size())
+      twinmax = tfilterEnvelope_[i-1].second;
+    else {
+      double energy1 = tfilterEnvelope_[i-1].first;
+      double lim1    = tfilterEnvelope_[i-1].second;
+      double energy2 = tfilterEnvelope_[i].first;
+      double lim2    = tfilterEnvelope_[i].second;
+
+      twinmax = lim1 + ((lim2-lim1)*(energy-energy1)/(energy2-energy1));
+
+    //char s[80];
+    //sprintf (s,"(%6.1f,%6.3f) (%6.1f,%6.3f) %6.1f %6.3f\n",energy1,lim1,energy2,lim2,energy,twinmax);
+    //std::cout << s;
+    }
+  }
+
+  twinmin = timeWindowCenterNs_ - (twinmax*timeWindowGain_);
+  twinmax = timeWindowCenterNs_ + (twinmax*timeWindowGain_);
+
+  //std::cout << "Time Window: " << twinmin << "-" << twinmax << std::endl;
+
+  return ((rhtime > twinmin) && (rhtime < twinmax));
+}                                            // HcalRecHitFilter::inTime
+
+//======================================================================
+
 // ------------ method called to produce the data  ------------
 void
 HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -280,14 +348,16 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       for (uint32_t i=0; i < hbhein->size(); i++) {
 	const HBHERecHit& rh= (*hbhein)[i];
-	double rhtime = rh.time() - timeShiftNs_;
-
-	if (doSmear)
-	  rhtime = smearedTime(rh);
-
-	if (!maskedId(rh.id()) &&
-	    inTime(rhtime))
-	  hbheout->push_back(HBHERecHit(rh.id(),rh.energy(),rhtime));
+	if (doSmear) {
+	  double smearedTime = smearTime(rh.energy(),rh.time()-timeShiftNs_);
+	  HBHERecHit newrh(rh.id(),rh.energy(),smearedTime);
+	  if (!maskedId(newrh.id()) && inTime(newrh))
+	    hbheout->push_back(newrh);
+	} else {
+	  HBHERecHit shiftedrh(rh.id(),rh.energy(),rh.time()-timeShiftNs_);
+	  if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
+	    hbheout->push_back(shiftedrh);
+	}
       }
       iEvent.put(hbheout);
     }
@@ -298,11 +368,10 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::auto_ptr<HORecHitCollection> hoout(new HORecHitCollection);
 
       for (uint32_t i=0; i < hoin->size(); i++) {
-	const HORecHit& rh= (*hoin)[i];
-	double rhtime = rh.time() - timeShiftNs_;
-	if (!maskedId(rh.id()) &&
-	    inTime(rhtime))
-	  hoout->push_back(rh);
+	const HORecHit& rh = (*hoin)[i];
+	HORecHit shiftedrh(rh.id(),rh.energy(),rh.time() - timeShiftNs_);
+	if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
+	  hoout->push_back(shiftedrh);
       }
       iEvent.put(hoout);
     }
@@ -313,11 +382,10 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::auto_ptr<HFRecHitCollection> hfout(new HFRecHitCollection);
 
       for (uint32_t i=0; i < hfin->size(); i++) {
-	const HFRecHit& rh= (*hfin)[i];
-	double rhtime = rh.time() - timeShiftNs_;
-	if (!maskedId(rh.id()) &&
-	    inTime(rhtime))
-	  hfout->push_back(rh);
+	const HFRecHit& rh = (*hfin)[i];
+	HFRecHit shiftedrh(rh.id(),rh.energy(),rh.time() - timeShiftNs_);
+	if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
+	  hfout->push_back(shiftedrh);
       }
       iEvent.put(hfout);
     }
@@ -330,20 +398,22 @@ void
 HcalRecHitFilter::beginJob(const edm::EventSetup&)
 {
   //  edm::LogInfo("Parameters being used: ")   <<
-  std::cout << "-----------------------"  << "\n" <<
   std::cout << "Parameters being used: "  << "\n" <<
-    "hbherecotag_   : " << hbherecotag_   << "\n" <<
-    "hfrecotag_     : " << hfrecotag_     << "\n" <<
-    "horecotag_     : " << horecotag_     << "\n" <<
-    "minRecoTimeNs_ = " << minRecoTimeNs_ << "\n" <<
-    "maxRecoTimeNs_ = " << maxRecoTimeNs_ << "\n" <<
-    "subdet_        : " << subdet_        << "\n" <<
-    "timeShiftNs_   = " << timeShiftNs_   << "\n";
+    "hbherecotag_         : " << hbherecotag_        << "\n" <<
+    "hfrecotag_           : " << hfrecotag_          << "\n" <<
+    "horecotag_           : " << horecotag_          << "\n" <<
+    "subdet_              : " << subdet_             << "\n" <<
+    "timeWindowCenterNs_  = " << timeWindowCenterNs_ << "\n" <<
+    "timeWindowGain_      = " << timeWindowGain_     << "\n" <<
+    "timeShiftNs_         = " << timeShiftNs_        << std::endl;
   
   for (uint32_t i=0; i<detIds2mask_.size(); i++)
     //edm::LogInfo("Masking ") << detIds2mask_[i] << std::endl;
     std::cout << "Masking " << detIds2mask_[i] << std::endl;
-  std::cout << "-----------------------"  << std::endl;
+
+
+  dumpEnvelope(tsmearEnvelope_,"Smear Sigma Envelope");
+  dumpEnvelope(tfilterEnvelope_, "Time Filter Envelope Limits");
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
