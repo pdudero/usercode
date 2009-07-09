@@ -1,0 +1,520 @@
+//
+
+#include "SimDataFormats/HepMCProduct/interface/HepMCProduct.h"
+#include "CLHEP/HepMC/GenVertex.h"
+#include "MyAnalyzers/Stop2TopAnalyzer/src/pdgid.h"
+#include "MyAnalyzers/Stop2TopAnalyzer/src/myParticleRecord.h"
+#include "DataFormats/JetReco/interface/CaloJetCollection.h"
+#include "DataFormats/JetReco/interface/GenJet.h"
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include "TH1F.h"
+#include "TH2D.h"
+#include "TProfile2D.h"
+#include "TFile.h"
+
+//======================================================================
+
+using namespace std;
+using namespace HepMC;
+
+//======================================================================
+
+//======================================================================
+/** \class Stop2TopAnalAlgos specification
+      
+$Date: 2005/10/06 22:21:33 $
+$Revision: 1.2 $
+\author P. Dudero - Minnesota
+*/
+class Stop2TopAnalAlgos {
+public:
+  Stop2TopAnalAlgos(bool           verbosity,
+		    double         maxdR,
+		    vector<double> v_genETbins,
+		    vector<double> v_recETbins,
+		    double         emfractioncut);
+  void beginJob(void);
+  void endJob();
+  void analyzeEvent(edm::HepMCProduct& HepMCEvt,
+		    GenJetCollection&  genjets2,
+		    GenJetCollection&  genjets5,
+		    GenJetCollection&  genjets7,
+		    CaloJetCollection& recjets2,
+		    CaloJetCollection& recjets5,
+		    CaloJetCollection& recjets7);
+private:
+  // internal methods
+  void ClassifyEvent(const HepMC::GenEvent* MCEvt);
+  void dumpJets(CaloJetCollection& jetc, const char *intro);
+  void dumpJets(GenJetCollection&  jetc, const char *intro);
+  void correlateJets(GenJetCollection&  genjetc,
+		     CaloJetCollection& calojetc,
+		     int conesize,
+		     const char *intro,
+		     vector<pair<GenJet,CaloJet> >& v_jetCorr,
+		     vector<GenJet>& v_genjetUncorr);
+  void collectJetStats(vector<pair<GenJet,CaloJet> >& v_jetCorr,
+		       vector<GenJet>& v_genjetUncorr,
+		       int conesize);
+
+  // user-configurable parameters
+  bool verbosity_;
+  double maxdR_;
+  vector<double> v_genETbins_; 
+  vector<double> v_recETbins_; 
+  double emfractioncut_;
+  double genjetETgevcut_;
+  double recjetETgevcut_;
+
+  int  evt;
+  myParticleRecord *myprec;
+  TH1F  *classhist;
+  map<int,TH2D *>       m_jetETscale_vs_phi_hists;
+  map<int,TProfile2D *> m_jetETscale_vs_geta_et_hists;
+  map<int,TProfile2D *> m_jetETscale_vs_reta_et_hists;
+  map<int,TH1F *>       m_emRecoJet_vs_geta_hists;
+  TFile *outf;
+};
+
+//======================================================================
+
+Stop2TopAnalAlgos::Stop2TopAnalAlgos(bool           verbosity,
+				     double         maxdR,
+				     vector<double> v_genETbins,
+				     vector<double> v_recETbins,
+				     double         emfractioncut) :
+  verbosity_(verbosity),
+  maxdR_(maxdR),
+  v_genETbins_(v_genETbins),
+  v_recETbins_(v_recETbins),
+  emfractioncut_(emfractioncut)
+{
+  if ((!v_genETbins_.size()) ||
+      (!v_genETbins_.size())) {
+    throw cms::Exception("Error on input", "must have at least one ET bin");
+  }
+  genjetETgevcut_ = v_genETbins_[0];
+  recjetETgevcut_ = v_recETbins_[0];
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::beginJob(void)
+{
+  vector<int> pdgidvec;
+
+  pdgidvec.push_back(downq);
+  pdgidvec.push_back(upq);
+  pdgidvec.push_back(strangeq);
+  pdgidvec.push_back(charmq);
+  pdgidvec.push_back(bottomq);
+  pdgidvec.push_back(topq);
+
+  pdgidvec.push_back(electron);
+  pdgidvec.push_back(nu_e);
+  pdgidvec.push_back(muminus);
+  pdgidvec.push_back(nu_mu);
+  pdgidvec.push_back(tauminus);
+  pdgidvec.push_back(nu_tau);
+
+  myprec = new myParticleRecord(pdgidvec);
+
+  outf = new TFile("stop2topanal.root","RECREATE");
+  classhist = new TH1F("classhist","classhist",21,-10.5,10.5);
+
+  m_jetETscale_vs_phi_hists[5] = new TH2D("h1",
+					  "Cone=0.5;Phi;rEt/gEt",
+					  35, -3.5, 3.5,
+					  150, 0.0, 1.5);
+  m_jetETscale_vs_phi_hists[7] = new TH2D("h2",
+					  "Cone=0.7;Phi;rEt/gEt",
+					  35, -3.5, 3.5,
+					  150, 0.0, 1.5);
+
+  m_jetETscale_vs_geta_et_hists[5] = new TProfile2D("tp2d1",
+						    "Cone=0.5;gEta;gEt;rEt/gEt",
+						    50, -5.0, 5.0,
+						    (int)v_genETbins_.size()-1,&v_genETbins_.front());
+  m_jetETscale_vs_geta_et_hists[7] = new TProfile2D("tp2d2",
+						    "Cone=0.7;gEta;gEt;rEt/gEt",
+						    50, -5.0, 5.0,
+						    (int)v_genETbins_.size()-1,&v_genETbins_.front());
+  m_jetETscale_vs_reta_et_hists[5] = new TProfile2D("tp2d3",
+						    "Cone=0.5;rEta;rEt;rEt/gEt",
+						    50, -5.0, 5.0,
+						    (int)v_recETbins_.size()-1,&v_recETbins_.front());
+  m_jetETscale_vs_reta_et_hists[7] = new TProfile2D("tp2d4",
+						    "Cone=0.7;rEta;rEt;rEt/gEt",
+						    50, -5.0, 5.0,
+						    (int)v_recETbins_.size()-1,&v_recETbins_.front());
+
+  m_emRecoJet_vs_geta_hists[5] = new TH1F("h7",
+					 "Cone=0.5, EMf>0.9;Eta;#Reco Jets",
+					 50, -5.0, 5.0);
+  m_emRecoJet_vs_geta_hists[7] = new TH1F("h8",
+					 "Cone=0.7, EMf>0.9;Eta;#Reco Jets",
+					 50, -5.0, 5.0);
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::endJob()
+{
+  outf->Write();
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::ClassifyEvent(const HepMC::GenEvent* MCEvt)
+{
+  int eventclass=0;
+  bool found_Wplus      = false;
+  bool found_Wminus     = false;
+  bool stop2top_event   = false;
+  bool background_event = false;
+
+  int nParticles = MCEvt->particles_size();
+  int nVertices  = MCEvt->vertices_size();
+    
+  if (verbosity_) {
+    cout << "          Number of Raw Particles collected:         ";
+    cout << nParticles << endl;
+    cout << "          Number of Vertices collected:         ";
+    cout << nVertices << endl;
+  }
+
+  myprec->clearcounts();
+
+  // Classify the event by the decay of the W's from
+  // the stop->top->W + b chain
+  //
+  GenEvent::vertex_const_iterator v;
+  for (v  = MCEvt->vertices_begin();
+       v != MCEvt->vertices_end();
+       ++v ) {
+
+    std::vector< GenParticle * >  theChildren((*v)->listChildren());
+    std::vector< GenParticle * >  theParents((*v)->listParents());
+ 
+    int p_pdgid = (*theParents.begin())->pdg_id();
+
+    // Verify this is a stop to top event
+    if (!stop2top_event && p_pdgid==stop1) {
+      bool found_top = false;
+      bool found_x01 = false;
+      std::vector< GenParticle * >::const_iterator c;
+      for (c=theChildren.begin(); c!=theChildren.end(); c++) {
+	int c_pdgid = (*c)->pdg_id();
+	if (c_pdgid == topq) found_top = true;
+	if (c_pdgid == neutralino01) found_x01 = true;
+      }
+      if (found_top && found_x01)
+	stop2top_event = true;
+    }
+
+    if ((p_pdgid==topq) ||
+        (p_pdgid==antitopq)) {
+      if (!stop2top_event)
+	background_event = true; // should not find top before finding stop
+
+      if (verbosity_)
+	cout << "Parent is: " << p_pdgid << ", children are: ";
+
+      std::vector< GenParticle * >::const_iterator c;
+      for (c=theChildren.begin(); c!=theChildren.end(); c++) {
+	int c_pdgid = (*c)->pdg_id();
+	if (verbosity_) cout << c_pdgid << " ";
+	if (c_pdgid != Wplus) myprec->add(c_pdgid);
+      }
+      if (verbosity_) cout << endl;
+    }
+
+    if (!found_Wplus && p_pdgid == Wplus) {
+      found_Wplus = true;
+
+      if (verbosity_)
+	cout << "Parent is: " << p_pdgid << ", children are: ";
+
+      std::vector< GenParticle * >::const_iterator c;
+      for (c=theChildren.begin(); c!=theChildren.end(); c++) {
+	int c_pdgid = (*c)->pdg_id();
+	if (verbosity_) cout << c_pdgid << " ";
+	if (c_pdgid != Wplus) myprec->add(c_pdgid);
+      }
+      if (verbosity_) cout << endl;
+    }
+
+    if (!found_Wminus && p_pdgid == Wminus) {
+      found_Wminus = true;
+
+      if (verbosity_)
+	cout << "Parent is: " << p_pdgid << ", children are: ";
+
+      std::vector< GenParticle * >::const_iterator c;
+      for (c=theChildren.begin(); c!=theChildren.end(); c++) {
+	int c_pdgid = (*c)->pdg_id();
+	if (verbosity_) cout << c_pdgid << " ";
+	if (c_pdgid != Wminus) myprec->add(c_pdgid);
+      }
+      if (verbosity_) cout << endl;
+    }
+  } // vertex loop
+
+  int quarkcount = myprec->quarkcount();
+
+  if ((!stop2top_event && !background_event) ||
+      !found_Wplus || !found_Wminus)
+    eventclass = 0;
+  else {
+    if ((myprec->count(electron) == 2) &&
+	(myprec->count(nu_e) == 2))
+      eventclass = 1;
+    else if ((myprec->count(muminus)  == 2) &&
+	     (myprec->count(nu_mu)    == 2) &&
+	     quarkcount == 2)
+      eventclass = 2;
+    else if ((myprec->count(tauminus) == 2) &&
+	     (myprec->count(nu_tau)   == 2) &&
+	     quarkcount == 2)
+      eventclass = 10;
+    else if ((myprec->count(electron) == 1) &&
+	     (myprec->count(muminus)  == 1) &&
+	     (myprec->count(nu_e)     == 1) &&
+	     (myprec->count(nu_mu)    == 1) &&
+	     quarkcount == 2)
+      eventclass = 3;
+    else if ((myprec->count(electron) == 1) &&
+	     (myprec->count(tauminus) == 1) &&
+	     (myprec->count(nu_e)     == 1) &&
+	     (myprec->count(nu_tau)   == 1) &&
+	     quarkcount == 2)
+      eventclass = 8;
+    else if ((myprec->count(muminus)  == 1) &&
+	     (myprec->count(tauminus) == 1) &&
+	     (myprec->count(nu_mu)    == 1) &&
+	     (myprec->count(nu_tau)   == 1) &&
+	     quarkcount == 2)
+      eventclass = 9;
+    else if ((myprec->count(electron) == 1) &&
+	     (quarkcount == 4))
+      eventclass = 4;
+    else if ((myprec->count(muminus) == 1) &&
+	     (quarkcount == 4))
+      eventclass = 5;
+    else if ((myprec->count(tauminus) == 1) &&
+	     (quarkcount == 4))
+      eventclass = 7;
+    else if (quarkcount == 6)
+      eventclass = 6;
+    else
+      eventclass = 0;
+  }
+
+  if (background_event)
+    eventclass *= -1;
+
+  if (verbosity_)
+    cout << "event class = " << eventclass << endl;
+
+  if (verbosity_ || !eventclass) {
+    cout << "#e = " << myprec->count(electron);
+    cout << ", #nu_e = " << myprec->count(nu_e);
+    cout << ", #mu- = " << myprec->count(muminus);
+    cout << ", #nu_mu = " << myprec->count(nu_mu);
+    cout << ", #tau- = " << myprec->count(tauminus);
+    cout << ", #nu_tau = " << myprec->count(nu_tau);
+    cout << ", #quark = " << quarkcount << endl;
+  }
+
+  classhist->Fill((float)eventclass);
+}
+
+
+//======================================================================
+
+void Stop2TopAnalAlgos::dumpJets(CaloJetCollection& jetc,
+				const char *intro)
+{
+  cout << intro << endl;
+  char s[80];
+  CaloJetCollection::const_iterator cj;
+  for (cj = jetc.begin(); cj != jetc.end(); cj++) {
+    sprintf (s, "Eta=%6.3f, Phi=%6.3f, ET=%5.1f",
+	     cj->eta(),cj->phi(),cj->et());
+    cout << s << endl;
+  }
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::dumpJets(GenJetCollection& jetc,
+				const char *intro)
+{
+  cout << intro << endl;
+  char s[80];
+  GenJetCollection::const_iterator gj;
+  for (gj = jetc.begin(); gj != jetc.end(); gj++) {
+    sprintf (s, "Eta=%6.3f, Phi=%6.3f, ET=%5.1f",
+	     gj->eta(),gj->phi(),gj->et());
+    cout << s << endl;
+  }
+}
+
+//======================================================================
+
+static double deltaPhi(double phi1, double phi2) {
+  double dPhi=fabs(phi1-phi2);
+  if (dPhi>M_PI) dPhi=2*M_PI-dPhi;
+  return dPhi;
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::correlateJets(GenJetCollection&  genjetc,
+				     CaloJetCollection& calojetc,
+				     int conesize,
+				     const char *intro,
+				     vector<pair<GenJet,CaloJet> >& v_jetCorr,
+				     vector<GenJet>& v_genjetUncorr)
+{
+  double dR,mindR,corlimit;
+  char s[80];
+
+  if (verbosity_)
+    cout << intro << endl;
+
+  corlimit = (double)conesize/10.0;
+
+  GenJetCollection::iterator gj;
+  CaloJetCollection::iterator cj,mcj;
+
+  for (gj = genjetc.begin(); gj != genjetc.end(); gj++) {
+
+    if (gj->et() < genjetETgevcut_) continue;
+
+    mindR=corlimit;
+    mcj = calojetc.end();
+    if (!calojetc.size()) break;
+
+    for (cj = calojetc.begin(); cj != calojetc.end(); cj++) {
+
+      if (cj->et() < recjetETgevcut_) continue;
+
+      dR = sqrt(pow((gj->eta() - cj->eta()),2) +
+		pow(deltaPhi(gj->phi(),cj->phi()),2));
+
+      if (dR < mindR) {
+	mindR = dR;
+	mcj = cj;
+      }
+    }
+
+    if (mcj != calojetc.end()) {
+      if (verbosity_) {
+	sprintf(s, "GenET=%5.1f, RecET=%5.1f, Ratio=%6.3f, dR=%6.2f",
+		gj->et(), mcj->et(), mcj->et()/gj->et(), mindR);
+	cout << s  << endl;
+      }
+      
+      pair<GenJet, CaloJet> mypair;
+      mypair.first  = *gj;
+      mypair.second = *mcj;
+      v_jetCorr.push_back(mypair);
+
+      calojetc.erase(mcj);
+    }
+    else {
+      if (verbosity_) {
+	sprintf(s, "GenET=%5.1f, UNCORRELATED", gj->et());
+	cout << s << endl;
+      }
+
+      v_genjetUncorr.push_back(*gj);
+    }
+  }
+}                                                       // correlateJets
+
+//======================================================================
+
+void Stop2TopAnalAlgos::collectJetStats(vector<pair<GenJet,CaloJet> >& v_jetCorr,
+				       vector<GenJet>& v_genjetUncorr,
+				       int conesize)
+{
+  char s[80];
+  map<int,TH2D *>::iterator ijesvsphihist  = m_jetETscale_vs_phi_hists.find(conesize);
+  map<int,TH1F *>::iterator irjemvsetahist = m_emRecoJet_vs_geta_hists.find(conesize);
+
+  map<int,TProfile2D *>::iterator ijesvsgetaetprof = m_jetETscale_vs_geta_et_hists.find(conesize);
+  map<int,TProfile2D *>::iterator ijesvsretaetprof = m_jetETscale_vs_reta_et_hists.find(conesize);
+
+  if (ijesvsphihist == m_jetETscale_vs_phi_hists.end()) {
+    throw cms::Exception("Error on input","invalid cone size");
+  }
+
+  vector<pair<GenJet,CaloJet> >::iterator ivgcj;
+  for (ivgcj = v_jetCorr.begin(); ivgcj != v_jetCorr.end(); ivgcj++) {
+    double geta   = ivgcj->first.eta();
+    double gphi   = ivgcj->first.phi();
+    double gEt    = ivgcj->first.et();
+    double reta   = ivgcj->second.eta();
+    double rEt    = ivgcj->second.et();
+    double ratio  = rEt/gEt;
+
+    double emfraction = ivgcj->second.energyFractionInECAL();
+
+    sprintf (s, "rEta=%6.3f rET=%7.2f", reta, rEt);
+    cout << s << endl;
+
+    ijesvsphihist->second->Fill(gphi, ratio);
+
+    ijesvsgetaetprof->second->Fill(geta, gEt, ratio);
+    ijesvsretaetprof->second->Fill(reta, rEt, ratio);
+
+    if (emfraction >= emfractioncut_)
+      irjemvsetahist->second->Fill(geta);
+  }
+}
+
+//======================================================================
+
+void Stop2TopAnalAlgos::analyzeEvent(edm::HepMCProduct& HepMCEvt,
+				     GenJetCollection&  genjets2,
+				     GenJetCollection&  genjets5,
+				     GenJetCollection&  genjets7,
+				     CaloJetCollection& recjets2,
+				     CaloJetCollection& recjets5,
+				     CaloJetCollection& recjets7)
+{
+  const HepMC::GenEvent* MCEvt = HepMCEvt->GetEvent();
+
+  ClassifyEvent(MCEvt);
+
+  if (verbosity_) {
+    //    dumpJets(genjets2, "Gen Jets, cone size=0.2: ");
+    dumpJets(genjets5, "\nGen Jets, cone size=0.5: ");
+    dumpJets(genjets7, "\nGen Jets, cone size=0.7: ");
+
+    //    dumpJets(calojets2, "Reco Jets, cone size=0.2: ");
+    dumpJets(calojets5, "\nReco Jets, cone size=0.5: ");
+    dumpJets(calojets7, "\nReco Jets, cone size=0.7: ");
+  }
+
+  vector<pair<GenJet,CaloJet> > v_jetCorr5, v_jetCorr7;
+  vector<GenJet> v_genjetUncorr5, v_genjetUncorr7;
+
+  correlateJets(genjets5, calojets5, 5,
+		"\nCorrelations, cone size=0.5: ",
+		v_jetCorr5, v_genjetUncorr5);
+
+  correlateJets(genjets7, calojets7, 7,
+		"\nCorrelations, cone size=0.7: ",
+		v_jetCorr7, v_genjetUncorr7);
+
+  collectJetStats(v_jetCorr5, v_genjetUncorr5, 5);
+  collectJetStats(v_jetCorr7, v_genjetUncorr7, 7);
+}
+
+//======================================================================
