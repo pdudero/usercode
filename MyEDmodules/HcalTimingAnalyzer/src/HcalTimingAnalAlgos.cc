@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.5 2009/05/21 09:52:41 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.6 2009/05/29 12:19:52 dudero Exp $
 //
 //
 
@@ -36,6 +36,31 @@
 //
 // constants, enums and typedefs
 //
+class IetaIphi_t {
+public:
+  inline int sign(int x) const { return ((x<0) ? -1 : 1); }
+  IetaIphi_t (int inieta, int iniphi) : ieta_(inieta), iphi_(iniphi) {}
+  IetaIphi_t (int code) { ieta_ = code/100; iphi_ = abs(code)%100; }
+  int toCode (void) const { return (ieta_*100)+(sign(ieta_)*iphi_); }
+  int ieta   (void) const { return ieta_; }
+  int iphi  (void) const { return iphi_; }
+  bool operator<(const IetaIphi_t& right) const {
+    if (ieta_ < right.ieta_) return true;
+    else if (iphi_ < right.iphi_) return true;
+    return false;
+  }
+private:
+  int ieta_;
+  int iphi_;
+};
+
+struct HFtowerEnergies_t {
+  HFtowerEnergies_t () : ieip(0,0), totalE(0.0), longE(0.0), shortE(0.0) {}
+  IetaIphi_t ieip;
+  double totalE;
+  double longE;
+  double shortE;
+};
 
 //
 // static data member definitions
@@ -61,7 +86,6 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   hcalRecHitEscaleMaxGeV_(iConfig.getParameter<double>("hcalRecHitEscaleMaxGeV")),
   rundescr_(iConfig.getUntrackedParameter<std::string>("runDescription",""))
 {
-
  //now do what ever initialization is needed
   std::vector<int> v_events2anal(iConfig.getParameter<std::vector<int> >("eventNumbers"));
 
@@ -99,7 +123,7 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
     simHitTscaleMaxNs_           = iConfig.getParameter<double>("simHitTscaleMaxNs");
     simHitEnergyMinGeVthreshold_ = iConfig.getParameter<double>("simHitEnergyMinGeVthreshold");
   }
-}
+}                            // HcalTimingAnalAlgos::HcalTimingAnalAlgos
 
 //======================================================================
 
@@ -222,9 +246,9 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   st_caloMet_Met_ = "h1d_caloMet_Met" + runstrn;
   hpars1d.name   = st_caloMet_Met_;
   hpars1d.title  = "MET from CaloTowers " + runstrt + "; MET (GeV)";
-  hpars1d.nbinsx = 100;
+  hpars1d.nbinsx = 200;    // 100;
   hpars1d.minx   = 0.;
-  hpars1d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars1d.maxx   = 1000.0; // hcalRecHitEscaleMaxGeV_;
 
   v_hpars1d.push_back(hpars1d);
 
@@ -259,6 +283,18 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   hpars2d.nbinsy =  72;
   hpars2d.miny   =    0.5;
   hpars2d.maxy   =   72.5;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_HFratioVsE_ = "h2d_HFratioVsE" + runstrn;
+  hpars2d.name   = st_HFratioVsE_;
+  hpars2d.title  = "HF (L-S)/(L+S) Ratio VS Energy" + runstrt + "; L+S (GeV); (L-S)/(L+S)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
+  hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars2d.nbinsy = 50;
+  hpars2d.miny   = -1.;
+  hpars2d.maxy   =  1.;
 
   v_hpars2d.push_back(hpars2d);
 
@@ -526,6 +562,8 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     s_runs_.insert(runn);
   }
 
+  //cout << 'A' << endl;
+
   TH1F *h_hbp = 0;
   TH1F *h_hep = 0;
   TH1F *h_hbm = 0;
@@ -551,6 +589,8 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
   std::set<HcalDetId> s_idsOverThresh;
 
+  //cout << 'B' << endl;
+
   /***************************************************
    *                    HBHE RECHITS                 *
    ***************************************************/
@@ -562,11 +602,23 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
   cutNone_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)ed.hbherechits()->size());
 
+  //cout << 'C' << endl;
+
   int rechitsOverThresh = 0;
   //int rechitsInTgtTwr   = 0;
 
+#if 0
+  if (!ed.hbherechits().isValid()) {
+    cerr << "WARNING! hbherechits handle is not valid!" << endl;
+  } else {
+#endif
   for (unsigned irh = 0; irh < ed.hbherechits()->size (); ++irh) {
+
+    //cout << irh;
+
     const HBHERecHit& rh = (*(ed.hbherechits()))[irh];
+
+    //cout << irh << endl;
 
     //std::cout << rh.id().rawId() << std::endl;
 
@@ -671,11 +723,13 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     }
 #endif
   }
+  //  } // else hbherechits handle is valid
 
   /***************************************************
    *                    HF   RECHITS                 *
    ***************************************************/
 
+  std::map<int,HFtowerEnergies_t> m_HFtowerEnergies;
   for (unsigned irh = 0; irh < ed.hfrechits()->size (); ++irh) {
     const HFRecHit& rh = (*(ed.hfrechits()))[irh];
     HcalDetId detId = rh.id();
@@ -689,6 +743,25 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     default:
       edm::LogWarning("Invalid depth in rechit collection! detId = ") << detId << std::endl;
       continue;
+    }
+
+    // add up tower energies
+    IetaIphi_t ieip(detId.ieta(),detId.iphi());
+    map<int,HFtowerEnergies_t>::iterator it = m_HFtowerEnergies.find(ieip.toCode());
+    HFtowerEnergies_t tower;
+
+    tower.ieip = ieip;
+
+    if (it == m_HFtowerEnergies.end()) {
+      tower.totalE = rh.energy();
+      if      (detId.depth() == 1) tower.longE  = rh.energy();
+      else if (detId.depth() == 2) tower.shortE = rh.energy();
+      m_HFtowerEnergies[ieip.toCode()] = tower;
+    }
+    else {
+      it->second.totalE += rh.energy();
+      if      (detId.depth() == 1) it->second.longE  += rh.energy();
+      else if (detId.depth() == 2) it->second.shortE += rh.energy();
     }
 
     double minHitGeV = lookupThresh(detId);
@@ -710,6 +783,16 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 						    rh.time());
     }
   } // loop over HF rechits
+
+  map<int,HFtowerEnergies_t>::iterator it;
+  for (it  = m_HFtowerEnergies.begin();
+       it != m_HFtowerEnergies.end(); it++) {
+    double lpluss  = it->second.longE + it->second.shortE;
+    double lminuss = it->second.longE - it->second.shortE;
+    double sum     = lpluss + lminuss;
+    double diff    = lpluss - lminuss;
+    cutNone_->histos()->fill2d<TH2D>(st_HFratioVsE_, diff/sum, sum);
+  }
 
   /***************************************************
    *                    HO   RECHITS                 *
