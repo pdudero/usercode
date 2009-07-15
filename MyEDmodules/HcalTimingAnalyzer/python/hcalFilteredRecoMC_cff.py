@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff import *
 
 hbhesmear = hbheRHfilter.clone()
-hbhesmear.smearEnvelope = cms.vdouble( #Energy   ss
+hbhesmear.tsmearEnvelope = cms.vdouble( #Energy   ss
                                          4.00,  1.703,
                                          6.50,  1.685,
                                         10.00,  1.756,
@@ -22,12 +22,14 @@ hbhesmear.smearEnvelope = cms.vdouble( #Energy   ss
                                        175.50,  1.070,
                                        350.00,  1.043)
 
-hbherecofilt6ns.hbheLabel  = cms.untracked.InputTag("hbhesmear")
-hbherecofilt10ns.hbheLabel = cms.untracked.InputTag("hbhesmear")
-hbherecofilt1ts.hbheLabel  = cms.untracked.InputTag("hbhesmear")
-hbherecofilt4ts.hbheLabel  = cms.untracked.InputTag("hbhesmear")
+hbherhfiltshp.hbheLabel  = cms.untracked.InputTag("hbhesmear")
+hbherhfilt06ns.hbheLabel = cms.untracked.InputTag("hbhesmear")
+hbherhfilt10ns.hbheLabel = cms.untracked.InputTag("hbhesmear")
+hbherhfilt1ts.hbheLabel  = cms.untracked.InputTag("hbhesmear")
+hbherhfilt4ts.hbheLabel  = cms.untracked.InputTag("hbhesmear")
 
 myanraw = myan.clone()
 myanunfilt.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbhesmear")
 
-allMCfilts = cms.Sequence(myanraw+allfilts)
+allMCSQfilts = cms.Sequence(myanraw+allSQfilts)
+mixedMCfilts = cms.Sequence(myanraw+mixedFilts)

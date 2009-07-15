@@ -21,13 +21,13 @@ myan = cms.EDAnalyzer('HcalTimingAnalyzer',
     minHitGeVHF2 = cms.double(1.8),
 
     hcalRecHitEscaleMinGeV = cms.double(-10.5),
-    hcalRecHitEscaleMaxGeV = cms.double(450.5),
+    hcalRecHitEscaleMaxGeV = cms.double(500.5),
 
     ecalRecHitTscaleNbins  = cms.int32(401),
     ecalRecHitTscaleMinNs  = cms.double(-100.5),
     ecalRecHitTscaleMaxNs  = cms.double(100.5),
 
     hcalRecHitTscaleNbins  = cms.int32(401),
-    hcalRecHitTscaleMinNs  = cms.double(-100.5),
-    hcalRecHitTscaleMaxNs  = cms.double(100.5),
+    hcalRecHitTscaleMinNs  = cms.double(-90.5),
+    hcalRecHitTscaleMaxNs  = cms.double(110.5),
 )

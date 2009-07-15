@@ -1,6 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-
 process = cms.Process("MyAnal")
 
 process.load("Configuration.StandardSequences.Geometry_cff")
@@ -10,7 +9,7 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
-    # replace 'myfile.root' with the source file you want to useru
+    # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 #'/store/data/Commissioning08/Cosmics/RECO/CRAFT_ALL_V9_225-v2/0002/CA3CF466-E7F9-DD11-AF70-003048679006.root'
 #'/store/data/Commissioning08/Cosmics/RAW-RECO/CRAFT_ALL_V9_TrackingPointing_225-v3/0006/E45FEB6E-A0FF-DD11-B5ED-00304867C0FC.root'
@@ -23,12 +22,12 @@ process.TFileService = cms.Service("TFileService",
      fileName = cms.string('hcalanal-mutrig.root')
 )
 
-process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff")
-process.myanunfilt.recHitEscaleMaxGeV  = cms.double(150.5)
-process.myanfilt6.recHitEscaleMaxGeV   = cms.double(150.5)
-process.myanfilt10.recHitEscaleMaxGeV  = cms.double(150.5)
-process.myanfilt1ts.recHitEscaleMaxGeV = cms.double(150.5)
-process.myanfilt4ts.recHitEscaleMaxGeV = cms.double(150.5)
+process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4CRAFT_cff")
+process.myanunfilt.recHitEscaleMaxGeV   = cms.double(150.5)
+process.myanfilt6ns.recHitEscaleMaxGeV  = cms.double(150.5)
+process.myanfilt10ns.recHitEscaleMaxGeV = cms.double(150.5)
+process.myanfilt1ts.recHitEscaleMaxGeV  = cms.double(150.5)
+process.myanfilt4ts.recHitEscaleMaxGeV  = cms.double(150.5)
 
 #-----------------------------
 # Hcal Conditions: from Global Conditions Tag

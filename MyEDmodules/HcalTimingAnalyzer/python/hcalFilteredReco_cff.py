@@ -3,94 +3,51 @@ import FWCore.ParameterSet.Config as cms
 #--------------------------------------------------
 # RECHIT FILTERS
 
-from MyEDmodules.HcalRecHitFilter.hcalrechitfilter_cff import *
-
-hbherecofilt6ns = hbheRHfilter.clone()
-hbherecofilt6ns.minRecoTimeNs = cms.double(11.0)
-hbherecofilt6ns.maxRecoTimeNs = cms.double(17.0)
-
-horecofilt6ns = hoRHfilter.clone()
-horecofilt6ns.minRecoTimeNs = cms.double(11.0)
-horecofilt6ns.maxRecoTimeNs = cms.double(17.0)
-
-hfrecofilt6ns = hfRHfilter.clone()
-hfrecofilt6ns.minRecoTimeNs = cms.double(11.0)
-hfrecofilt6ns.maxRecoTimeNs = cms.double(17.0)
-
-#--------------------------------------------------
-
-hbherecofilt10ns = hbheRHfilter.clone()
-hbherecofilt10ns.minRecoTimeNs = cms.double(9.0)
-hbherecofilt10ns.maxRecoTimeNs = cms.double(19.0)
-
-horecofilt10ns = hoRHfilter.clone()
-horecofilt10ns.minRecoTimeNs = cms.double(9.0)
-horecofilt10ns.maxRecoTimeNs = cms.double(19.0)
-
-hfrecofilt10ns = hfRHfilter.clone()
-hfrecofilt10ns.minRecoTimeNs = cms.double(9.0)
-hfrecofilt10ns.maxRecoTimeNs = cms.double(19.0)
-
-#--------------------------------------------------
-
-hbherecofilt1ts = hbheRHfilter.clone()
-hbherecofilt1ts.minRecoTimeNs = cms.double(0.0)
-hbherecofilt1ts.maxRecoTimeNs = cms.double(25.0)
-
-horecofilt1ts = hoRHfilter.clone()
-horecofilt1ts.minRecoTimeNs = cms.double(0.0)
-horecofilt1ts.maxRecoTimeNs = cms.double(25.0)
-
-hfrecofilt1ts = hfRHfilter.clone()
-hfrecofilt1ts.minRecoTimeNs = cms.double(0.0)
-hfrecofilt1ts.maxRecoTimeNs = cms.double(25.0)
-
-#--------------------------------------------------
-
-hbherecofilt4ts = hbheRHfilter.clone()
-hbherecofilt4ts.minRecoTimeNs = cms.double(0.0)
-hbherecofilt4ts.maxRecoTimeNs = cms.double(100.0)
-
-horecofilt4ts = hoRHfilter.clone()
-horecofilt4ts.minRecoTimeNs = cms.double(0.0)
-horecofilt4ts.maxRecoTimeNs = cms.double(100.0)
-
-hfrecofilt4ts = hfRHfilter.clone()
-hfrecofilt4ts.minRecoTimeNs = cms.double(0.0)
-hfrecofilt4ts.maxRecoTimeNs = cms.double(100.0)
+from MyEDmodules.HcalTimingAnalyzer.hcalRecHitFiltersTS4_cff import *
 
 #--------------------------------------------------
 # RERECO TOWERS
 
 from RecoJets.Configuration.RecoCaloTowersGR_cff import towerMaker
-filtTowers6ns  = towerMaker.clone()
-filtTowers6ns.hbheInput  = cms.InputTag("hbherecofilt6ns")
-filtTowers6ns.hoInput    = cms.InputTag("horecofilt6ns")
-filtTowers6ns.hfInput    = cms.InputTag("hfrecofilt6ns")
+filtTowers06ns  = towerMaker.clone()
+filtTowers06ns.hbheInput  = cms.InputTag("hbherhfilt06ns")
+filtTowers06ns.hoInput    = cms.InputTag("horhfilt06ns")
+filtTowers06ns.hfInput    = cms.InputTag("hfrhfilt06ns")
 
 filtTowers10ns = towerMaker.clone()
-filtTowers10ns.hbheInput = cms.InputTag("hbherecofilt10ns")
-filtTowers10ns.hoInput   = cms.InputTag("horecofilt10ns")
-filtTowers10ns.hfInput   = cms.InputTag("hfrecofilt10ns")
+filtTowers10ns.hbheInput = cms.InputTag("hbherhfilt10ns")
+filtTowers10ns.hoInput   = cms.InputTag("horhfilt10ns")
+filtTowers10ns.hfInput   = cms.InputTag("hfrhfilt10ns")
 
 filtTowers1ts  = towerMaker.clone()
-filtTowers1ts.hbheInput  = cms.InputTag("hbherecofilt1ts")
-filtTowers1ts.hoInput    = cms.InputTag("horecofilt1ts")
-filtTowers1ts.hfInput    = cms.InputTag("hfrecofilt1ts")
+filtTowers1ts.hbheInput  = cms.InputTag("hbherhfilt1ts")
+filtTowers1ts.hoInput    = cms.InputTag("horhfilt1ts")
+filtTowers1ts.hfInput    = cms.InputTag("hfrhfilt1ts")
 
 filtTowers4ts  = towerMaker.clone()
-filtTowers4ts.hbheInput  = cms.InputTag("hbherecofilt4ts")
-filtTowers4ts.hoInput    = cms.InputTag("horecofilt4ts")
-filtTowers4ts.hfInput    = cms.InputTag("hfrecofilt4ts")
+filtTowers4ts.hbheInput  = cms.InputTag("hbherhfilt4ts")
+filtTowers4ts.hoInput    = cms.InputTag("horhfilt4ts")
+filtTowers4ts.hfInput    = cms.InputTag("hfrhfilt4ts")
+
+filtTowersshp            = towerMaker.clone()
+filtTowersshp.hbheInput  = cms.InputTag("hbherhfiltshp")
+filtTowersshp.hoInput    = cms.InputTag("horhfiltshp")
+
+unfiltTowersShift = towerMaker.clone()
+unfiltTowersShift.hbheInput  = cms.InputTag("hbherhshift")
+unfiltTowersShift.hoInput    = cms.InputTag("horhshift")
+unfiltTowersShift.hfInput    = cms.InputTag("hfrhshift")
 
 #--------------------------------------------------
 # RERECO MET
 
 from RecoMET.METProducers.CaloMET_cfi import metNoHF
-filtmetNoHF6ns  = metNoHF.clone(src = cms.InputTag("filtTowers6ns"))
-filtmetNoHF10ns = metNoHF.clone(src = cms.InputTag("filtTowers10ns"))
-filtmetNoHF1ts  = metNoHF.clone(src = cms.InputTag("filtTowers1ts"))
-filtmetNoHF4ts  = metNoHF.clone(src = cms.InputTag("filtTowers4ts"))
+filtmetNoHF06ns    = metNoHF.clone(src = cms.InputTag("filtTowers06ns"))
+filtmetNoHF10ns    = metNoHF.clone(src = cms.InputTag("filtTowers10ns"))
+filtmetNoHF1ts     = metNoHF.clone(src = cms.InputTag("filtTowers1ts"))
+filtmetNoHF4ts     = metNoHF.clone(src = cms.InputTag("filtTowers4ts"))
+filtmetNoHFshp     = metNoHF.clone(src = cms.InputTag("filtTowersshp"))
+unfiltmetNoHFshift = metNoHF.clone(src = cms.InputTag("unfiltTowersShift"))
 
 #--------------------------------------------------
 # ANALYZERS:
@@ -99,60 +56,108 @@ from MyEDmodules.HcalTimingAnalyzer.hcaltimeanal_cfi import *
 myanunfilt   = myan.clone()
 myanunfilt.eventDataPset.hbheRechitLabel   = cms.untracked.InputTag("hbhereco")
 
-myanfilt6ns  = myan.clone()
-myanfilt6ns.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherecofilt6ns")
-myanfilt6ns.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrecofilt6ns")
-myanfilt6ns.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowers6ns")
-myanfilt6ns.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHF6ns")
+myanunfiltShift   = myan.clone()
+myanunfiltShift.eventDataPset.hbheRechitLabel   = cms.untracked.InputTag("hbherhshift")
+
+myanfiltshp  = myan.clone()
+myanfiltshp.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherhfiltshp")
+myanfiltshp.eventDataPset.hoRechitLabel    = cms.untracked.InputTag("horhfiltshp")
+myanfiltshp.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowersshp")
+myanfiltshp.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHFshp")
+
+myanfilt06ns  = myan.clone()
+myanfilt06ns.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherhfilt06ns")
+myanfilt06ns.eventDataPset.hoRechitLabel   = cms.untracked.InputTag("horhfilt06ns")
+myanfilt06ns.eventDataPset.hfRechitLabel   = cms.untracked.InputTag("hfrhfilt06ns")
+myanfilt06ns.eventDataPset.twrLabel        = cms.untracked.InputTag("filtTowers06ns")
+myanfilt06ns.eventDataPset.metLabel        = cms.untracked.InputTag("filtmetNoHF06ns")
 
 myanfilt10ns = myan.clone()
-myanfilt10ns.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherecofilt10ns")
-myanfilt10ns.eventDataPset.hfRechitLabel   = cms.untracked.InputTag("hfrecofilt10ns")
+myanfilt10ns.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherhfilt10ns")
+myanfilt10ns.eventDataPset.hfRechitLabel   = cms.untracked.InputTag("hfrhfilt10ns")
+myanfilt10ns.eventDataPset.hoRechitLabel   = cms.untracked.InputTag("horhfilt10ns")
 myanfilt10ns.eventDataPset.twrLabel        = cms.untracked.InputTag("filtTowers10ns")
 myanfilt10ns.eventDataPset.metLabel        = cms.untracked.InputTag("filtmetNoHF10ns")
 
 myanfilt1ts  = myan.clone()
-myanfilt1ts.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherecofilt1ts")
-myanfilt1ts.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrecofilt1ts")
+myanfilt1ts.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherhfilt1ts")
+myanfilt1ts.eventDataPset.hoRechitLabel    = cms.untracked.InputTag("horhfilt1ts")
+myanfilt1ts.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrhfilt1ts")
 myanfilt1ts.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowers1ts")
 myanfilt1ts.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHF1ts")
 
 myanfilt4ts  = myan.clone()
-myanfilt4ts.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherecofilt4ts")
-myanfilt4ts.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrecofilt4ts")
+myanfilt4ts.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherhfilt4ts")
+myanfilt4ts.eventDataPset.hoRechitLabel    = cms.untracked.InputTag("horhfilt4ts")
+myanfilt4ts.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrhfilt4ts")
 myanfilt4ts.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowers4ts")
 myanfilt4ts.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHF4ts")
 
 #--------------------------------------------------
 # SEQUENCES:
 
-recofilt6ns  = cms.Sequence(hbherecofilt6ns+horecofilt6ns+hfrecofilt6ns)
-recofilt10ns = cms.Sequence(hbherecofilt10ns+horecofilt10ns+hfrecofilt10ns)
-recofilt1ts  = cms.Sequence(hbherecofilt1ts+horecofilt1ts+hfrecofilt1ts)
-recofilt4ts  = cms.Sequence(hbherecofilt4ts+horecofilt4ts+hfrecofilt4ts)
+rhfiltshp  = cms.Sequence(hbherhfiltshp+horhfiltshp)
+rhshift    = cms.Sequence(hbherhshift+horhshift+hfrhshift)
 
-filt6ns  = cms.Sequence(recofilt6ns*
-                        filtTowers6ns*
-                        filtmetNoHF6ns*
-                        myanfilt6ns)
+rhfilt06ns = cms.Sequence(hbherhfilt06ns+horhfilt06ns+hfrhfilt06ns)
+rhfilt10ns = cms.Sequence(hbherhfilt10ns+horhfilt10ns+hfrhfilt10ns)
+rhfilt1ts  = cms.Sequence(hbherhfilt1ts+horhfilt1ts+hfrhfilt1ts)
+rhfilt4ts  = cms.Sequence(hbherhfilt4ts+horhfilt4ts+hfrhfilt4ts)
 
-filt10ns = cms.Sequence(recofilt10ns*
+filt06ns = cms.Sequence(rhfilt06ns*
+                        filtTowers06ns*
+                        filtmetNoHF06ns*
+                        myanfilt06ns)
+
+filt10ns = cms.Sequence(rhfilt10ns*
                         filtTowers10ns*
                         filtmetNoHF10ns*
                         myanfilt10ns)
 
-filt1ts = cms.Sequence(recofilt1ts*
+filt1ts = cms.Sequence(rhfilt1ts*
                        filtTowers1ts*
                        filtmetNoHF1ts*
                        myanfilt1ts)
 
-filt4ts = cms.Sequence(recofilt4ts*
+filt4ts = cms.Sequence(rhfilt4ts*
                        filtTowers4ts*
                        filtmetNoHF4ts*
                        myanfilt4ts)
 
-allfilts = cms.Sequence(myanunfilt+
-                        filt6ns+
-                        filt10ns+
-                        filt1ts+
-                        filt4ts)
+unfiltShift = cms.Sequence(rhshift*
+                           unfiltTowersShift*
+                           unfiltmetNoHFshift*
+                           myanunfiltShift)
+
+filtshp = cms.Sequence(rhfiltshp*
+                       filtTowersshp*
+                       filtmetNoHFshp*
+                       myanfiltshp)
+
+allSQfilts = cms.Sequence(myanunfilt+
+                          filt06ns+
+                          filt10ns+
+                          filt1ts+
+                          filt4ts)
+
+allSQfiltsWithShift = cms.Sequence(myanunfilt+
+                                   unfiltShift+
+                                   filt06ns+
+                                   filt10ns+
+                                   filt1ts+
+                                   filt4ts)
+
+#
+# combination of square filters (>=1ts)
+# and a shaped filter (<1ts)
+#
+mixedFilts = cms.Sequence(myanunfilt+
+                          filtshp+
+                          filt1ts+
+                          filt4ts)
+
+mixedFiltsWithShift = cms.Sequence(myanunfilt+
+                                   unfiltShift+
+                                   filtshp+
+                                   filt1ts+
+                                   filt4ts)

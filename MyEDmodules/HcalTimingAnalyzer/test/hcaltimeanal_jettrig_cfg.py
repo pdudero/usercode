@@ -23,7 +23,7 @@ process.TFileService = cms.Service("TFileService",
      fileName = cms.string('hcalanal-jettrig.root')
 )
 
-process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff")
+process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4CRAFT_cff")
 
 #-----------------------------
 # Hcal Conditions: from Global Conditions Tag
@@ -42,10 +42,7 @@ process.load("L1Trigger.Skimmer.l1Filter_cfi")
 process.l1Filter.algorithms = cms.vstring("L1_SingleJet10_0001")
 
 #process.p = cms.Path(process.l1Filter*process.hcalDigis*process.myan)
-process.p = cms.Path(process.l1Filter*
-                     process.myanunfilt+
-                     process.filt6+
-                     process.filt10)
+process.p = cms.Path(process.l1Filter*process.allfilts)
 
 process.out = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(

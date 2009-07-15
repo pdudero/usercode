@@ -14,9 +14,9 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 from SimCalorimetry.HcalZeroSuppressionProducers.hcalDigisRealistic_cfi import simHcalDigis
 process.zsTheDigis = simHcalDigis.clone(digiLabel="hcalDigis")
 
-process.hbhereco.digiLabel = 'zsTheDigis'
-process.horeco.digiLabel   = 'zsTheDigis'
-process.hfreco.digiLabel   = 'zsTheDigis'
+process.hbhereco.digiLabel = cms.InputTag('zsTheDigis')
+process.horeco.digiLabel   = cms.InputTag('zsTheDigis')
+process.hfreco.digiLabel   = cms.InputTag('zsTheDigis')
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -36,7 +36,28 @@ process.TFileService = cms.Service("TFileService",
      fileName = cms.string('hcaltimeanal-egtrig.root')
 )
 
-process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco_cff")
+process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4CRAFT_cff")
+process.myanunfilt.eventDataPset.hbheDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+process.myanunfilt.eventDataPset.hfDigiLabel        = cms.untracked.InputTag("zsTheDigis")
+process.myanunfilt.eventDataPset.hoDigiLabel        = cms.untracked.InputTag("zsTheDigis")
+process.myanunfiltShift.eventDataPset.hbheDigiLabel = cms.untracked.InputTag("zsTheDigis")
+process.myanunfiltShift.eventDataPset.hfDigiLabel   = cms.untracked.InputTag("zsTheDigis")
+process.myanunfiltShift.eventDataPset.hoDigiLabel   = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt06ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt06ns.eventDataPset.hfDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt06ns.eventDataPset.hoDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt10ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt10ns.eventDataPset.hfDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt10ns.eventDataPset.hoDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt1ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt1ts.eventDataPset.hfDigiLabel       = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt1ts.eventDataPset.hoDigiLabel       = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt4ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt4ts.eventDataPset.hfDigiLabel       = cms.untracked.InputTag("zsTheDigis")
+process.myanfilt4ts.eventDataPset.hoDigiLabel       = cms.untracked.InputTag("zsTheDigis")
+process.myanfiltshp.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
+process.myanfiltshp.eventDataPset.hfDigiLabel       = cms.untracked.InputTag("zsTheDigis")
+process.myanfiltshp.eventDataPset.hoDigiLabel       = cms.untracked.InputTag("zsTheDigis")
 
 #-----------------------------
 # Hcal Conditions: from Global Conditions Tag
@@ -69,26 +90,26 @@ process.myAbbrevReco = cms.Sequence(process.trackerCosmics*
 
 process.p = cms.Path(process.gtDigis*process.l1Filter*
                      process.myOtherDigis*process.zsTheDigis*process.myAbbrevReco*
-                     process.allfilts)
+                     process.mixedFiltsWithShift)
 
 #process.p = cms.Path(process.l1Filter*process.hcalDigis*process.myan)
 
 
-process.out = cms.OutputModule("PoolOutputModule",
-    SelectEvents = cms.untracked.PSet(
-        SelectEvents = cms.vstring('p')
-    ),
-    outputCommands = cms.untracked.vstring(
-        "drop *",
-        "keep *_*_*_MyAnal",
-        "keep recoCaloMETs_*_*_*",
-        "keep *_hbhereco_*_*",
-        "keep *_hfreco_*_*",
-        "keep *_horeco_*_*",
-        "keep *_towerMaker_*_*"
-    ),
+# process.out = cms.OutputModule("PoolOutputModule",
+#     SelectEvents = cms.untracked.PSet(
+#         SelectEvents = cms.vstring('p')
+#     ),
+#     outputCommands = cms.untracked.vstring(
+#         "drop *",
+#         "keep *_*_*_MyAnal",
+#         "keep recoCaloMETs_*_*_*",
+#         "keep *_hbhereco_*_*",
+#         "keep *_hfreco_*_*",
+#         "keep *_horeco_*_*",
+#         "keep *_towerMaker_*_*"
+#     ),
    
-    fileName = cms.untracked.string('hcaltimeanal-egtrig-pool.root')
-)
+#     fileName = cms.untracked.string('hcaltimeanal-egtrig-pool.root')
+# )
 
-#process.o = cms.EndPath(process.out)
+# process.o = cms.EndPath(process.out)
