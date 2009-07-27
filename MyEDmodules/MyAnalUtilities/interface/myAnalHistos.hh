@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.3 2009/05/18 01:15:06 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.4 2009/07/03 11:31:08 dudero Exp $
 //
 //
 
@@ -66,6 +66,9 @@ public:
   void book1d(const std::vector<HistoParams_t>& v_pars);
   template<class T>
   void book2d(const std::vector<HistoParams_t>& v_pars);
+
+  template<class T>
+  void bookClone(const std::string& cloneName,const T& h);
 
   template<class T>
   T *get(const std::string& hname);
@@ -145,6 +148,21 @@ void myAnalHistos::book2d(const std::vector<HistoParams_t>& v_pars)
 				histo.pars.nbinsy, histo.pars.miny, histo.pars.maxy);
     hm_histos_[histo.pars.name.c_str()] = histo;
   }
+}
+
+//======================================================================
+
+template<class T>
+void
+myAnalHistos::bookClone(const std::string& cloneName,const T& h)
+{
+  edm::LogInfo("booking clone histogram ") << cloneName << std::endl;
+  Histo_t histo;
+  histo.ptr = (TH1 *)dir_->make <T, T> (h);
+  std::cout << "Before SetName: " << histo.ptr->GetName() << std::endl;
+  histo.ptr->SetName(cloneName.c_str());
+  std::cout << "After  SetName: " << histo.ptr->GetName() << std::endl;
+  hm_histos_[cloneName.c_str()] = histo;
 }
 
 //======================================================================
