@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.2 2009/05/18 01:14:16 dudero Exp $
+// $Id: myEventData.cc,v 1.3 2009/07/03 11:26:27 dudero Exp $
 //
 //
 
@@ -40,6 +40,7 @@
 // constructors and destructor
 //
 myEventData::myEventData(const edm::ParameterSet& edPset) :
+  fedRawDataTag_(edPset.getUntrackedParameter<edm::InputTag>("fedRawDataLabel",edm::InputTag(""))),
   laserDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("laserDigiLabel",edm::InputTag(""))),
   hbheRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheRechitLabel",edm::InputTag(""))),
   hbheDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheDigiLabel",edm::InputTag(""))),
@@ -53,6 +54,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
   if (verbose_) {
+    cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
     cout << "laserDigiTag_  = " << laserDigiTag_  << endl;
     cout << "hbheRechitTag_ = " << hbheRechitTag_ << endl;
     cout << "hbheDigiTag_   = " << hbheDigiTag_   << endl;
@@ -83,78 +85,101 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   runn_    = eventId_.run();
   evtn_    = eventId_.event();
 
+  // Always try to get the HcalTBtrigger data regardless
+  try {
+    if(!iEvent.getByType(hcaltbtrigdata_)) {
+      if (verbose_)
+	cerr << "myEventData::get: " <<
+	  "HCAL TB trigger data not found, "<< hcaltbtrigdata_ << std::endl;
+    } else {
+      if (verbose_) 
+	cout << "myEventData::get: " << "Got HCAL TB trigger data " << std::endl;
+    }
+  } catch (...) {
+    if (verbose_)
+      cerr << "myEventData::get: " <<
+	"HCAL TB trigger data not found, "<< hcaltbtrigdata_ << std::endl;
+  }
+
+  if (fedRawDataTag_.label().size())
+    if(!iEvent.getByLabel(fedRawDataTag_,laserdigi_)) {
+      cerr << "myEventData::get: " <<
+	"FED raw data not found, "<< fedRawDataTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got FED raw data "<< fedRawDataTag_ << std::endl;
+
   if (laserDigiTag_.label().size())
     if(!iEvent.getByLabel(laserDigiTag_,laserdigi_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Laser Digi not found, "<< laserDigiTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got Laser digi "<< laserDigiTag_ << std::endl;
+      cout << "myEventData::get: " << "Got Laser digi "<< laserDigiTag_ << std::endl;
 
   if (hbheDigiTag_.label().size())
     if(!iEvent.getByLabel(hbheDigiTag_,hbhedigis_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Digis not found, "<< hbheDigiTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HBHE digis "<< hbheDigiTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HBHE digis "<< hbheDigiTag_ << std::endl;
 
   if (simHitTag_.label().size())
     if (!iEvent.getByLabel(simHitTag_, hsimhits_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Simhits not found, " << simHitTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got sim hits " << simHitTag_ << std::endl;
+      cout << "myEventData::get: " << "Got sim hits " << simHitTag_ << std::endl;
 
   if (hbheRechitTag_.label().size())
     if (!iEvent.getByLabel(hbheRechitTag_,hbherechits_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"HBHE Rechits not found, " << hbheRechitTag_  << std::endl;
       return;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HBHE Rechits " << hbheRechitTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HBHE Rechits " << hbheRechitTag_ << std::endl;
 
   if (hfRechitTag_.label().size())
     if (!iEvent.getByLabel(hfRechitTag_,hfrechits_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"HF Rechits not found, " << hfRechitTag_ << std::endl;
       return;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HF Rechits " << hfRechitTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HF Rechits " << hfRechitTag_ << std::endl;
 
   if (hfDigiTag_.label().size())
     if(!iEvent.getByLabel(hfDigiTag_,hfdigis_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Digis not found, "<< hfDigiTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HF digis "<< hfDigiTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HF digis "<< hfDigiTag_ << std::endl;
   
   if (hoRechitTag_.label().size())
     if (!iEvent.getByLabel(hoRechitTag_,horechits_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"HO Rechits not found, " << hoRechitTag_ << std::endl;
       return;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HO Rechits " << hoRechitTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HO Rechits " << hoRechitTag_ << std::endl;
 
   if (hoDigiTag_.label().size())
     if(!iEvent.getByLabel(hoDigiTag_,hodigis_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Digis not found, "<< hoDigiTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got HO digis "<< hoDigiTag_ << std::endl;
+      cout << "myEventData::get: " << "Got HO digis "<< hoDigiTag_ << std::endl;
 
   // CaloTowers
   if (twrTag_.label().size())
     if (!iEvent.getByLabel(twrTag_,towers_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Calo Towers not found, " << twrTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got Calo Towers " << twrTag_ << std::endl;
+      cout << "myEventData::get: " << "Got Calo Towers " << twrTag_ << std::endl;
   
   // MET
   if (metTag_.label().size())
     if (!iEvent.getByLabel(metTag_, recmet_)) {
-      edm::LogWarning("myEventData::get") <<
+      cerr << "myEventData::get: " <<
 	"Calo MET not found, " << metTag_ << std::endl;
     } else if (verbose_) 
-      edm::LogInfo("myEventData::get") << "Got Calo MET " << metTag_ << std::endl;
+      cout << "myEventData::get: " << "Got Calo MET " << metTag_ << std::endl;
 }
