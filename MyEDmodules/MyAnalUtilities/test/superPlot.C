@@ -24,10 +24,11 @@ using namespace std;
 
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),rightmargin(0.),leftmargin(0.),
-			fillcolor(10)
+			fillcolor(10),logx(0),logy(0)
   { hframe = new wTH1D(name,name,100,0.0,1.0); }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
+  unsigned logx, logy;
   float titlexndc, titleyndc;
   wTH1D *hframe;           // the frame histo, holds lots of pad info
   vector<string> histo_ids;
@@ -160,6 +161,44 @@ bool getLine(FILE *fp, string& theline, const string& callerid)
 
 //======================================================================
 
+TH1 *IntegrateLeft(TH1 *h)
+{
+  TH1 *hcum = (TH1 *)h->Clone();
+  hcum->Reset();
+
+  int nbins = hcum->GetNbinsX();
+  double htotal = h->Integral(1,nbins+1);
+
+  // Include the overflow bin
+  for (int i=1; i<=nbins+1 ; i++) { // includes overflow
+    double integral = h->Integral(1,i);
+    hcum->SetBinContent(i,integral/htotal);
+  }
+
+  return hcum;
+}
+
+//======================================================================
+
+TH1 *IntegrateRight(TH1 *h)
+{
+  TH1 *hcum = (TH1 *)h->Clone();
+  hcum->Reset();
+
+  int nbins = hcum->GetNbinsX();
+  double htotal = h->Integral(1,nbins+1);
+
+  // Include the overflow bin
+  for (int i=1; i<=nbins+1 ; i++) { // includes overflow
+    double integral = h->Integral(i,nbins+1);
+    hcum->SetBinContent(i,integral/htotal);
+  }
+
+  return hcum;
+}
+
+//======================================================================
+
 bool                                          // returns true if success
 processStyleSection(FILE *fp,string& theline, bool& new_section)
 {
@@ -196,9 +235,10 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     // Set the position/size of the title box
     else if (key == "title")     gStyle->SetOptTitle(str2int(value));
     else if (key == "titlexndc") gStyle->SetTitleX(str2flt(value));
-    else if (key == "titleyndc") gStyle->SetTitleX(str2flt(value));
+    else if (key == "titleyndc") gStyle->SetTitleY(str2flt(value));
     else if (key == "titlewndc") gStyle->SetTitleW(str2flt(value));
     else if (key == "titlehndc") gStyle->SetTitleH(str2flt(value));
+    else if (key == "titlefont") gStyle->SetTitleFont(str2int(value));
 
     // Set the position of the statbox
     else if (key == "statxndc")  gStyle->SetStatX(str2flt(value));
@@ -315,6 +355,8 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "bottommargin") wpad->bottommargin = str2flt(value);
     else if (key == "fillcolor")    wpad->fillcolor    = str2int(value);
     else if (key == "legend")       wpad->legid        = value;
+    else if (key == "logx")         wpad->logx         = str2int(value);
+    else if (key == "logy")         wpad->logy         = str2int(value);
     else if (key == "xmin") {
       float xmin = str2flt(value);
       wpad->hframe->SetXaxis("",false,0.0,0.0,0.0,xmin,xmax);
@@ -367,14 +409,18 @@ void processCommonHistoParams(const string& key,
   // axes
   else if (key == "xtitle")       wh.SetXaxis(value);
   else if (key == "ytitle")       wh.SetYaxis(value);
-  else if (key == "xtitleoffset") wh.SetXaxis("",false,0.0,str2flt(value));
-  else if (key == "ytitleoffset") wh.SetYaxis("",false,0.0,str2flt(value));
   else if (key == "xtitlesize")   wh.SetXaxis("",false,str2flt(value));
   else if (key == "ytitlesize")   wh.SetYaxis("",false,str2flt(value));
-  else if (key == "xlabelsize")   wh.SetXaxis("",false,0.0,0.0,str2flt(value));
-  else if (key == "ylabelsize")   wh.SetYaxis("",false,0.0,0.0,str2flt(value));
-  else if (key == "xndiv")  wh.SetXaxis("",false,0.0,0.0,0.0,1e99,-1e99,str2int(value));
-  else if (key == "yndiv")  wh.SetYaxis("",false,0.0,0.0,0.0,1e99,-1e99,str2int(value));
+  else if (key == "xtitleoffset") wh.SetXaxis("",false,0.0,str2flt(value));
+  else if (key == "ytitleoffset") wh.SetYaxis("",false,0.0,str2flt(value));
+  else if (key == "xtitlefont")   wh.SetXaxis("",false,0.0,0.0,str2int(value));
+  else if (key == "ytitlefont")   wh.SetYaxis("",false,0.0,0.0,str2int(value));
+  else if (key == "xlabelsize")   wh.SetXaxis("",false,0.0,0.0,0,str2flt(value));
+  else if (key == "ylabelsize")   wh.SetYaxis("",false,0.0,0.0,0,str2flt(value));
+  else if (key == "xlabelfont")   wh.SetXaxis("",false,0.0,0.0,0,0.0,str2int(value));
+  else if (key == "ylabelfont")   wh.SetYaxis("",false,0.0,0.0,0,0.0,str2int(value));
+  else if (key == "xndiv")  wh.SetXaxis("",false,0.0,0.0,0,0.0,0,1e99,-1e99,str2int(value));
+  else if (key == "yndiv")  wh.SetYaxis("",false,0.0,0.0,0,0.0,0,1e99,-1e99,str2int(value));
 
   // stats box
   else if (key == "statson")    wh.SetStats(str2int(value) != 0);
@@ -385,19 +431,19 @@ void processCommonHistoParams(const string& key,
 
   else if (key == "xmin") {
     xmin = str2flt(value);
-    wh.SetXaxis("",false,0.0,0.0,0.0,xmin,xmax);
+    wh.SetXaxis("",false,0.0,0.0,0,0.0,0,xmin,xmax);
   }
   else if (key == "xmax") {
     xmax = str2flt(value);
-    wh.SetXaxis("",false,0.0,0.0,0.0,xmin,xmax);
+    wh.SetXaxis("",false,0.0,0.0,0,0.0,0,xmin,xmax);
   }
   else if (key == "ymin") {
     ymin = str2flt(value);
-    wh.SetYaxis("",false,0.0,0.0,0.0,ymin,ymax);
+    wh.SetYaxis("",false,0.0,0.0,0,0.0,0,ymin,ymax);
   }
   else if (key == "ymax") {
     ymax = str2flt(value);
-    wh.SetYaxis("",false,0.0,0.0,0.0,ymin,ymax);
+    wh.SetYaxis("",false,0.0,0.0,0,0.0,0,ymin,ymax);
   }
   else {
     cerr << "unknown key " << key << endl;
@@ -453,13 +499,18 @@ processHistoSection(FILE *fp,
     //------------------------------
     } else if (key == "clone") {
     //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before clone key" << endl; continue;
+      }
       map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(value);
       if (it == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value << "not found, clone must be defined after the clonee" << endl;break;
+	cerr << "Histo ID " << value << " not found, clone must be defined after the clonee" << endl;break;
+	break;
       }
       wh = it->second->Clone(string(it->second->histo()->GetName())+"_clone",
 			     string(it->second->histo()->GetTitle()));
-      glmap_id2histo.insert(std::pair<string,wTH1D *>(value,wh));
+      h1d = wh->histo();
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
 
     //------------------------------
     } else if (key == "path") {
@@ -498,14 +549,14 @@ processHistoSection(FILE *fp,
       h1d = (TH1D *)rootfile->Get(v_tokens[1].c_str());
       if (!h1d) {
 	cerr << "couldn't find " << v_tokens[1] << " in " << v_tokens[0] << endl;
-	break;
+	exit(-1);
       } else {
 	wh = new wTH1D(h1d);
 	glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
       }
 
     } else if (!h1d) {  // all other keys must have "path" defined
-      cerr << "key 'histo' must be defined before key " << key << endl;
+      cerr << "key 'path' or 'clone' must be defined before key " << key << endl;
       break;
     }
 
@@ -562,7 +613,7 @@ processHmathSection(FILE *fp,
       hid = new string(value);
 
     //------------------------------
-    } else if (key == "operation") {
+    } else if (key == "binaryop") {  // binary operation +-*/
     //------------------------------
       if (!hid) {
 	cerr << "id key must be defined before path key" << endl; continue;
@@ -579,12 +630,12 @@ processHmathSection(FILE *fp,
       }
       map<string,wTH1D *>::const_iterator op1 = glmap_id2histo.find(v_tokens[0]);
       if (op1 == glmap_id2histo.end()) {
-	cerr << "Histo ID " << v_tokens[0] << "not found, math ops must be defined after the operands" << endl;
+	cerr << "Histo ID " << v_tokens[0] << " not found, math ops must be defined after the operands" << endl;
 	continue;
       }
       map<string,wTH1D *>::const_iterator op2 = glmap_id2histo.find(v_tokens[1]);
       if (op2 == glmap_id2histo.end()) {
-	cerr << "Histo ID " << v_tokens[1] << "not found, math ops must be defined after the operands" << endl;
+	cerr << "Histo ID " << v_tokens[1] << " not found, math ops must be defined after the operands" << endl;
 	continue;
       }
 
@@ -601,8 +652,46 @@ processHmathSection(FILE *fp,
       wh = new wTH1D(h1d);
       glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
 
+    //------------------------------
+    } else if (key == "integright") {  // sweep from low-high x-bins and integrate to the right
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
+      }
+      if (h1d) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      map<string,wTH1D *>::const_iterator op = glmap_id2histo.find(value);
+      if (op == glmap_id2histo.end()) {
+	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
+	continue;
+      }
+      TH1D *h1 = op->second->histo();
+      h1d = (TH1D *)IntegrateRight(h1);
+      wh = new wTH1D(h1d);
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+
+    //------------------------------
+    } else if (key == "integleft") {  // sweep from low-high x-bins and integrate to the left
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
+      }
+      if (h1d) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      map<string,wTH1D *>::const_iterator op = glmap_id2histo.find(value);
+      if (op == glmap_id2histo.end()) {
+	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
+	continue;
+      }
+      TH1D *h1 = op->second->histo();
+      h1d = (TH1D *)IntegrateLeft(h1);
+      wh = new wTH1D(h1d);
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+
     } else if (!h1d) {  // all other keys must have "path" defined
-      cerr << "key 'operation' must be defined before key " << key << endl;
+      cerr << "an operation key must be defined before key " << key << endl;
       break;
     }
 
@@ -655,16 +744,17 @@ processLegendSection(FILE *fp,
 	cerr << "no more than one id per legend section allowed " << *lid << endl;
 	break;
       }
+      lid = new string(value);
       if (glmap_id2legend.find(*lid) != glmap_id2legend.end()) { // legend id's cannot be redefined
 	cerr << "Legend ID " << *lid << " already defined, cannot be redefined." << endl;
 	break;
       }
-      lid = new string(value);
     }
-    else if (key == "x1ndc") wleg->x1ndc = str2flt(value);
-    else if (key == "y1ndc") wleg->y1ndc = str2flt(value);
-    else if (key == "x2ndc") wleg->x2ndc = str2flt(value);
-    else if (key == "y2ndc") wleg->y2ndc = str2flt(value);
+    else if (key == "header")     wleg->header = value;
+    else if (key == "x1ndc")      wleg->x1ndc  = str2flt(value);
+    else if (key == "y1ndc")      wleg->y1ndc  = str2flt(value);
+    else if (key == "x2ndc")      wleg->x2ndc  = str2flt(value);
+    else if (key == "y2ndc")      wleg->y2ndc  = str2flt(value);
 
     else if (key == "textsize")   wleg->textsize   = str2flt(value);
     else if (key == "textfont")   wleg->textfont   = str2int(value);
@@ -805,24 +895,29 @@ wCanvas_t *initCanvas(const string& cLayoutFile)
 
 //======================================================================
 
-void drawInPad(wPad_t *wp, wTH1D& myHisto,const string& altdrawopt="")
+void drawInPad(wPad_t *wp, wTH1D& myHisto,bool firstInPad,
+	       const string& altdrawopt="")
 {
-  cout << "Drawing " << myHisto.histo()->GetName() << endl;
-
   wp->vp->SetFillColor(wp->fillcolor);
 
-  if (ci_find(altdrawopt, "same") == string::npos) {
-    // this is the first one to draw
+  tdrStyle->cd();
+
+  wp->vp->SetLogx(wp->logx);
+  wp->vp->SetLogy(wp->logy);
+
+  if (firstInPad) {
     if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
     if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
     if (wp->rightmargin)  wp->vp->SetRightMargin (wp->rightmargin);
     if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
 
-    TAxis *ax = myHisto.histo()->GetXaxis(); // ax->CenterTitle();
-    ax = myHisto.histo()->GetYaxis(); // ax->CenterTitle();
+    altdrawopt.size() ? myHisto.Draw(altdrawopt) : myHisto.Draw();
+  }
+  else {
+    if (!myHisto.statsAreOn()) altdrawopt.size() ? myHisto.Draw(altdrawopt+ " same") : myHisto.DrawSame();
+    else                       altdrawopt.size() ? myHisto.Draw(altdrawopt+ " sames") : myHisto.DrawSames();
   }
 
-  altdrawopt.size() ? myHisto.Draw(altdrawopt) : myHisto.Draw();
   wp->vp->Update();
 }
 
@@ -850,8 +945,11 @@ void  drawPlots(wCanvas_t& wc)
       continue;
     }
 
-    // Draw the frame first:
-    // (Fix up frame since it can't be auto-scaled:)
+    /***************************************************
+     * Draw the frame first:
+     * (Fix up frame since it can't be auto-scaled:)
+     ***************************************************/
+
     string& hid0 = wp->histo_ids[0];
     map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(hid0);
     if (it == glmap_id2histo.end()) {
@@ -873,6 +971,10 @@ void  drawPlots(wCanvas_t& wc)
     wp->hframe->SetStats(0);
     //wp->hframe->Draw("AXIS");
 
+    /***************************************************
+     * Check for existence of a legend, create it
+     ***************************************************/
+
     if (wp->legid.size()) {
       map<string,wLegend_t *>::const_iterator it=glmap_id2legend.find(wp->legid);
       if (it != glmap_id2legend.end()) {
@@ -881,9 +983,15 @@ void  drawPlots(wCanvas_t& wc)
 	wl->leg = new TLegend(wl->x1ndc,wl->y1ndc,
 			      wl->x2ndc,wl->y2ndc);
       } else {
-	cerr << "ERROR: legend id " << wp->legid << " never defined in layout" << endl;
+	cerr << "ERROR: legend id " << wp->legid;
+	cerr << " never defined in layout" << endl;
       }
     }
+
+    /***************************************************
+     * Draw each histo
+     ***************************************************/
+
     for (unsigned j = 0; j < wp->histo_ids.size(); j++) {
       string& hid = wp->histo_ids[j];
       map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(hid);
@@ -891,12 +999,12 @@ void  drawPlots(wCanvas_t& wc)
 	cerr << "ERROR: id " << hid << " never defined in layout" << endl;
 	exit (-1);
       }
+
       wTH1D *myHisto = it->second;
 
       if (myHisto) {
-	if (!j)                        drawInPad(wp,*myHisto, "");
-	else if(!myHisto->statsAreOn())drawInPad(wp,*myHisto, "same");
-	else                           drawInPad(wp,*myHisto, "sames");
+	cout << "Drawing " << hid << " => " << myHisto->histo()->GetName() << endl;
+	drawInPad(wp,*myHisto,!j);
 	if (myHisto->statsAreOn()) {
 	  myHisto->DrawStats();
 	  wp->vp->Update();
@@ -909,6 +1017,7 @@ void  drawPlots(wCanvas_t& wc)
     if (drawlegend) {
       if (wl->header != "FillMe") wl->leg->SetHeader(wl->header.c_str());
       wl->leg->SetTextSize(wl->textsize);
+      wl->leg->SetTextFont(wl->textfont);
       wl->leg->SetBorderSize(wl->bordersize);
       wl->leg->SetFillColor(wl->fillcolor);
       wl->leg->SetLineWidth(wl->linewidth);

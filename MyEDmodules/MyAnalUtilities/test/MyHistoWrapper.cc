@@ -19,6 +19,8 @@ public:
   inline T *histo() const {return h_;}
 
   void   Draw(void)                       { Draw(drawoption_); }
+  void   DrawSame(void)                   { Draw(drawoption_+"same"); }
+  void   DrawSames(void)                  { Draw(drawoption_+"sames"); }
   void   Draw(const std::string& drawopt);
 
   // Only non-default values get set.
@@ -26,15 +28,19 @@ public:
 		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
+		  int   titlefont=0,
 		  float labelsize=0.0,
+		  int   labelfont=0,
 		  float rangeuserMin=1e99,
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
   TAxis *SetYaxis(const std::string& title,
-		  bool center = true,
+		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
+		  int   titlefont=0,
 		  float labelsize=0.0,
+		  int   labelfont=0,
 		  float rangeuserMin=1e99,
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
@@ -68,7 +74,9 @@ private:
 		 bool center = true,
 		 float titlesize=0.0,
 		 float titleoffs=0.0,
+		 int   titlefont=0,
 		 float labelsize=0.0,
+		 int   labelfont=0,
 		 float rangeuserMin=1e99,
 		 float rangeuserMax=-1e99,
 		 int   ndiv=510);
@@ -76,7 +84,7 @@ private:
   std::string legentry_;
   std::string drawoption_;
   bool        statsAreOn_;
-  TPaveStats  stats; // placeholder for storing stats options.
+  TPaveStats  stats_; // placeholder for storing stats options.
 };
 
 template<typename T>
@@ -101,7 +109,7 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::string& title) : h_(h)
 {
-  if (name.size()) h_->SetName(name.c_str());
+  if (name.size())  h_->SetName (name.c_str());
   if (title.size()) h_->SetTitle(title.c_str());
 }
 
@@ -116,17 +124,19 @@ MyHistoWrapper<T>::Clone(const std::string& newname,
 template<typename T>
 TAxis *
 MyHistoWrapper<T>::SetXaxis(const std::string& t,bool c,
-			    float ts, float to, float ls,
+			    float ts, float to, int tf,
+			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
-  return (SetAxis(h_->GetXaxis(),t,c,ts,to,ls,ruMin,ruMax,nd));
+  return (SetAxis(h_->GetXaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
 
 template<typename T>
 TAxis *
 MyHistoWrapper<T>::SetYaxis(const std::string& t,bool c,
-			    float ts, float to, float ls,
+			    float ts, float to, int tf,
+			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
-  return (SetAxis(h_->GetYaxis(),t,c,ts,to,ls,ruMin,ruMax,nd));
+  return (SetAxis(h_->GetYaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
 
 template<typename T>
@@ -136,7 +146,9 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
 			   bool center,
 			   float titlesize,
 			   float titleoffs,
+			   int   titlefont,
 			   float labelsize,
+			   int   labelfont,
 			   float rangeuserMin,
 			   float rangeuserMax,
 			   int   ndiv)
@@ -145,7 +157,9 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
   if (center)          ax->CenterTitle();
   if (titlesize > 0.0) ax->SetTitleSize(titlesize);
   if (titleoffs > 0.0) ax->SetTitleOffset(titleoffs);
+  if (titlefont > 0)   ax->SetTitleFont(titlefont);
   if (labelsize > 0.0) ax->SetLabelSize(labelsize);
+  if (labelfont > 0)   ax->SetLabelFont(labelfont);
   if (rangeuserMin < rangeuserMax)
     ax->SetRangeUser(rangeuserMin,rangeuserMax);
   if (ndiv != 510)     ax->SetNdivisions(ndiv,kTRUE);
@@ -181,10 +195,10 @@ MyHistoWrapper<T>::SetStats(bool  on,
 {
   statsAreOn_ = on;
   h_->SetStats(on);
-  if (x1ndc > 0.0) stats.SetX1NDC(x1ndc);
-  if (y1ndc > 0.0) stats.SetY1NDC(y1ndc);
-  if (x2ndc > 0.0) stats.SetX2NDC(x2ndc);
-  if (y2ndc > 0.0) stats.SetY2NDC(y2ndc);
+  if (x1ndc > 0.0) stats_.SetX1NDC(x1ndc);
+  if (y1ndc > 0.0) stats_.SetY1NDC(y1ndc);
+  if (x2ndc > 0.0) stats_.SetX2NDC(x2ndc);
+  if (y2ndc > 0.0) stats_.SetY2NDC(y2ndc);
 }
 
 //======================================================================
@@ -200,10 +214,10 @@ MyHistoWrapper<T>::DrawStats(void)
     return;
   }
 
-  st1->SetX1NDC(stats.GetX1NDC());
-  st1->SetX2NDC(stats.GetX2NDC());
-  st1->SetY1NDC(stats.GetY1NDC());
-  st1->SetY2NDC(stats.GetY2NDC());
+  st1->SetX1NDC(stats_.GetX1NDC());
+  st1->SetX2NDC(stats_.GetX2NDC());
+  st1->SetY1NDC(stats_.GetY1NDC());
+  st1->SetY2NDC(stats_.GetY2NDC());
   if (drawoption_ == "P") {
     st1->SetLineColor(h_->GetMarkerColor());
     st1->SetTextColor(h_->GetMarkerColor());
