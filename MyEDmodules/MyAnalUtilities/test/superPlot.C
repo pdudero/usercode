@@ -19,20 +19,22 @@
 #include "TPaveStats.h"
 
 #include "tdrstyle4timing.C"
+#include "drawStandardTexts.C"
 
 using namespace std;
 
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),rightmargin(0.),leftmargin(0.),
-			fillcolor(10),logx(0),logy(0)
+			fillcolor(10),logx(0),logy(0), legid("")
   { hframe = new wTH1D(name,name,100,0.0,1.0); }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
   unsigned logx, logy;
+  string legid;
   float titlexndc, titleyndc;
   wTH1D *hframe;           // the frame histo, holds lots of pad info
   vector<string> histo_ids;
-  string legid;
+  vector<string> label_ids;
   TVirtualPad *vp;
 };
 
@@ -74,11 +76,25 @@ struct wLegend_t {
   TLegend *leg;
 };
 
+struct wLabel_t {
+  wLabel_t(const string& intxt,
+	   float inx1ndc=0., float iny1ndc=0.,
+	   float inx2ndc=1., float iny2ndc=1.) :
+    text(intxt),
+    x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc) {}
+  string   text;
+  float    x1ndc, y1ndc;
+  float    x2ndc, y2ndc;
+  unsigned textfont;
+  float    textsize;
+};
+
 static set<string> glset_histopathsReadIn;  // keep track of histos read in
 
 static map<string, string>      glmap_fileid2path;
 static map<string, wTH1D *>     glmap_id2histo;
 static map<string, wLegend_t *> glmap_id2legend; // the map...of legends
+static map<string, wLabel_t *>  glmap_id2label;
 
 //======================================================================
 
@@ -239,6 +255,7 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "titlewndc") gStyle->SetTitleW(str2flt(value));
     else if (key == "titlehndc") gStyle->SetTitleH(str2flt(value));
     else if (key == "titlefont") gStyle->SetTitleFont(str2int(value));
+    else if (key == "titlebordersize") gStyle->SetTitleBorderSize(str2int(value));
 
     // Set the position of the statbox
     else if (key == "statxndc")  gStyle->SetStatX(str2flt(value));
@@ -345,6 +362,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     if      (key == "histos") {
       Tokenize(value,wpad->histo_ids," ,"); 
       if (!wpad->histo_ids.size()) wpad->histo_ids.push_back(value);
+    }
+    else if (key == "labels") {
+      Tokenize(value,wpad->label_ids," ,"); 
+      if (!wpad->label_ids.size()) wpad->label_ids.push_back(value);
     }
     else if (key == "title")        wpad->hframe->histo()->SetTitle(value.c_str());
     else if (key == "xtitle")       wpad->hframe->histo()->SetXTitle(value.c_str());
@@ -761,11 +782,75 @@ processLegendSection(FILE *fp,
     else if (key == "linewidth")  wleg->linewidth  = str2int(value);
     else if (key == "fillcolor")  wleg->fillcolor  = str2int(value);
     else if (key == "bordersize") wleg->bordersize = str2int(value);
+    else {
+      cerr << "unknown key " << key << endl;
+    }
   }
 
   glmap_id2legend.insert(std::pair<string,wLegend_t *>(*lid,wleg));
   return true;
 }                                                // processLegendSection
+
+//======================================================================
+
+bool                                          // returns true if success
+processLabelSection(FILE   *fp,
+		    string& theline,
+		    bool&   new_section)
+{
+  vector<string> v_tokens;
+
+  cout << "Processing label section" << endl;
+
+  string  *lid  = NULL;
+  wLabel_t *wlab = new wLabel_t("FillMe");
+
+  new_section=false;
+
+  while (getLine(fp,theline,"label")) {
+    if (!theline.size()) continue;
+    if (theline[0] == '#') continue; // comments are welcome
+
+    if (theline.find('[') != string::npos) {
+      new_section=true;
+      return true;
+    }
+
+    Tokenize(theline,v_tokens,"=");
+    if (v_tokens.size() != 2) {
+      cerr << "malformed key=value line " << theline << endl; continue;
+    }
+
+    string key   = v_tokens[0];
+    string value = v_tokens[1];
+
+    //--------------------
+    if (key == "id") {
+    //--------------------
+      if (lid != NULL) {
+	cerr << "no more than one id per label section allowed " << *lid << endl;
+	break;
+      }
+      lid = new string(value);
+      if (glmap_id2label.find(*lid) != glmap_id2label.end()) { // label id's cannot be redefined
+	cerr << "Label ID " << *lid << " already defined, cannot be redefined." << endl;
+	break;
+      }
+    }
+    else if (key == "text")       wlab->text   = value;
+    else if (key == "x1ndc")      wlab->x1ndc  = str2flt(value);
+    else if (key == "y1ndc")      wlab->y1ndc  = str2flt(value);
+
+    else if (key == "textsize")   wlab->textsize   = str2flt(value);
+    else if (key == "textfont")   wlab->textfont   = str2int(value);
+    else {
+      cerr << "unknown key " << key << endl;
+    }
+  } // while loop
+
+  glmap_id2label.insert(std::pair<string,wLabel_t *>(*lid,wlab));
+  return true;
+}                                                 // processLabelSection
 
 //======================================================================
 
@@ -852,6 +937,9 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "LEGEND") {
       processLegendSection(fp,theline,new_section);
     }
+    else if (section == "LABEL") {
+      processLabelSection(fp,theline,new_section);
+    }
     else if (section == "FILES") {
       processFilesSection(fp,theline,new_section);
     }
@@ -930,11 +1018,12 @@ void  drawPlots(wCanvas_t& wc)
 
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
-  bool drawlegend = false;
   wLegend_t *wl;
 
   vector<vector<string> >::const_iterator it;
   for (unsigned i = 0; i< npads; i++) {
+
+    bool drawlegend = false;
 
     wPad_t *& wp = wc.pads[i];
     wp->vp = wc.c1->cd(i+1);
@@ -996,7 +1085,7 @@ void  drawPlots(wCanvas_t& wc)
       string& hid = wp->histo_ids[j];
       map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(hid);
       if (it == glmap_id2histo.end()) {
-	cerr << "ERROR: id " << hid << " never defined in layout" << endl;
+	cerr << "ERROR: histo id " << hid << " never defined in layout" << endl;
 	exit (-1);
       }
 
@@ -1024,8 +1113,25 @@ void  drawPlots(wCanvas_t& wc)
       wl->leg->Draw();
     }
 
+    /***************************************************
+     * Draw each label
+     ***************************************************/
+
+    for (unsigned j = 0; j < wp->label_ids.size(); j++) {
+      string& lid = wp->label_ids[j];
+      map<string,wLabel_t *>::const_iterator it = glmap_id2label.find(lid);
+      if (it == glmap_id2label.end()) {
+	cerr << "ERROR: label id " << lid << " never defined in layout" << endl;
+	exit (-1);
+      }
+      wLabel_t *wl = it->second;
+      drawStandardText(wl->text, wl->x1ndc, wl->y1ndc);
+      //wp->vp->Update();
+    }
     wc.c1->Update();
-  }
+
+  } // pad loop
+
   wc.c1->cd();
 }                                                           // drawPlots
 
