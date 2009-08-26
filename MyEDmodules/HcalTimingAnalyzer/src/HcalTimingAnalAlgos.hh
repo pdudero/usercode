@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.6 2009/05/29 12:19:52 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.7 2009/07/15 15:25:36 dudero Exp $
 //
 //
 
@@ -77,8 +77,12 @@ private:
   std::string st_rhTprofd2_;
   std::string st_rhTprofd3_;
   std::string st_rhTprofd4_;
+  std::string st_rhTprofd1hpdMult_;
   std::string st_hbheTimingVsE_;
+  std::string st_hbheTvsEpulseErr_;
+  std::string st_hbheTvsEhpdMult_;
   std::string st_hfTimingVsE_;
+  std::string st_hfTvsEpulseErr_;
   std::string st_hoTimingVsE_;
   std::string st_shTimingVsE_;
   std::string st_ctHcalTvstwrE_;

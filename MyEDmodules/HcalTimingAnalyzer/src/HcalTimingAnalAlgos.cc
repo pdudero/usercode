@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.6 2009/05/29 12:19:52 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.7 2009/07/15 15:25:36 dudero Exp $
 //
 //
 
@@ -310,9 +310,45 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2d.push_back(hpars2d);
 
+  st_hbheTvsEpulseErr_ = "h2d_hbheTvsEpulseErr" + runstrn;
+  hpars2d.name   = st_hbheTvsEpulseErr_;
+  hpars2d.title  = "HBHE RecHit Timing vs. Energy, pulse Shape Error bit set " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
+  hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars2d.nbinsy = hcalRecHitTscaleNbins_;
+  hpars2d.miny   = hcalRecHitTscaleMinNs_;
+  hpars2d.maxy   = hcalRecHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hbheTvsEhpdMult_ = "h2d_hbheTvsEhpdMult" + runstrn;
+  hpars2d.name   = st_hbheTvsEhpdMult_;
+  hpars2d.title  = "HBHE RecHit Timing vs. Energy, HPD noise bit set " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
+  hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars2d.nbinsy = hcalRecHitTscaleNbins_;
+  hpars2d.miny   = hcalRecHitTscaleMinNs_;
+  hpars2d.maxy   = hcalRecHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
   st_hfTimingVsE_ = "h2d_hfTimingVsE" + runstrn;
   hpars2d.name   = st_hfTimingVsE_;
   hpars2d.title  = "HF RecHit Timing vs. Energy " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
+  hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
+  hpars2d.minx   = hcalRecHitEscaleMinGeV_;
+  hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
+  hpars2d.nbinsy = hcalRecHitTscaleNbins_;
+  hpars2d.miny   = hcalRecHitTscaleMinNs_;
+  hpars2d.maxy   = hcalRecHitTscaleMaxNs_;
+
+  v_hpars2d.push_back(hpars2d);
+
+  st_hfTvsEpulseErr_ = "h2d_hfTvsEpulseErr" + runstrn;
+  hpars2d.name   = st_hfTvsEpulseErr_;
+  hpars2d.title  = "HF RecHit Timing vs. Energy, pulse Shape Error bit set " + runstrt + "; Rechit Energy (GeV); Rechit Time (ns)";
   hpars2d.nbinsx = (uint32_t)(hcalRecHitEscaleMaxGeV_ - hcalRecHitEscaleMinGeV_);
   hpars2d.minx   = hcalRecHitEscaleMinGeV_;
   hpars2d.maxx   = hcalRecHitEscaleMaxGeV_;
@@ -450,6 +486,18 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   v_hpars2dprof.push_back(hpars2d);
 
+  st_rhTprofd1hpdMult_  = "p2d_rhTperIetaIphiDepth1hpdMult" + runstrn;
+  hpars2d.name   = st_rhTprofd1hpdMult_;
+  hpars2d.title  = "HBHE (Depth 1) RecHit Time Map-Profile for HPD Noise events " + runstrt + "; ieta; iphi";
+  hpars2d.nbinsx =  83;
+  hpars2d.minx   =  -41.5;
+  hpars2d.maxx   =   41.5;
+  hpars2d.nbinsy =  72;
+  hpars2d.miny   =    0.5;
+  hpars2d.maxy   =   72.5;
+
+  v_hpars2dprof.push_back(hpars2d);
+
   st_rhTprofd2_  = "p2d_rhTperIetaIphiDepth2" + runstrn;
   hpars2d.name   = st_rhTprofd2_;
   hpars2d.title  = "HBEF (Depth 2) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
@@ -476,7 +524,7 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
 
   st_rhTprofd4_  = "p2d_rhTperIetaIphiDepth4" + runstrn;
   hpars2d.name   = st_rhTprofd4_;
-  hpars2d.title  = "HBEF (Depth 4) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
+  hpars2d.title  = "HO (Depth 4) RecHit Time Map-Profile " + runstrt + "; ieta; iphi";
   hpars2d.nbinsx =  83;
   hpars2d.minx   =  -41.5;
   hpars2d.maxx   =   41.5;
@@ -628,6 +676,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     int    ieta     = detId.ieta();
     int    iphi     = detId.iphi();
     int    depth    = detId.depth();
+    uint32_t flags  = rh.flags();
 
     TH1F *hp = 0;
     if (detId.subdet() == HcalBarrel) hp = (detId.zside() > 0) ? h_hbpt : h_hbmt;
@@ -641,6 +690,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     myAH->fill1d<TH1D>(st_rhEnergies_,energy);
     myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,energy);
     myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
+
+    if (flags & 2) // HBHE timing error
+      myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
 
     std::string st_rhTprof;
     switch(depth) {
@@ -673,6 +725,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       myAH->fill1d<TH1D>(st_rhEnergies_,energy);
       myAH->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
       myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
+
       if (energy > 50.0)
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
     }
@@ -686,8 +739,18 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
       myAH->fill1d<TH1D>(st_rhEnergies_,energy);
       myAH->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
       myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
-      if (energy > 50.0)
+
+      if (flags & 1) // HBHE HPD multiplicity bit - noise
+	myAH->fill2d<TH2D>(st_hbheTvsEhpdMult_,energy,htime);
+
+      if (flags & 2) // HBHE timing error
+	myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
+
+      if (energy > 50.0) {
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
+	if ((flags & 1) && (depth == 1))
+	  myAH->fill2d<TProfile2D>(st_rhTprofd1hpdMult_,rh.id().ieta(),rh.id().iphi(),htime);
+      }
     }
   } // loop over HBHE rechits
 
@@ -768,6 +831,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
     cutNone_->histos()->fill2d<TH2D>(st_hfTimingVsE_,rh.energy(),rh.time());
 
+    if (rh.flags() & 2) // HF timing error
+      cutNone_->histos()->fill2d<TH2D>(st_hfTvsEpulseErr_,rh.energy(),rh.time());
+
     if (rh.energy() > minHitGeV) {
       cutMinHitGeV_->histos()->fill2d<TH2D>(st_rhEmap_,
 					    detId.ieta(),
@@ -775,6 +841,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 					    rh.energy());
 
       cutMinHitGeV_->histos()->fill2d<TH2D>(st_hfTimingVsE_,rh.energy(),rh.time());
+
+      if (rh.flags() & 2) // HF timing error
+	cutMinHitGeV_->histos()->fill2d<TH2D>(st_hfTvsEpulseErr_,rh.energy(),rh.time());
 
       if (rh.energy() > 50.0)
 	cutMinHitGeV_->histos()->fill2d<TProfile2D>(st_rhTprof,
