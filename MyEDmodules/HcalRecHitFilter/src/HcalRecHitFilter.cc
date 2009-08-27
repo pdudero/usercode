@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Dudero
 //         Created:  Mon Mar  2 02:37:12 CST 2009
-// $Id: HcalRecHitFilter.cc,v 1.2 2009/04/26 23:31:02 dudero Exp $
+// $Id: HcalRecHitFilter.cc,v 1.4 2009/07/06 08:47:25 dudero Exp $
 //
 //
 
@@ -73,6 +73,7 @@ private:
   std::vector<HcalDetId>   detIds2mask_;
   double                   timeShiftNs_; /* time to shift rechit times by
 					    before applying filter window */
+  int                      flagFilterMask_; // filter by rechit flag bits
 
   std::vector<std::pair<double,double> >  tsmearEnvelope_;
   std::vector<std::pair<double,double> >  tfilterEnvelope_;
@@ -107,7 +108,8 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
   horecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hoLabel",(edm::InputTag)"")),
   timeWindowCenterNs_(iConfig.getParameter<double>("timeWindowCenterNs")),
   timeWindowGain_(iConfig.getParameter<double>("timeWindowGain")),
-  timeShiftNs_(iConfig.getParameter<double>("timeShiftNs"))
+  timeShiftNs_(iConfig.getParameter<double>("timeShiftNs")),
+  flagFilterMask_(iConfig.getParameter<int>("flagFilterMask"))
 {
   //register your products
 
@@ -348,6 +350,9 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       for (uint32_t i=0; i < hbhein->size(); i++) {
 	const HBHERecHit& rh= (*hbhein)[i];
+
+	if (rh.flags() & flagFilterMask_) continue;
+
 	if (doSmear) {
 	  double smearedTime = smearTime(rh.energy(),rh.time()-timeShiftNs_);
 	  HBHERecHit newrh(rh.id(),rh.energy(),smearedTime);
@@ -398,14 +403,16 @@ void
 HcalRecHitFilter::beginJob(const edm::EventSetup&)
 {
   //  edm::LogInfo("Parameters being used: ")   <<
-  std::cout << "Parameters being used: "  << "\n" <<
+  std::cout << "========================================"  << "\n" <<
+    "Parameters being used: " << "\n" <<
     "hbherecotag_         : " << hbherecotag_        << "\n" <<
     "hfrecotag_           : " << hfrecotag_          << "\n" <<
     "horecotag_           : " << horecotag_          << "\n" <<
     "subdet_              : " << subdet_             << "\n" <<
     "timeWindowCenterNs_  = " << timeWindowCenterNs_ << "\n" <<
     "timeWindowGain_      = " << timeWindowGain_     << "\n" <<
-    "timeShiftNs_         = " << timeShiftNs_        << std::endl;
+    "timeShiftNs_         = " << timeShiftNs_        << "\n" <<
+    "flagFilterMask_      = " << flagFilterMask_     << std::endl;
   
   for (uint32_t i=0; i<detIds2mask_.size(); i++)
     //edm::LogInfo("Masking ") << detIds2mask_[i] << std::endl;
@@ -414,6 +421,7 @@ HcalRecHitFilter::beginJob(const edm::EventSetup&)
 
   dumpEnvelope(tsmearEnvelope_,"Smear Sigma Envelope");
   dumpEnvelope(tfilterEnvelope_, "Time Filter Envelope Limits");
+  std::cout << "========================================"  << std::endl;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

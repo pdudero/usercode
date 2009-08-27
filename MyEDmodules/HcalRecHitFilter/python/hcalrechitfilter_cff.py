@@ -5,10 +5,11 @@ hbheRHfilter = cms.EDProducer('HcalRecHitFilter',
      detIds2Mask        = cms.vint32(),
      tsmearEnvelope     = cms.vdouble(),
      tfilterEnvelope    = cms.vdouble(),
-     timeWindowCenterNs = cms.double(14.0),
+     timeWindowCenterNs = cms.double(0.0),
      timeWindowGain     = cms.double(1.0),
      Subdetector        = cms.string("HBHE"),
-     timeShiftNs        = cms.double(0.0)
+     timeShiftNs        = cms.double(0.0),
+     flagFilterMask     = cms.int32(0)
 )
 
 hfRHfilter = cms.EDProducer('HcalRecHitFilter',
@@ -16,10 +17,11 @@ hfRHfilter = cms.EDProducer('HcalRecHitFilter',
      detIds2Mask        = cms.vint32(),
      tsmearEnvelope     = cms.vdouble(),
      tfilterEnvelope    = cms.vdouble(),
-     timeWindowCenterNs = cms.double(14.0),
+     timeWindowCenterNs = cms.double(0.0),
      timeWindowGain     = cms.double(1.0),
      Subdetector        = cms.string("HF"),
-     timeShiftNs        = cms.double(0.0)
+     timeShiftNs        = cms.double(0.0),
+     flagFilterMask     = cms.int32(0)
 )
 
 hoRHfilter = cms.EDProducer('HcalRecHitFilter',
@@ -27,8 +29,9 @@ hoRHfilter = cms.EDProducer('HcalRecHitFilter',
      detIds2Mask        = cms.vint32(),
      tsmearEnvelope     = cms.vdouble(),
      tfilterEnvelope    = cms.vdouble(),
-     timeWindowCenterNs = cms.double(14.0),
+     timeWindowCenterNs = cms.double(0.0),
      timeWindowGain     = cms.double(1.0),
      Subdetector        = cms.string("HO"),
-     timeShiftNs        = cms.double(0.0)
+     timeShiftNs        = cms.double(0.0),
+     flagFilterMask     = cms.int32(0)
 )
