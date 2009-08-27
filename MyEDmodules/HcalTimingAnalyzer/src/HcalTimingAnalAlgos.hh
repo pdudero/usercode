@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.7 2009/07/15 15:25:36 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.8 2009/08/26 17:03:54 dudero Exp $
 //
 //
 
@@ -47,10 +47,12 @@ public:
   void endJob() ;
 
 private:
-  double lookupThresh(const HcalDetId& id);
+  double lookupThresh    (const HcalDetId& id);
   void   bookPerRunHistos(const uint32_t rn);
   bool   convertIdNumbers(std::vector<int>& v_idnumbers,
 			  HcalDetId& detId);
+  void   fillDigiPulse   (TH1D *pulseHist,
+			  const HBHEDataFrame& frame);
 
   // ----------member data ---------------------------
 
@@ -67,6 +69,8 @@ private:
   std::string st_shTimes_,  st_shEnergies_;
   std::string st_rhTimes_,  st_rhEnergies_;
   std::string st_avgPulse_;
+  std::string st_avgPulseTerr_;
+  std::string st_avgPulseHPDmult_;
   std::string st_hbhedigiColSize_;
   std::string st_hbheRHColSize_;
   std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;

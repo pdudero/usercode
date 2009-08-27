@@ -1,7 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-# shift the HBHE rechit times down by a time sample's worth.
-
 from MyEDmodules.HcalRecHitFilter.hcalrechitfilter_cff import *
 
 hbherhfilt06ns = hbheRHfilter.clone()
@@ -127,7 +125,13 @@ horhfiltshp.tfilterEnvelope     = cms.vdouble(  4.00,6.02,
 
 #--------------------------------------------------
 # In case ya want'em...unfiltered shifted rechits
+# shift the HBHE rechit times down by a time sample's worth.
 
 hbherhshift = hbheRHfilter.clone(timeShiftNs = cms.double(25.0))
 hfrhshift   = hfRHfilter.clone(timeShiftNs = cms.double(25.0))
 horhshift   = hoRHfilter.clone(timeShiftNs = cms.double(25.0))
+
+#--------------------------------------------------
+# Filters on flag bits
+hbherhfiltNoiseBit = hbheRHfilter.clone(flagFilterMask = cms.int32(1))
+hbherhfiltTimeBit  = hbheRHfilter.clone(flagFilterMask = cms.int32(2))

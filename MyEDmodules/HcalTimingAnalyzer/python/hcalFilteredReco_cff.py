@@ -33,6 +33,12 @@ filtTowersshp            = towerMaker.clone()
 filtTowersshp.hbheInput  = cms.InputTag("hbherhfiltshp")
 filtTowersshp.hoInput    = cms.InputTag("horhfiltshp")
 
+filtTowersNoiseBit           = towerMaker.clone()
+filtTowersNoiseBit.hbheInput = cms.InputTag("hbherhfiltNoiseBit")
+
+filtTowersTimeBit            = towerMaker.clone()
+filtTowersTimeBit.hbheInput  = cms.InputTag("hbherhfiltTimeBit")
+
 unfiltTowersShift = towerMaker.clone()
 unfiltTowersShift.hbheInput  = cms.InputTag("hbherhshift")
 unfiltTowersShift.hoInput    = cms.InputTag("horhshift")
@@ -47,6 +53,8 @@ filtmetNoHF10ns    = metNoHF.clone(src = cms.InputTag("filtTowers10ns"))
 filtmetNoHF1ts     = metNoHF.clone(src = cms.InputTag("filtTowers1ts"))
 filtmetNoHF4ts     = metNoHF.clone(src = cms.InputTag("filtTowers4ts"))
 filtmetNoHFshp     = metNoHF.clone(src = cms.InputTag("filtTowersshp"))
+filtmetNoHFnoise   = metNoHF.clone(src = cms.InputTag("filtTowersNoiseBit"))
+filtmetNoHFtime    = metNoHF.clone(src = cms.InputTag("filtTowersTimeBit"))
 unfiltmetNoHFshift = metNoHF.clone(src = cms.InputTag("unfiltTowersShift"))
 
 #--------------------------------------------------
@@ -93,6 +101,16 @@ myanfilt4ts.eventDataPset.hfRechitLabel    = cms.untracked.InputTag("hfrhfilt4ts
 myanfilt4ts.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowers4ts")
 myanfilt4ts.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHF4ts")
 
+myanfiltNoise = myan.clone()
+myanfiltNoise.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherhfiltNoiseBit")
+myanfiltNoise.eventDataPset.twrLabel        = cms.untracked.InputTag("filtTowersNoiseBit")
+myanfiltNoise.eventDataPset.metLabel        = cms.untracked.InputTag("filtmetNoHFnoise")
+
+myanfiltTime = myan.clone()
+myanfiltTime.eventDataPset.hbheRechitLabel  = cms.untracked.InputTag("hbherhfiltTimeBit")
+myanfiltTime.eventDataPset.twrLabel         = cms.untracked.InputTag("filtTowersTimeBit")
+myanfiltTime.eventDataPset.metLabel         = cms.untracked.InputTag("filtmetNoHFtime")
+
 #--------------------------------------------------
 # SEQUENCES:
 
@@ -134,6 +152,16 @@ filtshp = cms.Sequence(rhfiltshp*
                        filtmetNoHFshp*
                        myanfiltshp)
 
+filtnoise = cms.Sequence(hbherhfiltNoiseBit*
+                         filtTowersNoiseBit*
+                         filtmetNoHFnoise*
+                         myanfiltNoise)
+
+filttime = cms.Sequence(hbherhfiltTimeBit*
+                        filtTowersTimeBit*
+                        filtmetNoHFtime*
+                        myanfiltTime)
+
 allSQfilts = cms.Sequence(myanunfilt+
                           filt06ns+
                           filt10ns+
@@ -151,13 +179,13 @@ allSQfiltsWithShift = cms.Sequence(myanunfilt+
 # combination of square filters (>=1ts)
 # and a shaped filter (<1ts)
 #
-mixedFilts = cms.Sequence(myanunfilt+
-                          filtshp+
-                          filt1ts+
-                          filt4ts)
+timeFiltSeq = cms.Sequence(filtshp+
+                           filt1ts+
+                           filt4ts)
 
-mixedFiltsWithShift = cms.Sequence(myanunfilt+
-                                   unfiltShift+
-                                   filtshp+
-                                   filt1ts+
-                                   filt4ts)
+timeFiltsWithShift = cms.Sequence(unfiltShift+
+                                  filtshp+
+                                  filt1ts+
+                                  filt4ts)
+
+flagFiltSeq  = cms.Sequence(filtnoise+filttime)

@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.7 2009/07/15 15:25:36 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.8 2009/08/26 17:03:54 dudero Exp $
 //
 //
 
@@ -180,6 +180,24 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
     st_avgPulse_   = "h1d_pulse" + runstrn;
     hpars1d.name   = st_avgPulse_;
     hpars1d.title  = "HBHE Average Pulse Shape " + runstrt;
+    hpars1d.nbinsx = 10;
+    hpars1d.minx   = -0.5;
+    hpars1d.maxx   =  9.5;
+
+    v_hpars1d.push_back(hpars1d);
+
+    st_avgPulseTerr_  = "h1d_pulseTerr" + runstrn;
+    hpars1d.name   = st_avgPulseTerr_;
+    hpars1d.title  = "HBHE Avg Pulse Shape (Pulse Shape Error) " + runstrt;
+    hpars1d.nbinsx = 10;
+    hpars1d.minx   = -0.5;
+    hpars1d.maxx   =  9.5;
+
+    v_hpars1d.push_back(hpars1d);
+
+    st_avgPulseHPDmult_   = "h1d_pulseHPDmult" + runstrn;
+    hpars1d.name   = st_avgPulseHPDmult_;
+    hpars1d.title  = "HBHE Avg Pulse Shape (HPD noise) " + runstrt;
     hpars1d.nbinsx = 10;
     hpars1d.minx   = -0.5;
     hpars1d.maxx   =  9.5;
@@ -596,6 +614,19 @@ double HcalTimingAnalAlgos::lookupThresh(const HcalDetId& id)
 
 //======================================================================
 
+void
+HcalTimingAnalAlgos::fillDigiPulse(TH1D *pulseHist,
+				   const HBHEDataFrame& frame)
+{
+  for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
+    int rawadc = frame[isample].adc();
+    pulseHist->Fill(isample,rawadc);
+
+  } // loop over samples in digi
+}
+
+//======================================================================
+
 // ------------ method called to for each event  ------------
 void
 HcalTimingAnalAlgos::process(const myEventData& ed)
@@ -690,6 +721,9 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     myAH->fill1d<TH1D>(st_rhEnergies_,energy);
     myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,energy);
     myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
+
+    if (flags & 1) // HBHE HPD multiplicity bit - noise
+      myAH->fill2d<TH2D>(st_hbheTvsEhpdMult_,energy,htime);
 
     if (flags & 2) // HBHE timing error
       myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
@@ -926,28 +960,32 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
    ***************************************************/
 
   if (doHBHEdigis_ && ed.hbhedigis().isValid()) {
-    // to verify that simulated ZS is working:
+    // all the different pulses we may want to look at...
     //
-    cutNone_->histos()->fill1d<TH1D>(st_hbhedigiColSize_,(double)ed.hbhedigis()->size());
+    TH1D *uncutPulse = cutNone_->histos()->get<TH1D>(st_avgPulse_);
+    TH1D *ecutPulse =  cutMinHitGeV_->histos()->get<TH1D>(st_avgPulse_);
+    TH1D *noisePulse = cutNone_->histos()->get<TH1D>(st_avgPulseHPDmult_);
+    TH1D *terrPulse  = cutNone_->histos()->get<TH1D>(st_avgPulseTerr_);
 
-    for (unsigned idig = 0; idig < ed.hbhedigis()->size (); ++idig) {
-      const HBHEDataFrame& frame = (*(ed.hbhedigis()))[idig];
-      HcalDetId detId = frame.id();
-      TH1F *hp = 0;
-      if (detId.subdet() == HcalBarrel) hp = (detId.zside() > 0) ? h_hbp : h_hbm; 
-      if (detId.subdet() == HcalEndcap) hp = (detId.zside() > 0) ? h_hep : h_hem; 
-      
-      for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
-	int rawadc = frame[isample].adc();
-	if (hp) hp->Fill(isample,rawadc);
+    cutNone_->histos()->fill1d<TH1D>(st_hbhedigiColSize_,
+				     (double)ed.hbhedigis()->size());
 
-	cutNone_->histos()->fill1d<TH1D>(st_avgPulse_,isample,rawadc);
+    for (unsigned idig=0, irh=0;
+	 idig < ed.hbhedigis()->size() && irh < ed.hbherechits()->size();
+	 ++idig, ++irh) {
+      const HBHEDataFrame& frame  = (*(ed.hbhedigis()))[idig];
+      const HBHERecHit&    rechit = (*(ed.hbherechits()))[irh];
+      HcalDetId dgDetId = frame.id();
+      HcalDetId rhDetId = rechit.id();
 
-	if (inSet<HcalDetId>(s_idsOverThresh,detId))
-	  cutMinHitGeV_->histos()->fill1d<TH1D>(st_avgPulse_,isample,rawadc);
-
-      } // loop over samples in digi
-    } // loop over digi
+      fillDigiPulse(uncutPulse,frame);
+      if (inSet<HcalDetId>(s_idsOverThresh,dgDetId))
+	fillDigiPulse(ecutPulse,frame);
+      if( dgDetId==rhDetId )  {
+	if (rechit.flags() & 1) fillDigiPulse(noisePulse,frame);
+	if (rechit.flags() & 2) fillDigiPulse(terrPulse,frame);
+      }
+    } // loop over digis,rechits together
   } // if have digis
 
 
