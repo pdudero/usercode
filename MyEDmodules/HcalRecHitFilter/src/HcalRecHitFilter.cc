@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Dudero
 //         Created:  Mon Mar  2 02:37:12 CST 2009
-// $Id: HcalRecHitFilter.cc,v 1.4 2009/07/06 08:47:25 dudero Exp $
+// $Id: HcalRecHitFilter.cc,v 1.5 2009/08/27 01:57:27 dudero Exp $
 //
 //
 
@@ -356,10 +356,12 @@ HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (doSmear) {
 	  double smearedTime = smearTime(rh.energy(),rh.time()-timeShiftNs_);
 	  HBHERecHit newrh(rh.id(),rh.energy(),smearedTime);
+	  newrh.setFlags(rh.flags());
 	  if (!maskedId(newrh.id()) && inTime(newrh))
 	    hbheout->push_back(newrh);
 	} else {
 	  HBHERecHit shiftedrh(rh.id(),rh.energy(),rh.time()-timeShiftNs_);
+	  shiftedrh.setFlags(rh.flags());
 	  if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
 	    hbheout->push_back(shiftedrh);
 	}
