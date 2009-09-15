@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.8 2009/08/26 17:03:54 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.9 2009/08/27 01:56:37 dudero Exp $
 //
 //
 
@@ -54,6 +54,9 @@ private:
   void   fillDigiPulse   (TH1D *pulseHist,
 			  const HBHEDataFrame& frame);
 
+  bool   fillHBHEhistos  (myAnalHistos *myAH,
+			  const HBHERecHit& rh);
+
   // ----------member data ---------------------------
 
   myAnalCut *cutNone_;
@@ -73,6 +76,7 @@ private:
   std::string st_avgPulseHPDmult_;
   std::string st_hbhedigiColSize_;
   std::string st_hbheRHColSize_;
+  std::string st_hbheRHflags_;
   std::string st_caloMet_Met_, st_caloMet_Phi_, st_caloMet_SumEt_;
 
   std::string st_rhEmap_;

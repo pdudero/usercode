@@ -8,7 +8,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.8 2009/08/26 17:03:54 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.9 2009/08/27 01:56:37 dudero Exp $
 //
 //
 
@@ -220,6 +220,15 @@ void HcalTimingAnalAlgos::bookPerRunHistos(const uint32_t rn)
   hpars1d.nbinsx = 5201; // 72chan/RBX*72RBX = 5184
   hpars1d.minx   = -0.5;
   hpars1d.maxx   = 5200.5;
+  
+  v_hpars1d.push_back(hpars1d);
+
+  st_hbheRHflags_ = "h1d_HBHERecHitFlags" + runstrn;
+  hpars1d.name   = st_hbheRHflags_;
+  hpars1d.title  = "HBHE RecHit Flags " + runstrt;
+  hpars1d.nbinsx = 32;
+  hpars1d.minx   = -0.5;
+  hpars1d.maxx   = 31.5;
   
   v_hpars1d.push_back(hpars1d);
 
@@ -627,6 +636,50 @@ HcalTimingAnalAlgos::fillDigiPulse(TH1D *pulseHist,
 
 //======================================================================
 
+bool
+HcalTimingAnalAlgos::fillHBHEhistos(myAnalHistos *myAH, const HBHERecHit& rh)
+{
+  HcalDetId detId = rh.id();
+  double   htime  = rh.time();
+  double   energy = rh.energy();
+  int      ieta   = detId.ieta();
+  int      iphi   = detId.iphi();
+  int      depth  = detId.depth();
+  uint32_t flags  = rh.flags();
+
+  myAH->fill1d<TH1D>(st_rhTimes_,htime);
+  myAH->fill1d<TH1D>(st_rhEnergies_,energy);
+  myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,energy);
+  myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
+
+  for (int i=0; i<32; i++)
+    myAH->fill1d<TH1D>(st_hbheRHflags_,i,(flags & (1<<i))!=0);
+
+  if (flags & 1) // HBHE HPD multiplicity bit - noise
+    myAH->fill2d<TH2D>(st_hbheTvsEhpdMult_,energy,htime);
+
+  if (flags & 2) // HBHE timing error
+    myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
+
+  std::string st_rhTprof;
+  switch(depth) {
+  case 1: st_rhTprof = st_rhTprofd1_; break;
+  case 2: st_rhTprof = st_rhTprofd2_; break;
+  case 3: st_rhTprof = st_rhTprofd3_; break;
+    //case 4: st_rhTprof = st_rhTprofd4_; break; // not for hbhe!
+  default:
+    edm::LogWarning("Invalid depth in rechit collection! detId = ") << detId << std::endl;
+    return false;
+  }
+
+  if (energy > 50.0)
+    myAH->fill2d<TProfile2D>(st_rhTprof,ieta,iphi,htime);
+
+  return true;
+}                                 // HcalTimingAnalAlgos::fillHBHEhistos
+
+//======================================================================
+
 // ------------ method called to for each event  ------------
 void
 HcalTimingAnalAlgos::process(const myEventData& ed)
@@ -643,29 +696,6 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
   //cout << 'A' << endl;
 
-  TH1F *h_hbp = 0;
-  TH1F *h_hep = 0;
-  TH1F *h_hbm = 0;
-  TH1F *h_hem = 0;
-  TH1F *h_hbpt= 0;
-  TH1F *h_hept= 0;
-  TH1F *h_hbmt= 0;
-  TH1F *h_hemt= 0;
-
-  if (inSet<uint32_t>(s_events2anal_,evtn)) {
-    edm::Service<TFileService> fs;
-    char n[80];
-    sprintf (n,"run%devent%dpulseHBP", runn,evtn);  h_hbp = fs->make<TH1F>(n,n, 10,-0.5,9.5 );
-    sprintf (n,"run%devent%dpulseHEP", runn,evtn);  h_hep = fs->make<TH1F>(n,n, 10,-0.5,9.5 );
-    sprintf (n,"run%devent%dpulseHBM", runn,evtn);  h_hbm = fs->make<TH1F>(n,n, 10,-0.5,9.5 );
-    sprintf (n,"run%devent%dpulseHEM", runn,evtn);  h_hem = fs->make<TH1F>(n,n, 10,-0.5,9.5 );
-
-    sprintf (n,"run%devent%dRHTimesHBP",runn,evtn); h_hbpt=fs->make<TH1F>(n,n,101,-10.5,90.5);
-    sprintf (n,"run%devent%dRHTimesHEP",runn,evtn); h_hept=fs->make<TH1F>(n,n,101,-10.5,90.5);
-    sprintf (n,"run%devent%dRHTimesHBM",runn,evtn); h_hbmt=fs->make<TH1F>(n,n,101,-10.5,90.5);
-    sprintf (n,"run%devent%dRHTimesHEM",runn,evtn); h_hemt=fs->make<TH1F>(n,n,101,-10.5,90.5);
-  }
-
   std::set<HcalDetId> s_idsOverThresh;
 
   //cout << 'B' << endl;
@@ -676,8 +706,7 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 
   //HBHERecHit maxrh(HcalDetId::Undefined,-1e99,0.0);
   HcalDetId maxId;
-  double  maxenergy = -1e99;
-  double  maxtime = -1e99;
+  HBHERecHit maxrh(maxId,-1e99,-1e99);
 
   cutNone_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)ed.hbherechits()->size());
 
@@ -698,57 +727,15 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
     const HBHERecHit& rh = (*(ed.hbherechits()))[irh];
 
     //cout << irh << endl;
-
     //std::cout << rh.id().rawId() << std::endl;
 
-    HcalDetId detId = rh.id();
-    double htime    = rh.time();
-    double energy   = rh.energy();
-    int    ieta     = detId.ieta();
-    int    iphi     = detId.iphi();
-    int    depth    = detId.depth();
-    uint32_t flags  = rh.flags();
+    if (!fillHBHEhistos(cutNone_->histos(),rh)) continue;
 
-    TH1F *hp = 0;
-    if (detId.subdet() == HcalBarrel) hp = (detId.zside() > 0) ? h_hbpt : h_hbmt;
-    if (detId.subdet() == HcalEndcap) hp = (detId.zside() > 0) ? h_hept : h_hemt;
-
-    if (hp) hp->Fill(htime);
-
-    myAnalHistos *myAH = cutNone_->histos();
-
-    myAH->fill1d<TH1D>(st_rhTimes_,htime);
-    myAH->fill1d<TH1D>(st_rhEnergies_,energy);
-    myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,energy);
-    myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
-
-    if (flags & 1) // HBHE HPD multiplicity bit - noise
-      myAH->fill2d<TH2D>(st_hbheTvsEhpdMult_,energy,htime);
-
-    if (flags & 2) // HBHE timing error
-      myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
-
-    std::string st_rhTprof;
-    switch(depth) {
-    case 1: st_rhTprof = st_rhTprofd1_; break;
-    case 2: st_rhTprof = st_rhTprofd2_; break;
-    case 3: st_rhTprof = st_rhTprofd3_; break;
-      //case 4: st_rhTprof = st_rhTprofd4_; break; // not for hbhe!
-    default:
-      edm::LogWarning("Invalid depth in rechit collection! detId = ") << detId << std::endl;
-      continue;
-    }
-
-    if (energy > 50.0)
-      myAH->fill2d<TProfile2D>(st_rhTprof,ieta,iphi,htime);
-
-    double minHitGeV = lookupThresh(detId);
+    double minHitGeV = lookupThresh(rh.id());
 
     //if (energy > maxrh.energy()) maxrh = rh;
-    if (energy > maxenergy) {
-      maxtime   = htime;
-      maxenergy = energy;
-      maxId= rh.id(); 
+    if (rh.energy() > maxrh.energy()) {
+      maxrh = rh;
     }
 #if 0
     if (detId == tgtTwrId_) {
@@ -764,27 +751,10 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
 	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
     }
 #endif
-    if (energy > minHitGeV) {
+    if (rh.energy() > minHitGeV) {
       rechitsOverThresh++;
       s_idsOverThresh.insert(rh.id());
-      myAnalHistos *myAH = cutMinHitGeV_->histos();
-
-      myAH->fill1d<TH1D>(st_rhTimes_,htime);
-      myAH->fill1d<TH1D>(st_rhEnergies_,energy);
-      myAH->fill2d<TH2D>(st_rhEmap_,rh.id().ieta(),rh.id().iphi(),energy);
-      myAH->fill2d<TH2D>(st_hbheTimingVsE_,energy,htime);
-
-      if (flags & 1) // HBHE HPD multiplicity bit - noise
-	myAH->fill2d<TH2D>(st_hbheTvsEhpdMult_,energy,htime);
-
-      if (flags & 2) // HBHE timing error
-	myAH->fill2d<TH2D>(st_hbheTvsEpulseErr_,energy,htime);
-
-      if (energy > 50.0) {
-	myAH->fill2d<TProfile2D>(st_rhTprof,rh.id().ieta(),rh.id().iphi(),htime);
-	if ((flags & 1) && (depth == 1))
-	  myAH->fill2d<TProfile2D>(st_rhTprofd1hpdMult_,rh.id().ieta(),rh.id().iphi(),htime);
-      }
+      fillHBHEhistos(cutMinHitGeV_->histos(),rh);
     }
   } // loop over HBHE rechits
 
@@ -792,23 +762,8 @@ HcalTimingAnalAlgos::process(const myEventData& ed)
   //cutTgtTwrOnly_->histos()->fill1d<TH1D>(st_hbheRHColSize_,(double)rechitsInTgtTwr);
 
   //if (maxrh.id() != HcalDetId::Undefined) {
-  if (maxenergy > 0.0) {
-    myAnalHistos *myAH = cutMaxHitOnly_->histos();
-
-    myAH->fill1d<TH1D>(st_rhTimes_,maxtime);
-    myAH->fill1d<TH1D>(st_rhEnergies_,maxenergy);
-    myAH->fill2d<TH2D>(st_rhEmap_,maxId.ieta(),maxId.iphi(),maxenergy);
-    myAH->fill2d<TH2D>(st_hbheTimingVsE_,maxenergy,maxtime);
-
-    switch(maxId.depth()) {
-    case 1: myAH->fill2d<TProfile2D>(st_rhTprofd1_,maxId.ieta(),maxId.iphi(),maxtime); break;
-    case 2: myAH->fill2d<TProfile2D>(st_rhTprofd2_,maxId.ieta(),maxId.iphi(),maxtime); break;
-    case 3: myAH->fill2d<TProfile2D>(st_rhTprofd3_,maxId.ieta(),maxId.iphi(),maxtime); break;
-      //case 4: not for HBHE!
-    default:
-      edm::LogWarning("Invalid depth in rechit collection! detId = ") << maxId << std::endl;
-    }
-
+  if (maxrh.energy() > 0.0) {
+    fillHBHEhistos(cutMaxHitOnly_->histos(),maxrh);
 #if 0
     if ((energy > lookupThresh(maxId)) &&
 	(maxId == tgtTwrId_)) {
