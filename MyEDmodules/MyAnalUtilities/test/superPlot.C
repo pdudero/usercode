@@ -14,9 +14,12 @@
 #include "TStyle.h"
 #include "TH1D.h"
 #include "TH2.h"
+#include "TF1.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TPaveStats.h"
+#include "TGraph.h"
+#include "TVectorD.h"
 
 #include "tdrstyle4timing.C"
 #include "drawStandardTexts.C"
@@ -34,6 +37,7 @@ struct wPad_t {
   float titlexndc, titleyndc;
   wTH1D *hframe;           // the frame histo, holds lots of pad info
   vector<string> histo_ids;
+  vector<string> graph_ids;
   vector<string> label_ids;
   TVirtualPad *vp;
 };
@@ -41,16 +45,20 @@ struct wPad_t {
 struct wCanvas_t {
   wCanvas_t(const string& intitle,
 	    unsigned innpadsx=1, unsigned inpadxdim=600,
-	    unsigned innpadsy=1, unsigned inpadydim=600) :
+	    unsigned innpadsy=1, unsigned inpadydim=600,
+	    float inpadxmarg=0.01, float inpadymarg=0.01) :
     title(intitle), npadsx(innpadsx),npadsy(innpadsy),
-    padxdim(inpadxdim),padydim(inpadydim), optstat("nemr"),
-    fillcolor(10) {}
+    padxdim(inpadxdim),padydim(inpadydim),
+    padxmargin(inpadxmarg),padymargin(inpadymarg),
+    optstat("nemr"), fillcolor(10) {}
   string   style;
   string   title;
   unsigned npadsx;
   unsigned npadsy;
   unsigned padxdim;
   unsigned padydim;
+  float    padxmargin;
+  float    padymargin;
   string   optstat;
   unsigned fillcolor;
   vector<wPad_t *> pads;
@@ -79,20 +87,23 @@ struct wLegend_t {
 struct wLabel_t {
   wLabel_t(const string& intxt,
 	   float inx1ndc=0., float iny1ndc=0.,
-	   float inx2ndc=1., float iny2ndc=1.) :
+	   float inx2ndc=1., float iny2ndc=1.,
+	   float intxtsz=0.035) :
     text(intxt),
-    x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc) {}
+    x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc), textsize(intxtsz) {}
   string   text;
   float    x1ndc, y1ndc;
   float    x2ndc, y2ndc;
-  unsigned textfont;
   float    textsize;
+  unsigned textfont;
 };
 
 static set<string> glset_histopathsReadIn;  // keep track of histos read in
+static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
 static map<string, string>      glmap_fileid2path;
 static map<string, wTH1D *>     glmap_id2histo;
+static map<string, TGraph *>    glmap_id2graph;
 static map<string, wLegend_t *> glmap_id2legend; // the map...of legends
 static map<string, wLabel_t *>  glmap_id2label;
 
@@ -196,22 +207,80 @@ TH1 *IntegrateLeft(TH1 *h)
 
 //======================================================================
 
-TH1 *IntegrateRight(TH1 *h)
+TH1 *IntegrateRight(TH1 *h,float skipbinatx=-9e99)
 {
   TH1 *hcum = (TH1 *)h->Clone();
   hcum->Reset();
+  TF1 *one = new TF1("one","1.0",
+		     h->GetXaxis()->GetXmin(),
+		     h->GetXaxis()->GetXmax());
 
   int nbins = hcum->GetNbinsX();
   double htotal = h->Integral(1,nbins+1);
+  int   skipbin = nbins+2;
+  float skipcontent = 0.0;
+
+  if (skipbinatx > -9e99) {
+    for (int i=1; i<=nbins+1 ; i++) { // includes overflow
+      if ((h->GetXaxis()->GetBinLowEdge(i) < skipbinatx) &&
+	  (h->GetXaxis()->GetBinUpEdge(i)  > skipbinatx)   ) {
+	skipbin      = i;
+	skipcontent  = h->GetBinContent(i);
+	break;
+      }
+    }
+  }
 
   // Include the overflow bin
   for (int i=1; i<=nbins+1 ; i++) { // includes overflow
     double integral = h->Integral(i,nbins+1);
-    hcum->SetBinContent(i,integral/htotal);
+    if (i > skipbin) skipcontent=0.0;
+    hcum->SetBinContent(i,(integral-skipcontent)/htotal);
   }
 
   return hcum;
 }
+
+//======================================================================
+
+void loadVectorsFromFile(const char *filename, 
+			 TVectorD&   vx,
+			 TVectorD&   vy)
+{
+  char linein[128];
+  std::vector<double> v;
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  cout << "Loading vectors from file " << filename;
+
+  while (!feof(fp) && fgets(linein,128,fp)) {
+    double x, y;
+    if (sscanf(linein, "%lf %lf", &x, &y) != 2) {
+      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+      return;
+    }
+    else {
+      v.push_back(x); v.push_back(y);
+    }
+  }
+
+  int vecsize = v.size()/2;
+  vx.ResizeTo(vecsize);
+  vy.ResizeTo(vecsize);
+
+  cout << "; read " << vecsize << " lines" << endl;
+
+  for (int i=0; i<vecsize; i++) {
+    vx[i] = v[2*i];
+    vy[i] = v[2*i+1];
+  }
+}                                                 // loadVectorsFromFile
 
 //======================================================================
 
@@ -233,7 +302,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
       return true;
     }
     Tokenize(theline,v_tokens,"=");
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -249,7 +320,7 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "optstat")   gStyle->SetOptStat(value.c_str());
 
     // Set the position/size of the title box
-    else if (key == "title")     gStyle->SetOptTitle(str2int(value));
+    else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
     else if (key == "titlexndc") gStyle->SetTitleX(str2flt(value));
     else if (key == "titleyndc") gStyle->SetTitleY(str2flt(value));
     else if (key == "titlewndc") gStyle->SetTitleW(str2flt(value));
@@ -292,7 +363,9 @@ processLayoutSection(FILE      *fp,
     }
 
     Tokenize(theline,v_tokens,"=");
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -319,6 +392,15 @@ processLayoutSection(FILE      *fp,
     else if (key == "padydim") {
       unsigned long padydim = str2int(value);
       if (padydim > 0) wc.padydim = padydim;
+    }
+    else if (key == "padxmargin") {
+      float padxmargin = str2flt(value);
+      if (padxmargin > 0.) wc.padxmargin = padxmargin;
+
+    }
+    else if (key == "padymargin") {
+      float padymargin = str2flt(value);
+      if (padymargin > 0.) wc.padymargin = padymargin;
     }
     else if (key == "fillcolor")
       wc.fillcolor = str2int(value);
@@ -352,7 +434,9 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     }
 
     Tokenize(theline,v_tokens,"=");
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -362,6 +446,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     if      (key == "histos") {
       Tokenize(value,wpad->histo_ids," ,"); 
       if (!wpad->histo_ids.size()) wpad->histo_ids.push_back(value);
+    }
+    else if (key == "graphs") {
+      Tokenize(value,wpad->graph_ids," ,"); 
+      if (!wpad->graph_ids.size()) wpad->graph_ids.push_back(value);
     }
     else if (key == "labels") {
       Tokenize(value,wpad->label_ids," ,"); 
@@ -500,7 +588,9 @@ processHistoSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -547,7 +637,9 @@ processHistoSection(FILE *fp,
 	cerr << "histo " << path << " already read in. Use 'clone=someid' to duplicate it." << endl; break;
       }
       Tokenize(path,v_tokens,":");
-      if (v_tokens.size() != 2) {
+      if ((v_tokens.size() != 2) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())    ) {
 	cerr << "malformed root histo path file:folder/subfolder/.../histo " << path << endl; break;
       }
       string rootfn = v_tokens[0];
@@ -591,6 +683,109 @@ processHistoSection(FILE *fp,
 //======================================================================
 
 bool                              // returns true if success
+processGraphSection(FILE *fp,
+		    string& theline,
+		    bool& new_section)
+{
+  vector<string> v_tokens;
+
+  string *gid = NULL;
+  TGraph *gr  = NULL;
+  float yoffset=0.0, yscale=1.0;
+  int  lcolor=1,lstyle=1,lwidth=1;
+  TVectorD vx, vy;
+
+  cout << "Processing graph section" << endl;
+
+  new_section=false;
+
+  while (getLine(fp,theline,"graph")) {
+    if (!theline.size()) continue;
+    if (theline[0] == '#') continue; // comments are welcome
+
+    if (theline.find('[') != string::npos) {
+      new_section=true;
+      break;
+    }
+
+    Tokenize(theline,v_tokens,"=");
+
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
+      cerr << "malformed key=value line " << theline << endl; continue;
+    }
+
+    string key   = v_tokens[0];
+    string value = v_tokens[1];
+
+    //--------------------
+    if (key == "id") {
+    //--------------------
+      if (gid != NULL) {
+	cerr << "no more than one id per histo section allowed " << value << endl;
+	break;
+      }
+
+      gid = new string(value);
+
+    //------------------------------
+    } else if (key == "vectorfile") {
+    //------------------------------
+      if (!gid) {
+	cerr << "id key must be defined before vectorfile key" << endl; continue;
+      }
+      string path = value;
+      if (gr) {
+	cerr << "graph already defined" << endl; continue;
+      }
+      if (inSet<string>(glset_graphFilesReadIn,path)) {
+	cerr << "vector file " << path << " already read in" << endl; break;
+      }
+      if (path[0] == '@') {  // reference to a file defined in FILES section
+	map<string,string>::const_iterator it;
+	string fileid=path.substr(1);
+	it = glmap_fileid2path.find(fileid);
+	if (it == glmap_fileid2path.end()) {
+	  cerr << "file id " << fileid << " not found, define reference in FILES section first." << endl;
+	  continue;
+	}
+	path = it->second;
+      }
+
+      loadVectorsFromFile(path.c_str(),vx,vy);
+    }
+    else {
+      if      (key == "yoffset")   yoffset = str2flt(value);
+      else if (key == "yscale")    yscale  = str2flt(value);
+      else if (key == "linecolor") lcolor  = str2int(value);
+      else if (key == "linestyle") lstyle  = str2int(value);
+      else if (key == "linewidth") lwidth  = str2int(value);
+      
+#if 0
+      processCommonHistoParams(key,value,*wh);
+#endif
+    }
+  }
+
+  if (vx.GetNoElements()) { // load utility guarantees the same size for both
+    if (yscale  != 1.0) vy *= yscale;
+    if (yoffset != 0.0) vy += yoffset;
+    gr = new TGraph(vx,vy);
+    gr->SetLineColor(lcolor);
+    gr->SetLineStyle(lstyle);
+    gr->SetLineWidth(lwidth);
+    glmap_id2graph.insert(std::pair<string,TGraph *>(*gid,gr));
+  } else {
+    cerr << "couldn't construct graph " << gid << endl;
+  }
+
+  return (gr != NULL);
+}                                                 // processGraphSection
+
+//======================================================================
+
+bool                              // returns true if success
 processHmathSection(FILE *fp,
 		    string& theline,
 		    bool& new_section)
@@ -600,6 +795,7 @@ processHmathSection(FILE *fp,
   wTH1D *wh;
   string *hid = NULL;
   TH1D  *h1d      = NULL;
+  float skipbinatx=-9e99;
 
   cout << "Processing hmath section" << endl;
 
@@ -616,7 +812,9 @@ processHmathSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -688,7 +886,7 @@ processHmathSection(FILE *fp,
 	continue;
       }
       TH1D *h1 = op->second->histo();
-      h1d = (TH1D *)IntegrateRight(h1);
+      h1d = (TH1D *)IntegrateRight(h1,skipbinatx);
       wh = new wTH1D(h1d);
       glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
 
@@ -711,7 +909,10 @@ processHmathSection(FILE *fp,
       wh = new wTH1D(h1d);
       glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
 
-    } else if (!h1d) {  // all other keys must have "path" defined
+    } else if (key == "skipbinatx")
+      skipbinatx = str2flt(value);
+
+    else if (!h1d) {  // all other keys must have "path" defined
       cerr << "an operation key must be defined before key " << key << endl;
       break;
     }
@@ -751,7 +952,9 @@ processLegendSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -817,7 +1020,9 @@ processLabelSection(FILE   *fp,
     }
 
     Tokenize(theline,v_tokens,"=");
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -865,7 +1070,7 @@ processFilesSection(FILE *fp,string& theline, bool& new_section)
 
   while (getLine(fp,theline,"files")) {
 
-    if (!theline.size()) continue;
+    if (!theline.size())   continue;
     if (theline[0] == '#') continue; // comments are welcome
 
     if (theline.find('[') != string::npos) {
@@ -874,7 +1079,9 @@ processFilesSection(FILE *fp,string& theline, bool& new_section)
     }
 
     Tokenize(theline,v_tokens,"=");
-    if (v_tokens.size() != 2) {
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
@@ -934,6 +1141,9 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "HMATH") {
       processHmathSection(fp,theline,new_section);
     }
+    else if (section == "GRAPH") {
+      processGraphSection(fp,theline,new_section);
+    }
     else if (section == "LEGEND") {
       processLegendSection(fp,theline,new_section);
     }
@@ -974,9 +1184,12 @@ wCanvas_t *initCanvas(const string& cLayoutFile)
 
   unsigned npads = wc->npadsx*wc->npadsy;
   if (npads>1) wc->c1->Divide(wc->npadsx,wc->npadsy);
+			      // , wc->padxmargin,wc->padymargin);
 
   cout << "Canvas " << cLayoutFile << " dimensions "
        << wc->npadsx << "x" << wc->npadsy << endl;
+  cout << "Canvas " << cLayoutFile << " margins "
+       << wc->padxmargin << "x" << wc->padymargin << endl;
 
   return wc;
 }
@@ -1005,6 +1218,22 @@ void drawInPad(wPad_t *wp, wTH1D& myHisto,bool firstInPad,
     if (!myHisto.statsAreOn()) altdrawopt.size() ? myHisto.Draw(altdrawopt+ " same") : myHisto.DrawSame();
     else                       altdrawopt.size() ? myHisto.Draw(altdrawopt+ " sames") : myHisto.DrawSames();
   }
+
+  wp->vp->Update();
+}
+
+//======================================================================
+
+void drawInPad(wPad_t *wp, TGraph *gr)
+{
+  wp->vp->SetFillColor(wp->fillcolor);
+
+  tdrStyle->cd();
+
+  wp->vp->SetLogx(wp->logx);
+  wp->vp->SetLogy(wp->logy);
+
+  gr->Draw("L");
 
   wp->vp->Update();
 }
@@ -1103,6 +1332,30 @@ void  drawPlots(wCanvas_t& wc)
       }
     }
 
+    /***************************************************
+     * Draw each graph
+     ***************************************************/
+
+    for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
+      string& gid = wp->graph_ids[j];
+      map<string,TGraph *>::const_iterator it = glmap_id2graph.find(gid);
+      if (it == glmap_id2graph.end()) {
+	cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
+	exit (-1);
+      }
+
+      TGraph *gr = it->second;
+
+      if (gr) {
+	cout << "Drawing " << gid << endl;
+	drawInPad(wp,gr);
+	wp->vp->Update();
+
+	if (drawlegend)
+	  wl->leg->AddEntry(gr,gid.c_str(),"L");
+      }
+    }
+
     if (drawlegend) {
       if (wl->header != "FillMe") wl->leg->SetHeader(wl->header.c_str());
       wl->leg->SetTextSize(wl->textsize);
@@ -1125,7 +1378,8 @@ void  drawPlots(wCanvas_t& wc)
 	exit (-1);
       }
       wLabel_t *wl = it->second;
-      drawStandardText(wl->text, wl->x1ndc, wl->y1ndc);
+      drawStandardText(wl->text, wl->x1ndc, wl->y1ndc,-1,-1,wl->textsize);
+
       //wp->vp->Update();
     }
     wc.c1->Update();
