@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.4 2009/07/03 11:31:08 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.5 2009/07/27 16:07:38 dudero Exp $
 //
 //
 
@@ -62,16 +62,18 @@ public:
 			TFileDirectory& subdir);
   ~myAnalHistos() {}
 
-  template<class T>
-  void book1d(const std::vector<HistoParams_t>& v_pars);
-  template<class T>
-  void book2d(const std::vector<HistoParams_t>& v_pars);
+  template<class T> void book1d(const HistoParams_t& pars);
+  template<class T> void book2d(const HistoParams_t& pars);
+  template<class T> void book1d(const std::vector<HistoParams_t>& v_pars);
+  template<class T> void book2d(const std::vector<HistoParams_t>& v_pars);
+  template<class T> T *get(const std::string& hname);
 
-  template<class T>
-  void bookClone(const std::string& cloneName,const T& h);
+  template<class T> void fill1d(const std::map<std::string,double>& vals);
+  template<class T> void fill1d(const std::string& hname,double val,double weight=1.0);
+  template<class T> void fill2d(const std::map<std::string,std::pair<double,double> >& vals);
+  template<class T> void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
 
-  template<class T>
-  T *get(const std::string& hname);
+  template<class T> void bookClone(const std::string& cloneName,const T& h);
 
 #if 0
   // common usages:
@@ -88,15 +90,6 @@ public:
     book1d<TProfile2D>(v_pars);
   }
 #endif
-
-  template <class T>
-  void fill1d(const std::map<std::string,double>& vals);
-  template <class T>
-  void fill1d(const std::string& hname,double val,double weight=1.0);
-  template <class T>
-  void fill2d(const std::map<std::string,std::pair<double,double> >& vals);
-  template <class T>
-  void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
 
 private:
 
@@ -120,34 +113,53 @@ private:
 // member functions
 //
 template<class T>
+void myAnalHistos::book1d(const HistoParams_t& pars)
+{
+  Histo_t histo;
+  histo.pars = pars;
+
+  //edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
+  std::cout << "booking histogram " << histo.pars.name << std::endl;
+  histo.ptr = dir_->make <T> (histo.pars.name.c_str(),
+			      histo.pars.title.c_str(),
+			      histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx);
+  hm_histos_[histo.pars.name.c_str()] = histo;
+}
+
+//======================================================================
+
+//
+// member functions
+//
+template<class T>
 void myAnalHistos::book1d(const std::vector<HistoParams_t>& v_pars)
 {
-  for (uint32_t i=0; i<v_pars.size(); i++) {
-    Histo_t histo;
-    histo.pars = v_pars[i];
-
-    edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
-    histo.ptr = dir_->make <T> (histo.pars.name.c_str(),
-				histo.pars.title.c_str(),
-				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx);
-    hm_histos_[histo.pars.name.c_str()] = histo;
-  }
+  for (uint32_t i=0; i<v_pars.size(); i++)
+    book1d<T>(v_pars[i]);
 }
+
+//======================================================================
+
+template<class T>
+void myAnalHistos::book2d(const HistoParams_t& pars)
+{
+  Histo_t histo;
+  histo.pars = pars;
+
+  edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
+  histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
+			      histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx,
+			      histo.pars.nbinsy, histo.pars.miny, histo.pars.maxy);
+  hm_histos_[histo.pars.name.c_str()] = histo;
+}
+
 //======================================================================
 
 template<class T>
 void myAnalHistos::book2d(const std::vector<HistoParams_t>& v_pars)
 {
-  for (uint32_t i=0; i<v_pars.size(); i++) {
-    Histo_t histo;
-    histo.pars = v_pars[i];
-
-    edm::LogInfo("booking histogram ") << histo.pars.name << std::endl;
-    histo.ptr = dir_->make <T> (histo.pars.name.c_str(), histo.pars.title.c_str(),
-				histo.pars.nbinsx, histo.pars.minx, histo.pars.maxx,
-				histo.pars.nbinsy, histo.pars.miny, histo.pars.maxy);
-    hm_histos_[histo.pars.name.c_str()] = histo;
-  }
+  for (uint32_t i=0; i<v_pars.size(); i++)
+    book2d<T>(v_pars[i]);
 }
 
 //======================================================================

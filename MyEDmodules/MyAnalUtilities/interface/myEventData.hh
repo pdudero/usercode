@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.3 2009/07/03 11:29:14 dudero Exp $
+// $Id: myEventData.hh,v 1.4 2009/07/27 16:08:52 dudero Exp $
 //
 //
 
@@ -30,7 +30,9 @@
 #include "DataFormats/FEDRawData/interface/FEDRawData.h"
 #include "DataFormats/FEDRawData/interface/FEDRawDataCollection.h"
 #include "DataFormats/FEDRawData/interface/FEDNumbering.h"
+#ifdef CMSSW3XX
 #include "DataFormats/HcalDigi/interface/HcalCalibrationEventTypes.h"
+#endif
 #include "DataFormats/HcalDigi/interface/HcalLaserDigi.h"
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
