@@ -33,24 +33,13 @@ process.source = cms.Source("PoolSource",
 process.TFileService = cms.Service("TFileService",
      closeFileFast = cms.untracked.bool(True),
      fileName = cms.string('hta-mutrig-zssim-filters.root')
+#     fileName = cms.string('hta-mutrig-zssim-plusfilters.root')
+#     fileName = cms.string('hta-mutrig-zssim-minusfilters.root')
 )
 
-process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4CRAFT_cff")
+process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4CRAFTshifted_cff")
+#process.load("MyEDmodules.HcalTimingAnalyzer.hcalFilteredReco4BkgdEst_cff")
 #
-process.hbherhfilt06ns.timeShiftNs = cms.double(25.0)
-process.hbherhfilt10ns.timeShiftNs = cms.double(25.0)
-process.hbherhfilt1ts.timeShiftNs  = cms.double(25.0)
-process.hbherhfilt4ts.timeShiftNs  = cms.double(25.0)
-process.horhfilt06ns.timeShiftNs   = cms.double(25.0)
-process.horhfilt10ns.timeShiftNs   = cms.double(25.0)
-process.horhfilt1ts.timeShiftNs    = cms.double(25.0)
-process.horhfilt4ts.timeShiftNs    = cms.double(25.0)
-process.hfrhfilt06ns.timeShiftNs   = cms.double(25.0)
-process.hfrhfilt10ns.timeShiftNs   = cms.double(25.0)
-process.hfrhfilt1ts.timeShiftNs    = cms.double(25.0)
-process.hfrhfilt4ts.timeShiftNs    = cms.double(25.0)
-process.hbherhfiltshp.timeShiftNs  = cms.double(25.0)
-process.horhfiltshp.timeShiftNs    = cms.double(25.0)
 
 # for unshifted 68288 run, low MET
 # process.myanunfilt.hcalRecHitEscaleMaxGeV  = cms.double(150.5)
@@ -59,16 +48,16 @@ process.horhfiltshp.timeShiftNs    = cms.double(25.0)
 # process.myanfilt10ns.hcalRecHitEscaleMaxGeV  = cms.double(150.5)
 # process.myanfilt1ts.hcalRecHitEscaleMaxGeV = cms.double(150.5)
 # process.myanfilt4ts.hcalRecHitEscaleMaxGeV = cms.double(150.5)
-process.myanunfilt.eventDataPset.hbheDigiLabel      = cms.untracked.InputTag("zsTheDigis")
-process.myanunfilt.eventDataPset.hfDigiLabel        = cms.untracked.InputTag("zsTheDigis")
-process.myanunfilt.eventDataPset.hoDigiLabel        = cms.untracked.InputTag("zsTheDigis")
+#process.myanunfilt.eventDataPset.hbheDigiLabel      = cms.untracked.InputTag("zsTheDigis")
+#process.myanunfilt.eventDataPset.hfDigiLabel        = cms.untracked.InputTag("zsTheDigis")
+#nprocess.myanunfilt.eventDataPset.hoDigiLabel        = cms.untracked.InputTag("zsTheDigis")
 process.myanunfiltShift.eventDataPset.hbheDigiLabel = cms.untracked.InputTag("zsTheDigis")
 process.myanunfiltShift.eventDataPset.hfDigiLabel   = cms.untracked.InputTag("zsTheDigis")
 process.myanunfiltShift.eventDataPset.hoDigiLabel   = cms.untracked.InputTag("zsTheDigis")
-process.myanfilt06ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
-process.myanfilt10ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
-process.myanfilt1ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
-process.myanfilt4ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
+#process.myanfilt06ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
+#process.myanfilt10ns.eventDataPset.hbheDigiLabel    = cms.untracked.InputTag("zsTheDigis")
+#process.myanfilt1ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
+#process.myanfilt4ts.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
 process.myanfiltshp.eventDataPset.hbheDigiLabel     = cms.untracked.InputTag("zsTheDigis")
 process.myanfiltshp.eventDataPset.hfDigiLabel       = cms.untracked.InputTag("zsTheDigis")
 process.myanfiltshp.eventDataPset.hoDigiLabel       = cms.untracked.InputTag("zsTheDigis")
@@ -103,8 +92,9 @@ process.myAbbrevReco = cms.Sequence(process.trackerCosmics*
 
 process.p = cms.Path(process.gtDigis*process.l1Filter*
                      process.myOtherDigis*process.zsTheDigis*process.myAbbrevReco*
-#                    process.allSQfiltsWithShift)
-                     process.mixedFiltsWithShift)
+                     process.timeFiltSeqShifted)
+#                     process.allMinusFilts)
+#                     process.allPlusFilts)
 
 #process.p = cms.Path(process.l1Filter*process.hcalDigis*process.myan)
 
