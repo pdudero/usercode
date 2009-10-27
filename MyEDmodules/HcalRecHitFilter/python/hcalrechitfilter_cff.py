@@ -35,3 +35,7 @@ hoRHfilter = cms.EDProducer('HcalRecHitFilter',
      timeShiftNs        = cms.double(0.0),
      flagFilterMask     = cms.int32(0)
 )
+
+rhProfilingPset = cms.untracked.PSet(
+    thresholds      = cms.untracked.vdouble()
+    )
