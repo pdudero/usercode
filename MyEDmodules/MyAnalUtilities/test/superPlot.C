@@ -14,13 +14,14 @@
 #include "TStyle.h"
 #include "TH1D.h"
 #include "TH2.h"
+#include "THStack.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TPaveStats.h"
 #include "TGraph.h"
 #include "TVectorD.h"
-
+#include "TArrayD.h"
 #include "tdrstyle4timing.C"
 #include "drawStandardTexts.C"
 
@@ -28,11 +29,12 @@ using namespace std;
 
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),rightmargin(0.),leftmargin(0.),
-			fillcolor(10),logx(0),logy(0), legid("")
+			fillcolor(10),logx(0),logy(0), stackem(false),legid("")
   { hframe = new wTH1D(name,name,100,0.0,1.0); }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
   unsigned logx, logy;
+  bool   stackem;
   string legid;
   float titlexndc, titleyndc;
   wTH1D *hframe;           // the frame histo, holds lots of pad info
@@ -101,7 +103,7 @@ struct wLabel_t {
 static set<string> glset_histopathsReadIn;  // keep track of histos read in
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
-static map<string, string>      glmap_fileid2path;
+static map<string, string>      glmap_aliii; // better than aliases
 static map<string, wTH1D *>     glmap_id2histo;
 static map<string, TGraph *>    glmap_id2graph;
 static map<string, wLegend_t *> glmap_id2legend; // the map...of legends
@@ -170,7 +172,7 @@ void Tokenize(const string& str,
 
 //======================================================================
 
-bool getLine(FILE *fp, string& theline, const string& callerid)
+bool getLine(FILE *fp, string& theline, const string& callerid="")
 { 
   char linein[256];
 
@@ -211,9 +213,6 @@ TH1 *IntegrateRight(TH1 *h,float skipbinatx=-9e99)
 {
   TH1 *hcum = (TH1 *)h->Clone();
   hcum->Reset();
-  TF1 *one = new TF1("one","1.0",
-		     h->GetXaxis()->GetXmin(),
-		     h->GetXaxis()->GetXmax());
 
   int nbins = hcum->GetNbinsX();
   double htotal = h->Integral(1,nbins+1);
@@ -318,9 +317,10 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
 	gROOT->SetStyle("Plain");
     }
     else if (key == "optstat")   gStyle->SetOptStat(value.c_str());
+    else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
 
     // Set the position/size of the title box
-    else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
+
     else if (key == "titlexndc") gStyle->SetTitleX(str2flt(value));
     else if (key == "titleyndc") gStyle->SetTitleY(str2flt(value));
     else if (key == "titlewndc") gStyle->SetTitleW(str2flt(value));
@@ -466,21 +466,22 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "legend")       wpad->legid        = value;
     else if (key == "logx")         wpad->logx         = str2int(value);
     else if (key == "logy")         wpad->logy         = str2int(value);
+    else if (key == "stackem")      wpad->stackem      = (bool)str2int(value);
     else if (key == "xmin") {
       float xmin = str2flt(value);
-      wpad->hframe->SetXaxis("",false,0.0,0.0,0.0,xmin,xmax);
+      wpad->hframe->SetXaxis("",false,0,0,0,0,0,xmin,xmax);
     }
     else if (key == "xmax") {
       float xmax = str2flt(value);
-      wpad->hframe->SetXaxis("",false,0.0,0.0,0.0,xmin,xmax);
+      wpad->hframe->SetXaxis("",false,0,0,0,0,0,xmin,xmax);
     }
     else if (key == "ymin") {
       ymin = str2flt(value);
-      wpad->hframe->SetYaxis("",false,0.0,0.0,0.0,ymin,ymax);
+      wpad->hframe->SetYaxis("",false,0,0,0,0,0,ymin,ymax);
     }
     else if (key == "ymax") {
       ymax = str2flt(value);
-      wpad->hframe->SetYaxis("",false,0.0,0.0,0.0,ymin,ymax);
+      wpad->hframe->SetYaxis("",false,0,0,0,0,0,ymin,ymax);
     }
     else {
       cerr << "Unknown key " << key << endl;
@@ -509,10 +510,12 @@ void processCommonHistoParams(const string& key,
   else if (key == "linecolor")   wh.SetLine(str2int(value));
   else if (key == "linestyle")   wh.SetLine(0,str2int(value));
   else if (key == "linewidth")   wh.SetLine(0,0,str2int(value));
+  else if (key == "fillcolor")   wh.histo()->SetFillColor(str2int(value));
   else if (key == "leglabel")    wh.SetLegendEntry(value);
 
   // for 2-d histos
-  else if (key == "rebinx")      ((TH2 *)wh.histo())->RebinX(str2int(value));
+  else if (key == "rebinx")      ((TH1 *)wh.histo())->Rebin(str2int(value));
+  //else if (key == "rebinx")      ((TH2 *)wh.histo())->RebinX(str2int(value));
   else if (key == "rebiny")      ((TH2 *)wh.histo())->RebinY(str2int(value));
 
   // axes
@@ -520,16 +523,16 @@ void processCommonHistoParams(const string& key,
   else if (key == "ytitle")       wh.SetYaxis(value);
   else if (key == "xtitlesize")   wh.SetXaxis("",false,str2flt(value));
   else if (key == "ytitlesize")   wh.SetYaxis("",false,str2flt(value));
-  else if (key == "xtitleoffset") wh.SetXaxis("",false,0.0,str2flt(value));
-  else if (key == "ytitleoffset") wh.SetYaxis("",false,0.0,str2flt(value));
-  else if (key == "xtitlefont")   wh.SetXaxis("",false,0.0,0.0,str2int(value));
-  else if (key == "ytitlefont")   wh.SetYaxis("",false,0.0,0.0,str2int(value));
-  else if (key == "xlabelsize")   wh.SetXaxis("",false,0.0,0.0,0,str2flt(value));
-  else if (key == "ylabelsize")   wh.SetYaxis("",false,0.0,0.0,0,str2flt(value));
-  else if (key == "xlabelfont")   wh.SetXaxis("",false,0.0,0.0,0,0.0,str2int(value));
-  else if (key == "ylabelfont")   wh.SetYaxis("",false,0.0,0.0,0,0.0,str2int(value));
-  else if (key == "xndiv")  wh.SetXaxis("",false,0.0,0.0,0,0.0,0,1e99,-1e99,str2int(value));
-  else if (key == "yndiv")  wh.SetYaxis("",false,0.0,0.0,0,0.0,0,1e99,-1e99,str2int(value));
+  else if (key == "xtitleoffset") wh.SetXaxis("",false,0,str2flt(value));
+  else if (key == "ytitleoffset") wh.SetYaxis("",false,0,str2flt(value));
+  else if (key == "xtitlefont")   wh.SetXaxis("",false,0,0,str2int(value));
+  else if (key == "ytitlefont")   wh.SetYaxis("",false,0,0,str2int(value));
+  else if (key == "xlabelsize")   wh.SetXaxis("",false,0,0,0,str2flt(value));
+  else if (key == "ylabelsize")   wh.SetYaxis("",false,0,0,0,str2flt(value));
+  else if (key == "xlabelfont")   wh.SetXaxis("",false,0,0,0,0,str2int(value));
+  else if (key == "ylabelfont")   wh.SetYaxis("",false,0,0,0,0,str2int(value));
+  else if (key == "xndiv")  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
+  else if (key == "yndiv")  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
   // stats box
   else if (key == "statson")    wh.SetStats(str2int(value) != 0);
@@ -540,24 +543,91 @@ void processCommonHistoParams(const string& key,
 
   else if (key == "xmin") {
     xmin = str2flt(value);
-    wh.SetXaxis("",false,0.0,0.0,0,0.0,0,xmin,xmax);
+    wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
   }
   else if (key == "xmax") {
     xmax = str2flt(value);
-    wh.SetXaxis("",false,0.0,0.0,0,0.0,0,xmin,xmax);
+    wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
   }
   else if (key == "ymin") {
     ymin = str2flt(value);
-    wh.SetYaxis("",false,0.0,0.0,0,0.0,0,ymin,ymax);
+    wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
   }
   else if (key == "ymax") {
     ymax = str2flt(value);
-    wh.SetYaxis("",false,0.0,0.0,0,0.0,0,ymin,ymax);
+    wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
   }
   else {
     cerr << "unknown key " << key << endl;
   }
 }
+
+//======================================================================
+
+TH1 *getHistoFromSpec(const std::string& spec)
+{
+  TH1D  *h1d      = NULL;
+  TFile *rootfile = NULL;
+  vector<string> v_tokens;
+  string fullspec;     // potentially expanded from aliases.
+
+  cout << "processing " << spec << endl;
+
+  Tokenize(spec,v_tokens,":");
+  if ((v_tokens.size() != 2) ||
+      (!v_tokens[0].size())  ||
+      (!v_tokens[1].size())    ) {
+    cerr << "malformed root histo path file:folder/subfolder/.../histo " << spec << endl;
+    return NULL;
+  }
+  // Check for file alias
+  string rootfn = v_tokens[0];
+  if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
+    map<string,string>::const_iterator it;
+    string fileid=rootfn.substr(1);
+    it = glmap_aliii.find(fileid);
+    if (it == glmap_aliii.end()) {
+      cerr << "file id " << fileid << " not found, define reference in ALIAS section first." << endl;
+      return NULL;
+    }
+    rootfn = it->second;
+  }
+
+  // Check for histo alias
+  string hspec = v_tokens[1];
+  if (hspec[0] == '@') {  // reference to an alias defined in ALIAS section
+    map<string,string>::const_iterator it;
+    string hid=hspec.substr(1);
+    it = glmap_aliii.find(hid);
+    if (it == glmap_aliii.end()) {
+      cerr << "histo id " << hid << " not found, define reference in ALIAS section first." << endl;
+      return NULL;
+    }
+    hspec = it->second;
+  }
+
+  fullspec = rootfn + hspec;
+
+  if (inSet<string>(glset_histopathsReadIn,fullspec)) {
+    cerr << "histo " << fullspec << " already read in. Use 'clone=someid' to duplicate it." << endl;
+    return NULL;
+  }
+	
+  rootfile = new TFile(rootfn.c_str());
+  if (rootfile->IsZombie()) {
+    cerr << "File failed to open, " << rootfn << endl;
+    return NULL;
+  }
+
+  h1d = (TH1D *)rootfile->Get(hspec.c_str());
+  if (!h1d) {
+    cerr << "couldn't find " << hspec << " in " << rootfn << endl;
+  } else {
+    // success, record that you read it in.
+    glset_histopathsReadIn.insert(fullspec);
+  }
+  return h1d;
+}                                                    // getHistoFromSpec
 
 //======================================================================
 
@@ -568,10 +638,9 @@ processHistoSection(FILE *fp,
 {
   vector<string> v_tokens;
 
-  wTH1D *wh;
-  string *hid = NULL;
-  TFile *rootfile = NULL;
-  TH1D  *h1d      = NULL;
+  wTH1D  *wh   = NULL;
+  string *hid  = NULL;
+  TH1D   *h1d  = NULL;
 
   cout << "Processing histo section" << endl;
 
@@ -629,43 +698,56 @@ processHistoSection(FILE *fp,
       if (!hid) {
 	cerr << "id key must be defined before path key" << endl; continue;
       }
-      string path = value;
       if (h1d) {
 	cerr << "histo already defined" << endl; continue;
       }
-      if (inSet<string>(glset_histopathsReadIn,path)) {
-	cerr << "histo " << path << " already read in. Use 'clone=someid' to duplicate it." << endl; break;
+      h1d = (TH1D *)getHistoFromSpec(value);
+      if (!h1d) continue;
+      wh  = new wTH1D(h1d);
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+
+    //------------------------------
+    } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
       }
-      Tokenize(path,v_tokens,":");
+      if (h1d) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      // Tokenize again to get the histo ID and the desired property
+      string hprop = value;
+      Tokenize(hprop,v_tokens,":");
       if ((v_tokens.size() != 2) ||
 	  (!v_tokens[0].size())  ||
 	  (!v_tokens[1].size())    ) {
-	cerr << "malformed root histo path file:folder/subfolder/.../histo " << path << endl; break;
+	cerr << "malformed hid:property specification " << hprop << endl; continue;
       }
-      string rootfn = v_tokens[0];
-      if (rootfn[0] == '@') {  // reference to a file defined in FILES section
-	map<string,string>::const_iterator it;
-	string fileid=rootfn.substr(1);
-	it = glmap_fileid2path.find(fileid);
-	if (it == glmap_fileid2path.end()) {
-	  cerr << "file id " << fileid << " not found, define reference in FILES section first." << endl;
-	  continue;
-	}
-	rootfn = it->second;
-      }
-	
-      rootfile = new TFile(rootfn.c_str());
-      if (rootfile->IsZombie()) {
-	cerr << "File failed to open, " << value << endl;
+
+      string tgthid = v_tokens[0];
+      string prop   = v_tokens[1];
+
+      map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(tgthid);
+      if (it == glmap_id2histo.end()) {
+	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
 	break;
       }
-      h1d = (TH1D *)rootfile->Get(v_tokens[1].c_str());
-      if (!h1d) {
-	cerr << "couldn't find " << v_tokens[1] << " in " << v_tokens[0] << endl;
-	exit(-1);
-      } else {
-	wh = new wTH1D(h1d);
-	glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+      TH1D *tgth1d=it->second->histo();
+      wh = it->second->Clone(string(tgth1d->GetName())+"_"+prop,
+			     string(tgth1d->GetTitle())+" ("+prop+")");
+      h1d = wh->histo();
+      h1d->Clear();
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+      
+      if (!prop.compare("errors")) {
+	int nbins = h1d->GetNbinsX()*h1d->GetNbinsY()*h1d->GetNbinsZ();
+	for (int ibin=1; ibin<=nbins; ibin++)
+	  h1d->SetBinContent(ibin,tgth1d->GetBinError(ibin));
+      }
+      else {
+	cerr << "Unrecognized property: " << prop << endl;
+	break;
       }
 
     } else if (!h1d) {  // all other keys must have "path" defined
@@ -745,8 +827,8 @@ processGraphSection(FILE *fp,
       if (path[0] == '@') {  // reference to a file defined in FILES section
 	map<string,string>::const_iterator it;
 	string fileid=path.substr(1);
-	it = glmap_fileid2path.find(fileid);
-	if (it == glmap_fileid2path.end()) {
+	it = glmap_aliii.find(fileid);
+	if (it == glmap_aliii.end()) {
 	  cerr << "file id " << fileid << " not found, define reference in FILES section first." << endl;
 	  continue;
 	}
@@ -792,9 +874,9 @@ processHmathSection(FILE *fp,
 {
   vector<string> v_tokens;
 
-  wTH1D *wh;
+  wTH1D  *wh  = NULL;
   string *hid = NULL;
-  TH1D  *h1d      = NULL;
+  TH1D   *h1d = NULL;
   float skipbinatx=-9e99;
 
   cout << "Processing hmath section" << endl;
@@ -868,6 +950,27 @@ processHmathSection(FILE *fp,
       else if (theline.find('/') != string::npos) hres->Divide(h2);
 
       h1d = hres;
+      wh = new wTH1D(h1d);
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+
+    //------------------------------
+    } else if (key.find("sum") != string::npos) {
+    //------------------------------
+      Tokenize(value,v_tokens,",");
+      if (v_tokens.size() < 2) {
+	cerr << "expect comma-separated list of at least two histo specs to sum!" << theline << endl;
+	continue;
+      }
+      TH1D *firstone = (TH1D *)getHistoFromSpec(v_tokens[0]);
+      if (!firstone) continue;
+      h1d = (TH1D *)firstone->Clone();
+      if (key == "weightsum")
+	h1d->SetBit(TH1::kIsAverage);  // <========== Addends also have to have this set.
+      for (uint32_t i=1; i<v_tokens.size(); i++) {
+	TH1D *addend = (TH1D *)getHistoFromSpec(v_tokens[i]);
+	if (!addend) continue;
+	h1d->Add(addend,1.0);
+      }
       wh = new wTH1D(h1d);
       glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
 
@@ -1060,15 +1163,15 @@ processLabelSection(FILE   *fp,
 //======================================================================
 
 bool                                        // returns true if success
-processFilesSection(FILE *fp,string& theline, bool& new_section)
+processAliasSection(FILE *fp,string& theline, bool& new_section)
 {
   vector<string> v_tokens;
 
-  cout << "Processing files section" << endl;
+  cout << "Processing alias section" << endl;
 
   new_section=false;
 
-  while (getLine(fp,theline,"files")) {
+  while (getLine(fp,theline,"alias")) {
 
     if (!theline.size())   continue;
     if (theline[0] == '#') continue; // comments are welcome
@@ -1089,16 +1192,16 @@ processFilesSection(FILE *fp,string& theline, bool& new_section)
     string value = v_tokens[1];
 
     std::map<string,string>::const_iterator it;
-    it = glmap_fileid2path.find(key);
-    if (it != glmap_fileid2path.end()) {
-      cerr << "Error in Files section: key " << key << " already defined." << endl;
+    it = glmap_aliii.find(key);
+    if (it != glmap_aliii.end()) {
+      cerr << "Error in ALIAS section: key " << key << " already defined." << endl;
     } else
-      glmap_fileid2path.insert(std::pair<string,string>(key,value));
+      glmap_aliii.insert(std::pair<string,string>(key,value));
 
   } // while loop
 
   return true;
-}                                                 // processFilesSection
+}                                                 // processAliasSection
 
 //======================================================================
 
@@ -1150,8 +1253,8 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "LABEL") {
       processLabelSection(fp,theline,new_section);
     }
-    else if (section == "FILES") {
-      processFilesSection(fp,theline,new_section);
+    else if (section == "ALIAS") {
+      processAliasSection(fp,theline,new_section);
     }
     else {
       cerr << "Unknown section " << section << " in " << layoutFile << endl;
@@ -1201,7 +1304,7 @@ void drawInPad(wPad_t *wp, wTH1D& myHisto,bool firstInPad,
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
-  tdrStyle->cd();
+  //tdrStyle->cd();
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
@@ -1219,7 +1322,15 @@ void drawInPad(wPad_t *wp, wTH1D& myHisto,bool firstInPad,
     else                       altdrawopt.size() ? myHisto.Draw(altdrawopt+ " sames") : myHisto.DrawSames();
   }
 
+#if 0
+  myHisto.histo()->Sumw2();
+  TArrayD *sumw2 = myHisto.histo()->GetSumw2();
+  cout << sumw2->GetSize() << endl;
+  for (int i=0; i<sumw2->GetSize(); i++)
+    printf ("%g ", (*sumw2)[i]);
+  cout << endl;
   wp->vp->Update();
+#endif
 }
 
 //======================================================================
@@ -1228,12 +1339,34 @@ void drawInPad(wPad_t *wp, TGraph *gr)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
-  tdrStyle->cd();
+  //tdrStyle->cd();
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
 
   gr->Draw("L");
+
+  wp->vp->Update();
+}
+
+
+//======================================================================
+
+void drawInPad(wPad_t *wp, THStack *stack)
+{
+  wp->vp->SetFillColor(wp->fillcolor);
+
+  //tdrStyle->cd();
+
+  wp->vp->SetLogx(wp->logx);
+  wp->vp->SetLogy(wp->logy);
+
+  if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
+  if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
+  if (wp->rightmargin)  wp->vp->SetRightMargin (wp->rightmargin);
+  if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
+
+  stack->Draw();
 
   wp->vp->Update();
 }
@@ -1247,7 +1380,7 @@ void  drawPlots(wCanvas_t& wc)
 
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
-  wLegend_t *wl;
+  wLegend_t *wl = NULL;
 
   vector<vector<string> >::const_iterator it;
   for (unsigned i = 0; i< npads; i++) {
@@ -1310,6 +1443,11 @@ void  drawPlots(wCanvas_t& wc)
      * Draw each histo
      ***************************************************/
 
+    THStack *stack=NULL;
+    if (wp->stackem)
+      stack = new THStack(wp->hframe->histo()->GetName(),
+			  wp->hframe->histo()->GetTitle());
+
     for (unsigned j = 0; j < wp->histo_ids.size(); j++) {
       string& hid = wp->histo_ids[j];
       map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(hid);
@@ -1321,15 +1459,24 @@ void  drawPlots(wCanvas_t& wc)
       wTH1D *myHisto = it->second;
 
       if (myHisto) {
-	cout << "Drawing " << hid << " => " << myHisto->histo()->GetName() << endl;
-	drawInPad(wp,*myHisto,!j);
-	if (myHisto->statsAreOn()) {
-	  myHisto->DrawStats();
-	  wp->vp->Update();
+	if (wp->stackem) {
+	  stack->Add(myHisto->histo());
+	} else {
+	  cout << "Drawing " << hid << " => " << myHisto->histo()->GetName() << endl;
+	  drawInPad(wp,*myHisto,!j);
+	  if (myHisto->statsAreOn()) {
+	    myHisto->DrawStats();
+	    wp->vp->Update();
+	  }
 	}
 	if (drawlegend)
 	  myHisto->Add2Legend(wl->leg);
       }
+    } // histos loop
+
+    if (wp->stackem) {
+      cout << "Drawing stack" << endl;
+      drawInPad(wp,stack);
     }
 
     /***************************************************
@@ -1363,7 +1510,7 @@ void  drawPlots(wCanvas_t& wc)
       wl->leg->SetBorderSize(wl->bordersize);
       wl->leg->SetFillColor(wl->fillcolor);
       wl->leg->SetLineWidth(wl->linewidth);
-      wl->leg->Draw();
+      wl->leg->Draw("same");
     }
 
     /***************************************************
@@ -1394,7 +1541,7 @@ void  drawPlots(wCanvas_t& wc)
 void superPlot(const string& canvasLayout="canvas.txt",
 	       bool dotdrStyle=false)
 {
-  glmap_fileid2path.clear();
+  glmap_aliii.clear();
   glmap_id2histo.clear();
   glmap_id2legend.clear();
 
