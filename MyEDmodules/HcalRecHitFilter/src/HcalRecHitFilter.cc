@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Dudero
 //         Created:  Mon Mar  2 02:37:12 CST 2009
-// $Id: HcalRecHitFilter.cc,v 1.5 2009/08/27 01:57:27 dudero Exp $
+// $Id: HcalRecHitFilter.cc,v 1.6 2009/09/15 10:19:36 dudero Exp $
 //
 //
 
@@ -23,17 +23,20 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <math.h>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
 
 #include "TRandom3.h"
 
@@ -60,9 +63,21 @@ private:
   bool   inTime      (const CaloRecHit& rh) const;
   void   dumpEnvelope(const std::vector<std::pair<double,double> >& env,
 		      const std::string& descr) const;
-      
+
+  std::string histname (int i,bool senseGreaterThan=true);
+  std::string histtitle(int i,bool senseGreaterThan=true);
+
+  void updateCounters(double hitenergy,
+		      std::vector<int>& counts);
+
+  template<class Hit,class Col>
+  void   filterHits   (edm::Event& iEvent,
+		       edm::InputTag recotag);
+
   // ----------member data ---------------------------
 
+  edm::ParameterSet        rhProfilingPset_; /* "profiling" in the sense of
+						determining characteristics */
   edm::InputTag            hbherecotag_;
   edm::InputTag            hfrecotag_;
   edm::InputTag            horecotag_;
@@ -70,15 +85,23 @@ private:
   double                   timeWindowGain_; // 0-1
   int                      subdet_;
   int                      subdetOther_;
+  std::string              subdetstr_;
   std::vector<HcalDetId>   detIds2mask_;
   double                   timeShiftNs_; /* time to shift rechit times by
 					    before applying filter window */
+
+  std::vector<double>      v_profileThresholds_;
+  std::vector<TH1F *>      v_allhistos_;
+  std::vector<TH1F *>      v_inthistos_;
+  std::vector<TH1F *>      v_outhistos_;
+  //myAnalHistos            *pfHistos_;
+  TRandom3                *rand_;
+
   int                      flagFilterMask_; // filter by rechit flag bits
+
 
   std::vector<std::pair<double,double> >  tsmearEnvelope_;
   std::vector<std::pair<double,double> >  tfilterEnvelope_;
-
-  TRandom3                *rand_;
 };
 
 //
@@ -103,6 +126,7 @@ public:
 // constructors and destructor
 //
 HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
+  rhProfilingPset_(iConfig.getUntrackedParameter<edm::ParameterSet>("rhProfilingPset",edm::ParameterSet())),
   hbherecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hbheLabel",(edm::InputTag)"")),
   hfrecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hfLabel",(edm::InputTag)"")),
   horecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hoLabel",(edm::InputTag)"")),
@@ -113,17 +137,17 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
 {
   //register your products
 
-  std::string subd=iConfig.getParameter<std::string>("Subdetector");
-  if (!strcasecmp(subd.c_str(),"HBHE")) {
+  subdetstr_=iConfig.getParameter<std::string>("Subdetector");
+  if (!strcasecmp(subdetstr_.c_str(),"HBHE")) {
     subdet_=HcalBarrel;
     produces<HBHERecHitCollection>();
-  } else if (!strcasecmp(subd.c_str(),"HO")) {
+  } else if (!strcasecmp(subdetstr_.c_str(),"HO")) {
     subdet_=HcalOuter;
     produces<HORecHitCollection>();
-  } else if (!strcasecmp(subd.c_str(),"HF")) {
+  } else if (!strcasecmp(subdetstr_.c_str(),"HF")) {
     subdet_=HcalForward;
     produces<HFRecHitCollection>();
-  } else if (!strcasecmp(subd.c_str(),"CALIB")) {
+  } else if (!strcasecmp(subdetstr_.c_str(),"CALIB")) {
     subdet_=HcalOther;
     subdetOther_=HcalCalibration;
     produces<HcalCalibRecHitCollection>();
@@ -188,6 +212,17 @@ HcalRecHitFilter::HcalRecHitFilter(const edm::ParameterSet& iConfig) :
     std::sort(tfilterEnvelope_.begin(),
 	      tfilterEnvelope_.end(),
 	      comparePair1<std::pair<double,double> >());
+  }
+
+  /***************************************************
+   * PROCESS OPTIONAL PROFILING PARAMETERS
+   **************************************************/
+
+  if (!rhProfilingPset_.empty()) {
+    v_profileThresholds_ =
+      rhProfilingPset_.getUntrackedParameter<std::vector<double> >("thresholds");
+    std::sort(v_profileThresholds_.begin(),v_profileThresholds_.end());
+    //    pfHistos_ = new myAnalHistos("recHitProfilingHistos");
   }
 }                                  // HcalRecHitFilter::HcalRecHitFilter
 
@@ -318,10 +353,11 @@ HcalRecHitFilter::inTime(const CaloRecHit& rh) const
       double lim2    = tfilterEnvelope_[i].second;
 
       twinmax = lim1 + ((lim2-lim1)*(energy-energy1)/(energy2-energy1));
-
-    //char s[80];
-    //sprintf (s,"(%6.1f,%6.3f) (%6.1f,%6.3f) %6.1f %6.3f\n",energy1,lim1,energy2,lim2,energy,twinmax);
-    //std::cout << s;
+      
+      //char s[80];
+      /*sprintf (s,"(%6.1f,%6.3f) (%6.1f,%6.3f) %6.1f %6.3f\n",
+                 energy1,lim1,energy2,lim2,energy,twinmax); */
+      //std::cout << s;
     }
   }
 
@@ -335,78 +371,135 @@ HcalRecHitFilter::inTime(const CaloRecHit& rh) const
 
 //======================================================================
 
+std::string
+HcalRecHitFilter::histname(int i,bool senseGreaterThan)
+{
+  std::ostringstream namss;
+  namss << "h1d_"<<subdetstr_<<"nRecHits"<<(senseGreaterThan?"Over":"Under")<<"Thresh"<<i;
+  return namss.str();
+}
+
+std::string HcalRecHitFilter::histtitle(int i,bool senseGreaterThan)
+{
+  std::ostringstream titss;
+  double thresh = v_profileThresholds_[i];
+  titss << subdetstr_<<" # RecHits " << (senseGreaterThan?"> ":"< ") << thresh << " GeV";
+  return titss.str();
+}
+
+//======================================================================
+
+void
+HcalRecHitFilter::updateCounters(double hitenergy,
+				 std::vector<int>& counts) // hits above/below threshold
+{
+  // unroll the first iteration because most hits are here -
+  // lower than the lowest threshold (assuming threshold is set reasonably
+  //
+  if (hitenergy < v_profileThresholds_[0]) { counts[0]++; return; }
+
+  for (uint32_t i=0; i<v_profileThresholds_.size(); i++) {
+    double thresh = v_profileThresholds_[i];
+    if (hitenergy > thresh) counts[i+1]++;
+    else return;
+  }
+}
+
+//======================================================================
+
+template<class Hit,class Col>
+void
+HcalRecHitFilter::filterHits(edm::Event& iEvent,
+			     edm::InputTag recotag)
+{
+  using namespace edm;
+
+  bool doSmear = ((tsmearEnvelope_.size() > 0) &&
+		  ((subdet_ == HcalBarrel) || 
+		   (subdet_ == HcalEndcap))       );
+
+  std::vector<int> allcounters(v_profileThresholds_.size()+1,0);
+  std::vector<int> intimecounters(v_profileThresholds_.size()+1,0);
+  std::vector<int> outoftimecounters(v_profileThresholds_.size()+1,0);
+
+  Handle<Col> incol;
+  if (iEvent.getByLabel(recotag,incol)) {
+    std::auto_ptr<Col> outCol(new Col);
+
+    for (uint32_t i=0; i < incol->size(); i++) {
+      const Hit& inhit= (*incol)[i];
+      Hit outh;
+
+      if (maskedId(inhit.id())) continue;   // masked cells just plain don't count
+
+#ifdef CMSSW3XX
+      if (inhit.flags() & flagFilterMask_) continue; // filtering by flag bits
+#endif
+
+      Hit outhit(inhit.id(),
+		 inhit.energy(),
+		 inhit.time()-timeShiftNs_); // time-shifted hit (if shift != 0)
+
+      if (doSmear)
+	outhit = Hit(inhit.id(),
+		     inhit.energy(),
+		     smearTime(outhit.energy(),
+			       outhit.time()));  // smeared hit
+
+#ifdef CMSSW3XX
+      outhit.setFlags(inhit.flags());
+#endif
+
+      if (inTime(outhit))
+	outCol->push_back(outhit);               // in-time hit
+
+      if (v_profileThresholds_.size()) {
+	if (inTime(outhit)) {
+	  updateCounters(outhit.energy(),intimecounters);
+	} else {
+	  updateCounters(outhit.energy(),outoftimecounters);
+	}
+	updateCounters(outhit.energy(),allcounters);
+      }
+    } // hit loop
+
+    // fill any profiling histograms
+    for (uint32_t i=0; i<v_allhistos_.size(); i++) {
+      v_allhistos_[i]->Fill((double)allcounters[i]);
+      v_inthistos_[i]->Fill((double)intimecounters[i]);
+      v_outhistos_[i]->Fill((double)outoftimecounters[i]);
+    }
+
+    iEvent.put(outCol);
+  }
+}                                        // HcalRecHitFilter::filterHits
+
+//======================================================================
+
 // ------------ method called to produce the data  ------------
 void
 HcalRecHitFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
 
-  bool doSmear = (tsmearEnvelope_.size() > 0);
-
-  if (subdet_ == HcalBarrel || subdet_ == HcalEndcap) {
-    Handle<HBHERecHitCollection> hbhein;
-    if (iEvent.getByLabel(hbherecotag_,hbhein)) {
-      std::auto_ptr<HBHERecHitCollection> hbheout(new HBHERecHitCollection);
-
-      for (uint32_t i=0; i < hbhein->size(); i++) {
-	const HBHERecHit& rh= (*hbhein)[i];
-
-	if (rh.flags() & flagFilterMask_) continue;
-
-	if (doSmear) {
-	  double smearedTime = smearTime(rh.energy(),rh.time()-timeShiftNs_);
-	  HBHERecHit newrh(rh.id(),rh.energy(),smearedTime);
-	  newrh.setFlags(rh.flags());
-	  if (!maskedId(newrh.id()) && inTime(newrh))
-	    hbheout->push_back(newrh);
-	} else {
-	  HBHERecHit shiftedrh(rh.id(),rh.energy(),rh.time()-timeShiftNs_);
-	  shiftedrh.setFlags(rh.flags());
-	  if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
-	    hbheout->push_back(shiftedrh);
-	}
-      }
-      iEvent.put(hbheout);
-    }
-  }
-  else if (subdet_ == HcalOuter) {
-    Handle<HORecHitCollection> hoin;
-    if (iEvent.getByLabel(horecotag_,hoin)) {
-      std::auto_ptr<HORecHitCollection> hoout(new HORecHitCollection);
-
-      for (uint32_t i=0; i < hoin->size(); i++) {
-	const HORecHit& rh = (*hoin)[i];
-	HORecHit shiftedrh(rh.id(),rh.energy(),rh.time() - timeShiftNs_);
-	if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
-	  hoout->push_back(shiftedrh);
-      }
-      iEvent.put(hoout);
-    }
-  }
-  else if (subdet_ == HcalForward) {
-    Handle<HFRecHitCollection> hfin;
-    if (iEvent.getByLabel(hfrecotag_,hfin)) {
-      std::auto_ptr<HFRecHitCollection> hfout(new HFRecHitCollection);
-
-      for (uint32_t i=0; i < hfin->size(); i++) {
-	const HFRecHit& rh = (*hfin)[i];
-	HFRecHit shiftedrh(rh.id(),rh.energy(),rh.time() - timeShiftNs_);
-	if (!maskedId(shiftedrh.id()) && inTime(shiftedrh))
-	  hfout->push_back(shiftedrh);
-      }
-      iEvent.put(hfout);
-    }
+  switch (subdet_) {
+  case HcalBarrel:
+  case HcalEndcap:  filterHits<HBHERecHit,HBHERecHitCollection>(iEvent,hbherecotag_); break;
+  case HcalOuter:   filterHits<HORecHit,HORecHitCollection>(iEvent,horecotag_); break;
+  case HcalForward: filterHits<HFRecHit,HFRecHitCollection>(iEvent,hfrecotag_); break;
+  default: break;
   }
 }                                        // HcalRecHitFilter::produce
 
 
-// ------------ method called once each job just before starting event loop  ------------
+// --- method called once each job just before starting event loop  ----
 void 
 HcalRecHitFilter::beginJob(const edm::EventSetup&)
 {
   //  edm::LogInfo("Parameters being used: ")   <<
-  std::cout << "========================================"  << "\n" <<
-    "Parameters being used: " << "\n" <<
+
+  std::cout << "----------------------------------------"  << "\n" <<
+  std::cout << "Parameters being used: "  << "\n" <<
     "hbherecotag_         : " << hbherecotag_        << "\n" <<
     "hfrecotag_           : " << hfrecotag_          << "\n" <<
     "horecotag_           : " << horecotag_          << "\n" <<
@@ -421,9 +514,39 @@ HcalRecHitFilter::beginJob(const edm::EventSetup&)
     std::cout << "Masking " << detIds2mask_[i] << std::endl;
 
 
-  dumpEnvelope(tsmearEnvelope_,"Smear Sigma Envelope");
+  dumpEnvelope(tsmearEnvelope_,  "Smear Sigma Envelope");
   dumpEnvelope(tfilterEnvelope_, "Time Filter Envelope Limits");
-  std::cout << "========================================"  << std::endl;
+
+  /******************************
+   * BOOK PROFILING HISTOS
+   ******************************/
+  if (v_profileThresholds_.size()) { /* currently acts also as an indicator
+					of profile activities in general */
+    edm::Service<TFileService> fs;
+      
+    v_allhistos_.push_back(fs->make<TH1F>((histname(0,false)+"All").c_str(),
+					  (histtitle(0,false)+ " (Unfiltered)").c_str(),
+					  101, -0.5, 5000.5));
+    v_inthistos_.push_back(fs->make<TH1F>((histname(0,false)+"InTime").c_str(),
+					  (histtitle(0,false)+ " (In Time)").c_str(),
+					  101, -0.5, 5000.5));
+    v_outhistos_.push_back(fs->make<TH1F>((histname(0,false)+"OutOfTime").c_str(),
+					  (histtitle(0,false)+ " (Out Of Time)").c_str(),
+					  101, -0.5, 5000.5));
+
+    for (uint32_t i=0; i<v_profileThresholds_.size(); i++) {
+      v_allhistos_.push_back(fs->make<TH1F>((histname(i+1)+"All").c_str(),
+					    (histtitle(i)+ " (Unfiltered)").c_str(),
+					    101, -0.5, 100.5));
+      v_inthistos_.push_back(fs->make<TH1F>((histname(i+1)+"InTime").c_str(),
+					    (histtitle(i)+ " (In Time)").c_str(),
+					    101, -0.5, 100.5));
+      v_outhistos_.push_back(fs->make<TH1F>((histname(i+1)+"OutOfTime").c_str(),
+					    (histtitle(i)+ " (Out Of Time)").c_str(),
+					    101, -0.5, 100.5));
+    }
+    //pfHistos_->book1d<TH1D>(v_hpars1d);
+  }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
