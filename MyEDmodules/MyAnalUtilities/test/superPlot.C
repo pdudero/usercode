@@ -28,8 +28,10 @@
 using namespace std;
 
 struct wPad_t {
-  wPad_t(string name) : topmargin(0.),bottommargin(0.),rightmargin(0.),leftmargin(0.),
-			fillcolor(10),logx(0),logy(0), stackem(false),legid("")
+  wPad_t(string name) : topmargin(0.),bottommargin(0.),
+			rightmargin(0.),leftmargin(0.),
+			fillcolor(10),logx(0),logy(0),
+			stackem(false),legid("")
   { hframe = new wTH1D(name,name,100,0.0,1.0); }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
@@ -750,6 +752,50 @@ processHistoSection(FILE *fp,
 	break;
       }
 
+    //------------------------------
+    } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
+      }
+      if (h1d) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      // Tokenize again to get the histo ID and the desired property
+      string hprop = value;
+      Tokenize(hprop,v_tokens,":");
+      if ((v_tokens.size() != 2) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())    ) {
+	cerr << "malformed hid:property specification " << hprop << endl; continue;
+      }
+
+      string tgthid = v_tokens[0];
+      string prop   = v_tokens[1];
+
+      map<string,wTH1D *>::const_iterator it = glmap_id2histo.find(tgthid);
+      if (it == glmap_id2histo.end()) {
+	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
+	break;
+      }
+      TH1D *tgth1d=it->second->histo();
+      wh = it->second->Clone(string(tgth1d->GetName())+"_"+prop,
+			     string(tgth1d->GetTitle())+" ("+prop+")");
+      h1d = wh->histo();
+      h1d->Clear();
+      glmap_id2histo.insert(std::pair<string,wTH1D *>(*hid,wh));
+      
+      if (!prop.compare("errors")) {
+	int nbins = h1d->GetNbinsX()*h1d->GetNbinsY()*h1d->GetNbinsZ();
+	for (int ibin=1; ibin<=nbins; ibin++)
+	  h1d->SetBinContent(ibin,tgth1d->GetBinError(ibin));
+      }
+      else {
+	cerr << "Unrecognized property: " << prop << endl;
+	break;
+      }
+
     } else if (!h1d) {  // all other keys must have "path" defined
       cerr << "key 'path' or 'clone' must be defined before key " << key << endl;
       break;
@@ -1329,8 +1375,9 @@ void drawInPad(wPad_t *wp, wTH1D& myHisto,bool firstInPad,
   for (int i=0; i<sumw2->GetSize(); i++)
     printf ("%g ", (*sumw2)[i]);
   cout << endl;
-  wp->vp->Update();
 #endif
+
+  wp->vp->Update();
 }
 
 //======================================================================
@@ -1457,7 +1504,7 @@ void  drawPlots(wCanvas_t& wc)
       }
 
       wTH1D *myHisto = it->second;
-
+      
       if (myHisto) {
 	if (wp->stackem) {
 	  stack->Add(myHisto->histo());
