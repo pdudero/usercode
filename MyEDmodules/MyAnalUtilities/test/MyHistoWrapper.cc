@@ -66,6 +66,8 @@ public:
     leg->AddEntry(h_,legentry_.c_str(),drawoption_.c_str());
  }
 
+  const std::string& GetLegendEntry(void)   { return legentry_;  }
+
   MyHistoWrapper<T> *Clone(const std::string& newname,
 			   const std::string& newtitle);
 private:
@@ -93,6 +95,8 @@ MyHistoWrapper<T>::Draw(const std::string& drawopt)
 {
   if (drawopt.find("COL") != std::string::npos)
     gStyle->SetPalette(1,0); // always!
+
+  cout << "Drawing " << h_->GetName() << " with " << drawopt << endl;
 
   h_->Draw(drawopt.c_str());
 }

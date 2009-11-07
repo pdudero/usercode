@@ -1,13 +1,16 @@
+#include <iostream>
 #include <string>
 #include "TText.h"
 #include "TLatex.h"
 #include "TDatime.h"
 
+using namespace std;
 static bool dotime=false;
 
 void drawStandardText(const std::string& text,
 		      double px,    double py,
-		      double tx=-1, double ty=-1)
+		      double tx=-1, double ty=-1,
+		      double textsize=0.035)
 {
   const char* time_;
   TDatime mytime;
@@ -17,7 +20,7 @@ void drawStandardText(const std::string& text,
   plabel-> SetNDC();
   plabel -> SetTextFont(522);
   plabel -> SetTextColor(1);
-  plabel -> SetTextSize(0.035);
+  plabel -> SetTextSize(textsize);
   plabel -> SetTextAlign(22);
   plabel -> SetTextAngle(0);
 
