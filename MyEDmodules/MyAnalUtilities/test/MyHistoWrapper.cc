@@ -62,9 +62,18 @@ public:
   void SetDrawOption (const std::string& option)  { drawoption_ = option; }
 
   void Add2Legend(TLegend *leg) {
-    if (!drawoption_.size()) drawoption_ = "L";
-    leg->AddEntry(h_,legentry_.c_str(),drawoption_.c_str());
- }
+    std::string legdrawopt=drawoption_;
+    if (legdrawopt.size())
+      if (legdrawopt.find("L") != string::npos)
+	if (legdrawopt.find("E") != string::npos) legdrawopt = "LE";
+	else                                      legdrawopt = "L";
+      else if (legdrawopt.find("P") != string::npos) legdrawopt = "P";
+      else if (legdrawopt.find("F") != string::npos) legdrawopt = "F";
+      else
+	legdrawopt = "L";
+    
+    leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
+  }
 
   const std::string& GetLegendEntry(void)   { return legentry_;  }
 
