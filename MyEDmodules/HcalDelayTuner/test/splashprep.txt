@@ -1,0 +1,92 @@
+Subject:
+Re: splash prep
+From:
+Jordan Damgov <Jordan.Damgov@cern.ch>
+Date:
+Sat, 31 Oct 2009 15:31:06 +0200
+To:
+Phil Dudero <dudero@physics.umn.edu>
+
+ Hi Phil,
+
+Here is the distance calculation, whhich provides the predicted time:
+=================================================
+// geometry
+   const CaloGeometry *geo;
+   ESHandle < CaloGeometry > pG;
+   iSetup.get < CaloGeometryRecord > ().get(pG);
+   geo = pG.product();
+...
+...
+// Within RecHits loop (hhit iterator)
+    GlobalPoint hbheposition = geo->getPosition(hhit->detid());
+//   HB geomerty
+    if(abs(hhit->id().ieta())<17&&hhit->id().depth()<3) {
+    if(abs(hhit->id().ieta())<15) R=233;
+    if(abs(hhit->id().ieta())==15&&hhit->id().depth()==1) R=216;
+    if(abs(hhit->id().ieta())==15&&hhit->id().depth()==2) R=267;
+    if(abs(hhit->id().ieta())==16&&hhit->id().depth()==1) R=188;
+    if(abs(hhit->id().ieta())==16&&hhit->id().depth()==2) R=206;
+    Z=R/tan(hbheposition.theta());
+    }else{
+//   HE geometry
+    if(abs(hhit->id().ieta())==16) Z=445;
+    if(abs(hhit->id().ieta())==17) Z=462;
+    if(abs(hhit->id().ieta())==18&&hhit->id().depth()==1) Z=410;
+    if(abs(hhit->id().ieta())==18&&hhit->id().depth()==2) Z=484;
+    if(abs(hhit->id().ieta())>=19&& abs(hhit->id().ieta())<=26&&hhit->id().depth()==1) Z=418;
+    if(abs(hhit->id().ieta())>=19&& abs(hhit->id().ieta())<=26&&hhit->id().depth()==2) Z=493;
+    if(abs(hhit->id().ieta())>=27&& abs(hhit->id().ieta())<=29&&hhit->id().depth()==1) Z=410;
+    if(abs(hhit->id().ieta())>=27&& abs(hhit->id().ieta())<=29&&hhit->id().depth()==2) Z=428;
+    if(abs(hhit->id().ieta())>=27&& abs(hhit->id().ieta())<=29&&hhit->id().depth()==3) Z=493;
+    R=Z*tan(hbheposition.theta());
+    if(hhit->id().ieta()<0)Z=-Z;
+    }
+// +Z or -Z beam splash
+//     GlobalPoint pcoll(0.,R,Z+15000.);
+    GlobalPoint pcoll(0.,R,Z-15000.);
+    GlobalPoint pcalo(0.,R,Z);
+// dist is in cm, 30cm=1ns
+    dist=pcoll.mag()-pcalo.mag();
+....
+=================================================
+// HO Geometry
+    GlobalPoint hoposition = geo->getPosition(hhit->detid());
+    if(abs(hhit->id().ieta())<=4) R=395;
+    if(abs(hhit->id().ieta())>=5) R=407;
+    Z=R/tan(hbheposition.theta());
+
+//     GlobalPoint pcoll(0.,R,Z+15000.);
+    GlobalPoint pcoll(0.,R,Z-15000.);
+    GlobalPoint pcalo(0.,R,Z);
+// dist is in cm, 30cm=1ns
+    dist=pcoll.mag()-pcalo.mag();
+=================================================
+There is a large constant time offset - can put it as a parameter at any later step in the analysis (per run dependent in 2008).
+To select splash I use filter for 1000 TeV in HF .
+
+2008 splash runs :
+61642 - pre-Sep10
+62062- sep10 from +Z
+62068, sep 10 from -Z
+63198, post-sep10 or post-tune from +Z
+
+===================================================================================================
+fileNames = cms.untracked.vstring(
+#'/store/data/Commissioning08/BeamHalo/RECO/StuffAlmostToP5_v1/000/061/642/10A0FE34-A67D-DD11-AD05-000423D94E1C.root'
+#'/store/data/Commissioning08/BeamHalo/RECO/GRtoBeam_v1/000/062/068/12E17E04-3A7F-DD11-B369-000423D6CA02.root'
+#'/store/data/Commissioning08/BeamHalo/RECO/GRtoBeam_v1/000/062/063/D4E2F831-157F-DD11-AA06-000423D9853C.root'
+#'/store/data/BeamCommissioning08/BeamHalo/RECO/v1/000/063/198/4472E99B-C885-DD11-A48A-001617C3B77C.root'
+),
+secondaryFileNames = cms.untracked.vstring(
+#'/store/data/Commissioning08/BeamHalo/RAW/StuffAlmostToP5_v1/000/061/642/94D3CADF-A47D-DD11-BF3E-000423D94E1C.root'
+#'/store/data/Commissioning08/BeamHalo/RAW/GRtoBeam_v1/000/062/068/6E1474C7-387F-DD11-8ED7-000423D6CAF2.root'
+#'/store/data/Commissioning08/BeamHalo/RAW/GRtoBeam_v1/000/062/063/46D299E0-137F-DD11-9A92-001617E30CE8.root'
+#'/store/data/BeamCommissioning08/BeamHalo/RAW/v1/000/063/198/C0D83EB6-C685-DD11-86B7-001D09F27067.root'
+
+))
+==================================================================================================
+
+Let me know if I missed to send some critical detail.
+Cheers,
+Jordan
