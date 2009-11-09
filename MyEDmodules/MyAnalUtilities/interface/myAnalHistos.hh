@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.5 2009/07/27 16:07:38 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.6 2009/10/27 02:45:39 dudero Exp $
 //
 //
 
@@ -74,6 +74,8 @@ public:
   template<class T> void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
 
   template<class T> void bookClone(const std::string& cloneName,const T& h);
+
+  TFileDirectory *dir(void) { return dir_; }
 
 #if 0
   // common usages:
