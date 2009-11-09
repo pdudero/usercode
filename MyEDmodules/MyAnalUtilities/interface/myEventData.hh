@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.4 2009/07/27 16:08:52 dudero Exp $
+// $Id: myEventData.hh,v 1.5 2009/10/27 02:45:39 dudero Exp $
 //
 //
 
@@ -70,6 +70,8 @@ public:
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
+  inline uint32_t                            bxNumber(void)      const { return bxn_;  }
+  inline uint32_t                            lumiSection(void)   const { return lsn_;  }
 
 private:
 
@@ -93,6 +95,8 @@ private:
   edm::EventID eventId_;
   uint32_t runn_;
   uint32_t evtn_;
+  uint32_t bxn_;
+  uint32_t lsn_;
 
   edm::Handle<HcalTBTriggerData>      hcaltbtrigdata_;
   edm::Handle<FEDRawDataCollection>   fedrawdata_;

@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.3 2009/07/03 11:26:27 dudero Exp $
+// $Id: myEventData.cc,v 1.4 2009/07/27 16:09:58 dudero Exp $
 //
 //
 
@@ -84,6 +84,8 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   eventId_ = iEvent.id();
   runn_    = eventId_.run();
   evtn_    = eventId_.event();
+  lsn_     = iEvent.luminosityBlock();
+  bxn_     = iEvent.bunchCrossing();
 
   // Always try to get the HcalTBtrigger data regardless
   try {
