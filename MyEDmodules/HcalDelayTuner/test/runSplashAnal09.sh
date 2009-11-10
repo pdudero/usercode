@@ -13,19 +13,33 @@ echo "      Please choose"
        echo '   '
 
 echo "  1 - Run 120015 - Nov.7, 2009 (from -Z)"
+echo "  2 - Run 120042 - Nov.9, 2009 (from -Z)"
        echo '   '
 
 read VAR1
 
 case $VAR1 in
   "1") export RUN=120015
-       export FILES="'file:~/scratch0/data/Splash09skims/run120015-rhskim.root'"
+       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120015-rhskim-nodigis-59events.root'"
        export RUNDESCR="'Run 120015 Splash from -Z'"
        export GLOBALTOFFSET=-7.31
        export SPLASHZSIDEPLUS=False
        export BAD_EVENT_LIST=8,51,270
-#      export TIMEWINDOWMIN=
-#      export TIMEWINDOWMIN=
+       export BXNUMS=
+       export GLOBAL_FLAG_MASK=0xC0003
+       export TIMEWINDOWMIN=-11
+       export TIMEWINDOWMAX=11
+       ;;
+  "2") export RUN=120042
+       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120042-rhskim-nodigis.root'"
+       export RUNDESCR="'Run 120042 Splash from -Z (post-correction)'"
+       export GLOBALTOFFSET=-6.63
+       export SPLASHZSIDEPLUS=False
+       export BXNUMS=100
+       export GLOBAL_FLAG_MASK=0xC0003
+#      export BAD_EVENT_LIST=8,51,270
+       export TIMEWINDOWMIN=-10
+       export TIMEWINDOWMAX=5
        ;;
 esac
 
@@ -85,17 +99,20 @@ from MyEDmodules.HcalDelayTuner.splashtiminganal_cfi import *
 process.hbtimeanal = timeanal.clone();
 process.hbtimeanal.runDescription = cms.untracked.string(${RUNDESCR})
 process.hbtimeanal.splashPlusZside = cms.untracked.bool(${SPLASHZSIDEPLUS})
-process.hbtimeanal.badEventList    = cms.vint32(${BAD_EVENT_LIST})
+process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.hbtimeanal.badEventList     = cms.untracked.vint32(${BAD_EVENT_LIST})
+process.hbtimeanal.acceptedBxNums   = cms.untracked.vint32(${BXNUMS})
+process.hbtimeanal.SubdetPars.maxEventNum2plot = cms.int32(1600000)
 process.hetimeanal = process.hbtimeanal.clone(subdet=cms.untracked.string("HE"));
 process.hotimeanal = process.hbtimeanal.clone(subdet=cms.untracked.string("HO"));
 process.hotimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("")
-process.hotimeanal.eventDataPset.hoRechitLabel = cms.untracked.InputTag("horeco")
-#process.hbtimeanal.timeWindowMinNS   = cms.double(${TIMEWINDOWMIN})
-#process.hbtimeanal.timeWindowMaxNS   = cms.double(${TIMEWINDOWMAX})
-#process.hetimeanal.timeWindowMinNS   = cms.double(${TIMEWINDOWMIN})
-#process.hetimeanal.timeWindowMaxNS   = cms.double(${TIMEWINDOWMAX})
-#process.hotimeanal.timeWindowMinNS   = cms.double(${TIMEWINDOWMIN})
-#process.hotimeanal.timeWindowMaxNS   = cms.double(${TIMEWINDOWMAX})
+process.hotimeanal.eventDataPset.hoRechitLabel   = cms.untracked.InputTag("horeco")
+process.hbtimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
+process.hbtimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
+process.hetimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
+process.hetimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
+#process.hotimeanal.SubdetPars.timeWindowMinNS   = cms.double(${TIMEWINDOWMIN})
+#process.hotimeanal.SubdetPars.timeWindowMaxNS   = cms.double(${TIMEWINDOWMAX})
 
 process.hbtimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
 process.hetimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
@@ -124,4 +141,4 @@ echo "   All done with run ${RUNNUMBER}! Deleting temp .cfg"
 echo " -----------------------------------------------------------------  " 
 echo "                                                                    "
 
-rm ${CFGFILE}
+#rm ${CFGFILE}

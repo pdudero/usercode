@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.1 2009/11/09 00:57:59 dudero Exp $
 //
 //
 
@@ -53,18 +53,22 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   HcalDelayTunerAlgos(iConfig),
   timecor_(timecor),
   globalToffset_(iConfig.getParameter<double>("globalTimeOffset")),
+  globalFlagMask_(iConfig.getParameter<int>("globalRecHitFlagMask")),
   sdpars_(iConfig.getParameter<edm::ParameterSet>("SubdetPars")),
   rundescr_(iConfig.getUntrackedParameter<std::string>("runDescription",""))
 {
-  std::vector<int> badEventVec;
-
-  cout << "GLOBAL TIME OFFSET IN USE: " << globalToffset_ << endl;
-
   // cut string vector initialized in order
-  v_cuts_.push_back("cutNone");
-  v_cuts_.push_back("cutMinHitGeV");
-  v_cuts_.push_back("cutBadEvents"); // on top of the previous one
-  st_lastCut_ = "cutBadEvents";
+  // all cuts applied on top of the previous one
+  //
+  v_cuts_.push_back("cut0none");
+  v_cuts_.push_back("cut1minHitGeV");
+  v_cuts_.push_back("cut2bxnum");
+  v_cuts_.push_back("cut3badFlags");
+  v_cuts_.push_back("cut4badEvents");
+  v_cuts_.push_back("cut5tower16");
+  v_cuts_.push_back("cut6aInTimeWindow");
+  v_cuts_.push_back("cut6bOutOfTimeWindow");
+  st_lastCut_ = "cut6bOutOfTimeWindow";
 
   minHitGeV_          = sdpars_.getParameter<double>("minHitGeV");
   timeWindowMinNS_    = sdpars_.getParameter<double>("timeWindowMinNS");
@@ -74,10 +78,17 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   recHitTscaleMaxNs_  = sdpars_.getParameter<double>("recHitTscaleMaxNs");
   recHitEscaleMinGeV_ = sdpars_.getParameter<double>("recHitEscaleMinGeV");
   recHitEscaleMaxGeV_ = sdpars_.getParameter<double>("recHitEscaleMaxGeV");
+  maxEventNum2plot_   = sdpars_.getParameter<int>("maxEventNum2plot");
 
-  badEventVec = iConfig.getParameter<vector<int> >("badEventList");
+  std::vector<int> badEventVec =
+    iConfig.getUntrackedParameter<vector<int> >("badEventList");
   for (size_t i=0; i<badEventVec.size(); i++)
     badEventSet_.insert(badEventVec[i]);
+
+  std::vector<int> acceptedBxVec =
+    iConfig.getUntrackedParameter<vector<int> >("acceptedBxNums");
+  for (size_t i=0; i<acceptedBxVec.size(); i++)
+    acceptedBxNums_.insert(acceptedBxVec[i]);
 
   HcalLogicalMapGenerator gen;
   lmap_ = new HcalLogicalMap(gen.createMap());
@@ -159,6 +170,18 @@ SplashDelayTunerAlgos::add2dHisto(const std::string& name, const std::string& ti
 
 //======================================================================
 
+myAnalCut *
+SplashDelayTunerAlgos::findCut(const std::string& cutstr)
+{
+  std::map<std::string,myAnalCut *>::const_iterator it = m_cuts_.find(cutstr);
+  if (it == m_cuts_.end())
+    throw cms::Exception("Cut not found, you numnutz! You changed the name: ") << cutstr;
+
+  return it->second;
+}
+
+//======================================================================
+
 void
 SplashDelayTunerAlgos::bookHistos(void)
 {
@@ -210,7 +233,7 @@ SplashDelayTunerAlgos::bookHistos(void)
 
   st_totalEperEv_ = "h1d_totalEperEvIn" + mysubdetstr_;
   add1dHisto( st_totalEperEv_,
-	      "#Sigma RecHit Energy Per Event in " + mysubdetstr_ + "; Event Number; Total Energy (GeV)",
+  "#Sigma RecHit Energy Per Event in " + mysubdetstr_ + "; Event Number; Total Energy (GeV)",
 	      501,-0.5,500.5,
 	      v_hpars1d);
 
@@ -219,6 +242,16 @@ SplashDelayTunerAlgos::bookHistos(void)
 	      "Depth 1 RecHit Times (corrected), " + mysubdetstr_ + "; Rechit Time (ns)",
 	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
+  st_rhFlagBits_ = "h1d_rhFlagBits" + mysubdetstr_;
+  add1dHisto( st_rhFlagBits_,
+	      "RecHit Quality Flag Bits, " + mysubdetstr_ + "; Flag Name",
+	      20,0.5,20.5,v_hpars1d);  // see below (post-booking) for bin labeling
+  
+  st_rhHBHEtimingShapedCuts_ = "h1d_HBHEtimingShapedCuts" + mysubdetstr_;
+  add1dHisto( st_rhHBHEtimingShapedCuts_,
+	      "RecHit Timing Shaped Cuts Bits, " + mysubdetstr_ + "; Quality (0-7)",
+	      10,-0.5,9.5,v_hpars1d);
+
   /*****************************************
    * 1-D PROFILES:                         *
    *****************************************/
@@ -226,7 +259,7 @@ SplashDelayTunerAlgos::bookHistos(void)
   st_avgTperEvD1_ = "h1d_avgTperEvIn" + mysubdetstr_;
   add1dHisto( st_avgTperEvD1_,
 	      "Depth 1 Averaged Time Per Event in " + mysubdetstr_ + "; Event Number; Average Time (ns)",
-	      501,-0.5,500.5,
+	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1dprof);
 
   if (mysubdet_ != HcalOuter) { 
@@ -363,12 +396,13 @@ SplashDelayTunerAlgos::bookHistos(void)
    *****************************************/
 
   st_rhEmap_        = "h2d_rhEperIetaIphi" + mysubdetstr_;
-  add2dHisto(st_rhEmap_, "RecHit Energy Map (#Sigma depths), " + mysubdetstr_ + "; i#eta; i#phi",
+  add2dHisto(st_rhEmap_,
+	     "RecHit Energy Map (#Sigma depths), " + mysubdetstr_ + "; i#eta; i#phi",
 	     61, -30.5,  30.5, 72,   0.5,  72.5, v_hpars2d);
 
   st_uncorTimingVsE_ = "h2d_uncorTimingVsE" + mysubdetstr_;
   add2dHisto(st_uncorTimingVsE_,
-    "RecHit Timing (uncorrected) vs. Energy, " + mysubdetstr_ + "; Rechit Energy (GeV); Rechit Time (ns)",
+"RecHit Timing (uncorrected) vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
 	     (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
 	     recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
@@ -376,7 +410,7 @@ SplashDelayTunerAlgos::bookHistos(void)
 
   st_corTimingVsE_ = "h2d_corTimingVsE" + mysubdetstr_;
   add2dHisto(st_corTimingVsE_,
-    "RecHit Timing (corrected) vs. Energy, " + mysubdetstr_ + "; Rechit Energy (GeV); Rechit Time (ns)",
+"RecHit Timing (corrected) vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
 	     (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
 	     recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
@@ -507,6 +541,31 @@ SplashDelayTunerAlgos::bookHistos(void)
       xax->SetBinLabel(5,"HE+");
       xax->SetBinLabel(6,"HF+");
     }
+
+    TH1D *h1d = myAH->get<TH1D>(st_rhFlagBits_);
+    if (h1d) {
+      TAxis *xax = h1d->GetXaxis();
+      xax->SetBinLabel(1,(mysubdet_==HcalForward)?"HFLongShort":"HBHEHpdHitMultiplicity");
+      xax->SetBinLabel(2,(mysubdet_==HcalForward)?"HFDigiTime":"HBHEPulseShape");
+      xax->SetBinLabel(3,"HSCP_R1R2");
+      xax->SetBinLabel(4,"HSCP_FracLeader");
+      xax->SetBinLabel(5,"HSCP_OuterEnergy");
+      xax->SetBinLabel(6,"HSCP_ExpFit");
+      xax->SetBinLabel(7,(mysubdet_==HcalForward)?"HFTimingTrust0":"N/A");
+      xax->SetBinLabel(8,(mysubdet_==HcalForward)?"HFTimingTrust1":"N/A");
+      xax->SetBinLabel(9,"HBHETimingShapedCuts0");
+      xax->SetBinLabel(10,"HBHETimingShapedCuts1");
+      xax->SetBinLabel(11,"HBHETimingShapedCuts2");
+      xax->SetBinLabel(12,"N/A");
+      xax->SetBinLabel(13,"N/A");
+      xax->SetBinLabel(14,"N/A");
+      xax->SetBinLabel(15,"N/A");
+      xax->SetBinLabel(16,"N/A");
+      xax->SetBinLabel(17,"Subtracted25ns");
+      xax->SetBinLabel(18,"Added25ns");
+      xax->SetBinLabel(19,"UncorBCNcapidMismatch");
+      xax->SetBinLabel(20,"Saturation");
+    }
   }
 }                                                          // bookHistos
 
@@ -518,7 +577,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 {
   //edm::LogInfo("Filling histograms for subdet ") << mysubdetstr_ << std::endl;
 
-  myAnalHistos *myAH = m_cuts_[cutstr]->histos();
+  myAnalHistos *myAH =   findCut(cutstr)->histos();
 
   int        ieta = detID_.ieta();
   int        iphi = detID_.iphi();
@@ -539,6 +598,17 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   myAH->fill2d<TH2D>(st_rhEmap_,ieta,iphi,hitenergy_);
   myAH->fill2d<TH2D>(st_uncorTimingVsE_,hitenergy_,hittime_);
   myAH->fill2d<TH2D>(st_corTimingVsE_,hitenergy_,corTime_);
+
+  for (int ibit=0; ibit<20; ibit++) {
+    int flagshift = (hitflags_>>ibit);
+    if (ibit==8) {
+      int timingCutQuality = flagshift & 7;
+      myAH->fill1d<TH1D>(st_rhHBHEtimingShapedCuts_,timingCutQuality);
+    }
+    if (flagshift & 1) {
+      myAH->fill1d<TH1D>(st_rhFlagBits_,ibit+1);
+    }
+  }
 
   /* Per Depth Histos: */
 
@@ -633,7 +703,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 template<class RecHit>
 void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>& rechits)
 {
-  myAnalHistos *myAH = m_cuts_["cutNone"]->histos();
+  myAnalHistos *myAH = findCut("cut0none")->histos();
   myAH->fill1d<TH1D>(st_rhColSize_,rechits.size());
 
   totalE_ = 0.0;
@@ -648,28 +718,40 @@ void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>&
 
     hittime_   = rh.time() - globalToffset_;
     hitenergy_ = rh.energy();
+    hitflags_  = rh.flags();
     detID_     = rh.id();
     feID_      = lmap_->getHcalFrontEndId(detID_);
-
     totalE_   += hitenergy_;
 
     // splashcorns sounded too weird.
     splashCor_ns_  = timecor_->getTcor4(detID_);
     corTime_ = hittime_ - splashCor_ns_;
 
-    fillHistos4cut("cutNone");
+    fillHistos4cut("cut0none");
     if (rh.energy() > minHitGeV_) {
-      fillHistos4cut("cutMinHitGeV");
-#if 0
-      if ((corTime_ > timeWindowMinNS_) &&
-	  (corTime_ < timeWindowMaxNS_)   ) {
-	fillHistos4cut("cutTimeWindow");
+      fillHistos4cut("cut1minHitGeV");
+      if (inSet<int>(acceptedBxNums_,bxnum_)) {
+	fillHistos4cut("cut2bxnum");
+	if (!(hitflags_ & globalFlagMask_)) {
+	  fillHistos4cut("cut3badFlags");
+	  //	if (notInSet<int>(badEventSet_,evtnum_)) {
+	  if (evtnum_<1061000) {
+	    fillHistos4cut("cut4badEvents");
+	    if (abs(detID_.ieta()) != 16) {
+	      fillHistos4cut("cut5tower16");
+	      if ((corTime_ >= timeWindowMinNS_) &&
+		  (corTime_ <= timeWindowMaxNS_)   ) {
+		fillHistos4cut("cut6aInTimeWindow");
+	      }
+	      if ((corTime_ < timeWindowMinNS_) ||
+		  (corTime_ > timeWindowMaxNS_)   ) {
+		fillHistos4cut("cut6bOutOfTimeWindow");
+	      }
+	    }
+	  }
+	}
       }
-#endif
-      if (notInSet<int>(badEventSet_,evtnum_))
-	fillHistos4cut("cutBadEvents");
     }
-
     tree_->Fill();
 
   } // loop over rechits
@@ -710,15 +792,32 @@ SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
   edm::Service<TFileService> fs;
 
   tree_ = fs->make<TTree>("mytree","Splash Results Tree");
-  tree_->Branch("feID",         &feID_, 32000,1);
-  tree_->Branch("detID",        &detID_,32000,1);
-  tree_->Branch("bxnum",        &bxnum_,32000,1);
-  tree_->Branch("lsnum",        &lsnum_,32000,1);
-  tree_->Branch("evtnum",       &evtnum_,32000,1);
+  tree_->Branch("feID",         &feID_,  32000, 1);
+  tree_->Branch("detID",        &detID_, 32000, 1);
+  tree_->Branch("bxnum",        &bxnum_, 32000, 1);
+  tree_->Branch("lsnum",        &lsnum_, 32000, 1);
+  tree_->Branch("evtnum",       &evtnum_,32000, 1);
   tree_->Branch("hittime",      &hittime_);
   tree_->Branch("hitenergy",    &hitenergy_);
+  tree_->Branch("hitflags",     &hitflags_);
   tree_->Branch("splashCor_ns", &splashCor_ns_);
   tree_->Branch("corhittime_ns",&corTime_);
+
+  std::cout << "----------------------------------------"  << "\n" <<
+  std::cout << "Parameters being used: "  << "\n" <<
+    "subdet_           = " << mysubdetstr_      << "\n" << 
+    "globalToffset_    = " << globalToffset_    << "\n" << 
+    "globalFlagMask_   = " << globalFlagMask_   << "\n" << 
+    "minHitGeV_        = " << minHitGeV_        << "\n" << 
+    "timeWindowMinNS_  = " << timeWindowMinNS_  << "\n" << 
+    "timeWindowMaxNS_  = " << timeWindowMaxNS_  << "\n" <<
+    "badEventVec_      = ";
+  
+  std::set<int>::const_iterator it;
+  for (it=badEventSet_.begin(); it!=badEventSet_.end(); it++)
+    std::cout << *it << ",";
+  std::cout << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
 }
 
 //======================================================================
@@ -727,7 +826,7 @@ void
 SplashDelayTunerAlgos::endAnal()
 {
   if (mysubdet_ == HcalBarrel) {
-    TProfile *tp= m_cuts_[st_lastCut_]->histos()->get<TProfile>(st_avgTcorPerIetad1_);
+    TProfile *tp=findCut(st_lastCut_)->histos()->get<TProfile>(st_avgTcorPerIetad1_);
     float TetaMinus1 = tp->GetBinContent(tp->GetXaxis()->FindBin(-1));
     float TetaPlus1  = tp->GetBinContent(tp->GetXaxis()->FindBin( 1));
 

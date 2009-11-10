@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.1 2009/11/09 00:58:33 dudero Exp $
 //
 //
 
@@ -52,6 +52,7 @@ private:
   void   bookHistos      (void);
   bool   convertIdNumbers(const std::vector<int>& v_idnumbers, HcalDetId& detId);
 
+  myAnalCut *findCut     (const std::string& cutstr);
   void   fillHistos4cut  (const std::string& cutstr);
 
   template<class RecHit>
@@ -77,6 +78,8 @@ private:
 
   // Timing Analyzer Parameters:
   double            globalToffset_;
+  uint32_t          globalFlagMask_;
+
   edm::ParameterSet sdpars_;
   std::string       rundescr_;
   double            minHitGeV_;
@@ -87,6 +90,7 @@ private:
   double            recHitTscaleMaxNs_;
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
+  uint32_t          maxEventNum2plot_;
 
   // Delay Tuner Parameters
   std::string       rootFilename_; // tuner input (analyzer output)
@@ -104,6 +108,7 @@ private:
   uint32_t        evtnum_;
   float           hittime_;       // reconstructed hit time-globalToffset
   float           corTime_;       // corrected for both splash geometry and global offset
+  uint32_t        hitflags_;
   float           hitenergy_;
   float           splashCor_ns_;  // splash geometry correction in nanoseconds
 
@@ -119,6 +124,8 @@ private:
   std::string st_rhUncorTimes_;
   std::string st_rhCorTimes_;
   std::string st_rhCorTimesD1_;
+  std::string st_rhFlagBits_;
+  std::string st_rhHBHEtimingShapedCuts_;
   std::string st_avgTimePerPhid1_,st_avgTimePerPhid2_;
   std::string st_avgTimePerPhid3_,st_avgTimePerPhid4_;
   std::string st_avgTimePer2RMs_;
@@ -143,6 +150,7 @@ private:
   std::vector<std::string> v_cuts_;             // vector of cut strings
   std::map<std::string, myAnalCut *> m_cuts_;
   std::set<int>  badEventSet_;
+  std::set<int>  acceptedBxNums_;
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
 };
