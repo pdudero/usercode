@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.1 2009/11/09 00:57:59 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.2 2009/11/10 22:46:44 dudero Exp $
 //
 //
 
@@ -66,13 +66,15 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   v_cuts_.push_back("cut3badFlags");
   v_cuts_.push_back("cut4badEvents");
   v_cuts_.push_back("cut5tower16");
-  v_cuts_.push_back("cut6aInTimeWindow");
-  v_cuts_.push_back("cut6bOutOfTimeWindow");
-  st_lastCut_ = "cut6bOutOfTimeWindow";
+  //v_cuts_.push_back("cut6aInTimeWindow");
+  //v_cuts_.push_back("cut6bOutOfTimeWindow");
+  st_lastCut_ = "cut5tower16";
 
   minHitGeV_          = sdpars_.getParameter<double>("minHitGeV");
+#if 0
   timeWindowMinNS_    = sdpars_.getParameter<double>("timeWindowMinNS");
   timeWindowMaxNS_    = sdpars_.getParameter<double>("timeWindowMaxNS");
+#endif
   recHitTscaleNbins_  = sdpars_.getParameter<int>   ("recHitTscaleNbins");
   recHitTscaleMinNs_  = sdpars_.getParameter<double>("recHitTscaleMinNs");
   recHitTscaleMaxNs_  = sdpars_.getParameter<double>("recHitTscaleMaxNs");
@@ -170,6 +172,8 @@ SplashDelayTunerAlgos::add2dHisto(const std::string& name, const std::string& ti
 
 //======================================================================
 
+//======================================================================
+
 myAnalCut *
 SplashDelayTunerAlgos::findCut(const std::string& cutstr)
 {
@@ -186,6 +190,8 @@ void
 SplashDelayTunerAlgos::bookHistos(void)
 {
   // Initialize the cuts for the run and add them to the global map
+  char name[40];
+  char title[40];
 
   m_cuts_.clear();
 
@@ -314,6 +320,47 @@ SplashDelayTunerAlgos::bookHistos(void)
 		37,-18.5, 18.5,v_hpars1dprof);
 
     if (mysubdet_ == HcalEndcap) {
+#if 0
+      //
+      // Make profiles of timing vs RM for individual pixels
+      //
+      for (int ipix=1; ipix<=19; ipix++) {
+	sprintf(name,"p1d_rhTvsRM4pix%02dHE",ipix);
+	sprintf(title,"Corrected RecHit Time vs RM for pixel %d, HE",ipix);
+	v_st_rhTvsRMperPixHE_.push_back(string(name));
+	string titlestr = string(title);
+	add1dHisto(v_st_rhTvsRMperPixHE_[ipix-1],titlestr,145,-72.5,72.5,v_hpars1dprof);
+      }
+#endif
+      //
+      // Make profiles of timing vs RM and phi for individual ietas/depths
+      //
+      for (int ieta=18; ieta<=29; ieta++) {
+	sprintf(name,"p1d_rhTvsRM4ieta%02d2HEP",ieta);
+	sprintf(title,"Corrected RecHit Time vs RM for i#eta=%d, depth=2 HEP",ieta);
+	v_st_rhTvsRMperIetaD2HEP_.push_back(string(name));
+	string titlestr = string(title);
+	add1dHisto(v_st_rhTvsRMperIetaD2HEP_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+
+	sprintf(name,"p1d_rhTvsRM4ieta%02d2HEM",ieta);
+	sprintf(title,"Corrected RecHit Time vs RM for i#eta=-%d, depth=2 HEM",ieta);
+	v_st_rhTvsRMperIetaD2HEM_.push_back(string(name));
+	titlestr = string(title);
+	add1dHisto(v_st_rhTvsRMperIetaD2HEM_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+
+	sprintf(name,"p1d_rhTvsPhi4ieta%02d2HEP",ieta);
+	sprintf(title,"Corrected RecHit Time vs i#phi for i#eta=%d, depth=2 HEP",ieta);
+	v_st_rhTvsPhiperIetaD2HEP_.push_back(string(name));
+	titlestr = string(title);
+	add1dHisto(v_st_rhTvsPhiperIetaD2HEP_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+
+	sprintf(name,"p1d_rhTvsPhi4ieta%02d2HEM",ieta);
+	sprintf(title,"Corrected RecHit Time vs i#phi for i#eta=-%d, depth=2 HEM",ieta);
+	v_st_rhTvsPhiperIetaD2HEM_.push_back(string(name));
+	titlestr = string(title);
+	add1dHisto(v_st_rhTvsPhiperIetaD2HEM_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+      }
+
       st_avgTimePer2RMs_ =  "p1d_avgTimePer2RMs" + mysubdetstr_;
       add1dHisto( st_avgTimePer2RMs_,
 		  "Averaged Time over 2RMs, HE; iRM/2; Time (ns)",
@@ -587,6 +634,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   // need front end id: 
   int            iRBX = atoi(((feID_.rbx()).substr(3,2)).c_str());
   int        iRMinRBX = feID_.rm();
+  int            ipix = feID_.pixel();
   int             iRM = zside * ((iRBX-1)*4 + iRMinRBX);
   int     signed_iphi = zside*iphi;
 
@@ -653,7 +701,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
     rhTcorProf = st_rhTcorProfd4_;
     rhTprofRBX = st_rhTprofRBXd4_;
     avgRMt     = st_avgTimePerRMd4_;
-    avgPhiT    = st_avgTimePerPhid4_;
+    //avgPhiT    = st_avgTimePerPhid4_; // we do it by ring, see below 
     avgIetaTunc= st_avgTuncPerIetad4_;
     avgIetaTcor= st_avgTcorPerIetad4_;
     avgRBXt    = st_avgTimePerRBXd4_;
@@ -675,7 +723,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   myAH->fill1d<TH1D>       (st_rhUncorTimes_,         hittime_);
 
   myAH->fill1d<TProfile>   (avgRMt,     iRM,          corTime_); // for passing to delay tuner
-  myAH->fill1d<TProfile>   (avgPhiT,    signed_iphi,  corTime_); // for talking to everyone else!
+  //myAH->fill1d<TProfile>   (avgPhiT,    signed_iphi,  corTime_); // for talking to everyone else! - but not for HO, see below
   myAH->fill1d<TProfile>   (avgIetaTunc,ieta,         hittime_);
   myAH->fill1d<TProfile>   (avgIetaTcor,ieta,         corTime_);
   myAH->fill1d<TProfile>   (avgRBXt,    zside*iRBX,   corTime_);
@@ -687,15 +735,25 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   if (mysubdet_ == HcalEndcap) {
     int iRMavg2 = ((iRM-sign(iRM))/2)+sign(iRM);
     myAH->fill1d<TProfile> (st_avgTimePer2RMs_, iRMavg2, corTime_);
-  }
+    //myAH->fill1d<TProfile> (v_st_rhTvsRMperPixHE_[ipix-1],iRM,corTime_);
 
+    if (depth==2) {
+      const std::string& hRM =(ieta>0)?v_st_rhTvsRMperIetaD2HEP_[ieta-18]:v_st_rhTvsRMperIetaD2HEM_[-ieta-18];
+      const std::string& hPhi=(ieta>0)?v_st_rhTvsPhiperIetaD2HEP_[ieta-18]:v_st_rhTvsPhiperIetaD2HEM_[-ieta-18];
+      myAH->fill1d<TProfile>(hRM,iRM,corTime_);
+      myAH->fill1d<TProfile>(hPhi,iphi,corTime_);
+    }
+  }
   if (depth == 4) {
     if      ((ieta>=-15)&&(ieta<=-11))myAH->fill1d<TProfile>(st_avgTimePerPhiRing2M_,iphi,corTime_);
     else if ((ieta>=-10)&&(ieta<= -5))myAH->fill1d<TProfile>(st_avgTimePerPhiRing1M_,iphi,corTime_);
     else if ((ieta>= -4)&&(ieta<=  4))myAH->fill1d<TProfile>(st_avgTimePerPhiRing0_, iphi,corTime_);
     else if ((ieta>=  5)&&(ieta<= 10))myAH->fill1d<TProfile>(st_avgTimePerPhiRing1P_,iphi,corTime_);
     else if ((ieta>= 11)&&(ieta<= 15))myAH->fill1d<TProfile>(st_avgTimePerPhiRing2P_,iphi,corTime_);
+  } else {
+    myAH->fill1d<TProfile> (avgPhiT, signed_iphi, corTime_); // for talking to everyone else!
   }
+
 }                               // SplashDelayTunerAlgos::fillHistos4cut
 
 //======================================================================
@@ -739,6 +797,7 @@ void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>&
 	    fillHistos4cut("cut4badEvents");
 	    if (abs(detID_.ieta()) != 16) {
 	      fillHistos4cut("cut5tower16");
+#if 0
 	      if ((corTime_ >= timeWindowMinNS_) &&
 		  (corTime_ <= timeWindowMaxNS_)   ) {
 		fillHistos4cut("cut6aInTimeWindow");
@@ -747,6 +806,7 @@ void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>&
 		  (corTime_ > timeWindowMaxNS_)   ) {
 		fillHistos4cut("cut6bOutOfTimeWindow");
 	      }
+#endif
 	    }
 	  }
 	}
@@ -809,14 +869,23 @@ SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
     "globalToffset_    = " << globalToffset_    << "\n" << 
     "globalFlagMask_   = " << globalFlagMask_   << "\n" << 
     "minHitGeV_        = " << minHitGeV_        << "\n" << 
+#if 0
     "timeWindowMinNS_  = " << timeWindowMinNS_  << "\n" << 
     "timeWindowMaxNS_  = " << timeWindowMaxNS_  << "\n" <<
-    "badEventVec_      = ";
+#endif
+    "badEventSet_      = ";
   
   std::set<int>::const_iterator it;
   for (it=badEventSet_.begin(); it!=badEventSet_.end(); it++)
     std::cout << *it << ",";
   std::cout << std::endl;
+
+  std::cout << "acceptedBxNums_   = ";
+
+  for (it=acceptedBxNums_.begin(); it!=acceptedBxNums_.end(); it++)
+    std::cout << *it << ",";
+  std::cout << std::endl;
+
   std::cout << "----------------------------------------" << std::endl;
 }
 

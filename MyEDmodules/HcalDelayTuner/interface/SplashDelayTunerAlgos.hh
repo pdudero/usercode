@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.1 2009/11/09 00:58:33 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.2 2009/11/10 22:46:43 dudero Exp $
 //
 //
 
@@ -126,6 +126,13 @@ private:
   std::string st_rhCorTimesD1_;
   std::string st_rhFlagBits_;
   std::string st_rhHBHEtimingShapedCuts_;
+
+  std::vector<std::string>        v_st_rhTvsRMperPixHE_;
+  std::vector<std::string>        v_st_rhTvsRMperIetaD2HEP_;
+  std::vector<std::string>        v_st_rhTvsRMperIetaD2HEM_;
+  std::vector<std::string>        v_st_rhTvsPhiperIetaD2HEP_;
+  std::vector<std::string>        v_st_rhTvsPhiperIetaD2HEM_;
+
   std::string st_avgTimePerPhid1_,st_avgTimePerPhid2_;
   std::string st_avgTimePerPhid3_,st_avgTimePerPhid4_;
   std::string st_avgTimePer2RMs_;
