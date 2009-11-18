@@ -21,9 +21,9 @@ timeanal = cms.EDAnalyzer('SplashTimingAnalyzer',
       timeWindowMaxNS    = cms.double(100.0),
       recHitEscaleMinGeV = cms.double(-0.5),
       recHitEscaleMaxGeV = cms.double(1000.5),
-      recHitTscaleNbins  = cms.int32(201),
-      recHitTscaleMinNs  = cms.double(-100.5),
-      recHitTscaleMaxNs  = cms.double(100.5),
+      recHitTscaleNbins  = cms.int32(801),
+      recHitTscaleMinNs  = cms.double(-100.125),
+      recHitTscaleMaxNs  = cms.double(100.125),
       maxEventNum2plot   = cms.int32(1)
     ),
 
