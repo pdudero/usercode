@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.hh,v 1.5 2009/05/21 09:52:41 dudero Exp $
+// $Id: HcalDelayTunerInput.cc,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -35,7 +35,11 @@ using namespace std;
 
 HcalDelayTunerInput::HcalDelayTunerInput(const edm::ParameterSet& iConfig)
 {
-  xmlfileNames_ = iConfig.getUntrackedParameter<vector<string> >("oldSettingFilenames");
+  xmlfileNames_ = iConfig.getUntrackedParameter<vector<string> >("fileNames");
+
+  cout << "Opening " << xmlfileNames_.size() << " file(s) for reading: " << endl;
+  for (size_t i=0; i<xmlfileNames_.size(); i++)
+    cout << xmlfileNames_[i] << endl;
 }
 
 // Parses a list of xml files and returns a map of delay settings,
@@ -46,6 +50,11 @@ HcalDelayTunerInput::getSamplingDelays (DelaySettings& delays)
 {
   if (!xmlfileNames_.size()) {
     edm::LogWarning("Called getSamplingDelays without defining filename vector!");
+    return; // nothing to do...
+  }
+
+  if (!xmlfileNames_[0].size()) {
+    edm::LogWarning("Filename 0 is empty, aborting");
     return; // nothing to do...
   }
 
