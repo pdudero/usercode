@@ -20,20 +20,22 @@ read VAR1
 
 case $VAR1 in
   "1") export RUN=120015
-       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120015-rhskim-nodigis-59events.root'"
+#       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120015-rhskim-nodigis-59events.root'"
+       export FILES="'/store/data/BeamCommissioning09/BeamHalo/RECO/v1/000/120/015/3EDA5631-80CC-DE11-A980-0030487A3C9A.root'"
        export RUNDESCR="'Run 120015 Splash from -Z'"
        export GLOBALTOFFSET=-7.31
        export SPLASHZSIDEPLUS=False
        export BAD_EVENT_LIST=8,51,270
-       export BXNUMS=
+       export BXNUMS=2604
        export GLOBAL_FLAG_MASK=0xC0003
        export TIMEWINDOWMIN=-11
        export TIMEWINDOWMAX=11
        ;;
   "2") export RUN=120042
-       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120042-rhskim-nodigis.root'"
+#      export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120042-rhskim-nodigis.root'"
+       export FILES="'/store/data/BeamCommissioning09/BeamHalo/RECO/v1/000/120/042/3EE31BC1-FECC-DE11-9FC2-001617C3B79A.root'"
        export RUNDESCR="'Run 120042 Splash from -Z (post-correction)'"
-       export GLOBALTOFFSET=-6.63
+       export GLOBALTOFFSET=-11.67
        export SPLASHZSIDEPLUS=False
        export BXNUMS=100
        export GLOBAL_FLAG_MASK=0xC0003
@@ -111,14 +113,15 @@ process.hbtimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
 process.hbtimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
 process.hetimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
 process.hetimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
-#process.hotimeanal.SubdetPars.timeWindowMinNS   = cms.double(${TIMEWINDOWMIN})
-#process.hotimeanal.SubdetPars.timeWindowMaxNS   = cms.double(${TIMEWINDOWMAX})
+process.hotimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
+process.hotimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
 
 process.hbtimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
 process.hetimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
 process.hotimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
    
-process.p = cms.Path(process.hbtimeanal*
+process.p = cms.Path(
+#                     process.hbtimeanal*
                      process.hetimeanal)
 #                     process.hotimeanal)
  
