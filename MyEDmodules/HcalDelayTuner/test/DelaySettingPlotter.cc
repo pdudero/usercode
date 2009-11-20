@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.1 2009/11/09 00:59:05 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.1 2009/11/15 12:19:43 dudero Exp $
 //
 //
 
@@ -105,8 +105,9 @@ DelaySettingPlotter::getSetting4(const DelaySettings& settings,
 {
   int setting = -1;
 
-  // no direct inverse mapping, have to do it the hard way!
+  if (!HcalDetId::validDetId(subdet,ieta,iphi,depth)) return setting;
 
+  // no direct inverse mapping, have to do it the hard way!
   HcalDetId detID(subdet, ieta, iphi, depth);
   try {
     HcalFrontEndId feID = lmap_->getHcalFrontEndId(detID);
@@ -128,7 +129,7 @@ DelaySettingPlotter::plotHB(const DelaySettings& settings,
   cout <<"plotHB" << endl;
   int setting;
   DelaySettings::const_iterator it;
-  for (int iphi=0; iphi < 72; iphi++) {
+  for (int iphi=1; iphi <= 72; iphi++) {
     for (int ieta=-16; ieta<=16; ieta++) {
       if (!ieta) continue;
       setting = getSetting4(settings,HcalBarrel,ieta,iphi,1);      // depth 1
@@ -153,7 +154,7 @@ DelaySettingPlotter::plotHE(const DelaySettings& settings,
   cout <<"plotHE" << endl;
   int setting;
   DelaySettings::const_iterator it;
-  for (int iphi=0; iphi < 72; iphi++) {
+  for (int iphi=1; iphi <= 72; iphi++) {
     for (int ieta=17; ieta<=29; ieta++) {
       setting = getSetting4(settings,HcalEndcap,-ieta,iphi,1);      // depth 1, minus side
       if (setting >=0) { mapd1->Fill(-ieta,iphi,setting); dist->Fill(setting); }
@@ -162,7 +163,7 @@ DelaySettingPlotter::plotHE(const DelaySettings& settings,
       if (setting >=0) { mapd1->Fill(ieta,iphi,setting); dist->Fill(setting); }
 
     }
-    for (int ieta=18; ieta<29; ieta++) {
+    for (int ieta=18; ieta<=29; ieta++) {
       setting = getSetting4(settings,HcalEndcap, ieta,iphi,2);      // depth 2, plus side
       if (setting >=0) { mapd2->Fill(ieta,iphi,setting); dist->Fill(setting); }
 
@@ -207,7 +208,7 @@ DelaySettingPlotter::plotHO(const DelaySettings& settings,
   cout <<"plotHO" << endl;
   int setting;
   DelaySettings::const_iterator it;
-  for (int iphi=0; iphi < 72; iphi++) {
+  for (int iphi=1; iphi <= 72; iphi++) {
     for (int ieta=-15; ieta<=15; ieta++) {
       if (!ieta) continue;
       setting = getSetting4(settings,HcalOuter,ieta,iphi,4);
@@ -237,19 +238,22 @@ DelaySettingPlotter::endJob()
   inpold_->getSamplingDelays(oldsettings);
   inpnew_->getSamplingDelays(newsettings);
 
-  TH2D *oldmapd1 = fs->make<TH2D>("oldmapd1","Old Delay Settings, Depth 1;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *oldmapd2 = fs->make<TH2D>("oldmapd2","Old Delay Settings, Depth 2;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *oldmapd3 = fs->make<TH2D>("oldmapd3","Old Delay Settings, Depth 3;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *oldmapd4 = fs->make<TH2D>("oldmapd4","Old Delay Settings, Depth 4;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH1D *olddist  = fs->make<TH1D>("olddist","Old DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
+  TH2D*oldmapd1=fs->make<TH2D>("oldmapd1","Old Delay Settings, Depth 1;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*oldmapd2=fs->make<TH2D>("oldmapd2","Old Delay Settings, Depth 2;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*oldmapd3=fs->make<TH2D>("oldmapd3","Old Delay Settings, Depth 3;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*oldmapd4=fs->make<TH2D>("oldmapd4","Old Delay Settings, Depth 4;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH1D*olddist =fs->make<TH1D>("olddist","Old DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
+
   plotHB(oldsettings,oldmapd1,oldmapd2,olddist);
   plotHE(oldsettings,oldmapd1,oldmapd2,oldmapd3,olddist);
   plotHO(oldsettings,oldmapd4,olddist);
-  TH2D *newmapd1 = fs->make<TH2D>("newmapd1","New Delay Settings, Depth 1;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *newmapd2 = fs->make<TH2D>("newmapd2","New Delay Settings, Depth 2;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *newmapd3 = fs->make<TH2D>("newmapd3","New Delay Settings, Depth 3;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH2D *newmapd4 = fs->make<TH2D>("newmapd4","New Delay Settings, Depth 4;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
-  TH1D *newdist  = fs->make<TH1D>("newdist","New DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
+
+  TH2D*newmapd1=fs->make<TH2D>("newmapd1","New Delay Settings, Depth 1;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*newmapd2=fs->make<TH2D>("newmapd2","New Delay Settings, Depth 2;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*newmapd3=fs->make<TH2D>("newmapd3","New Delay Settings, Depth 3;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH2D*newmapd4=fs->make<TH2D>("newmapd4","New Delay Settings, Depth 4;i#eta;i#phi", 61,-30.5,30.5, 72,0.5,72.5);
+  TH1D*newdist =fs->make<TH1D>("newdist","New DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
+
   plotHB(newsettings,newmapd1,newmapd2,newdist);
   plotHE(newsettings,newmapd1,newmapd2,newmapd3,newdist);
   plotHO(newsettings,newmapd4,newdist);

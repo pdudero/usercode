@@ -8,14 +8,25 @@ fi
 
 EVENTS=-1
 #EVENTS=10
-WRITEBRICKS=False
+WRITEBRICKS=True
+#HBHE:
+#TIMECORRFILENAME="'timeCorrs_run120042_HE.csv','timeCorrs_run120042_HB.csv'"
+#TIMECORRSCANFMT="'%*s %*s %*s %*s %s %d %d %d %f'"
+#OLDSETTINGFILENAME="'../data/hbhetable_091108tune.csv'"
+#
+#HO:
+TIMECORRFILENAMES="'../data/timeCorrs_run120042_HO_noSiPMs.csv'"
+TIMECORRSCANFMT='%*s %*d %*d %*d %s %d %d %d %f'
+OLDSETTINGFILENAMES="'../data/hotable_mapcorrs_noHOX.csv'"
+#OLDSETTINGFILENAMES="'../data/hotable.csv'"
+CLIPATLIMITS=True
 
 #if [ $# -eq 2 ]
 #then
 #  EVENTS=$2
 #fi
 
-CFGFILE=$0_$1_cfg.py
+CFGFILE=$0_cfg.py
 cat > ${CFGFILE} << EOF
 
 import FWCore.ParameterSet.Config as cms
@@ -46,42 +57,19 @@ process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
 # Hcal Digis and RecHits
 #-----------------------------
 
-process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("splashDelayTuner_run$1.root"),
-    closeFileFast = cms.untracked.bool(False)
-)
-
 process.load("MyEDmodules.HcalDelayTuner.splashdelaytuner_cfi")
-process.tunedelays.writeBricks  = cms.untracked.bool(${WRITEBRICKS})
-process.tunedelays.rootFilename = cms.untracked.string("splashTimingAnal_run120015.root")
-#process.tunedelays.hbRMprofileHistos = cms.untracked.vstring("hbtimeanal/HB/cutBadEvents/p1d_avgTimePerRMd1HB",
-#                                                             "hbtimeanal/HB/cutBadEvents/p1d_avgTimePerRMd2HB")
-process.tunedelays.heRMprofileHisto = cms.untracked.string("hetimeanal/HE/cutBadEvents/p1d_avgTimePer2RMsHE")
-#process.tunedelays.hoRMprofileHisto = cms.untracked.string("hotimeanal/HO/cutBadEvents/p1d_avgTimePerRMd1HO")
-#process.tunedelays.oldSettingFilenames = cms.untracked.vstring("../data/hbtable.csv")
-process.tunedelays.oldSettingFilenames = cms.untracked.vstring("../data/hetable.csv")
+process.tunedelays.writeBricks         = cms.untracked.bool(${WRITEBRICKS})
+process.tunedelays.timecorrFilenames   = cms.untracked.vstring(${TIMECORRFILENAMES})
+process.tunedelays.timecorrScanFmt     = cms.untracked.string("${TIMECORRSCANFMT}")
+process.tunedelays.fileNames           = cms.untracked.vstring(${OLDSETTINGFILENAMES})
 
-#LogicalMapFilename = cms.untracked.string("HCALmapHBEF_Jun.19.2008.txt")
+process.tunedelays.clipSettingsAtLimits= cms.untracked.bool(${CLIPATLIMITS})
+process.tunedelays.subdet              = cms.untracked.string("HO")
    
 process.p = cms.Path(process.tunedelays)
- 
-# Output module configuration
-#process.out = cms.OutputModule("PoolOutputModule",
-#    fileName = cms.untracked.string('laserDelayTuner_run$1_TDC${TDCWINDOW}_ENERGY${ENTHRESH}-pool.root'),
-#    # save only events passing the full path
-#    #SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-#    #outputCommands = cms.untracked.vstring('drop *')
-#)
 
-  
-#process.e = cms.EndPath(process.out)
 EOF
 
-cmsRun ${CFGFILE} 2>&1 | tee ./logs/log.txt
-
-echo " -----------------------------------------------------------------  " 
-echo "   All done with run ${RUNNUMBER}! Deleting temp .cfg" 
-echo " -----------------------------------------------------------------  " 
-echo "                                                                    "
+cmsRun ${CFGFILE} 2>&1 | tee ./logs/splashDelayTuner.log
 
 #rm ${CFGFILE}

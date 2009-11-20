@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.1 2009/11/09 00:58:33 dudero Exp $
 //
 //
 
@@ -42,8 +42,9 @@ class HcalDelayTunerXML;
 //
 // class declaration
 //
-typedef std::map<HcalFrontEndId,int>    DelaySettings;
-typedef std::map<HcalFrontEndId,double> ChannelTimes;
+typedef std::map<HcalFrontEndId,int>   DelaySettings;
+typedef std::map<HcalFrontEndId,float> TimesPerFEchan;
+typedef std::map<HcalDetId,float>      TimesPerDetId;
 
 class HcalDelayTunerAlgos {
 public:
@@ -51,22 +52,23 @@ public:
   virtual ~HcalDelayTunerAlgos() {}
   virtual void process (const myEventData& ed) {}
   virtual void beginJob(const edm::EventSetup&) {}
-  virtual void endJob(const ChannelTimes& chtimes,
+  virtual void endJob(const TimesPerFEchan& chtimes,
 		      const DelaySettings& oldsettings);
 
 protected:
+  void   shiftBySubdet       (const std::string subdet);
   int    detSetting4Channel  (const HcalFrontEndId& feID,
-			      double hittime,
-			      double mintime,
+			      float  hittime,
+			      float  mintime,
 			      int oldsetting);
-  void   determineSettings   (const ChannelTimes& hittimes,
+  void   determineSettings   (const TimesPerFEchan& hittimes,
 			      const DelaySettings& oldsettings);
 
-  HcalSubdetector             mysubdet_;
-  std::string                 mysubdetstr_;
-  HcalDelayTunerXML          *xml_;
-  DelaySettings               oldsettings_;
-  DelaySettings               newsettings_;
+  HcalSubdetector              mysubdet_;
+  std::string                  mysubdetstr_;
+  HcalDelayTunerXML           *xml_;
+  DelaySettings                oldsettings_;
+  DelaySettings                newsettings_;
 
 private:
 
@@ -74,6 +76,7 @@ private:
 
   bool writeBricks_;
   bool firstEvent_;
+  bool clipAtLimits_;
   int  nchanMissingOldSettings_;
   int  nchanMissingData_;
 };

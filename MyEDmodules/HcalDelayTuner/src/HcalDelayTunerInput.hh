@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.hh,v 1.5 2009/05/21 09:52:41 dudero Exp $
+// $Id: HcalDelayTunerInput.hh,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -30,6 +30,7 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
+#include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
 //
 // class declaration
@@ -53,7 +54,13 @@ public:
   // Parses a list of xml files and returns a map of delay settings,
   // one for each channel
   //
-  void getSamplingDelays   (DelaySettings& delays);
+  void getSamplingDelays  (DelaySettings& delays);
+
+  // Parses a list of xml files and returns a map of delay settings,
+  // one for each channel
+  //
+  void getTimeCorrections (TimesPerFEchan& timecorrs);
+  void getTimeCorrections (TimesPerDetId&  timecorrs);
 
   // Parses a single xml file that has one phase setting per RBX
   // and returns a map of these settings, one per RBX name.
@@ -65,6 +72,8 @@ private:
 
   // Add private methods and data members as needed
   std::vector<std::string> xmlfileNames_;
+  std::vector<std::string> timecorrFileNames_;
+  std::string              timecorrScanFmt_;
 					
 };
 

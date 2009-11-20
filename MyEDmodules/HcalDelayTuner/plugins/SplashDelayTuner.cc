@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTuner.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashDelayTuner.cc,v 1.1 2009/11/09 00:59:05 dudero Exp $
 //
 //
 
@@ -51,7 +51,7 @@ private:
   // ----------member data ---------------------------
 
   SplashDelayTunerAlgos *algo_;
-  HcalDelayTunerInput *inp_;
+  HcalDelayTunerInput   *inp_;
 };
 
 //
@@ -97,8 +97,10 @@ SplashDelayTuner::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 void 
 SplashDelayTuner::endJob() {
   DelaySettings oldsettings;
+  TimesPerFEchan chtimes;
+  inp_->getTimeCorrections(chtimes);
   inp_->getSamplingDelays(oldsettings);
-  algo_->endJob(oldsettings);
+  algo_->endJob(chtimes,oldsettings);
 }
 
 //define this as a plug-in

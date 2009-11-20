@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -98,7 +98,7 @@ LaserDelayTunerAlgos::convertIdNumbers(const std::vector<int>& v_idnumbers,
   enum HcalSubdetector subdet;
   if      (depth == 4)       subdet = HcalOuter;
   else if (abs(ieta) <= 16)  subdet = HcalBarrel;
-  else if (abs(ieta) <= 28)  subdet = HcalOuter; // gud enuf fer gubmint werk
+  else if (abs(ieta) <= 28)  subdet = HcalEndcap; // gud enuf fer gubmint werk
   else if (abs(ieta) <= 41)  subdet = HcalForward;
   else return false;
 
@@ -550,17 +550,17 @@ LaserDelayTunerAlgos::processHFrechits
 inline int    sign   (double x) { return (x>=0) ? 1 : -1; }
 
 void
-LaserDelayTunerAlgos::detChannelTimes(ChannelTimes& chtimes)
+LaserDelayTunerAlgos::detChannelTimes(TimesPerDetId& chtimes)
 {
   myAnalHistos *myAH = m_cuts_["cutAll"]->histos();
   TProfile *tp = myAH->get<TProfile>(avgTimePerRMd1_);
 
-  double minRMtime = 1e99;
+  float minRMtime = 1e99;
   for (int ibin=1; ibin<=tp->GetNbinsX(); ibin++) {
     int iRM = (int)tp->GetBinCenter(ibin);
     if (!iRM) continue;                      // skip bin at 0
 
-    double rmtime = tp->GetBinContent(ibin);
+    float rmtime = tp->GetBinContent(ibin);
     if (rmtime < minRMtime) minRMtime=rmtime;
   }
 
@@ -585,9 +585,10 @@ LaserDelayTunerAlgos::detChannelTimes(ChannelTimes& chtimes)
 
     for (int i=1; i<4; i++) {
       for (int j=0; j<5; j++) {
+#if 0
 	HcalFrontEndId feID(string(rbx),iRMinRBX,0,1,0,i,j);
 	chtimes.insert(std::pair<HcalFrontEndId,double>(feID,time));
-
+#endif
 	printf ("%3d\t%3d\t%3d\t%d\t%6.3f\n",
 		ibin, iRM, iRBX, iRMinRBX, avgtimeThisRM);
       }

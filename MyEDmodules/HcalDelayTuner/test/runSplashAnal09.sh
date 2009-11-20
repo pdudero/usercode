@@ -35,7 +35,12 @@ case $VAR1 in
 #      export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120042-rhskim-nodigis.root'"
        export FILES="'/store/data/BeamCommissioning09/BeamHalo/RECO/v1/000/120/042/3EE31BC1-FECC-DE11-9FC2-001617C3B79A.root'"
        export RUNDESCR="'Run 120042 Splash from -Z (post-correction)'"
-       export GLOBALTOFFSET=-11.67
+# raw:
+#       export GLOBALTOFFSET=0.0
+# b4 corrections, zero=barrel center:
+#       export GLOBALTOFFSET=-11.67
+# with adjusted delay settings applied:
+       export GLOBALTOFFSET=-5.67
        export SPLASHZSIDEPLUS=False
        export BXNUMS=100
        export GLOBAL_FLAG_MASK=0xC0003
@@ -97,47 +102,42 @@ process.TFileService = cms.Service("TFileService",
     closeFileFast = cms.untracked.bool(False)
 )
 
-from MyEDmodules.HcalDelayTuner.splashtiminganal_cfi import *
-process.hbtimeanal = timeanal.clone();
-process.hbtimeanal.runDescription = cms.untracked.string(${RUNDESCR})
-process.hbtimeanal.splashPlusZside = cms.untracked.bool(${SPLASHZSIDEPLUS})
+#process.load("MyEDmodules.HcalDelayTuner.splash09timingCorrections2ndIteration_cfi")
+#process.load("MyEDmodules.HcalDelayTuner.splash09timingCorHOvalidation_cfi")
+process.load("MyEDmodules.HcalDelayTuner.splash09timingCorHBHEHOvalidation_cfi")
+
+process.hbtimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
+process.hbtimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
 process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
-process.hbtimeanal.badEventList     = cms.untracked.vint32(${BAD_EVENT_LIST})
-process.hbtimeanal.acceptedBxNums   = cms.untracked.vint32(${BXNUMS})
-process.hbtimeanal.SubdetPars.maxEventNum2plot = cms.int32(1600000)
-process.hetimeanal = process.hbtimeanal.clone(subdet=cms.untracked.string("HE"));
-process.hotimeanal = process.hbtimeanal.clone(subdet=cms.untracked.string("HO"));
-process.hotimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("")
-process.hotimeanal.eventDataPset.hoRechitLabel   = cms.untracked.InputTag("horeco")
-process.hbtimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
-process.hbtimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
-process.hetimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
-process.hetimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
-process.hotimeanal.SubdetPars.timeWindowMinNS    = cms.double(${TIMEWINDOWMIN})
-process.hotimeanal.SubdetPars.timeWindowMaxNS    = cms.double(${TIMEWINDOWMAX})
+process.hbtimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.hbtimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hbtimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
+process.hbtimeanal.maxEventNum2plot     = cms.int32(1600000)
+#
+process.hetimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
+process.hetimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
+process.hetimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.hetimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.hetimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hetimeanal.maxEventNum2plot     = cms.int32(1600000)
+process.hetimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 
-process.hbtimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
-process.hetimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
-process.hotimeanal.globalTimeOffset  = cms.double(${GLOBALTOFFSET})
-   
+process.hotimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
+process.hotimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
+process.hotimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.hotimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.hotimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+#process.hotimeanal.detIds2mask          = cms.vint32(-6,20,4,-6,10,4)
+process.hotimeanal.maxEventNum2plot     = cms.int32(1600000)
+process.hotimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
+
 process.p = cms.Path(
-#                     process.hbtimeanal*
-                     process.hetimeanal)
-#                     process.hotimeanal)
- 
-# Output module configuration
-#process.out = cms.OutputModule("PoolOutputModule",
-#    fileName = cms.untracked.string('laserDelayTuner_run$1_TDC${TDCWINDOW}_ENERGY${ENTHRESH}-pool.root'),
-#    # save only events passing the full path
-#    #SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-#    #outputCommands = cms.untracked.vstring('drop *')
-#)
-
-  
-#process.e = cms.EndPath(process.out)
+                     process.hbtimeanal+
+                     process.hetimeanal+
+                     process.hotimeanal)
 EOF
 
-cmsRun ${CFGFILE} 2>&1 | tee ./logs/splashDelayTuner_run$RUN.log
+cmsRun ${CFGFILE} 2>&1 | tee ./logs/splashTimingAnalyzer_run$RUN.log
 
 echo " -----------------------------------------------------------------  " 
 echo "   All done with run ${RUNNUMBER}! Deleting temp .cfg" 

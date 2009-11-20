@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -73,7 +73,7 @@ private:
 				  int nbinsy, double miny, double maxy,
 				  std::vector<myAnalHistos::HistoParams_t>& v_hpars2d);
 
-  void    detChannelTimes        (ChannelTimes& chtimes);
+  void    detChannelTimes        (TimesPerDetId& chtimes);
 
   void    positivize             (myAnalHistos *myAH, TH2D *h2);
   void    positivize             (myAnalHistos *myAH, TProfile2D *h2);

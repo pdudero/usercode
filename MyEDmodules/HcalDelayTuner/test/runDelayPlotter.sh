@@ -5,6 +5,13 @@ then
     echo Please set up your runtime environment!
     exit
 fi
+#export OLD=../data/hotable.csv
+#export FMT='%s %d %d %d %f'
+#export NEW=../data/SettingsHO_091118postSplash09tune_floatingRings.csv
+
+
+export OLD=../data/hbhetable_091108tune.csv
+export NEW=../data/hbhetable_091118tune.csv
 
 CFGFILE=$0_$1_cfg.py
 cat > ${CFGFILE} << EOF
@@ -33,9 +40,10 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.load("MyEDmodules.HcalDelayTuner.delaysettingplotter_cfi")
-process.plotdelays.oldSettingParameters.fileNames = cms.untracked.vstring("../data/hotable.csv")
-process.plotdelays.newSettingParameters.fileNames = cms.untracked.vstring("../data/hotable_mapcorrections.csv")
-
+process.plotdelays.oldSettingParameters.fileNames = cms.untracked.vstring("${OLD}")
+process.plotdelays.newSettingParameters.fileNames = cms.untracked.vstring("${NEW}")
+process.plotdelays.oldSettingParameters.timecorrScanFmt=cms.untracked.string("${OLDFMT}")
+process.plotdelays.newSettingParameters.timecorrScanFmt=cms.untracked.string("${NEWFMT}")
 process.p = cms.Path(process.plotdelays)
 
 EOF
