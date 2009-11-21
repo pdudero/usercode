@@ -7,6 +7,9 @@
 #include <sstream>
 #include <ctype.h>     // isdigit
 #include <stdlib.h>
+
+using namespace std;
+
 #include "MyHistoWrapper.cc"
 #include "inSet.hh"
 #include "TFile.h"
@@ -26,8 +29,6 @@
 #include "mystyle.C"
 #include "tdrstyle4timing.C"
 #include "drawStandardTexts.C"
-
-using namespace std;
 
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),
@@ -106,9 +107,9 @@ struct wLabel_t {
   unsigned textfont;
 };
 
-static set<string> glset_histopathsReadIn;  // keep track of histos read in
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
+static map<string, string>      glmap_histopaths2id;  // keep track of histos read in
 static map<string, string>      glmap_aliii; // better than aliases
 static map<string, wTH1 *>      glmap_id2histo;
 static map<string, TGraph *>    glmap_id2graph;
@@ -128,7 +129,7 @@ inline float str2flt(const string& str) {
 }
 
 inline string int2str(int i) {
-  std::ostringstream ss;
+  ostringstream ss;
   ss << i;
   return ss.str();
 }
@@ -198,7 +199,7 @@ bool getLine(FILE *fp, string& theline, const string& callerid="")
 
 //======================================================================
 
-const std::string& extractAlias(const std::string& input)
+const string& extractAlias(const string& input)
 {
   map<string,string>::const_iterator it;
   it = glmap_aliii.find(input);
@@ -211,7 +212,7 @@ const std::string& extractAlias(const std::string& input)
 
 //======================================================================
 
-TH1 *findHisto(const std::string& hid)
+TH1 *findHisto(const string& hid)
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
@@ -281,7 +282,7 @@ void loadVectorsFromFile(const char *filename,
 			 TVectorD&   vy)
 {
   char linein[128];
-  std::vector<double> v;
+  vector<double> v;
 
   FILE *fp = fopen(filename, "r");
 
@@ -330,7 +331,7 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -349,8 +350,6 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
 	setTDRStyle();
       else if (value == "Plain")
 	gROOT->SetStyle("Plain");
-      else
-	setPRDStyle();
     }
     else if (key == "optstat")   gStyle->SetOptStat(value.c_str());
     else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
@@ -393,7 +392,7 @@ processLayoutSection(FILE      *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -464,7 +463,7 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -547,6 +546,7 @@ void processCommonHistoParams(const string& key,
 {
   static float xmin=1e99, xmax=-1e99;
   static float ymin=1e99, ymax=-1e99;
+  static float zmin=1e99, zmax=-1e99;
 
   if      (key == "draw")        wh.SetDrawOption(value);
   else if (key == "title")       wh.histo()->SetTitle(value.c_str());
@@ -603,6 +603,40 @@ void processCommonHistoParams(const string& key,
     ymax = str2flt(value);
     wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
   }
+  else if (key == "zmin") {
+    zmin = str2flt(value);
+    wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
+  }
+  else if (key == "zmax") {
+    zmax = str2flt(value);
+    wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
+  }
+  else if (key == "print2file") {
+    string filename = value;
+    FILE *fp = fopen(filename.c_str(),"w");
+    if (wh.histo()->InheritsFrom("TH2")) {
+      TH2 *h2 = (TH2 *)wh.histo();
+      fprintf(fp,"#x\ty\tz\n");
+      for (int ix=1; ix<=h2->GetNbinsX(); ix++)
+	for (int iy=1; iy<=h2->GetNbinsY(); iy++)
+	  fprintf(fp,"%d\t%d\t%d\n",
+		  (int)h2->GetXaxis()->GetBinCenter(ix),
+		  (int)h2->GetYaxis()->GetBinCenter(iy),
+		  (int)h2->GetBinContent(ix,iy));
+      cout << "File " << filename << " written with contents of ";
+      cout << h2->GetName() << endl;
+    } else {
+      TH1 *h1 = (TH1 *)wh.histo();
+      fprintf(fp,"#x\ty\n");
+      for (int ix=1; ix<=h1->GetNbinsX(); ix++)
+	fprintf(fp,"%d\t%d\n",
+		(int)h1->GetBinCenter(ix),
+		(int)h1->GetBinContent(ix));
+      cout << "File " << filename << " written with contents of ";
+      cout << h1->GetName() << endl;
+    }
+    fclose(fp);
+  }
   else {
     cerr << "unknown key " << key << endl;
   }
@@ -610,9 +644,10 @@ void processCommonHistoParams(const string& key,
 
 //======================================================================
 
-TH1 *getHistoFromSpec(const std::string& spec)
+wTH1 *getHistoFromSpec(const string& hid,
+		       const string& spec)
 {
-  TH1D  *h1d      = NULL;
+  wTH1  *wth1     = NULL;
   TFile *rootfile = NULL;
   vector<string> v_tokens;
   string fullspec;     // potentially expanded from aliases.
@@ -626,53 +661,50 @@ TH1 *getHistoFromSpec(const std::string& spec)
     cerr << "malformed root histo path file:folder/subfolder/.../histo " << spec << endl;
     return NULL;
   }
+
   // Check for file alias
   string rootfn = v_tokens[0];
   if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
-    map<string,string>::const_iterator it;
-    string fileid=rootfn.substr(1);
-    it = glmap_aliii.find(fileid);
-    if (it == glmap_aliii.end()) {
-      cerr << "file id " << fileid << " not found, define reference in ALIAS section first." << endl;
-      return NULL;
-    }
-    rootfn = it->second;
+    rootfn = extractAlias(rootfn.substr(1));
+    if (!rootfn.size()) return NULL;
   }
 
   // Check for histo alias
   string hspec = v_tokens[1];
   if (hspec[0] == '@') {  // reference to an alias defined in ALIAS section
-    map<string,string>::const_iterator it;
-    string hid=hspec.substr(1);
-    it = glmap_aliii.find(hid);
-    if (it == glmap_aliii.end()) {
-      cerr << "histo id " << hid << " not found, define reference in ALIAS section first." << endl;
-      return NULL;
-    }
-    hspec = it->second;
+    hspec = extractAlias(hspec.substr(1));
+    if (!hspec.size()) return NULL;
   }
 
   fullspec = rootfn + hspec;
 
-  if (inSet<string>(glset_histopathsReadIn,fullspec)) {
-    cerr << "histo " << fullspec << " already read in. Use 'clone=someid' to duplicate it." << endl;
-    return NULL;
-  }
-	
-  rootfile = new TFile(rootfn.c_str());
-  if (rootfile->IsZombie()) {
-    cerr << "File failed to open, " << rootfn << endl;
-    return NULL;
-  }
-
-  h1d = (TH1D *)rootfile->Get(hspec.c_str());
-  if (!h1d) {
-    cerr << "couldn't find " << hspec << " in " << rootfn << endl;
+  map<string,string>::const_iterator it = glmap_histopaths2id.find(fullspec);
+  if (it != glmap_histopaths2id.end()) {
+    // Allow the possibility to run the script a second time in root
+    cout << "histo " << fullspec << " already read in, here it is" << endl;
+    map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
+    if (hit == glmap_id2histo.end()) {
+      cout << "oops, sorry, I lied." << endl;
+      return NULL;
+    }
+    wth1 = hit->second;
   } else {
-    // success, record that you read it in.
-    glset_histopathsReadIn.insert(fullspec);
+    rootfile = new TFile(rootfn.c_str());
+    if (rootfile->IsZombie()) {
+      cerr << "File failed to open, " << rootfn << endl;
+    } else {
+      TH1 *h1 = (TH1 *)rootfile->Get(hspec.c_str());
+      if (!h1) {
+	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
+      } else {
+	// success, record that you read it in.
+	glmap_histopaths2id.insert(pair<string,string>(fullspec,hid));
+	wth1 = new wTH1(h1);
+	glmap_id2histo.insert(pair<string,wTH1 *>(hid,wth1));
+      }
+    }
   }
-  return h1d;
+  return wth1;
 }                                                    // getHistoFromSpec
 
 //======================================================================
@@ -684,9 +716,8 @@ processHistoSection(FILE *fp,
 {
   vector<string> v_tokens;
 
-  wTH1   *wh   = NULL;
+  wTH1   *wth1 = NULL;
   string *hid  = NULL;
-  TH1    *h1   = NULL;
 
   cout << "Processing histo section" << endl;
 
@@ -696,7 +727,7 @@ processHistoSection(FILE *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -733,10 +764,9 @@ processHistoSection(FILE *fp,
 	cerr << "Histo ID " << value << " not found, clone must be defined after the clonee" << endl;break;
 	break;
       }
-      wh = it->second->Clone(string(it->second->histo()->GetName())+"_clone",
-			     string(it->second->histo()->GetTitle()));
-      h1 = wh->histo();
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      wth1 = it->second->Clone(string(it->second->histo()->GetName())+"_clone",
+			       string(it->second->histo()->GetTitle()));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
     } else if (key == "path") {
@@ -744,13 +774,11 @@ processHistoSection(FILE *fp,
       if (!hid) {
 	cerr << "id key must be defined before path key" << endl; continue;
       }
-      if (h1) {
+      if (wth1) {
 	cerr << "histo already defined" << endl; continue;
       }
-      h1 = (TH1 *)getHistoFromSpec(value);
-      if (!h1) continue;
-      wh  = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      wth1  = getHistoFromSpec(*hid,value);
+      if (!wth1) continue;
 
     //------------------------------
     } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
@@ -758,7 +786,7 @@ processHistoSection(FILE *fp,
       if (!hid) {
 	cerr << "id key must be defined before path key" << endl; continue;
       }
-      if (h1) {
+      if (wth1) {
 	cerr << "histo already defined" << endl; continue;
       }
 
@@ -779,12 +807,12 @@ processHistoSection(FILE *fp,
 	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
 	break;
       }
-      TH1 *tgth1=it->second->histo();
-      wh = it->second->Clone(string(tgth1->GetName())+"_"+prop,
-			     string(tgth1->GetTitle())+" ("+prop+")");
-      h1 = wh->histo();
+      TH1 *tgth1 = it->second->histo();
+      wth1       = it->second->Clone(string(tgth1->GetName())+"_"+prop,
+				     string(tgth1->GetTitle())+" ("+prop+")");
+      TH1 *h1=wth1->histo();
       h1->Clear();
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
       
       if (!prop.compare("errors")) {
 	int nbins = h1->GetNbinsX()*h1->GetNbinsY()*h1->GetNbinsZ();
@@ -796,60 +824,16 @@ processHistoSection(FILE *fp,
 	break;
       }
 
-    //------------------------------
-    } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
-    //------------------------------
-      if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
-      }
-      if (h1) {
-	cerr << "histo already defined" << endl; continue;
-      }
-
-      // Tokenize again to get the histo ID and the desired property
-      string hprop = value;
-      Tokenize(hprop,v_tokens,":");
-      if ((v_tokens.size() != 2) ||
-	  (!v_tokens[0].size())  ||
-	  (!v_tokens[1].size())    ) {
-	cerr << "malformed hid:property specification " << hprop << endl; continue;
-      }
-
-      string tgthid = v_tokens[0];
-      string prop   = v_tokens[1];
-
-      map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(tgthid);
-      if (it == glmap_id2histo.end()) {
-	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
-	break;
-      }
-      TH1 *tgth1=it->second->histo();
-      wh = it->second->Clone(string(tgth1->GetName())+"_"+prop,
-			     string(tgth1->GetTitle())+" ("+prop+")");
-      h1 = wh->histo();
-      h1->Clear();
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
-      
-      if (!prop.compare("errors")) {
-	int nbins = h1->GetNbinsX()*h1->GetNbinsY()*h1->GetNbinsZ();
-	for (int ibin=1; ibin<=nbins; ibin++)
-	  h1->SetBinContent(ibin,tgth1->GetBinError(ibin));
-      }
-      else {
-	cerr << "Unrecognized property: " << prop << endl;
-	break;
-      }
-
-    } else if (!h1) {  // all other keys must have "path" defined
+    } else if (!wth1) {  // all other keys must have "path" defined
       cerr << "key 'path' or 'clone' must be defined before key " << key << endl;
       break;
     }
 
     else {
-      processCommonHistoParams(key,value,*wh);
+      processCommonHistoParams(key,value,*wth1);
     }
   }
-  return (h1 != NULL);
+  return (wth1 != NULL);
 }                                                 // processHistoSection
 
 //======================================================================
@@ -875,7 +859,7 @@ processGraphSection(FILE *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       break;
     }
@@ -941,7 +925,7 @@ processGraphSection(FILE *fp,
     gr->SetLineColor(lcolor);
     gr->SetLineStyle(lstyle);
     gr->SetLineWidth(lwidth);
-    glmap_id2graph.insert(std::pair<string,TGraph *>(*gid,gr));
+    glmap_id2graph.insert(pair<string,TGraph *>(*gid,gr));
   } else {
     cerr << "couldn't construct graph " << gid << endl;
   }
@@ -971,7 +955,7 @@ processHmathSection(FILE *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -1018,8 +1002,8 @@ processHmathSection(FILE *fp,
       double constant=0.0;
       TF1 *f1 = 0;
 
-      std::string& arg1=v_tokens[0];
-      std::string& arg2=v_tokens[1];
+      string& arg1=v_tokens[0];
+      string& arg2=v_tokens[1];
       if (arg1[0] == '@') {
 	arg1= extractAlias(arg1.substr(1));
 	if (!arg1.size()) continue;
@@ -1062,11 +1046,12 @@ processHmathSection(FILE *fp,
 
       h1 = hres;
       wh = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key == "binaryop") {  // binary operation +-*/
     //------------------------------
+
       if (!hid) {
 	cerr << "id key must be defined before path key" << endl; continue;
       }
@@ -1081,20 +1066,20 @@ processHmathSection(FILE *fp,
 	continue;
       }
 
-      TH1 *h1 = findHisto(v_tokens[0]); if (!h1) continue;
-      TH1 *h2 = findHisto(v_tokens[1]); if (!h2) continue;
-      TH1 *hres = (TH1 *)h1->Clone();
+      TH1 *tmph1 = findHisto(v_tokens[0]); if (!tmph1) continue;
+      TH1 *tmph2 = findHisto(v_tokens[1]); if (!tmph2) continue;
+      TH1 *hres = (TH1 *)tmph1->Clone();
       //hres->Reset();
 
-      if      (theline.find('-') != string::npos) hres->Add(h2,-1.0);
-      else if (theline.find('+') != string::npos) hres->Add(h2);
-      else if (theline.find('*') != string::npos) hres->Multiply(h2);
-      //else if (theline.find('/') != string::npos) hres->Divide(h1,h2,1.0,1.0,"C");
-      else if (theline.find('/') != string::npos) hres->Divide(h2);
+      if      (theline.find('-') != string::npos) hres->Add(tmph2,-1.0);
+      else if (theline.find('+') != string::npos) hres->Add(tmph2);
+      else if (theline.find('*') != string::npos) hres->Multiply(tmph2);
+      //else if (theline.find('/') != string::npos) hres->Divide(tmph1,tmph2,1.0,1.0,"C");
+      else if (theline.find('/') != string::npos) hres->Divide(tmph2);
 
       h1 = (TH1 *)hres;
       wh = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key.find("sum") != string::npos) {
@@ -1104,18 +1089,18 @@ processHmathSection(FILE *fp,
 	cerr << "expect comma-separated list of at least two histo specs to sum!" << theline << endl;
 	continue;
       }
-      TH1 *firstone = (TH1 *)getHistoFromSpec(v_tokens[0]);
+      TH1 *firstone = (TH1 *)findHisto(v_tokens[0]);
       if (!firstone) continue;
       h1 = (TH1 *)firstone->Clone();
       if (key == "weightsum")
 	h1->SetBit(TH1::kIsAverage);  // <========== Addends also have to have this set.
       for (uint32_t i=1; i<v_tokens.size(); i++) {
-	TH1 *addend = (TH1 *)getHistoFromSpec(v_tokens[i]);
+	TH1 *addend = (TH1 *)findHisto(v_tokens[i]);
 	if (!addend) continue;
 	h1->Add(addend,1.0);
       }
       wh = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key == "integright") {  // sweep from low-high x-bins and integrate to the right
@@ -1131,10 +1116,10 @@ processHmathSection(FILE *fp,
 	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
 	continue;
       }
-      TH1 *h1 = op->second->histo();
-      h1 = (TH1 *)IntegrateRight(h1,skipbinatx);
+      TH1 *tmph1 = op->second->histo();
+      h1 = (TH1 *)IntegrateRight(tmph1,skipbinatx);
       wh = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key == "integleft") {  // sweep from low-high x-bins and integrate to the left
@@ -1150,10 +1135,10 @@ processHmathSection(FILE *fp,
 	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
 	continue;
       }
-      TH1 *h1 = op->second->histo();
-      h1 = (TH1 *)IntegrateLeft(h1);
+      TH1 *tmph1 = op->second->histo();
+      h1 = (TH1 *)IntegrateLeft(tmph1);
       wh = new wTH1(h1);
-      glmap_id2histo.insert(std::pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     } else if (key == "skipbinatx")
       skipbinatx = str2flt(value);
@@ -1191,7 +1176,7 @@ processLegendSection(FILE *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       break;
     }
@@ -1236,7 +1221,7 @@ processLegendSection(FILE *fp,
     }
   }
 
-  glmap_id2legend.insert(std::pair<string,wLegend_t *>(*lid,wleg));
+  glmap_id2legend.insert(pair<string,wLegend_t *>(*lid,wleg));
   return true;
 }                                                // processLegendSection
 
@@ -1260,7 +1245,7 @@ processLabelSection(FILE   *fp,
     if (!theline.size()) continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -1299,7 +1284,7 @@ processLabelSection(FILE   *fp,
     }
   } // while loop
 
-  glmap_id2label.insert(std::pair<string,wLabel_t *>(*lid,wlab));
+  glmap_id2label.insert(pair<string,wLabel_t *>(*lid,wlab));
   return true;
 }                                                 // processLabelSection
 
@@ -1319,7 +1304,7 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
     if (!theline.size())   continue;
     if (theline[0] == '#') continue; // comments are welcome
 
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       new_section=true;
       return true;
     }
@@ -1334,12 +1319,12 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
     string key   = v_tokens[0];
     string value = v_tokens[1];
 
-    std::map<string,string>::const_iterator it;
+    map<string,string>::const_iterator it;
     it = glmap_aliii.find(key);
     if (it != glmap_aliii.end()) {
       cerr << "Error in ALIAS section: key " << key << " already defined." << endl;
     } else
-      glmap_aliii.insert(std::pair<string,string>(key,value));
+      glmap_aliii.insert(pair<string,string>(key,value));
 
   } // while loop
 
@@ -1366,7 +1351,7 @@ void parseCanvasLayout(const string& layoutFile,
   bool keepgoing = getLine(fp,theline,"layoutintro");
   while (keepgoing) {
     if (!theline.size()) continue;
-    if (theline.find('[') != string::npos) {
+    if (theline[0] == '[') {
       Tokenize(theline,v_tokens," []");
       section = v_tokens[0];
     }
@@ -1463,8 +1448,12 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
     altdrawopt.size() ? myHisto.Draw(altdrawopt) : myHisto.Draw();
   }
   else {
-    if (!myHisto.statsAreOn()) altdrawopt.size() ? myHisto.Draw(altdrawopt+ " same") : myHisto.DrawSame();
-    else                       altdrawopt.size() ? myHisto.Draw(altdrawopt+ " sames") : myHisto.DrawSames();
+    if (!myHisto.statsAreOn()) altdrawopt.size() ?
+				 myHisto.Draw(altdrawopt+ " same") :
+				 myHisto.DrawSame();
+    else                       altdrawopt.size() ?
+				 myHisto.Draw(altdrawopt+ " sames") :
+				 myHisto.DrawSames();
   }
 
 #if 0
@@ -1686,6 +1675,7 @@ void  drawPlots(wCanvas_t& wc)
       wl->leg->SetFillColor(wl->fillcolor);
       wl->leg->SetLineWidth(wl->linewidth);
       wl->leg->Draw("same");
+      wp->vp->Update();
     }
 
     /***************************************************
@@ -1702,13 +1692,14 @@ void  drawPlots(wCanvas_t& wc)
       wLabel_t *wl = it->second;
       drawStandardText(wl->text, wl->x1ndc, wl->y1ndc,-1,-1,wl->textsize);
 
-      //wp->vp->Update();
+      wp->vp->Update();
     }
     wc.c1->Update();
 
   } // pad loop
 
-  wc.c1->cd();
+  //prdFixOverlay();
+  //wc.c1->cd();
 }                                                           // drawPlots
 
 //======================================================================
@@ -1716,9 +1707,15 @@ void  drawPlots(wCanvas_t& wc)
 void superPlot(const string& canvasLayout="canvas.txt",
 	       bool dotdrStyle=false)
 {
+  glmap_histopaths2id.clear();
   glmap_aliii.clear();
   glmap_id2histo.clear();
+  glmap_id2graph.clear();
   glmap_id2legend.clear();
+  glmap_id2label.clear();
+
+  setPRDStyle();
+  //gROOT->ForceStyle();
 
   if (dotdrStyle) {
     setTDRStyle();
