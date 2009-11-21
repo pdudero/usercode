@@ -19,8 +19,8 @@ public:
   inline T *histo() const {return h_;}
 
   void   Draw(void)                       { Draw(drawoption_); }
-  void   DrawSame(void)                   { Draw(drawoption_+"same"); }
-  void   DrawSames(void)                  { Draw(drawoption_+"sames"); }
+  void   DrawSame(void)                   { Draw(drawoption_+" same"); }
+  void   DrawSames(void)                  { Draw(drawoption_+" sames"); }
   void   Draw(const std::string& drawopt);
 
   // Only non-default values get set.
@@ -35,6 +35,16 @@ public:
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
   TAxis *SetYaxis(const std::string& title,
+		  bool center = false,
+		  float titlesize=0.0,
+		  float titleoffs=0.0,
+		  int   titlefont=0,
+		  float labelsize=0.0,
+		  int   labelfont=0,
+		  float rangeuserMin=1e99,
+		  float rangeuserMax=-1e99,
+		  int   ndiv=510);
+  TAxis *SetZaxis(const std::string& title,
 		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
@@ -63,15 +73,17 @@ public:
 
   void Add2Legend(TLegend *leg) {
     std::string legdrawopt=drawoption_;
-    if (legdrawopt.size())
+    if (legdrawopt.size()) {
       if (legdrawopt.find("L") != string::npos)
 	if (legdrawopt.find("E") != string::npos) legdrawopt = "LE";
 	else                                      legdrawopt = "L";
       else if (legdrawopt.find("P") != string::npos) legdrawopt = "P";
       else if (legdrawopt.find("F") != string::npos) legdrawopt = "F";
-      else
-	legdrawopt = "L";
-    
+    }
+    else
+      legdrawopt = "L";
+
+    cout << "legdrawopt="<<legdrawopt<<endl;
     leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
   }
 
@@ -131,7 +143,9 @@ MyHistoWrapper<T> *
 MyHistoWrapper<T>::Clone(const std::string& newname,
 			 const std::string& newtitle)
 {
-  return new MyHistoWrapper<T>((T *)h_->Clone(newname.c_str()));
+  T *newh = (T *)h_->Clone(newname.c_str());
+  newh->SetTitle(newtitle.c_str());
+  return new MyHistoWrapper<T>(newh);
 }
 
 template<typename T>
@@ -150,6 +164,15 @@ MyHistoWrapper<T>::SetYaxis(const std::string& t,bool c,
 			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
   return (SetAxis(h_->GetYaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
+}
+
+template<typename T>
+TAxis *
+MyHistoWrapper<T>::SetZaxis(const std::string& t,bool c,
+			    float ts, float to, int tf,
+			    float ls, int lf,
+			    float ruMin, float ruMax,int nd) {
+  return (SetAxis(h_->GetZaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
 
 template<typename T>
@@ -220,7 +243,7 @@ template<typename T>
 void
 MyHistoWrapper<T>::DrawStats(void)
 {
-  TPaveStats *st1 = (TPaveStats*)h_->FindObject("stats");
+  TPaveStats *st1 = (TPaveStats*)h_->GetListOfFunctions()->FindObject("stats");
   if (!st1) {
     std::cout << "Error, couldn't find stats object for ";
     std::cout << h_->GetName() << std::endl;
