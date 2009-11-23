@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.3 2009/11/13 15:55:35 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.4 2009/11/20 19:12:48 dudero Exp $
 //
 //
 
@@ -256,7 +256,7 @@ SplashDelayTunerAlgos::getHistos4cut(const std::string& cutstr)
 {
   std::map<std::string,myAnalCut *>::const_iterator it = m_cuts_.find(cutstr);
   if (it == m_cuts_.end())
-    throw cms::Exception("Cut not found, you numnutz! You changed the name: ") << cutstr;
+    throw cms::Exception("Cut not found, you numnutz! You changed the name: ") << cutstr << endl;
 
   return it->second->histos();
 }
@@ -335,7 +335,7 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
   st_totalEperEv_ = "h1d_totalEperEvIn" + mysubdetstr_;
   add1dHisto( st_totalEperEv_,
   "#Sigma RecHit Energy Per Event in " + mysubdetstr_ + "; Event Number; Total Energy (GeV)",
-	      501,-0.5,500.5,
+	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1d);
 
   /*****************************************
@@ -912,20 +912,39 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   } // if last cut
 }                               // SplashDelayTunerAlgos::fillHistos4cut
 
-//======================================================================
+//==================================================================
 
-template<class RecHit>
-void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>& rechits)
+template<class Digi>
+void
+SplashDelayTunerAlgos::fillDigiPulse(TH1F *pulseHist,
+				     const Digi& frame)
 {
+  for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
+    int rawadc = frame[isample].adc();
+    pulseHist->Fill(isample,rawadc);
+
+  } // loop over samples in digi
+}
+
+//==================================================================
+
+template<class Digi,class RecHit>
+void SplashDelayTunerAlgos::processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
+						    const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle)
+{
+  const edm::SortedCollection<RecHit>& rechits = *rechithandle;
+
   myAnalHistos *myAH = getHistos4cut("cut0none");
   myAH->fill1d<TH1F>(st_rhColSize_,rechits.size());
 
-  totalE_ = 0.0;
-  for (unsigned irh = 0;
-       irh < rechits.size();
-       ++irh) {
+  if (digihandle.isValid())
+    myAH->fill1d<TH1F>(st_digiColSize_,digihandle->size());
 
-    const RecHit& rh = rechits[irh];
+  totalE_ = 0.0;
+  unsigned idig=0;
+  for (unsigned irh=0; irh < rechits.size(); ++irh, idig++) {
+
+    const RecHit& rh  = rechits[irh];
 
     if (rh.id().subdet() != mysubdet_)
       continue; // HB and HE handled by separate instances of this class!
@@ -950,15 +969,39 @@ void SplashDelayTunerAlgos::processRecHits (const edm::SortedCollection<RecHit>&
     }
 
     fillHistos4cut("cut0none");
+    if (digihandle.isValid() && (idig < digihandle->size())) {
+      const Digi& frame = (*digihandle)[idig];
+      if (frame.id() != rh.id()) {
+	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
+      }
+      fillDigiPulse(getHistos4cut("cut0none")->get<TH1F>(st_avgPulse_),frame);
+    }
+
     if (rh.energy() > minHitGeV_) {
       fillHistos4cut("cut1minHitGeV");
+      if (digihandle.isValid() && (idig < digihandle->size())) {
+	const Digi& frame = (*digihandle)[idig];
+	fillDigiPulse(getHistos4cut("cut1minHitGeV")->get<TH1F>(st_avgPulse_),frame);
+      }
       if (inSet<int>(acceptedBxNums_,bxnum_)) {
 	fillHistos4cut("cut2bxnum");
+	if (digihandle.isValid() && (idig < digihandle->size())) {
+	  const Digi& frame = (*digihandle)[idig];
+	  fillDigiPulse(getHistos4cut("cut2bxnum")->get<TH1F>(st_avgPulse_),frame);
+	}
 	if (!(hitflags_ & globalFlagMask_)) {
 	  fillHistos4cut("cut3badFlags");
-	  //	if (notInSet<int>(badEventSet_,evtnum_)) {
-	  if (evtnum_<1061000) {
+	  if (digihandle.isValid() && (idig < digihandle->size())) {
+	    const Digi& frame = (*digihandle)[idig];
+	    fillDigiPulse(getHistos4cut("cut3badFlags")->get<TH1F>(st_avgPulse_),frame);
+	  }
+	  if (notInSet<int>(badEventSet_,evtnum_)) {
+//	  if (evtnum_<1061000) {                      // for run 120042
 	    fillHistos4cut("cut4badEvents");
+	    if (digihandle.isValid() && (idig < digihandle->size())) {
+	      const Digi& frame = (*digihandle)[idig];
+	      fillDigiPulse(getHistos4cut("cut4badEvents")->get<TH1F>(st_avgPulse_),frame);
+	    }
 #if 0
 	    if (abs(detID_.ieta()) != 16) {
 	      fillHistos4cut("cut5tower16");
@@ -1005,9 +1048,9 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
 
   switch (mysubdet_) {
   case HcalBarrel:
-  case HcalEndcap:  processRecHits<HBHERecHit>(*(ed.hbherechits())); break;
-  case HcalOuter:   processRecHits<HORecHit>  (*(ed.horechits()));   break;
-  case HcalForward: processRecHits<HFRecHit>  (*(ed.hfrechits()));   break;
+  case HcalEndcap:  processDigisAndRecHits<HBHEDataFrame,HBHERecHit>(ed.hbhedigis(),ed.hbherechits()); break;
+  case HcalOuter:   processDigisAndRecHits<HODataFrame,HORecHit>    (ed.hodigis(),  ed.horechits());   break;
+  case HcalForward: processDigisAndRecHits<HFDataFrame,HFRecHit>    (ed.hfdigis(),  ed.hfrechits());   break;
   default: break;
   }
 }

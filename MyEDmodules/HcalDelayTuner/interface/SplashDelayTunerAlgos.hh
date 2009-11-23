@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.3 2009/11/13 15:56:07 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.4 2009/11/20 19:25:21 dudero Exp $
 //
 //
 
@@ -83,9 +83,17 @@ private:
   void         fillHistos4cut(const std::string& cutstr);
 
   void   compileCorrections(const std::vector<edm::ParameterSet>& corList);
-
-  template<class RecHit>
-  void    processRecHits (const edm::SortedCollection<RecHit>& rechits);
+#if 0
+  template<class Digi,class RecHit>
+  void    processDigisAndRecHits (const edm::SortedCollection<Digi>&   digis,
+				  const edm::SortedCollection<RecHit>& rechits);
+#endif
+  template<class Digi,class RecHit>
+  void    processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
+				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
+  template<class Digi>
+  void    fillDigiPulse          (TH1F *pulseHist,
+				  const Digi& frame);
 
   void add1dHisto        (const std::string& name, const std::string& title,
 			  int nbinsx, double minx, double maxx,
