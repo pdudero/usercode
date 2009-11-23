@@ -12,8 +12,9 @@ echo "      Please choose"
        echo '   '
        echo '   '
 
-echo "  1 - Run 120015 - Nov.7, 2009 (from -Z)"
-echo "  2 - Run 120042 - Nov.9, 2009 (from -Z)"
+echo "  1 - Run 120015 - Nov.  7, 2009 (from -Z)"
+echo "  2 - Run 120042 - Nov.  9, 2009 (from -Z)"
+echo "  3 - Run 121943 - Nov. 20, 2009 (from +Z)"
        echo '   '
 
 read VAR1
@@ -47,6 +48,20 @@ case $VAR1 in
 #      export BAD_EVENT_LIST=8,51,270
        export TIMEWINDOWMIN=-10
        export TIMEWINDOWMAX=5
+       export MAXEVENTNUM=1600000
+       ;;
+  "3") export RUN=121943
+       export FILES="'file:/afs/cern.ch/user/d/dudero/scratch0/data/Splash09skims/run121943-rhskim.root'"
+       export RUNDESCR="'Run 121943 Splash from +Z (post-correction)'"
+       export GLOBALTOFFSET=34.84
+       export SPLASHZSIDEPLUS=True
+#      export BXNUMS=339
+       export BXNUMS=341
+       export GLOBAL_FLAG_MASK=0xC0003
+#      export BAD_EVENT_LIST=8,51,270
+       export TIMEWINDOWMIN=-10
+       export TIMEWINDOWMAX=5
+       export MAXEVENTNUM=200
        ;;
 esac
 
@@ -54,7 +69,6 @@ echo "Processing $RUN..."
 
 EVENTS=-1
 #EVENTS=10
-WRITEBRICKS=False
 
 #if [ $# -eq 2 ]
 #then
@@ -104,22 +118,22 @@ process.TFileService = cms.Service("TFileService",
 
 #process.load("MyEDmodules.HcalDelayTuner.splash09timingCorrections2ndIteration_cfi")
 #process.load("MyEDmodules.HcalDelayTuner.splash09timingCorHOvalidation_cfi")
-process.load("MyEDmodules.HcalDelayTuner.splash09timingCorHBHEHOvalidation_cfi")
-
+#process.load("MyEDmodules.HcalDelayTuner.splash09timingCorHBHEHOvalidation_cfi")
+process.load("MyEDmodules.HcalDelayTuner.splashtiminganal_cfi")
 process.hbtimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
 process.hbtimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
 process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hbtimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hbtimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hbtimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.hbtimeanal.maxEventNum2plot     = cms.int32(1600000)
+process.hbtimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 #
 process.hetimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
 process.hetimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
 process.hetimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hetimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hetimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
-process.hetimeanal.maxEventNum2plot     = cms.int32(1600000)
+process.hetimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hetimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 
 process.hotimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
@@ -128,7 +142,7 @@ process.hotimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hotimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hotimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 #process.hotimeanal.detIds2mask          = cms.vint32(-6,20,4,-6,10,4)
-process.hotimeanal.maxEventNum2plot     = cms.int32(1600000)
+process.hotimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hotimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 
 process.p = cms.Path(
