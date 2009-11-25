@@ -25,7 +25,7 @@ hbtimeanal = cms.EDAnalyzer('SplashTimingAnalyzer',
     recHitTscaleMinNs  = cms.double(-100.5),
     recHitTscaleMaxNs  = cms.double(100.5),
     maxEventNum2plot   = cms.int32(1),
-
+    unravelHBatIeta    = cms.int32(17), # as in, _don't_ by default
     CorrectionsList    = cms.VPSet(),
 
     bottomfeeder = cms.untracked.int32(0xbadf00d)
