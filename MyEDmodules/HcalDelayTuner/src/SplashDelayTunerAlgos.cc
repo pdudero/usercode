@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.4 2009/11/20 19:12:48 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.5 2009/11/23 00:27:13 dudero Exp $
 //
 //
 
@@ -23,6 +23,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <stdlib.h> // itoa
 #include <math.h> // floor
 
 // user include files
@@ -86,6 +87,10 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   recHitEscaleMaxGeV_ = iConfig.getParameter<double>("recHitEscaleMaxGeV");
   maxEventNum2plot_   = iConfig.getParameter<int>("maxEventNum2plot");
 
+  // HB towers with ieta >= this parameter are excluded from the HB average
+  // over ieta and have their phi profiles plotted separately
+  //
+  unravelHBatIeta_    = abs(iConfig.getParameter<int>("unravelHBatIeta"));
 
   std::vector<int> badEventVec =
     iConfig.getParameter<vector<int> >("badEventList");
@@ -209,8 +214,7 @@ SplashDelayTunerAlgos::compileCorrections
       corList_.push_back(tcor);
     }
   }
-}
-
+}                           // SplashDelayTunerAlgos::compileCorrections
 
 //======================================================================
 
@@ -227,7 +231,7 @@ SplashDelayTunerAlgos::add1dHisto(const std::string& name, const std::string& ti
   hpars1d.maxx   = maxx;
   hpars1d.nbinsy = 0;
   v_hpars1d.push_back(hpars1d);
-}
+}                                   // SplashDelayTunerAlgos::add1dHisto
 
 //======================================================================
 
@@ -247,7 +251,7 @@ SplashDelayTunerAlgos::add2dHisto(const std::string& name, const std::string& ti
   hpars2d.miny   = miny;
   hpars2d.maxy   = maxy;
   v_hpars2d.push_back(hpars2d);
-}
+}                                   // SplashDelayTunerAlgos::add2dHisto
 
 //======================================================================
 
@@ -259,7 +263,7 @@ SplashDelayTunerAlgos::getHistos4cut(const std::string& cutstr)
     throw cms::Exception("Cut not found, you numnutz! You changed the name: ") << cutstr << endl;
 
   return it->second->histos();
-}
+}                                // SplashDelayTunerAlgos::getHistos4cut
 
 //======================================================================
 
@@ -269,11 +273,10 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
   // Initialize the cuts for the run and add them to the global map
   m_cuts_.clear();
 
+  string runnumstr = int2str(runnum_);
+
   for (unsigned i=0; i<v_cuts_.size(); i++)
     m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],mysubdetstr_);
-
-  cout << "Booking histos for subdet = " << mysubdetstr_ << std::endl;
-//edm::LogInfo(
 
   std::vector<myAnalHistos::HistoParams_t> v_hpars1d; 
   std::vector<myAnalHistos::HistoParams_t> v_hpars1dprof;
@@ -284,57 +287,59 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
    * 1-D HISTOGRAMS FIRST:                 *
    *****************************************/
 
+#if 0
   st_avgPulse_   = "h1d_pulse" + mysubdetstr_;
   add1dHisto(st_avgPulse_,"Average Pulse Shape, " + mysubdetstr_,10,-0.5,9.5,v_hpars1d);
 
   //==================== Collection sizes ====================
 
   st_digiColSize_ = "DigiCollectionSize" + mysubdetstr_;
-  add1dHisto( st_digiColSize_, "Digi Collection Size, " + mysubdetstr_, 
+  add1dHisto( st_digiColSize_, "Digi Collection Size, "+mysubdetstr_+", Run "+runnumstr;
 	      5201,-0.5, 5200.5, v_hpars1d); // 72chan/RBX*72RBX = 5184, more than HF or HO
+#endif
 
   st_rhColSize_ = "RechitCollectionSize" + mysubdetstr_;
-  add1dHisto( st_rhColSize_, "Rechit Collection Size, " + mysubdetstr_,
+  add1dHisto( st_rhColSize_, "Rechit Collection Size, "+mysubdetstr_+", Run "+runnumstr,
 	      5201,-0.5, 5200.5,v_hpars1d);  // 72chan/RBX*72RBX = 5184, more than HF or HO
 
   //==================== Total time/energy/flags distros ====================
 	     
   st_rhUncorTimes_ = "h1d_rhUncorTimes" + mysubdetstr_;
   add1dHisto( st_rhUncorTimes_,
-	      "RecHit Times (uncorrected), " + mysubdetstr_ + "; Rechit Time (ns)",
+	      "RecHit Times (uncorrected), "+mysubdetstr_+", Run "+runnumstr+"; Rechit Time (ns)",
 	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
   st_rhCorTimes_ = "h1d_rhCorTimes" + mysubdetstr_;
   add1dHisto( st_rhCorTimes_,
-	      "RecHit Times (corrected), " + mysubdetstr_ + "; Rechit Time (ns)",
+	      "RecHit Times, "+mysubdetstr_+", Run "+runnumstr+"; Rechit Time (ns)",
 	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
   st_rhCorTimesD1_ = "h1d_rhCorTimesD1" + mysubdetstr_;
   add1dHisto( st_rhCorTimesD1_,
-	      "Depth 1 RecHit Times (corrected), " + mysubdetstr_ + "; Rechit Time (ns)",
+	      "Depth 1 RecHit Times, "+mysubdetstr_+", Run "+runnumstr+"; Rechit Time (ns)",
 	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
   st_rhEnergies_ = "h1d_RHEnergies" + mysubdetstr_;
   add1dHisto( st_rhEnergies_,
-	      "RecHit Energies, " + mysubdetstr_ + "; Rechit Energy (GeV)",
+	      "RecHit Energies, "+mysubdetstr_+", Run "+runnumstr+"; Rechit Energy (GeV)",
 	      (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
 	      recHitEscaleMinGeV_,recHitEscaleMaxGeV_,v_hpars1d);
 
   st_rhFlagBits_ = "h1d_rhFlagBits" + mysubdetstr_;
   add1dHisto( st_rhFlagBits_,
-	      "RecHit Quality Flag Bits, " + mysubdetstr_ + "; Flag Name",
+	      "RecHit Quality Flag Bits, "+mysubdetstr_+", Run "+runnumstr+"; Flag Name",
 	      20,0.5,20.5,v_hpars1d);  // see below (post-booking) for bin labeling
   
   st_rhHBHEtimingShapedCuts_ = "h1d_HBHEtimingShapedCuts" + mysubdetstr_;
   add1dHisto( st_rhHBHEtimingShapedCuts_,
-	      "RecHit Timing Shaped Cuts Bits, " + mysubdetstr_ + "; Quality (0-7)",
+	      "RecHit Timing Shaped Cuts Bits, "+mysubdetstr_+", Run "+runnumstr+"; Quality (0-7)",
 	      10,-0.5,9.5,v_hpars1d);
 
   //==================== ...by Event ====================
 
   st_totalEperEv_ = "h1d_totalEperEvIn" + mysubdetstr_;
   add1dHisto( st_totalEperEv_,
-  "#Sigma RecHit Energy Per Event in " + mysubdetstr_ + "; Event Number; Total Energy (GeV)",
+  "#Sigma RecHit Energy Per Event in "+mysubdetstr_+", Run "+runnumstr+"; Event Number; Total Energy (GeV)",
 	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1d);
 
@@ -344,7 +349,7 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_avgTperEvD1_ = "h1d_avgTperEvIn" + mysubdetstr_;
   add1dHisto( st_avgTperEvD1_,
-	      "Depth 1 Averaged Time Per Event in " + mysubdetstr_ + "; Event Number; Average Time (ns)",
+	      "Depth 1 Averaged Time Per Event in "+mysubdetstr_+", Run "+runnumstr+"; Event Number; Average Time (ns)",
 	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1dprof);
 
@@ -354,7 +359,7 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_rhEmap_        = "h2d_rhEperIetaIphi" + mysubdetstr_;
   add2dHisto(st_rhEmap_,
-	     "RecHit Energy Map (#Sigma depths), " + mysubdetstr_ + "; i#eta; i#phi",
+	     "RecHit Energy Map (#Sigma depths), "+mysubdetstr_+", Run "+runnumstr+"; i#eta; i#phi",
 	     61, -30.5,  30.5, 72,   0.5,  72.5, v_hpars2d);
 
   st_uncorTimingVsE_ = "h2d_uncorTimingVsE" + mysubdetstr_;
@@ -367,7 +372,7 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_corTimingVsE_ = "h2d_corTimingVsE" + mysubdetstr_;
   add2dHisto(st_corTimingVsE_,
-"RecHit Timing (corrected) vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
+"RecHit Timing vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
 	     (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
 	     recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
@@ -376,6 +381,11 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
   /*****************************************
    * BOOK 'EM, DANNO...                    *
    *****************************************/
+
+  uint32_t total = v_hpars1d.size()+v_hpars1dprof.size()+v_hpars2d.size();
+
+  cout<<mysubdetstr_<<": Booking "<<total<<" histos for each of "<<v_cuts_.size()<<" cuts..."<<std::endl;
+//edm::LogInfo(
 
   std::map<string, myAnalCut *>::const_iterator it;
   for (it = m_cuts_.begin(); it != m_cuts_.end(); it++) {
@@ -411,6 +421,8 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
       xax->SetBinLabel(20,"Saturation");
     }
   }
+  cout<<"Done."<<std::endl;
+
 }                           // SplashDelayTunerAlgos::bookHistos4allCuts
 
 //======================================================================
@@ -418,70 +430,104 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
 void
 SplashDelayTunerAlgos::bookHistos4lastCut(void)
 {
-  char name[40];
-  char title[128];
+  char name[40];   std::string namestr;
+  char title[128]; std::string titlestr;
 
   //std::vector<myAnalHistos::HistoParams_t> v_hpars1d;  // in all cuts
   //std::vector<myAnalHistos::HistoParams_t> v_hpars2d;  // in all cuts
   std::vector<myAnalHistos::HistoParams_t> v_hpars1dprof;
   std::vector<myAnalHistos::HistoParams_t> v_hpars2dprof;
 
+  string runnumstr = int2str(runnum_);
+
   /*****************************************
    * 1-D PROFILES:                         *
    *****************************************/
+
+  st_avgTimePerRBX_ =  "p1d_avgTimePerRBX" + mysubdetstr_;
+  sprintf (title, "Avg. Time/RBX, %s, Run %d; iRBX; Time (ns)",
+	   mysubdetstr_.c_str(), runnum_);
+  titlestr = string(title);
+  add1dHisto( st_avgTimePerRBX_, titlestr, 37,-18.5, 18.5, v_hpars1dprof);
 
   //==================== ...by phi/eta/depth ====================
 
   if (mysubdet_ != HcalOuter) { 
     st_avgTimePerRMd1_ =  "p1d_avgTimePerRMd1" + mysubdetstr_;
-    add1dHisto( st_avgTimePerRMd1_,
-		"Averaged Time (Depth 1), " + mysubdetstr_ + "; iRM; Time (ns)",
-		145,-72.5, 72.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerRMd1_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
     st_avgTimePerRMd2_ =  "p1d_avgTimePerRMd2" + mysubdetstr_;
-    add1dHisto( st_avgTimePerRMd2_,
-		"Averaged Time (Depth 2), " + mysubdetstr_ + "; iRM; Time (ns)",
-		145,-72.5, 72.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerRMd2_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
     st_avgTimePerPhid1_ =  "p1d_avgTimePerPhid1" + mysubdetstr_;
-    add1dHisto( st_avgTimePerPhid1_,
-		"Averaged Time (Depth 1), " + mysubdetstr_ + "; i#phi; Time (ns)",
-		145,-72.5, 72.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerPhid1_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
     st_avgTimePerPhid2_ =  "p1d_avgTimePerPhid2" + mysubdetstr_;
-    add1dHisto( st_avgTimePerPhid2_,
-		"Averaged Time (Depth 2), " + mysubdetstr_ + "; i#phi; Time (ns)",
-		145,-72.5, 72.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerPhid2_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
     st_avgTuncPerIetad1_ =  "p1d_avgTuncPerIetad1" + mysubdetstr_;
-    add1dHisto( st_avgTuncPerIetad1_,
-		"Averaged Time (Depth 1), " + mysubdetstr_ + "; i#eta; Time (ns)",
-		61,-30.5, 30.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Uncorrected), %s Depth 1, Run %d; i#eta; Time (ns)",
+	     mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTuncPerIetad1_, titlestr,	61,-30.5, 30.5, v_hpars1dprof);
 
     st_avgTuncPerIetad2_ =  "p1d_avgTuncPerIetad2" + mysubdetstr_;
-    add1dHisto( st_avgTuncPerIetad2_,
-		"Averaged Time (Depth 2), " + mysubdetstr_ + "; i#eta; Time (ns)",
-		61,-30.5, 30.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time (Uncorrected), %s Depth 2, Run %d; i#eta; Time (ns)",
+	     mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTuncPerIetad2_, titlestr, 61,-30.5, 30.5, v_hpars1dprof);
 
     st_avgTcorPerIetad1_ =  "p1d_avgTcorPerIetad1" + mysubdetstr_;
-    add1dHisto( st_avgTcorPerIetad1_,
-		"Averaged Time (Depth 1), " + mysubdetstr_ + "; i#eta; Time (ns)",
-		61,-30.5, 30.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time, %s Depth 1, Run %d; i#eta; Time (ns)",
+	     mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTcorPerIetad1_, titlestr, 61,-30.5, 30.5, v_hpars1dprof);
 
     st_avgTcorPerIetad2_ =  "p1d_avgTcorPerIetad2" + mysubdetstr_;
-    add1dHisto( st_avgTcorPerIetad2_,
-		"Averaged Time (Depth 2), " + mysubdetstr_ + "; i#eta; Time (ns)",
-		61,-30.5, 30.5,v_hpars1dprof);
+    sprintf (title, "Avg. Time, %s Depth 2, Run %d; i#eta; Time (ns)",
+	     mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTcorPerIetad2_, titlestr, 61,-30.5, 30.5, v_hpars1dprof);
 
-    st_avgTimePerRBXd1_ =  "p1d_avgTimePerRBXd1" + mysubdetstr_;
-    add1dHisto( st_avgTimePerRBXd1_,
-		"Averaged Time (Depth 1), " + mysubdetstr_ + "; iRBX; Time (ns)",
-		37,-18.5, 18.5,v_hpars1dprof);
+    //
+    // Make profiles of timing vs RM and phi for individual ietas/depths
+    //
+    for (int absieta=unravelHBatIeta_; absieta<=16; absieta++) {
+      int maxdepth = (absieta<15) ? 1:2;
+      for (int depth=1; depth<=maxdepth; depth++) {
+	// vs. RM
+	sprintf(name,"p1d_rhTvsRM4ieta%02dd%dHB",absieta,depth);
+	sprintf(title,"RecHit Time/RM for |i#eta|=%d, depth=%d, Run %d; iRM; Time (ns)",
+		absieta,depth,runnum_);
+	titlestr = string(title);
+	namestr  = string(name);
+	int key=(absieta*10)+depth;
+	m_unravelHBperRM_.insert(std::pair<int,string>(key,namestr));
+	add1dHisto(namestr,titlestr,145,-72.5,72.5,v_hpars1dprof);
+      
+	// vs. phi
+	sprintf(name,"p1d_rhTvsPhi4ieta%02dd%dHB",absieta,depth);
+	sprintf(title,"RecHit Time/#iphi for |i#eta|=%d, depth=%d, Run %d; i#phi; Time (ns)",
+		absieta,depth,runnum_);
+	titlestr = string(title);
+	namestr  = string(name);
+	m_unravelHBperPhi_.insert(std::pair<int,string>(key,namestr));
+	add1dHisto(namestr,titlestr,145,-72.5,72.5,v_hpars1dprof);
 
-    st_avgTimePerRBXd2_ =  "p1d_avgTimePerRBXd2" + mysubdetstr_;
-    add1dHisto( st_avgTimePerRBXd2_,
-		"Averaged Time (Depth 2), " + mysubdetstr_ + "; iRBX; Time (ns)",
-		37,-18.5, 18.5,v_hpars1dprof);
+      } // loop over depth
+    } // loop over ieta
 
     if (mysubdet_ == HcalEndcap) {
       //
@@ -489,42 +535,37 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
       //
       st_avgTimePer2RMs_ =  "p1d_avgTimePer2RMs" + mysubdetstr_;
       add1dHisto( st_avgTimePer2RMs_,
-		  "Averaged Time over 2RMs, HE; iRM/2; Time (ns)",
+		  "Avg. Time over 2RMs, HE, Run "+runnumstr+"; iRM/2; Time (ns)",
 		  73,-36.5, 36.5,v_hpars1dprof);
 
       st_avgTimePerRMd3_ =  "p1d_avgTimePerRMd3HE";
       add1dHisto( st_avgTimePerRMd3_,
-		  "Averaged Time (Depth 3), HE; iRM; Time (ns)",
+		  "Avg. Time (Depth 3), HE, Run "+runnumstr+"; iRM; Time (ns)",
 		  145,-72.5, 72.5,v_hpars1dprof);
 
       st_avgTimePerPhid3_ =  "p1d_avgTimePerPhid3HE";
       add1dHisto( st_avgTimePerPhid3_,
-		  "Averaged Time (Depth 3), HE; i#phi; Time (ns)",
+		  "Avg. Time (Depth 3), HE, Run "+runnumstr+"; i#phi; Time (ns)",
 		  145,-72.5, 72.5,v_hpars1dprof);
 
       st_avgTuncPerIetad3_ =  "p1d_avgTuncPerIetad3HE";
       add1dHisto( st_avgTuncPerIetad3_,
-		  "Averaged Time (Depth 3), HE; i#eta; Time (ns)",
+		  "Avg. Time (Depth 3), HE, Run "+runnumstr+"; i#eta; Time (ns)",
 		  61,-30.5, 30.5,v_hpars1dprof);
 
       st_avgTcorPerIetad3_ =  "p1d_avgTcorPerIetad3HE";
       add1dHisto( st_avgTcorPerIetad3_,
-		  "Averaged Time (Depth 3), HE; i#eta; Time (ns)",
+		  "Avg. Time (Depth 3), HE, Run "+runnumstr+"; i#eta; Time (ns)",
 		  61,-30.5, 30.5,v_hpars1dprof);
-
-      st_avgTimePerRBXd3_ =  "p1d_avgTimePerRBXd3HE";
-      add1dHisto( st_avgTimePerRBXd3_,
-		  "Averaged Time (Depth 3), HE; iRBX; Time (ns)",
-		  37,-18.5, 18.5,v_hpars1dprof);
 
       //
       // Make profiles of timing vs RM for individual pixels
       //
       for (int ipix=1; ipix<=19; ipix++) {
 	sprintf(name,"p1d_rhTvsRM4pix%02dHE",ipix);
-	sprintf(title,"Corrected RecHit Time vs RM for pixel %d, HE",ipix);
+	sprintf(title,"RecHit Time/RM for pixel %d, HE, Run %d",ipix, runnum_);
 	v_st_rhTvsRMperPixHE_.push_back(string(name));
-	string titlestr = string(title);
+	titlestr = string(title);
 	add1dHisto(v_st_rhTvsRMperPixHE_[ipix-1],titlestr,145,-72.5,72.5,v_hpars1dprof);
       }
 
@@ -534,28 +575,28 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
       for (int ieta=18; ieta<=29; ieta++) {
 	
 	sprintf(name,"p1d_rhTvsRM4ieta%02dd2HEP",ieta);
-	sprintf(title,"Corrected RecHit Time vs RM for i#eta=%d, depth=2 HEP",ieta);
+	sprintf(title,"RecHit Time/RM for i#eta=%d, depth=2 HEP, Run %d",ieta, runnum_);
 	v_st_rhTvsRMperIetaD2HEP_.push_back(string(name));
-	string titlestr = string(title);
-	add1dHisto(v_st_rhTvsRMperIetaD2HEP_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+	titlestr = string(title);
+	add1dHisto(v_st_rhTvsRMperIetaD2HEP_[ieta-18],titlestr,72,0.5,72.5,v_hpars1dprof);
       
 	sprintf(name,"p1d_rhTvsRM4ieta%02dd2HEM",ieta);
-	sprintf(title,"Corrected RecHit Time vs RM for i#eta=-%d, depth=2 HEM",ieta);
+	sprintf(title,"RecHit Time/RM for i#eta=-%d, depth=2 HEM, Run %d",ieta, runnum_);
 	v_st_rhTvsRMperIetaD2HEM_.push_back(string(name));
 	titlestr = string(title);
-	add1dHisto(v_st_rhTvsRMperIetaD2HEM_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+	add1dHisto(v_st_rhTvsRMperIetaD2HEM_[ieta-18],titlestr,72,0.5,72.5,v_hpars1dprof);
       
 	sprintf(name,"p1d_rhTvsPhi4ieta%02dd2HEP",ieta);
-	sprintf(title,"Corrected RecHit Time vs i#phi for i#eta=%d, depth=2 HEP",ieta);
+	sprintf(title,"RecHit Time/i#phi for i#eta=%d, depth=2 HEP, Run %d",ieta, runnum_);
 	v_st_rhTvsPhiperIetaD2HEP_.push_back(string(name));
 	titlestr = string(title);
-	add1dHisto(v_st_rhTvsPhiperIetaD2HEP_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+	add1dHisto(v_st_rhTvsPhiperIetaD2HEP_[ieta-18],titlestr,72,0.5,72.5,v_hpars1dprof);
 	
 	sprintf(name,"p1d_rhTvsPhi4ieta%02dd2HEM",ieta);
-	sprintf(title,"Corrected RecHit Time vs i#phi for i#eta=-%d, depth=2 HEM",ieta);
+	sprintf(title,"RecHit Time/i#phi for i#eta=-%d, depth=2 HEM, Run %d",ieta, runnum_);
 	v_st_rhTvsPhiperIetaD2HEM_.push_back(string(name));
 	titlestr = string(title);
-	add1dHisto(v_st_rhTvsPhiperIetaD2HEM_[ieta-18],titlestr,73,-0.5,72.5,v_hpars1dprof);
+	add1dHisto(v_st_rhTvsPhiperIetaD2HEM_[ieta-18],titlestr,72,0.5,72.5,v_hpars1dprof);
 
       }           // loop over ieta
     }           // if endcap
@@ -564,50 +605,45 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
 
     st_avgTimePerRMd4_ = "p1d_avgTimePerRMd4HO";
     add1dHisto( st_avgTimePerRMd4_,
-		"Averaged Time vs iRM, HO; iRM; Time (ns)",
+		"Avg. Time/iRM, HO, Run "+runnumstr+"; iRM; Time (ns)",
 		145,-72.5, 72.5,v_hpars1dprof);
 
   //==================== ...by Ring ====================
 
     st_avgTimePerPhiRing0_ = "p1d_avgTimePerPhiHORing0";
     add1dHisto( st_avgTimePerPhiRing0_,
-		"Averaged Time vs i#phi (YB0), HO; i#phi; Time (ns)",
+		"Avg. Time/i#phi (YB0), HO, Run "+runnumstr+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,v_hpars1dprof);
 
     st_avgTimePerPhiRing1M_ = "p1d_avgTimePerPhiHORing1M";
     add1dHisto( st_avgTimePerPhiRing1M_,
-		"Averaged Time vs i#phi (YB-1), HO; i#phi; Time (ns)",
+		"Avg. Time/i#phi (YB-1), HO, Run "+runnumstr+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,v_hpars1dprof);
 
     st_avgTimePerPhiRing1P_ = "p1d_avgTimePerPhiHORing1P";
     add1dHisto( st_avgTimePerPhiRing1P_,
-		"Averaged Time vs i#phi (YB+1), HO; i#phi; Time (ns)",
+		"Avg. Time/i#phi (YB+1), HO, Run "+runnumstr+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,v_hpars1dprof);
 
     st_avgTimePerPhiRing2M_ = "p1d_avgTimePerPhiHORing2M";
     add1dHisto( st_avgTimePerPhiRing2M_,
-		"Averaged Time vs i#phi (YB-2), HO; i#phi; Time (ns)",
+		"Avg. Time/i#phi (YB-2), HO, Run "+runnumstr+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,v_hpars1dprof);
 
     st_avgTimePerPhiRing2P_ = "p1d_avgTimePerPhiHORing2P";
     add1dHisto( st_avgTimePerPhiRing2P_,
-		"Averaged Time vs i#phi (YB+2), HO; i#phi; Time (ns)",
+		"Avg. Time/i#phi (YB+2), HO, Run "+runnumstr+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,v_hpars1dprof);
 
     st_avgTuncPerIetad4_ = "p1d_avgTuncPerIetad4HO";
     add1dHisto( st_avgTuncPerIetad4_,
-		"Averaged Time vs i#eta (Uncorrected), HO; i#eta; Time (ns)",
+		"Avg. Time/i#eta (Uncorrected), HO, Run "+runnumstr+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,v_hpars1dprof);
 
     st_avgTcorPerIetad4_ = "p1d_avgTcorPerIetad4HO";
     add1dHisto( st_avgTcorPerIetad4_,
-		"Averaged Time vs i#eta (Corrected), HO; i#eta; Time (ns)",
+		"Avg. Time/i#eta, HO, Run "+runnumstr+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,v_hpars1dprof);
-
-    st_avgTimePerRBXd4_ =  "p1d_avgTimePerRBXd4HO",
-    add1dHisto( st_avgTimePerRBXd4_,
-		"Averaged Time by RBX (Depth 4), HO; iRBX; Time (ns)",
-		37,-18.5, 18.5,v_hpars1dprof);
   }
 
   /*****************************************
@@ -617,75 +653,75 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
   if (mysubdet_ != HcalOuter) { 
     st_rhTuncProfd1_  = "p2d_rhTuncPerIetaIphiD1" + mysubdetstr_;
     add2dHisto(st_rhTuncProfd1_,
- "Depth 1 RecHit Time Map-Profile (uncorrected), " + mysubdetstr_ + "; i#eta; i#phi",
+ "Depth 1 RecHit Time Map (uncorrected), "+mysubdetstr_+", Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72, 0.5, 72.5,
 	       v_hpars2dprof);
 
     st_rhTcorProfd1_  = "p2d_rhTcorPerIetaIphiD1" + mysubdetstr_;
     add2dHisto(st_rhTcorProfd1_,
- "Depth 1 RecHit Time Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; i#phi",
+ "Depth 1 RecHit Time Map, "+mysubdetstr_+", Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72, 0.5, 72.5,
 	       v_hpars2dprof);
 
     st_rhTuncProfd2_  = "p2d_rhTuncPerIetaIphiD2" + mysubdetstr_;
     add2dHisto(st_rhTuncProfd2_,
- "Depth 2 RecHit Time Map-Profile (uncorrected), " + mysubdetstr_ + "; i#eta; i#phi",
+ "Depth 2 RecHit Time Map (uncorrected), "+mysubdetstr_+", Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72,   0.5,  72.5,
 	       v_hpars2dprof);
 
     st_rhTcorProfd2_  = "p2d_rhTcorPerIetaIphiD2" + mysubdetstr_;
     add2dHisto(st_rhTcorProfd2_,
- "Depth 2 RecHit Time Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; i#phi",
+ "Depth 2 RecHit Time Map, "+mysubdetstr_+", Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72, 0.5, 72.5,
 	       v_hpars2dprof);
 
     st_rhTprofRBXd1_  = "p2d_rhTcorPerRBXD1" + mysubdetstr_;
     add2dHisto(st_rhTprofRBXd1_,
-"Depth 1 RecHit Time RBX Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; iRBX",
+"Depth 1 RecHit Time RBX Map, "+mysubdetstr_+", Run "+runnumstr+"; i#eta; iRBX",
 	       6, -3.0,  3.0, 18,   0.5,  18.5,
 	       v_hpars2dprof);
 
     st_rhTprofRBXd2_  = "p2d_rhTcorPerRBXD2" + mysubdetstr_;
     add2dHisto(st_rhTprofRBXd2_,
-"Depth 2 RecHit Time RBX Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; iRBX",
+"Depth 2 RecHit Time RBX Map, "+mysubdetstr_+", Run "+runnumstr+"; i#eta; iRBX",
 	       6, -3.0,  3.0, 18,   0.5,  18.5,
 	       v_hpars2dprof);
 
     if (mysubdet_ == HcalEndcap) {
       st_rhTuncProfd3_  = "p2d_rhTuncPerIetaIphiD3HE";
       add2dHisto(st_rhTuncProfd3_,
-	 "Depth 3 RecHit Time Map-Profile (uncorrected), HE; i#eta; i#phi",
+	 "Depth 3 RecHit Time Map (uncorrected), HE, Run "+runnumstr+"; i#eta; i#phi",
 		 61, -30.5,  30.5, 72,   0.5,  72.5,
 		 v_hpars2dprof);
 
       st_rhTcorProfd3_  = "p2d_rhTcorPerIetaIphiD3HE";
       add2dHisto(st_rhTcorProfd3_,
-	 "Depth 3 RecHit Time Map-Profile (corrected), HE; i#eta; i#phi",
+	 "Depth 3 RecHit Time Map, HE, Run "+runnumstr+"; i#eta; i#phi",
 		 61, -30.5,  30.5, 72,   0.5,  72.5,
 		 v_hpars2dprof);
 
       st_rhTprofRBXd3_  = "p2d_rhTcorPerRBXD3" + mysubdetstr_;
       add2dHisto(st_rhTprofRBXd3_,
-"Depth 3 RecHit Time RBX Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; iRBX",
+		 "Depth 3 RecHit Time RBX Map, HE, Run "+runnumstr+"; i#eta; iRBX",
 		 6, -3.0,  3.0, 18,   0.5,  18.5,
 		 v_hpars2dprof);
     }
   } else {
     st_rhTuncProfd4_  = "p2d_rhTuncPerIetaIphiD4HO";
     add2dHisto(st_rhTuncProfd4_,
-	       "Depth 4 RecHit Time Map-Profile (uncorrected), HO; i#eta; i#phi",
+	       "Depth 4 RecHit Time Map (uncorrected), HO, Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72,   0.5,  72.5,
 	       v_hpars2dprof);
 
     st_rhTcorProfd4_  = "p2d_rhTcorPerIetaIphiD4HO";
     add2dHisto(st_rhTcorProfd4_,
-	       "Depth 4 RecHit Time Map-Profile (corrected), HO; i#eta; i#phi",
+	       "Depth 4 RecHit Time Map, HO, Run "+runnumstr+"; i#eta; i#phi",
 	       61, -30.5,  30.5, 72,   0.5,  72.5,
 	       v_hpars2dprof);
 
     st_rhTprofRBXd4_  = "p2d_rhTperRBXD4" + mysubdetstr_;
     add2dHisto(st_rhTprofRBXd4_,
-"Depth 4 RecHit Time RBX Map-Profile (corrected), " + mysubdetstr_ + "; i#eta; iRBX",
+	       "Depth 4 RecHit Time RBX Map, HO, Run "+runnumstr+"; i#eta; iRBX",
 	       6, -3.0,  3.0, 18,   0.5,  18.5,
 	       v_hpars2dprof);
   }
@@ -693,6 +729,11 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
   /*****************************************
    * BOOK 'EM, DANNO...                    *
    *****************************************/
+
+  uint32_t total = v_hpars1dprof.size()+v_hpars2dprof.size();
+
+  cout << mysubdetstr_ << ": Booking " << total << " histos for the last cut" << std::endl;
+//edm::LogInfo(
 
   myAnalHistos *myAH = getHistos4cut(st_lastCut_);
   //myAH->book1d<TH1F>      (v_hpars1d);
@@ -732,6 +773,7 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
     xax->SetBinLabel(5,"HE+");
     xax->SetBinLabel(6,"HF+");
   }
+  cout<<"Done."<<std::endl;
 
   /*****************************************
    * To put in a separate directory
@@ -811,6 +853,8 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
     //cout << detId << "\t" << feID.rbx() << "\t" << feID.rbx().substr(3,2) << "\t";
     //cout << feID.rm() << " maps to RBX/RM# " << iRBX << "/" << iRM << endl;
 
+    myAH->fill1d<TProfile>(st_avgTimePerRBX_, zside*iRBX, corTime_);
+
     /* Per Depth Histos: */
     std::string rhTuncProf,rhTcorProf,rhTprofRBX;
     std::string avgRMt,avgPhiT,avgIetaTunc,avgIetaTcor,avgRBXt;
@@ -824,7 +868,6 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       avgPhiT    = st_avgTimePerPhid1_;
       avgIetaTunc= st_avgTuncPerIetad1_;
       avgIetaTcor= st_avgTcorPerIetad1_;
-      avgRBXt    = st_avgTimePerRBXd1_;
       break;
     case 2:
       rhTuncProf = st_rhTuncProfd2_;
@@ -834,7 +877,6 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       avgPhiT    = st_avgTimePerPhid2_;
       avgIetaTunc= st_avgTuncPerIetad2_;
       avgIetaTcor= st_avgTcorPerIetad2_;
-      avgRBXt    = st_avgTimePerRBXd2_;
       break;
     case 3:
       rhTuncProf = st_rhTuncProfd3_;
@@ -844,7 +886,6 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       avgPhiT    = st_avgTimePerPhid3_;
       avgIetaTunc= st_avgTuncPerIetad3_;
       avgIetaTcor= st_avgTcorPerIetad3_;
-      avgRBXt    = st_avgTimePerRBXd3_;
       break;
     case 4:
       rhTuncProf = st_rhTuncProfd4_;
@@ -854,7 +895,6 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       //avgPhiT    = st_avgTimePerPhid4_; // we do it by ring, see below 
       avgIetaTunc= st_avgTuncPerIetad4_;
       avgIetaTcor= st_avgTcorPerIetad4_;
-      avgRBXt    = st_avgTimePerRBXd4_;
       break;
     default:
       edm::LogWarning("Invalid depth in rechit collection! detId = ") << detID_ << std::endl;
@@ -869,35 +909,39 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
     default: break;
     }
 
-    myAH->fill1d<TProfile>   (avgRMt,     iRM,          corTime_);
     myAH->fill1d<TProfile>   (avgIetaTunc,ieta,         hittime_);
     myAH->fill1d<TProfile>   (avgIetaTcor,ieta,         corTime_);
-    myAH->fill1d<TProfile>   (avgRBXt,    zside*iRBX,   corTime_);
     myAH->fill2d<TProfile2D> (rhTuncProf, ieta, iphi,   hittime_);
     myAH->fill2d<TProfile2D> (rhTcorProf, ieta, iphi,   corTime_);
     myAH->fill2d<TProfile2D> (rhTprofRBX, fsubdet,iRBX, corTime_);
 
     // subdet-specific histos
-    if (mysubdet_ == HcalEndcap) {
+
+    if ((mysubdet_ == HcalBarrel) &&
+	(abs(ieta) >= unravelHBatIeta_) ) {
+      int key = (abs(ieta)*10) + depth;
+      myAH->fill1d<TProfile> (m_unravelHBperRM_[key], iRM, corTime_);
+      myAH->fill1d<TProfile> (m_unravelHBperPhi_[key], signed_iphi, corTime_);
+    } else if (mysubdet_ == HcalEndcap) {
       int iRMavg2 = ((iRM-sign(iRM))/2)+sign(iRM);
       myAH->fill1d<TProfile> (st_avgTimePer2RMs_, iRMavg2, corTime_);
       myAH->fill1d<TProfile> (v_st_rhTvsRMperPixHE_[ipix-1],iRM,corTime_);
-
       if (depth==2) {
 	const std::string& hRM =(ieta>0)?v_st_rhTvsRMperIetaD2HEP_[ieta-18]:v_st_rhTvsRMperIetaD2HEM_[-ieta-18];
 	const std::string& hPhi=(ieta>0)?v_st_rhTvsPhiperIetaD2HEP_[ieta-18]:v_st_rhTvsPhiperIetaD2HEM_[-ieta-18];
 	myAH->fill1d<TProfile>(hRM,iRM,corTime_);
 	myAH->fill1d<TProfile>(hPhi,iphi,corTime_);
       }
-    }
-    if (depth == 4) {
+    } else if (mysubdet_ == HcalOuter) {
       if      ((ieta>=-15)&&(ieta<=-11))myAH->fill1d<TProfile>(st_avgTimePerPhiRing2M_,iphi,corTime_);
       else if ((ieta>=-10)&&(ieta<= -5))myAH->fill1d<TProfile>(st_avgTimePerPhiRing1M_,iphi,corTime_);
       else if ((ieta>= -4)&&(ieta<=  4))myAH->fill1d<TProfile>(st_avgTimePerPhiRing0_, iphi,corTime_);
       else if ((ieta>=  5)&&(ieta<= 10))myAH->fill1d<TProfile>(st_avgTimePerPhiRing1P_,iphi,corTime_);
       else if ((ieta>= 11)&&(ieta<= 15))myAH->fill1d<TProfile>(st_avgTimePerPhiRing2P_,iphi,corTime_);
-    } else
+    } else {
+      myAH->fill1d<TProfile> (avgRMt,     iRM,      corTime_);
       myAH->fill1d<TProfile> (avgPhiT, signed_iphi, corTime_);
+    }
 
 #if 0
     // per-channel histograms
@@ -910,7 +954,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 #endif
 
   } // if last cut
-}                               // SplashDelayTunerAlgos::fillHistos4cut
+}                           // SplashDelayTunerAlgos::fillHistos4cut
 
 //==================================================================
 
@@ -929,8 +973,9 @@ SplashDelayTunerAlgos::fillDigiPulse(TH1F *pulseHist,
 //==================================================================
 
 template<class Digi,class RecHit>
-void SplashDelayTunerAlgos::processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
-						    const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle)
+void SplashDelayTunerAlgos::processDigisAndRecHits
+  (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
+   const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle)
 {
   const edm::SortedCollection<RecHit>& rechits = *rechithandle;
 
@@ -1024,10 +1069,11 @@ void SplashDelayTunerAlgos::processDigisAndRecHits (const edm::Handle<edm::Sorte
   } // loop over rechits
 
   // now that we have the total energy...
+  cout << evtnum_ << "\t" << totalE_ << endl;
 
   myAH->fill1d<TH1F>(st_totalEperEv_,evtnum_,totalE_);
 
-}                               // SplashDelayTunerAlgos::processRecHits
+}                       // SplashDelayTunerAlgos::processDigisAndRecHits
 
 //======================================================================
 
@@ -1036,9 +1082,9 @@ void
 SplashDelayTunerAlgos::process(const myEventData& ed)
 {
   if (firstEvent_) {
+    runnum_  = ed.runNumber();
     bookHistos4allCuts();
     bookHistos4lastCut();
-    runnum_ = ed.runNumber();
     firstEvent_ = false;
   }
 
@@ -1053,6 +1099,8 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
   case HcalForward: processDigisAndRecHits<HFDataFrame,HFRecHit>    (ed.hfdigis(),  ed.hfrechits());   break;
   default: break;
   }
+  neventsProcessed_++;
+
 }
 
 //======================================================================
@@ -1060,6 +1108,8 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
 void
 SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
 {
+  neventsProcessed_=0;
+
   edm::Service<TFileService> fs;
 
   tree_ = fs->make<TTree>("mytree","Splash Results Tree");
@@ -1122,10 +1172,13 @@ void
 SplashDelayTunerAlgos::writeCorrections(const TimesPerDetId& chtimes)
 {
   char name[40];
-  sprintf(name,"timeCorrs_run%d_%s.csv",runnum_,mysubdetstr_.c_str());
-  FILE *fp = fopen(name,"w");
+  FILE *fp=0;
+  if (chtimes.size() > 0) {
+    sprintf(name,"timeCorrs_run%d_%s.csv",runnum_,mysubdetstr_.c_str());
+    fp = fopen(name,"w");
+    fprintf(fp,"SD\tieta\tiphi\tdpth\tRBX\tRM\tcard\tadc\tAvgT(ns)\n");
+  }
 
-  fprintf(fp,"SD\tieta\tiphi\tdpth\tRBX\tRM\tcard\tadc\tAvgT(ns)\n");
   TimesPerDetId::const_iterator it;
   for (it=chtimes.begin(); it!=chtimes.end(); it++) {
     HcalDetId     detID = it->first;
@@ -1156,24 +1209,24 @@ SplashDelayTunerAlgos::projectResults(const TimesPerDetId& chtimes, int itnum)
   if (mysubdet_ != HcalOuter) {
     v_old[0] = lastAH->get<TProfile2D>(st_rhTcorProfd1_);
     v_new[0] = itdir->make<TProfile2D>(string("h2d_rhTprojPerIetaIphiD1"+mysubdetstr_).c_str(),
-      string("Depth 1 RecHit Time Map-Profile (projected), "+mysubdetstr_+";i#eta;i#phi").c_str(),
+      string("Depth 1 RecHit Time Map (projected), "+mysubdetstr_+";i#eta;i#phi").c_str(),
 				   61, -30.5,  30.5, 72, 0.5, 72.5);
 
     v_old[1] = lastAH->get<TProfile2D>(st_rhTcorProfd2_);
     v_new[1] = itdir->make<TProfile2D>(string("h2d_rhTprojPerIetaIphiD2"+mysubdetstr_).c_str(),
-      string("Depth 2 RecHit Time Map-Profile (projected), "+mysubdetstr_+";i#eta;i#phi").c_str(),
+      string("Depth 2 RecHit Time Map (projected), "+mysubdetstr_+";i#eta;i#phi").c_str(),
 				   61, -30.5,  30.5, 72, 0.5, 72.5);
 
     if (mysubdet_ == HcalEndcap) {
       v_old[2] = lastAH->get<TProfile2D>(st_rhTcorProfd3_);
       v_new[2] = itdir->make<TProfile2D>(string("h2d_rhTprojPerIetaIphiD3"+mysubdetstr_).c_str(),
-      string("Depth 3 RecHit Time Map-Profile (projected), " + mysubdetstr_ + "; i#eta; i#phi").c_str(),
+      string("Depth 3 RecHit Time Map (projected), " + mysubdetstr_ + "; i#eta; i#phi").c_str(),
 				     61, -30.5,  30.5, 72, 0.5, 72.5);
     }
   } else {
     v_old[3] = lastAH->get<TProfile2D>(st_rhTcorProfd4_);
     v_new[3] = itdir->make<TProfile2D>("h2d_rhTprojPerIetaIphiD4HO",
-      string("Depth 4 RecHit Time Map-Profile (projected), " + mysubdetstr_ + "; i#eta; i#phi").c_str(),
+      string("Depth 4 RecHit Time Map (projected), " + mysubdetstr_ + "; i#eta; i#phi").c_str(),
 				   61, -30.5,  30.5, 72, 0.5, 72.5);
   }
 
@@ -1216,6 +1269,9 @@ SplashDelayTunerAlgos::projectResults(const TimesPerDetId& chtimes, int itnum)
 void
 SplashDelayTunerAlgos::endAnal()
 {
+  cout << neventsProcessed_ << " events processed for subdet " << mysubdetstr_ << endl;
+  if (!neventsProcessed_) return;
+
   if (mysubdet_ == HcalBarrel) {
     TProfile *tp=getHistos4cut(st_lastCut_)->get<TProfile>(st_avgTcorPerIetad1_);
     float TetaMinus1 = tp->GetBinContent(tp->GetXaxis()->FindBin(-1));

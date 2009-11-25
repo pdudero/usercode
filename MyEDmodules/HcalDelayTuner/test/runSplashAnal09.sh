@@ -15,6 +15,8 @@ echo "      Please choose"
 echo "  1 - Run 120015 - Nov.  7, 2009 (from -Z)"
 echo "  2 - Run 120042 - Nov.  9, 2009 (from -Z)"
 echo "  3 - Run 121943 - Nov. 20, 2009 (from +Z)"
+echo "  4 - Run 121964 - Nov. 20, 2009 (from -Z)"
+echo "  5 - Run 121993 - Nov. 21, 2009 (from -Z)"
        echo '   '
 
 read VAR1
@@ -35,7 +37,7 @@ case $VAR1 in
   "2") export RUN=120042
 #      export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run120042-rhskim-nodigis.root'"
        export FILES="'/store/data/BeamCommissioning09/BeamHalo/RECO/v1/000/120/042/3EE31BC1-FECC-DE11-9FC2-001617C3B79A.root'"
-       export RUNDESCR="'Run 120042 Splash from -Z (post-correction)'"
+       export RUNDESCR="'Run 120042 Splash from -Z'"
 # raw:
 #       export GLOBALTOFFSET=0.0
 # b4 corrections, zero=barrel center:
@@ -51,8 +53,9 @@ case $VAR1 in
        export MAXEVENTNUM=1600000
        ;;
   "3") export RUN=121943
-       export FILES="'file:/afs/cern.ch/user/d/dudero/scratch0/data/Splash09skims/run121943-rhskim.root'"
-       export RUNDESCR="'Run 121943 Splash from +Z (post-correction)'"
+#      export FILES="'file:/afs/cern.ch/user/d/dudero/scratch0/data/Splash09skims/run121943-rhskim.root'"
+       export FILES="'/store/data/BeamCommissioning09/PhysicsMuonBkg/RECO/v2/000/121/943/80633910-12D6-DE11-8D71-001D09F2932B.root'"
+       export RUNDESCR="'Run 121943 Splash from +Z'"
        export GLOBALTOFFSET=34.84
        export SPLASHZSIDEPLUS=True
 #      export BXNUMS=339
@@ -63,12 +66,36 @@ case $VAR1 in
        export TIMEWINDOWMAX=5
        export MAXEVENTNUM=200
        ;;
+  "4") export RUN=121964
+#       export FILES="'/store/data/BeamCommissioning09/PhysicsMuonBkg/RECO/v2/000/121/964/96F2B74C-43D6-DE11-8340-0030487A18A4.root'"
+       export FILES="'file:../../HcalRecHitFilter/test/run121964-rhskim.root'"
+       export RUNDESCR="'Run 121964 Splash from -Z'"
+       export GLOBALTOFFSET=5.76
+       export SPLASHZSIDEPLUS=False
+       export BXNUMS=2607
+       export GLOBAL_FLAG_MASK=0xC0003
+       export BAD_EVENT_LIST=97
+       export TIMEWINDOWMIN=-10
+       export TIMEWINDOWMAX=5
+       export MAXEVENTNUM=166000
+       ;;
+  "5") export RUN=121993
+       export FILES="'file:~/stage/1E2E81FE-9FD6-DE11-A5B2-0030487A18A4.root'"
+       export RUNDESCR="'Run 121993 Splash from -Z'"
+       export GLOBALTOFFSET=0.0
+       export SPLASHZSIDEPLUS=False
+       export BXNUMS=342
+       export GLOBAL_FLAG_MASK=0xC0003
+       export BAD_EVENT_LIST=97
+       export TIMEWINDOWMIN=-10
+       export TIMEWINDOWMAX=5
+       export MAXEVENTNUM=-1
+       ;;
 esac
 
 echo "Processing $RUN..."
 
-EVENTS=-1
-#EVENTS=10
+EVENTS=$MAXEVENTNUM
 
 #if [ $# -eq 2 ]
 #then
@@ -127,6 +154,7 @@ process.hbtimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hbtimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hbtimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hbtimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
+process.hbtimeanal.unravelHBatIeta      = cms.int32(14)
 #
 process.hetimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
 process.hetimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})

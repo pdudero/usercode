@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.4 2009/11/20 19:25:21 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.5 2009/11/23 00:27:32 dudero Exp $
 //
 //
 
@@ -141,6 +141,7 @@ private:
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
   uint32_t          maxEventNum2plot_;
+  int               unravelHBatIeta_;
   bool              selfSynchronize_; // versus synchronize to the system reference
 
   std::vector<tCorrection> corList_;
@@ -160,6 +161,7 @@ private:
   float           splashCor_ns_;  // splash geometry correction in nanoseconds
 
   float           totalE_;
+  int             neventsProcessed_;
 
   // The collection of names of histos per subdetector
   std::string st_rhEnergies_;
@@ -180,13 +182,15 @@ private:
   std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEP_;
   std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEM_;
 
+  std::map<int,std::string>        m_unravelHBperRM_;
+  std::map<int,std::string>        m_unravelHBperPhi_;
+
+  std::string st_avgTimePerRBX_;
+  std::string st_avgTimePer2RMs_;
   std::string st_avgTimePerPhid1_, st_avgTimePerPhid2_;
   std::string st_avgTimePerPhid3_, st_avgTimePerPhid4_;
-  std::string st_avgTimePer2RMs_;
   std::string st_avgTimePerRMd1_,  st_avgTimePerRMd2_;
   std::string st_avgTimePerRMd3_,  st_avgTimePerRMd4_;
-  std::string st_avgTimePerRBXd1_, st_avgTimePerRBXd2_;
-  std::string st_avgTimePerRBXd3_, st_avgTimePerRBXd4_;
   std::string st_avgTuncPerIetad1_,st_avgTuncPerIetad2_;
   std::string st_avgTuncPerIetad3_,st_avgTuncPerIetad4_;
   std::string st_avgTcorPerIetad1_,st_avgTcorPerIetad2_;
