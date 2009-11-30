@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.1 2009/11/15 12:19:43 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.2 2009/11/20 19:17:02 dudero Exp $
 //
 //
 
@@ -97,13 +97,15 @@ DelaySettingPlotter::~DelaySettingPlotter() {
 // member functions
 //
 //======================================================================
+static const int BADVAL=-999;
+static const int maxsetting=26;
 
 int
 DelaySettingPlotter::getSetting4(const DelaySettings& settings,
 				 HcalSubdetector subdet, 
 				 int ieta, int iphi, int depth)
 {
-  int setting = -1;
+  int setting = BADVAL;
 
   if (!HcalDetId::validDetId(subdet,ieta,iphi,depth)) return setting;
 
@@ -116,6 +118,9 @@ DelaySettingPlotter::getSetting4(const DelaySettings& settings,
     if (it != settings.end())
       setting = it->second;
   }catch (...) {
+  }
+  if ((setting >= maxsetting) || ((setting < 0) && (setting != BADVAL))) {
+    cerr << "WARNING!!! setting = " << setting << " for detId " << detID << endl;
   }
   return setting;
 }
@@ -133,14 +138,14 @@ DelaySettingPlotter::plotHB(const DelaySettings& settings,
     for (int ieta=-16; ieta<=16; ieta++) {
       if (!ieta) continue;
       setting = getSetting4(settings,HcalBarrel,ieta,iphi,1);      // depth 1
-      if (setting >=0) { mapd1->Fill(ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd1->Fill(ieta,iphi,setting); dist->Fill(setting); }
     }
     for (int ieta=15; ieta<=16; ieta++) {
       setting = getSetting4(settings,HcalBarrel,ieta,iphi,2);      // depth 2, plus side
-      if (setting >=0) { mapd2->Fill(ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd2->Fill(ieta,iphi,setting); dist->Fill(setting); }
 
       setting = getSetting4(settings,HcalBarrel,-ieta,iphi,2);     // depth 2, minus side
-      if (setting >=0) { mapd2->Fill(-ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd2->Fill(-ieta,iphi,setting); dist->Fill(setting); }
     }
   }
 }
@@ -157,44 +162,44 @@ DelaySettingPlotter::plotHE(const DelaySettings& settings,
   for (int iphi=1; iphi <= 72; iphi++) {
     for (int ieta=17; ieta<=29; ieta++) {
       setting = getSetting4(settings,HcalEndcap,-ieta,iphi,1);      // depth 1, minus side
-      if (setting >=0) { mapd1->Fill(-ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd1->Fill(-ieta,iphi,setting); dist->Fill(setting); }
 
       setting = getSetting4(settings,HcalEndcap, ieta,iphi,1);      // depth 1, plus side
-      if (setting >=0) { mapd1->Fill(ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd1->Fill(ieta,iphi,setting); dist->Fill(setting); }
 
     }
     for (int ieta=18; ieta<=29; ieta++) {
       setting = getSetting4(settings,HcalEndcap, ieta,iphi,2);      // depth 2, plus side
-      if (setting >=0) { mapd2->Fill(ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd2->Fill(ieta,iphi,setting); dist->Fill(setting); }
 
       setting = getSetting4(settings,HcalEndcap,-ieta,iphi,2);      // depth 2, minus side
-      if (setting >=0) { mapd2->Fill(-ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd2->Fill(-ieta,iphi,setting); dist->Fill(setting); }
     }
 
     // Depth 3, ietas 16,27-29
     setting = getSetting4(settings,HcalEndcap, 16,iphi,3);
-    if (setting >=0) { mapd3->Fill( 16,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill( 16,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap,-16,iphi,3);
-    if (setting >=0) { mapd3->Fill(-16,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill(-16,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap, 27,iphi,3);
-    if (setting >=0) { mapd3->Fill( 27,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill( 27,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap,-27,iphi,3);
-    if (setting >=0) { mapd3->Fill(-27,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill(-27,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap, 28,iphi,3);
-    if (setting >=0) { mapd3->Fill( 28,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill( 28,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap,-28,iphi,3);
-    if (setting >=0) { mapd3->Fill(-28,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill(-28,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap, 29,iphi,3);
-    if (setting >=0) { mapd3->Fill( 29,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill( 29,iphi,setting); dist->Fill(setting); }
 
     setting = getSetting4(settings,HcalEndcap,-29,iphi,3);
-    if (setting >=0) { mapd3->Fill(-29,iphi,setting); dist->Fill(setting); }
+    if (setting != BADVAL) { mapd3->Fill(-29,iphi,setting); dist->Fill(setting); }
 
   } // phi loop
 }
@@ -212,7 +217,7 @@ DelaySettingPlotter::plotHO(const DelaySettings& settings,
     for (int ieta=-15; ieta<=15; ieta++) {
       if (!ieta) continue;
       setting = getSetting4(settings,HcalOuter,ieta,iphi,4);
-      if (setting >=0) { mapd4->Fill(ieta,iphi,setting); dist->Fill(setting); }
+      if (setting != BADVAL) { mapd4->Fill(ieta,iphi,setting); dist->Fill(setting); }
     }
   }
 }
