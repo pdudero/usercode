@@ -9,9 +9,10 @@ fi
 #export FMT='%s %d %d %d %f'
 #export NEW=../data/SettingsHO_091118postSplash09tune_floatingRings.csv
 
-
-export OLD=../data/hbhetable_091108tune.csv
-export NEW=../data/hbhetable_091118tune.csv
+export OLD=../data/hbhetable_08etaTune.csv
+#export OLD=../data/hbhetable_091108tune.csv
+#export NEW=../data/hbhetable_091118tune.csv
+export NEW=../data/temp/table.csv
 
 CFGFILE=$0_$1_cfg.py
 cat > ${CFGFILE} << EOF
@@ -48,11 +49,11 @@ process.p = cms.Path(process.plotdelays)
 
 EOF
 
-cmsRun ${CFGFILE} 2>&1 | tee ./logs/log.txt
+cmsRun ${CFGFILE} 2>&1
 
 echo " -----------------------------------------------------------------  " 
 echo "   All done with run ${RUNNUMBER}! Deleting temp .cfg" 
 echo " -----------------------------------------------------------------  " 
 echo "                                                                    "
 
-#rm ${CFGFILE}
+rm ${CFGFILE}

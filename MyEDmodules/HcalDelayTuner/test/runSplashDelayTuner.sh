@@ -8,17 +8,19 @@ fi
 
 EVENTS=-1
 #EVENTS=10
-WRITEBRICKS=True
+WRITEBRICKS=False
 #HBHE:
-#TIMECORRFILENAME="'timeCorrs_run120042_HE.csv','timeCorrs_run120042_HB.csv'"
-#TIMECORRSCANFMT="'%*s %*s %*s %*s %s %d %d %d %f'"
-#OLDSETTINGFILENAME="'../data/hbhetable_091108tune.csv'"
+TIMECORRFILENAMES="'../data/timeCorrs_run120042_HE.csv','../data/timeCorrs_run120042_HB.csv'"
+TIMECORRSCANFMT='%*s %*d %*d %*d %s %d %d %d %f'
+OLDSETTINGFILENAMES="'../data/hbhetable_091108tune.csv'"
+SUBDET=HBHE
 #
 #HO:
-TIMECORRFILENAMES="'../data/timeCorrs_run120042_HO_noSiPMs.csv'"
-TIMECORRSCANFMT='%*s %*d %*d %*d %s %d %d %d %f'
-OLDSETTINGFILENAMES="'../data/hotable_mapcorrs_noHOX.csv'"
+#TIMECORRFILENAMES="'../data/timeCorrs_run120042_HO_noSiPMs.csv'"
+#TIMECORRSCANFMT='%*s %*d %*d %*d %s %d %d %d %f'
+#OLDSETTINGFILENAMES="'../data/hotable_mapcorrs_noHOX.csv'"
 #OLDSETTINGFILENAMES="'../data/hotable.csv'"
+#SUBDET=HO
 CLIPATLIMITS=True
 
 #if [ $# -eq 2 ]
@@ -64,7 +66,7 @@ process.tunedelays.timecorrScanFmt     = cms.untracked.string("${TIMECORRSCANFMT
 process.tunedelays.fileNames           = cms.untracked.vstring(${OLDSETTINGFILENAMES})
 
 process.tunedelays.clipSettingsAtLimits= cms.untracked.bool(${CLIPATLIMITS})
-process.tunedelays.subdet              = cms.untracked.string("HO")
+process.tunedelays.subdet              = cms.untracked.string("${SUBDET}")
    
 process.p = cms.Path(process.tunedelays)
 
