@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.1 2009/11/09 00:57:58 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.2 2009/11/20 19:12:48 dudero Exp $
 //
 //
 
@@ -62,20 +62,17 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig)
   mysubdetstr_ = iConfig.getUntrackedParameter<std::string>("subdet");
   clipAtLimits_= iConfig.getUntrackedParameter<bool>("clipSettingsAtLimits",false);
 
-  if (!mysubdetstr_.compare("HB")) mysubdet_ = HcalBarrel;  else
-  if (!mysubdetstr_.compare("HE")) mysubdet_ = HcalEndcap;  else
-  if (!mysubdetstr_.compare("HO")) mysubdet_ = HcalOuter;   else
-  if (!mysubdetstr_.compare("HF")) mysubdet_ = HcalForward; else {
-    mysubdet_ = HcalOther;
-    edm::LogWarning("Warning: subdetector set to 'other', ") << mysubdetstr_;
-  }
-
   xml_ = new HcalDelayTunerXML();
+  if (writeBricks && !clipAtLimits_) {
+    for (unsigned i=0; i<10; i++) {
+      cout << "BOY, YOU IN A HEAP'A'TROUBLE!" << endl;
+    }
+  }
 }
 
 //======================================================================
 
-static const int maxlimit=24;
+static const int maxlimit=26;
 
 int
 HcalDelayTunerAlgos::detSetting4Channel(const HcalFrontEndId& feID,
@@ -107,7 +104,9 @@ HcalDelayTunerAlgos::shiftBySubdet(const std::string subdet)
   for (itnew =newsettings_.begin();
        itnew!=newsettings_.end(); itnew++) {
     HcalFrontEndId feID = itnew->first;
-    if (feID.rbx().find(subdet) == std::string::npos) continue;
+
+    // allows use of "HBHE" as a subdet:
+    if (subdet.find(feID.rbx().substr(0,2)) == std::string::npos) continue;
 
     int setting = itnew->second;
     if (setting < minsetting) minsetting = setting;
@@ -266,14 +265,12 @@ HcalDelayTunerAlgos::determineSettings(const TimesPerFEchan& timecors,
   //   so we split it up and let the pieces float.
 
 
-  switch (mysubdet_) {
-  case HcalBarrel:  shiftBySubdet("HB"); break; // unsatisfactory...we
-  case HcalEndcap:  shiftBySubdet("HE"); break; // really want these 2 together
-  case HcalForward: shiftBySubdet("HF"); break;
-  case HcalOuter:   shiftBySubdet("HO0");
-                    shiftBySubdet("HO1");
-		    shiftBySubdet("HO2");break;
-  default: break;
+  if (mysubdetstr_ == "HO") {
+    shiftBySubdet("HO0");
+    shiftBySubdet("HO1");
+    shiftBySubdet("HO2");
+  } else {
+    shiftBySubdet(mysubdetstr_);
   }
 
   for (itold =oldsettings.begin();

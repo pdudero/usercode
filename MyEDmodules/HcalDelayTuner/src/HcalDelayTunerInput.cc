@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.cc,v 1.2 2009/11/18 03:22:01 dudero Exp $
+// $Id: HcalDelayTunerInput.cc,v 1.3 2009/11/20 19:12:48 dudero Exp $
 //
 //
 
@@ -133,24 +133,27 @@ HcalDelayTunerInput::getTimeCorrections (TimesPerFEchan& timecorrs)
   // Here the files are really just white-space-separated columns of
   // RBX RM card qie delay settings
   //
-  FILE *fp = fopen(timecorrFileNames_[0].c_str(),"r");
-  if (!fp) {
-    throw cms::Exception("File doesn't exist") << timecorrFileNames_[0];
+  for (uint32_t i=0; i<timecorrFileNames_.size();i++) {
+    FILE *fp = fopen(timecorrFileNames_[i].c_str(),"r");
+    if (!fp) {
+      throw cms::Exception("File doesn't exist") << timecorrFileNames_[0];
+    }
+    
+    while (!feof(fp) && fgets(line,128,fp)) {
+      if (line[0]=='#') continue;
+      int num=sscanf(line,timecorrScanFmt_.c_str(),rbx,&rm,&card,&qie,&tcor);
+      if (num != 5) 
+	throw cms::Exception("ScanFmt string doesn't match input")
+	  << line << timecorrScanFmt_ << endl;
+      
+      if (rbx[0] == 'Z') continue; // ZDC
+      HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
+      timecorrs.insert(std::pair<HcalFrontEndId,float>(feID,tcor));
+    }
+    fclose(fp);
+    cout << "Read in time corrections from " << timecorrFileNames_[i] << endl;
   }
-
-  while (!feof(fp) && fgets(line,128,fp)) {
-    if (line[0]=='#') continue;
-    int num=sscanf(line,timecorrScanFmt_.c_str(),rbx,&rm,&card,&qie,&tcor);
-    if (num != 5) 
-      throw cms::Exception("ScanFmt string doesn't match input") << line;
-
-    if (rbx[0] == 'Z') continue; // ZDC
-    HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
-    timecorrs.insert(std::pair<HcalFrontEndId,float>(feID,tcor));
-  }
-
-  cout << "Read in time corrections from " << timecorrFileNames_[0] << endl;
-}
+}                             // HcalDelayTunerInput::getTimeCorrections
 
 //======================================================================
 

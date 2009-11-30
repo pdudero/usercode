@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.5 2009/11/23 00:27:13 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.6 2009/11/25 09:03:12 dudero Exp $
 //
 //
 
@@ -108,28 +108,6 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   if (!buildMaskSet(v_maskidnumbers))
     throw cms::Exception("Invalid detID vector");
 
-  HcalLogicalMapGenerator gen;
-  lmap_ = new HcalLogicalMap(gen.createMap());
-
-  switch(mysubdet_) {
-  case HcalBarrel : mysubdetstr_ = "HB"; break;
-  case HcalEndcap : mysubdetstr_ = "HE"; break;
-  case HcalOuter  : mysubdetstr_ = "HO"; break;
-  case HcalForward: mysubdetstr_ = "HF"; break;
-  default:          mysubdetstr_ = "FU"; break;
-  }
-
-  firstEvent_ = true;
-}                        // SplashDelayTunerAlgos::SplashDelayTunerAlgos
-
-//======================================================================
-
-//
-// constructors and destructor
-//
-SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig) :
-  HcalDelayTunerAlgos(iConfig)
-{
   HcalLogicalMapGenerator gen;
   lmap_ = new HcalLogicalMap(gen.createMap());
 

@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.5 2009/11/23 00:27:32 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.6 2009/11/25 09:03:12 dudero Exp $
 //
 //
 
@@ -40,8 +40,9 @@
 class SplashDelayTunerAlgos : public HcalDelayTunerAlgos {
 public:
   SplashDelayTunerAlgos(const edm::ParameterSet&,
-			SplashHitTimeCorrector *); // used for analysis
-  SplashDelayTunerAlgos(const edm::ParameterSet&); // used for brick-writing
+			SplashHitTimeCorrector *);         // used for analysis
+  SplashDelayTunerAlgos(const edm::ParameterSet& iConfig): // used for brick-writing
+    HcalDelayTunerAlgos(iConfig) {}
   ~SplashDelayTunerAlgos() {}
 
   void process      (const myEventData&);
