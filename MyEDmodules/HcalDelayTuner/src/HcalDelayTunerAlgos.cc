@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.2 2009/11/20 19:12:48 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.3 2009/11/30 09:45:35 dudero Exp $
 //
 //
 
@@ -63,7 +63,7 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig)
   clipAtLimits_= iConfig.getUntrackedParameter<bool>("clipSettingsAtLimits",false);
 
   xml_ = new HcalDelayTunerXML();
-  if (writeBricks && !clipAtLimits_) {
+  if (writeBricks_ && !clipAtLimits_) {
     for (unsigned i=0; i<10; i++) {
       cout << "BOY, YOU IN A HEAP'A'TROUBLE!" << endl;
     }

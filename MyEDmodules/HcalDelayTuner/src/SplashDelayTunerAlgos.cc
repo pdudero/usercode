@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.6 2009/11/25 09:03:12 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.7 2009/11/30 09:45:35 dudero Exp $
 //
 //
 
@@ -111,13 +111,14 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   HcalLogicalMapGenerator gen;
   lmap_ = new HcalLogicalMap(gen.createMap());
 
-  switch(mysubdet_) {
-  case HcalBarrel : mysubdetstr_ = "HB"; break;
-  case HcalEndcap : mysubdetstr_ = "HE"; break;
-  case HcalOuter  : mysubdetstr_ = "HO"; break;
-  case HcalForward: mysubdetstr_ = "HF"; break;
-  default:          mysubdetstr_ = "FU"; break;
-  }
+  if (!mysubdetstr_.compare("HB")) mysubdet_ = HcalBarrel;  else 	 
+  if (!mysubdetstr_.compare("HE")) mysubdet_ = HcalEndcap;  else 	 
+  if (!mysubdetstr_.compare("HO")) mysubdet_ = HcalOuter;   else 	 
+  if (!mysubdetstr_.compare("HF")) mysubdet_ = HcalForward; else { 	 
+    mysubdet_ = HcalOther;
+    mysubdetstr_ = "FU";
+    edm::LogWarning("Warning: subdetector set to 'other', ") << mysubdetstr_; 	 
+  } 	 
 
   firstEvent_ = true;
 }                        // SplashDelayTunerAlgos::SplashDelayTunerAlgos
@@ -318,7 +319,8 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
   st_totalEperEv_ = "h1d_totalEperEvIn" + mysubdetstr_;
   add1dHisto( st_totalEperEv_,
   "#Sigma RecHit Energy Per Event in "+mysubdetstr_+", Run "+runnumstr+"; Event Number; Total Energy (GeV)",
-	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
+//	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
+	      100,-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1d);
 
   /*****************************************
@@ -328,7 +330,8 @@ SplashDelayTunerAlgos::bookHistos4allCuts(void)
   st_avgTperEvD1_ = "h1d_avgTperEvIn" + mysubdetstr_;
   add1dHisto( st_avgTperEvD1_,
 	      "Depth 1 Averaged Time Per Event in "+mysubdetstr_+", Run "+runnumstr+"; Event Number; Average Time (ns)",
-	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
+//	      (maxEventNum2plot_+1),-0.5,((float)maxEventNum2plot_)+0.5,
+	      100,-0.5,((float)maxEventNum2plot_)+0.5,
 	      v_hpars1dprof);
 
   /*****************************************
@@ -982,9 +985,12 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
     totalE_   += hitenergy_;
 
     // splashcorns sounded too weird.
+#if 0
     splashCor_ns_  = timecor_->getTcor4(detID_);
     corTime_ = hittime_ - splashCor_ns_;
-
+#else
+    corTime_ = hittime_;
+#endif
     TimesPerDetId::const_iterator it = exthitcors_.find(detID_);
     if (it != exthitcors_.end()) {
       // external hit correction to apply to hits for this det ID
