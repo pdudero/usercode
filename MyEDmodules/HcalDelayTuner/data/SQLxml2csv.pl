@@ -19,7 +19,7 @@ sub processFile {
 	if (/Parameter name=\'RBX\'.*>(.*)<\/Parameter>/) {
 	    $rbx=$1;
 	}
-	elsif (/Data.*rm=\"(\d{1})\" card=\"(\d{1})\" qie=\"(\d{1})\">(\d+)<\/Data/) {
+	elsif (/Data.*rm=\"(\d{1})\" card=\"(\d{1})\" qie=\"(\d{1})\">(.+)<\/Data/) {
 	    $rm=$1;
 	    $card=$2;
 	    $qie=$3;
