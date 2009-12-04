@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashTimingAnalyzer.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashTimingAnalyzer.cc,v 1.1 2009/11/09 00:59:05 dudero Exp $
 //
 //
 
@@ -117,7 +117,7 @@ SplashTimingAnalyzer::beginJob(const edm::EventSetup& es)
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 SplashTimingAnalyzer::endJob() {
-  algo_->endAnal();
+  algo_->endJob();
 }
 
 //define this as a plug-in
