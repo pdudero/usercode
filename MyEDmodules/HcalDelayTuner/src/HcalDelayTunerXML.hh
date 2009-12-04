@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerXML.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: HcalDelayTunerXML.hh,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -24,7 +24,7 @@
 #include <map>
 #include <stdlib.h>
 #include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
-#include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
+#include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh" // "DelaySettings"
 
 //
 // class declaration

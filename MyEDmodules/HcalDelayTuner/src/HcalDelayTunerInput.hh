@@ -16,13 +16,13 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.hh,v 1.1 2009/11/09 00:57:58 dudero Exp $
+// $Id: HcalDelayTunerInput.hh,v 1.2 2009/11/20 19:12:48 dudero Exp $
 //
 //
 
 
 // system include files
-#include <set>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -31,7 +31,12 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
-#include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
+
+
+typedef std::map<HcalFrontEndId,int>   DelaySettings;
+typedef std::map<HcalFrontEndId,float> TimesPerFEchan;
+typedef std::map<HcalDetId,float>      TimesPerDetId;
+
 //
 // class declaration
 //
