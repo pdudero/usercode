@@ -6,8 +6,7 @@
 // Package:    HcalDelayTunerAlgos
 // Class:      HcalDelayTunerAlgos
 // 
-/**\class HcalDelayTunerAlgos HcalDelayTunerAlgos.cc MyEDmodules/HcalDelayTunerAlgos/src/HcalDelayTunerAlgos.cc
-
+/*
  Description: <one line class summary>
 
  Implementation:
@@ -16,69 +15,207 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.1 2009/11/09 00:58:33 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.6 2009/11/25 09:03:12 dudero Exp $
 //
 //
-
 
 // system include files
-#include <string>
-#include <vector>
 
 // user include files
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Framework/interface/ESHandle.h"
-#include "DataFormats/HcalDetId/interface/HcalDetId.h"
-#include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
-#include "DataFormats/Common/interface/SortedCollection.h"
-#include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
+#include "TTree.h"
+#include "TH1F.h"
+#include "TProfile2D.h"
 
-#include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
-#include "MyEDmodules/MyAnalUtilities/interface/myAnalCut.hh"
+#include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
-
-class HcalDelayTunerXML;
+#include "MyEDmodules/MyAnalUtilities/interface/myAnalCut.hh"
+#include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
+#include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 
 //
 // class declaration
 //
-typedef std::map<HcalFrontEndId,int>   DelaySettings;
-typedef std::map<HcalFrontEndId,float> TimesPerFEchan;
-typedef std::map<HcalDetId,float>      TimesPerDetId;
 
 class HcalDelayTunerAlgos {
 public:
-  HcalDelayTunerAlgos(const edm::ParameterSet&);
+  explicit HcalDelayTunerAlgos(const edm::ParameterSet& iConfig);
   virtual ~HcalDelayTunerAlgos() {}
-  virtual void process (const myEventData& ed) {}
-  virtual void beginJob(const edm::EventSetup&) {}
-  virtual void endJob(const TimesPerFEchan& chtimes,
-		      const DelaySettings& oldsettings);
+
+  virtual void process  (const myEventData&);
+  virtual void beginJob (const edm::EventSetup&);
+  virtual void endJob();
+
+  void detChannelTimes(TimesPerDetId& chtimes);
 
 protected:
-  void   shiftBySubdet       (const std::string subdet);
-  int    detSetting4Channel  (const HcalFrontEndId& feID,
-			      float  hittime,
-			      float  mintime,
-			      int oldsetting);
-  void   determineSettings   (const TimesPerFEchan& hittimes,
-			      const DelaySettings& oldsettings);
 
-  HcalSubdetector              mysubdet_;
-  std::string                  mysubdetstr_;
-  HcalDelayTunerXML           *xml_;
-  DelaySettings                oldsettings_;
-  DelaySettings                newsettings_;
+  // ---------- private types ---------------------------
 
-private:
+  struct  tCorrection {
+    tCorrection() : correctByPhi(false),correctByEta(false),applyExternal(false),
+		    selfSynchronize(false),ietamin(-41),ietamax(41),iphimin(1),iphimax(72),
+		    devthresh(0.0),mirrorCorrection(false) {}
+    bool  correctByPhi;
+    bool  correctByEta;
+    bool  applyExternal;
+    bool  selfSynchronize;
+    int   ietamin;
+    int   ietamax;
+    int   iphimin;
+    int   iphimax;
+    float devthresh; // definition depends on whether you're self-syncing or not
+    bool  mirrorCorrection;
+
+    HcalDelayTunerInput *extcorInput;
+  };
+
+  // ---------- private methods ---------------------------
+
+  virtual void   bookHistos4allCuts  (void);
+  virtual void   bookHistos4lastCut  (void);
+
+  virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
+
+  virtual myAnalHistos *getHistos4cut(const std::string& cutstr);
+  virtual void         fillHistos4cut(const std::string& cutstr);
+
+  virtual void   compileCorrections(const std::vector<edm::ParameterSet>& corList);
+#if 0
+  template<class Digi,class RecHit>
+  void    processDigisAndRecHits (const edm::SortedCollection<Digi>&   digis,
+				  const edm::SortedCollection<RecHit>& rechits);
+
+  template<class Digi,class RecHit>
+  void    processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
+				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
+  template<class Digi>
+  void    fillDigiPulse          (TH1F *pulseHist,
+				  const Digi& frame);
+#endif
+  virtual void add1dHisto        (const std::string& name, const std::string& title,
+				  int nbinsx, double minx, double maxx,
+				  std::vector<myAnalHistos::HistoParams_t>& v_hpars1d);
+
+  virtual void add2dHisto        (const std::string& name, const std::string& title,
+				  int nbinsx, double minx, double maxx,
+				  int nbinsy, double miny, double maxy,
+				  std::vector<myAnalHistos::HistoParams_t>& v_hpars2d);
+  
+  virtual void detChanCorsByPhiDepth   (const std::vector<TProfile *>& profsByPhi,
+					const tCorrection& tcor,
+					TimesPerDetId& chtimes);
+  virtual void detChanCorsByEtaDepth   (const std::vector<TProfile *>& profsByEta,
+					const tCorrection& tcor,
+					TimesPerDetId& chtimes);
+  virtual void detChanCorsByRingHO     (TimesPerDetId& chtimes);
+  virtual void detChanCorsIndividually (const std::vector<TProfile2D *>& profs2d,
+					const tCorrection& tcor,
+					TimesPerDetId& chtimes);
+  virtual void applyExternalCorrections(TimesPerDetId& extcors,
+					TimesPerDetId& chtimes);
+  virtual void processCorrection       (const tCorrection& tcor,
+					TimesPerDetId& chtimes);
+  virtual void writeCorrections        (const TimesPerDetId& chtimes);
+  virtual void projectResults          (const TimesPerDetId& chtimes,
+					int iterationnumber);
 
   // ----------member data ---------------------------
 
-  bool writeBricks_;
+  // Timing Analyzer Parameters:
+  double            globalToffset_;   // calculated from center if HB
+  uint32_t          globalFlagMask_;  // hit quality flag mask
+
+  std::string       rundescr_;
+  double            minHitGeV_;       // minimum hit energy threshold
+  double            timeWindowMinNS_;
+  double            timeWindowMaxNS_;
+  uint32_t          recHitTscaleNbins_;
+  double            recHitTscaleMinNs_;
+  double            recHitTscaleMaxNs_;
+  double            recHitEscaleMinGeV_;
+  double            recHitEscaleMaxGeV_;
+  uint32_t          maxEventNum2plot_;
+  int               unravelHBatIeta_;
+  bool              selfSynchronize_; // versus synchronize to the system reference
+
+  HcalSubdetector   mysubdet_;
+  std::string       mysubdetstr_;
+
+  TimesPerDetId     exthitcors_; // misc. external hit time corrections
+
+  std::vector<tCorrection> corList_;
+
+  // Tree and branch vars:
+  TTree          *tree_;
+  HcalFrontEndId  feID_;
+  HcalDetId       detID_;
+  uint32_t        lsnum_;
+  uint32_t        bxnum_;
+  uint32_t        evtnum_;
+  uint32_t        runnum_;
+  float           hittime_;        // reconstructed hit time-globalToffset
+  float           corTime_;        // corrected for both global offset and algo-specific
+  float           correction_ns_;  // algo-specific hit time correction in nanoseconds
+
+  uint32_t        hitflags_;
+  float           hitenergy_;
+
+  float           totalE_;
+  int             neventsProcessed_;
+
+  // The collection of names of histos per subdetector
+  std::string st_rhEnergies_;
+  std::string st_totalEperEv_;
+  std::string st_avgTperEvD1_;
+  std::string st_avgPulse_;
+  std::string st_digiColSize_;
+  std::string st_rhColSize_;
+  std::string st_rhUncorTimes_;
+  std::string st_rhCorTimes_;
+  std::string st_rhCorTimesD1_;
+  std::string st_rhFlagBits_;
+  std::string st_rhHBHEtimingShapedCuts_;
+
+  std::vector<std::string>         v_st_rhTvsRMperPixHE_;
+  std::vector<std::string>         v_st_rhTvsRMperIetaD2HEP_;
+  std::vector<std::string>         v_st_rhTvsRMperIetaD2HEM_;
+  std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEP_;
+  std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEM_;
+
+  std::map<int,std::string>        m_unravelHBperRM_;
+  std::map<int,std::string>        m_unravelHBperPhi_;
+
+  std::string st_avgTimePerRBX_;
+  std::string st_avgTimePer2RMs_;
+  std::string st_avgTimePerPhid1_, st_avgTimePerPhid2_;
+  std::string st_avgTimePerPhid3_, st_avgTimePerPhid4_;
+  std::string st_avgTimePerRMd1_,  st_avgTimePerRMd2_;
+  std::string st_avgTimePerRMd3_,  st_avgTimePerRMd4_;
+  std::string st_avgTuncPerIetad1_,st_avgTuncPerIetad2_;
+  std::string st_avgTuncPerIetad3_,st_avgTuncPerIetad4_;
+  std::string st_avgTcorPerIetad1_,st_avgTcorPerIetad2_;
+  std::string st_avgTcorPerIetad3_,st_avgTcorPerIetad4_;
+  std::string st_avgTimePerPhiRing0_;
+  std::string st_avgTimePerPhiRing1M_, st_avgTimePerPhiRing1P_;
+  std::string st_avgTimePerPhiRing2M_, st_avgTimePerPhiRing2P_;
+  std::string st_rhTuncProfd1_,st_rhTuncProfd2_,st_rhTuncProfd3_,st_rhTuncProfd4_;
+  std::string st_rhTcorProfd1_,st_rhTcorProfd2_,st_rhTcorProfd3_,st_rhTcorProfd4_;
+  std::string st_rhTprofRBXd1_,st_rhTprofRBXd2_,st_rhTprofRBXd3_,st_rhTprofRBXd4_;
+  std::string st_rhEmap_;
+  std::string st_uncorTimingVsE_, st_corTimingVsE_;
+
   bool firstEvent_;
-  bool clipAtLimits_;
-  int  nchanMissingOldSettings_;
-  int  nchanMissingData_;
+  std::vector<std::string> v_cuts_;             // vector of cut strings
+  std::map<std::string, myAnalCut *> m_cuts_;
+  std::map<uint32_t,TH1F *> m_perChHistos_;
+  std::set<int>  badEventSet_;
+  std::set<int>  acceptedBxNums_;
+  std::set<int>  detIds2mask_;
+  std::string st_lastCut_;
+  HcalLogicalMap *lmap_;
+
+  TProfile2D *last2dprof_;
+  TH1F       *last1ddist_;
 };
 
 #endif // _MYEDMODULESHCALDELAYTUNERALGOS
