@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashHitTimeCorrector.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashHitTimeCorrector.hh,v 1.1 2009/11/09 00:58:34 dudero Exp $
 //
 //
 
@@ -40,8 +40,8 @@ public:
   SplashHitTimeCorrector(bool plusZsideSplash);
   ~SplashHitTimeCorrector() {}
 
-  void  init     (const edm::EventSetup& iSetup);
-  float getTcor4 (const HcalDetId& id);
+  void  init         (const edm::EventSetup& iSetup);
+  float correctTime4 (const HcalDetId& id);
 
 private:
   void   bookHistos      (void);

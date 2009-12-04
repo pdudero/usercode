@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashHitTimeCorrector.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: SplashHitTimeCorrector.cc,v 1.1 2009/11/09 00:57:59 dudero Exp $
 //
 //
 
@@ -132,7 +132,7 @@ SplashHitTimeCorrector::calcRawTcorrect4(const HcalDetId& id)
 //======================================================================
 
 float
-SplashHitTimeCorrector::getTcor4(const HcalDetId& id)
+SplashHitTimeCorrector::correctTime4(const HcalDetId& id)
 {
   int ieta   = id.ieta();
   int depth  = id.depth();
@@ -150,7 +150,7 @@ SplashHitTimeCorrector::getTcor4(const HcalDetId& id)
     thecor = mapit->second;
   }
   return thecor;
-}                                    // SplashHitTimeCorrector::getTcor4
+}                                // SplashHitTimeCorrector::correctTime4
 
 //======================================================================
 
