@@ -79,7 +79,8 @@ void setPRDStyle() {
   prdStyle->SetOptStat("e"); // To display the mean and RMS:   SetOptStat("mr");
   prdStyle->SetStatColor(kWhite);
   prdStyle->SetStatFont(42);
-  prdStyle->SetStatFontSize(0.025);
+  //  prdStyle->SetStatFontSize(0.025);
+  prdStyle->SetStatFontSize(0.2);
   prdStyle->SetStatTextColor(1);
   prdStyle->SetStatFormat("6.4g");
   prdStyle->SetStatBorderSize(1);

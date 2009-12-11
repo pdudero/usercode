@@ -19,8 +19,8 @@ public:
   inline T *histo() const {return h_;}
 
   void   Draw(void)                       { Draw(drawoption_); }
-  void   DrawSame(void)                   { Draw(drawoption_+" same"); }
-  void   DrawSames(void)                  { Draw(drawoption_+" sames"); }
+  void   DrawSame(void)                   { Draw(drawoption_+"same"); }
+  void   DrawSames(void)                  { Draw(drawoption_+"sames"); }
   void   Draw(const std::string& drawopt);
 
   // Only non-default values get set.
@@ -249,6 +249,13 @@ MyHistoWrapper<T>::DrawStats(void)
     std::cout << h_->GetName() << std::endl;
     return;
   }
+#if 1
+  std::cout << "Settings Stats Object for " << h_->GetName() << " to ";
+  std::cout << stats_.GetX1NDC() << ", ";
+  std::cout << stats_.GetX2NDC() << ", ";
+  std::cout << stats_.GetY1NDC() << ", ";
+  std::cout << stats_.GetY2NDC() << std::endl;
+#endif
 
   st1->SetX1NDC(stats_.GetX1NDC());
   st1->SetX2NDC(stats_.GetX2NDC());
