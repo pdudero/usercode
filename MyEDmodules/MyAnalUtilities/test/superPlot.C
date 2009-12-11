@@ -23,6 +23,7 @@ using namespace std;
 #include "TLegend.h"
 #include "TPaveStats.h"
 #include "TGraph.h"
+#include "TGraphAsymmErrors.h"
 #include "TGaxis.h"
 #include "TVectorD.h"
 #include "TArrayD.h"
@@ -318,6 +319,58 @@ void loadVectorsFromFile(const char *filename,
 
 //======================================================================
 
+void loadVectorsFromFile(const char *filename, 
+			 TVectorD&   vx, TVectorD&   vy,
+			 TVectorD&   exl,TVectorD&   exh,
+			 TVectorD&   eyl,TVectorD&   eyh)
+{
+  char linein[128];
+  vector<double> v;
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  cout << "Loading vectors from file " << filename;
+
+  while (!feof(fp) && fgets(linein,128,fp)) {
+    double x, y, ymin,ymax;
+    if (sscanf(linein, "%lf %lf %lf %lf", &x, &ymin, &ymax, &y) != 4) {
+      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+      return;
+    }
+    else {
+      v.push_back(x); v.push_back(y);
+      v.push_back(0); v.push_back(0);
+      v.push_back(y-ymin); v.push_back(ymax-y);
+    }
+  }
+
+  int vecsize = v.size()/6;
+  vx.ResizeTo(vecsize);
+  vy.ResizeTo(vecsize);
+  exl.ResizeTo(vecsize);
+  exh.ResizeTo(vecsize);
+  eyl.ResizeTo(vecsize);
+  eyh.ResizeTo(vecsize);
+
+  cout << "; read " << vecsize << " lines" << endl;
+
+  for (int i=0; i<vecsize; i++) {
+    vx[i]  = v[6*i];
+    vy[i]  = v[6*i+1];
+    exl[i] = v[6*i+2];
+    exh[i] = v[6*i+3];
+    eyl[i] = v[6*i+4];
+    eyh[i] = v[6*i+5];
+  }
+}                                                 // loadVectorsFromFile
+
+//======================================================================
+
 bool                                          // returns true if success
 processStyleSection(FILE *fp,string& theline, bool& new_section)
 {
@@ -368,6 +421,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "statyndc")  gStyle->SetStatY(str2flt(value));
     else if (key == "statwndc")  gStyle->SetStatW(str2flt(value));
     else if (key == "stathndc")  gStyle->SetStatH(str2flt(value));
+    else {
+      cerr << "Unknown key " << key << endl;
+    }
 
   } // while loop
 
@@ -439,6 +495,9 @@ processLayoutSection(FILE      *fp,
     }
     else if (key == "fillcolor")
       wc.fillcolor = str2int(value);
+    else {
+      cerr << "Unknown key " << key << endl;
+    }
 
   } // while loop
 
@@ -560,8 +619,8 @@ void processCommonHistoParams(const string& key,
   else if (key == "leglabel")    wh.SetLegendEntry(value);
 
   // for 2-d histos
-  else if (key == "rebinx")      ((TH1 *)wh.histo())->Rebin(str2int(value));
-  //else if (key == "rebinx")      ((TH2 *)wh.histo())->RebinX(str2int(value));
+  //else if (key == "rebinx")      ((TH1 *)wh.histo())->Rebin(str2int(value));
+  else if (key == "rebinx")      ((TH2 *)wh.histo())->RebinX(str2int(value));
   else if (key == "rebiny")      ((TH2 *)wh.histo())->RebinY(str2int(value));
 
   // axes
@@ -575,8 +634,10 @@ void processCommonHistoParams(const string& key,
   else if (key == "ytitlefont")   wh.SetYaxis("",false,0,0,str2int(value));
   else if (key == "xlabelsize")   wh.SetXaxis("",false,0,0,0,str2flt(value));
   else if (key == "ylabelsize")   wh.SetYaxis("",false,0,0,0,str2flt(value));
+  else if (key == "zlabelsize")   wh.SetZaxis("",false,0,0,0,str2flt(value));
   else if (key == "xlabelfont")   wh.SetXaxis("",false,0,0,0,0,str2int(value));
   else if (key == "ylabelfont")   wh.SetYaxis("",false,0,0,0,0,str2int(value));
+  else if (key == "zlabelfont")   wh.SetZaxis("",false,0,0,0,0,str2int(value));
   else if (key == "xndiv")  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
   else if (key == "yndiv")  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
@@ -611,6 +672,17 @@ void processCommonHistoParams(const string& key,
     zmax = str2flt(value);
     wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
   }
+  else if (key == "erroroption") {
+    // only for TProfiles.
+    // allowed options are
+    // ' ' (default, e=spread/sqrt(n)
+    // 's' (e=spread)
+    // others -> see ROOT documentation!
+    //
+    if (wh.histo()->InheritsFrom("TProfile")) {
+      ((TProfile *)wh.histo())->SetErrorOption(value.c_str());
+    }
+  }
   else if (key == "print2file") {
     string filename = value;
     FILE *fp = fopen(filename.c_str(),"w");
@@ -636,6 +708,14 @@ void processCommonHistoParams(const string& key,
       cout << h1->GetName() << endl;
     }
     fclose(fp);
+  }
+  else if ((key == "normalize") &&
+	   str2int(value)) {
+    TH1 *h1 = (TH1 *)wh.histo();
+    if (h1->Integral() > 0.0)
+      h1->Scale(1./h1->Integral());
+    else
+      cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
   else {
     cerr << "unknown key " << key << endl;
@@ -847,9 +927,10 @@ processGraphSection(FILE *fp,
 
   string *gid = NULL;
   TGraph *gr  = NULL;
-  float yoffset=0.0, yscale=1.0;
+  float xoffset=0.0,yoffset=0.0, yscale=1.0;
   int  lcolor=1,lstyle=1,lwidth=1;
-  TVectorD vx, vy;
+  TVectorD vx,vy,exl,exh,eyl,eyh;
+  bool asymerrors = false;
 
   cout << "Processing graph section" << endl;
 
@@ -903,15 +984,22 @@ processGraphSection(FILE *fp,
 	if (!path.size()) continue;
       }
 
-      loadVectorsFromFile(path.c_str(),vx,vy);
+      if (asymerrors)
+	loadVectorsFromFile(path.c_str(),vx,vy,exl,exh,eyl,eyh);
+      else
+	loadVectorsFromFile(path.c_str(),vx,vy);
     }
     else {
-      if      (key == "yoffset")   yoffset = str2flt(value);
+      if      (key == "xoffset")   xoffset = str2flt(value);
+      else if (key == "yoffset")   yoffset = str2flt(value);
       else if (key == "yscale")    yscale  = str2flt(value);
       else if (key == "linecolor") lcolor  = str2int(value);
       else if (key == "linestyle") lstyle  = str2int(value);
       else if (key == "linewidth") lwidth  = str2int(value);
-      
+      else if (key == "asymerrors") asymerrors = (bool)str2int(value);
+      else {
+	cerr << "unknown key " << key << endl;
+      }
 #if 0
       processCommonHistoParams(key,value,*wh);
 #endif
@@ -920,8 +1008,13 @@ processGraphSection(FILE *fp,
 
   if (vx.GetNoElements()) { // load utility guarantees the same size for both
     if (yscale  != 1.0) vy *= yscale;
+    if (xoffset != 0.0) vx += xoffset;
     if (yoffset != 0.0) vy += yoffset;
-    gr = new TGraph(vx,vy);
+    if (asymerrors) 
+      gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
+    else
+      gr = new TGraph(vx,vy);
+
     gr->SetLineColor(lcolor);
     gr->SetLineStyle(lstyle);
     gr->SetLineWidth(lwidth);
@@ -1470,7 +1563,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 
 //======================================================================
 
-void drawInPad(wPad_t *wp, TGraph *gr)
+void drawInPad(wPad_t *wp, TGraph *gr, const string& drawopt)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
@@ -1479,7 +1572,9 @@ void drawInPad(wPad_t *wp, TGraph *gr)
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
 
-  gr->Draw("L");
+  cout << "Drawing " << gr->GetName() << " with option(s) " << drawopt << endl;
+
+  gr->Draw(drawopt.c_str());
 
   wp->vp->Update();
 }
@@ -1511,7 +1606,7 @@ void drawInPad(wPad_t *wp, THStack *stack)
 
 void  drawPlots(wCanvas_t& wc)
 {
-  unsigned npads = wc.pads.size();
+  unsigned npads = std::min(wc.npadsx*wc.npadsy, wc.pads.size());
 
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
@@ -1525,7 +1620,7 @@ void  drawPlots(wCanvas_t& wc)
     wPad_t *& wp = wc.pads[i];
     wp->vp = wc.c1->cd(i+1);
 
-    if (!wp->histo_ids.size()) {
+    if (!wp->histo_ids.size() && !wp->graph_ids.size()) {
       cerr << "ERROR: pad #" << i+1 << " has no ids defined for it";
       cerr << ", continuing to the next" << endl;
       continue;
@@ -1536,6 +1631,7 @@ void  drawPlots(wCanvas_t& wc)
      * (Fix up frame since it can't be auto-scaled:)
      ***************************************************/
 
+#if 0
     string& hid0 = wp->histo_ids[0];
     map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid0);
     if (it == glmap_id2histo.end()) {
@@ -1556,6 +1652,7 @@ void  drawPlots(wCanvas_t& wc)
 
     wp->hframe->SetStats(0);
     //wp->hframe->Draw("AXIS");
+#endif
 
     /***************************************************
      * Check for existence of a legend, create it
@@ -1648,6 +1745,7 @@ void  drawPlots(wCanvas_t& wc)
      ***************************************************/
 
     for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
+      string drawopt("P");
       string& gid = wp->graph_ids[j];
       map<string,TGraph *>::const_iterator it = glmap_id2graph.find(gid);
       if (it == glmap_id2graph.end()) {
@@ -1657,9 +1755,11 @@ void  drawPlots(wCanvas_t& wc)
 
       TGraph *gr = it->second;
 
+      if (!j && !wp->histo_ids.size())
+	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+
       if (gr) {
-	cout << "Drawing " << gid << endl;
-	drawInPad(wp,gr);
+	drawInPad(wp,gr,drawopt.c_str());
 	wp->vp->Update();
 
 	if (drawlegend)
@@ -1698,7 +1798,7 @@ void  drawPlots(wCanvas_t& wc)
 
   } // pad loop
 
-  //prdFixOverlay();
+  prdFixOverlay();
   //wc.c1->cd();
 }                                                           // drawPlots
 
