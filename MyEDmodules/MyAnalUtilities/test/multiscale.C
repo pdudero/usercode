@@ -16,18 +16,20 @@ using namespace std;
 #include "TLegend.h"
 #include "TGraph.h"
 #include "TKey.h"
+#include "TArrayD.h"
 
 #ifdef MAIN
 typedef unsigned long uint32_t;
 #endif
 
 struct FileInfo_t {
-  FileInfo_t(TFile *infp,string inpath,float inxs,int innev,float inwt):
-    fp(infp),path(inpath),xsec(inxs),nev(innev),weight(inwt) {}
+  FileInfo_t(TFile *infp,string inpath,float inxs,int innev, int innrb,float inwt):
+    fp(infp),path(inpath),xsec(inxs),nev(innev),nrebin(innrb),weight(inwt) {}
   TFile *fp;
   string path;
   float  xsec;
   int    nev;
+  int    nrebin;
   float  weight;
 };
 
@@ -58,10 +60,11 @@ int getFileInfo(const char *filewithpaths,
     char path[256];
     int nev;
     float xsec,weight;
+    int nrebin = 0;
 
     if (line[0] == '#') continue;
 
-    int nscanned = sscanf(line, "%s %f %d", path,&xsec,&nev);
+    int nscanned = sscanf(line, "%s %f %d %d", path,&xsec,&nev,&nrebin);
 
     TFile *tfile =  new TFile(path);
     
@@ -70,15 +73,16 @@ int getFileInfo(const char *filewithpaths,
       return 0;
     }
 
-    if (nscanned != 3) {
-      cerr << "pathfile requires <pathstring> <xsec> <nevents>\n";
+    if ((nscanned != 3) &&
+	(nscanned != 4)   )  {
+      cerr << "pathfile requires <pathstring> <xsec> <nevents> [nrebin]\n";
       return 0;
     } else
-      cout << xsec << " " << integluminvpb << " " << nev << endl;
+      cout << xsec << " " << integluminvpb << " " << nev << " " << nrebin << endl;
 
     weight = (xsec*integluminvpb)/((float)nev);
     cout << "calculated weight for file " << path << " = " << weight << endl;
-    FileInfo_t fileinfo(tfile,path,xsec,nev,weight);
+    FileInfo_t fileinfo(tfile,path,xsec,nev,nrebin,weight);
     v_rootfiles.push_back(fileinfo);
   }
   return 1;
@@ -119,6 +123,10 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
       cout << obj->GetName() << " ";
       TH1 *h1 = (TH1*)obj;
       TH1 *h2 = NULL;
+
+      if (source.nrebin > 1)
+	h1->Rebin(source.nrebin);
+
       if (writeErrors) {
 	h1->Sumw2();
 	h2 = (TH1 *)h1->Clone();
@@ -129,9 +137,23 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
       //------------------------------
 
       if (writeErrors) {
+	// to force weighted summing when we get to it
+	// NOTE: I learned the hard way, this bit has to be set AFTER
+	//      the scaling.
+	// h1->SetBit(TH1::kIsAverage);
 	int nbins = h1->GetNbinsX()*h1->GetNbinsY()*h1->GetNbinsZ();
 	for (int ibin=1; ibin<=nbins; ibin++)
 	  h1->SetBinError(ibin,source.weight*h2->GetBinError(ibin));
+	delete h2;
+      }
+
+      if (strstr(obj->GetName(),"h1d_caloMet_MetQCD") &&
+	  strstr(target->GetPath(),"cutNone")) {
+	TArrayD *sumw2 = h1->GetSumw2();
+	cout << sumw2->GetSize() << endl;
+	for (int i=0; i<sumw2->GetSize(); i++)
+	  printf ("%lf ", (*sumw2)[i]);
+	cout << endl;
       }
 
     } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
