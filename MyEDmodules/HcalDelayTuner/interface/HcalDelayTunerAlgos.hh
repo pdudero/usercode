@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.6 2009/11/25 09:03:12 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.3 2009/12/04 14:31:23 dudero Exp $
 //
 //
 
@@ -122,6 +122,7 @@ protected:
   // ----------member data ---------------------------
 
   // Timing Analyzer Parameters:
+  std::string       mysubdetstr_;
   double            globalToffset_;   // calculated from center if HB
   uint32_t          globalFlagMask_;  // hit quality flag mask
 
@@ -139,8 +140,6 @@ protected:
   bool              selfSynchronize_; // versus synchronize to the system reference
 
   HcalSubdetector   mysubdet_;
-  std::string       mysubdetstr_;
-
   TimesPerDetId     exthitcors_; // misc. external hit time corrections
 
   std::vector<tCorrection> corList_;
@@ -176,6 +175,21 @@ protected:
   std::string st_rhFlagBits_;
   std::string st_rhHBHEtimingShapedCuts_;
 
+  // Breakdowns:
+
+  // Plus/Minus Breakdown
+  std::string st_rhCorTimesPlus_;
+  std::string st_rhCorTimesMinus_;
+  std::string st_rhCorTimesPlusVsMinus_;
+  std::string st_avgPulsePlus_;
+  std::string st_avgPulseMinus_;
+  std::string st_nHitsPlus_;
+  std::string st_nHitsMinus_;
+  std::string st_totalEplus_;
+  std::string st_totalEminus_;
+
+  // eta/phi/depth breakdowns:
+
   std::vector<std::string>         v_st_rhTvsRMperPixHE_;
   std::vector<std::string>         v_st_rhTvsRMperIetaD2HEP_;
   std::vector<std::string>         v_st_rhTvsRMperIetaD2HEM_;
@@ -184,6 +198,8 @@ protected:
 
   std::map<int,std::string>        m_unravelHBperRM_;
   std::map<int,std::string>        m_unravelHBperPhi_;
+
+  std::string st_nHitsPerIetaIphi_;
 
   std::string st_avgTimePerRBX_;
   std::string st_avgTimePer2RMs_;
