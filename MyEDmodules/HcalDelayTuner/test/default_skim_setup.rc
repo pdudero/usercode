@@ -1,0 +1,8 @@
+RUN=
+HLTPATHS='"HLT_MinBiasBSC"'
+L1TTBITS='9 OR 40 OR 41'
+INCLUDELS=
+EXCLUDELS=
+INCLUDEBX=
+DODIGIS=1
+KEEPDROP='"drop *","keep *_hcalDigis_*_*","keep *_hbhereco_*_*","keep *_horeco_*_*","keep *_hfreco_*_*","keep HcalNoiseSummary_*_*_*","keep recoVertexs_*_*_*"'
