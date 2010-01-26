@@ -1,0 +1,10 @@
+# space-separated list of runs to process:
+#
+RUNS="124022 124023 124024 124027 124030 124230"
+#
+DATASET="/store/express/BeamCommissioning09/ExpressPhysics/FEVT/v2/000"
+SKIMFILE=skim_setup.rc
+#SKIMFILE=
+#ANALFILE=anal_setup_run124020.rc
+PLOTFILE=
+EMAILLOG2=
