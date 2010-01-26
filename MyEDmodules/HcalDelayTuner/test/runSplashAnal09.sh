@@ -16,7 +16,7 @@ echo "  1 - Run 120015 - Nov.  7, 2009 (from -Z)"
 echo "  2 - Run 120042 - Nov.  9, 2009 (from -Z)"
 echo "  3 - Run 121943 - Nov. 20, 2009 (from +Z)"
 echo "  4 - Run 121964 - Nov. 20, 2009 (from -Z)"
-echo "  5 - Run 121993 - Nov. 21, 2009 (from -Z)"
+echo "  5 - Run 121993 - Nov. 21, 2009 (from +Z)"
        echo '   '
 
 read VAR1
@@ -68,7 +68,7 @@ case $VAR1 in
        ;;
   "4") export RUN=121964
 #       export FILES="'/store/data/BeamCommissioning09/PhysicsMuonBkg/RECO/v2/000/121/964/96F2B74C-43D6-DE11-8340-0030487A18A4.root'"
-       export FILES="'file:../../HcalRecHitFilter/test/run121964-rhskim.root'"
+       export FILES="'file:~/data/Splash09skims/run121964-rhskim.root'"
        export RUNDESCR="'Run 121964 Splash from -Z'"
        export GLOBALTOFFSET=5.76
        export SPLASHZSIDEPLUS=False
@@ -80,13 +80,13 @@ case $VAR1 in
        export MAXEVENTNUM=166000
        ;;
   "5") export RUN=121993
-       export FILES="'file:~/stage/1E2E81FE-9FD6-DE11-A5B2-0030487A18A4.root'"
-       export RUNDESCR="'Run 121993 Splash from -Z'"
-       export GLOBALTOFFSET=0.0
-       export SPLASHZSIDEPLUS=False
+       export FILES="'file:~/data/Splash09skims/run121993-rhskim.root'"
+       export RUNDESCR="'Run 121993 Splash from +Z'"
+       export GLOBALTOFFSET=9.56
+       export SPLASHZSIDEPLUS=True
        export BXNUMS=342
        export GLOBAL_FLAG_MASK=0xC0003
-       export BAD_EVENT_LIST=97
+       export BAD_EVENT_LIST=
        export TIMEWINDOWMIN=-10
        export TIMEWINDOWMAX=5
        export MAXEVENTNUM=-1
