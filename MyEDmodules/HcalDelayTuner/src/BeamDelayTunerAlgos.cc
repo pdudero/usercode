@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.9 2009/12/04 14:36:00 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.1 2010/01/26 13:54:40 dudero Exp $
 //
 //
 
@@ -142,6 +142,8 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       }
       fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(st_avgPulse_),frame);
       fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
+      if (corTime_ == 0.0)
+	fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(st_avgPulseTeq0_),frame);
     }
 
     if (rh.energy() > minHitGeV_) {

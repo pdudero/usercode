@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.3 2009/12/04 14:31:23 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.4 2010/01/26 13:58:10 dudero Exp $
 //
 //
 
@@ -167,6 +167,7 @@ protected:
   std::string st_totalEperEv_;
   std::string st_avgTperEvD1_;
   std::string st_avgPulse_;
+  std::string st_avgPulseTeq0_;
   std::string st_digiColSize_;
   std::string st_rhColSize_;
   std::string st_rhUncorTimes_;
@@ -217,6 +218,7 @@ protected:
   std::string st_rhTuncProfd1_,st_rhTuncProfd2_,st_rhTuncProfd3_,st_rhTuncProfd4_;
   std::string st_rhTcorProfd1_,st_rhTcorProfd2_,st_rhTcorProfd3_,st_rhTcorProfd4_;
   std::string st_rhTprofRBXd1_,st_rhTprofRBXd2_,st_rhTprofRBXd3_,st_rhTprofRBXd4_;
+  std::string st_rhTvsEtaEnergy_;
   std::string st_rhEmap_;
   std::string st_uncorTimingVsE_, st_corTimingVsE_;
 

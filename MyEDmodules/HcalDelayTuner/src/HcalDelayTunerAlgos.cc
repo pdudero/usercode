@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.5 2009/12/04 14:31:24 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.6 2010/01/26 13:56:47 dudero Exp $
 //
 //
 
@@ -317,6 +317,9 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_avgPulse_   = "h1d_pulse" + mysubdetstr_;
   add1dHisto(st_avgPulse_,"Average Pulse Shape, " + mysubdetstr_,10,-0.5,9.5,v_hpars1dprof);
+
+  st_avgPulseTeq0_   = "h1d_pulseTeq0" + mysubdetstr_;
+  add1dHisto(st_avgPulseTeq0_,"Average Pulse Shape, hittime=0.0, " + mysubdetstr_,10,-0.5,9.5,v_hpars1dprof);
 
   st_avgPulsePlus_   = "h1d_pulse" + mysubdetstr_ + "P";
   add1dHisto(st_avgPulsePlus_,"Average Pulse Shape, " + mysubdetstr_+"P",10,-0.5,9.5,v_hpars1dprof);
@@ -725,6 +728,12 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
 	       6, -3.0,  3.0, 18,   0.5,  18.5,
 	       v_hpars2dprof);
 
+    st_rhTvsEtaEnergy_  = "p2d_rhTvsEtaEnergy" + mysubdetstr_;
+    add2dHisto(st_rhTvsEtaEnergy_,
+ "RecHit Time Vs. #eta and Energy, "+mysubdetstr_+", Run "+runnumstr+"; i#eta; Hit Energy (GeV)",
+	       83, -41.5,  41.5, (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
+	      recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2dprof);
+
     if (mysubdet_ == HcalEndcap) {
       st_rhTuncProfd3_  = "p2d_rhTuncPerIetaIphiD3HE";
       add2dHisto(st_rhTuncProfd3_,
@@ -889,7 +898,7 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
     // need front end id: 
     int            iRBX = atoi(((feID_.rbx()).substr(3,2)).c_str());
     int        iRMinRBX = feID_.rm();
-    int            ipix = feID_.pixel();
+    //int            ipix = feID_.pixel();
     int             iRM = zside * ((iRBX-1)*4 + iRMinRBX);
     int     signed_iphi = zside*iphi;
     
@@ -986,6 +995,7 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
     } else {
       myAH->fill1d<TProfile> (avgRMt,     iRM,      corTime_);
       myAH->fill1d<TProfile> (avgPhiT, signed_iphi, corTime_);
+      myAH->fill2d<TProfile2D>(st_rhTvsEtaEnergy_, ieta, hitenergy_, corTime_);
     }
 
 #if 0
