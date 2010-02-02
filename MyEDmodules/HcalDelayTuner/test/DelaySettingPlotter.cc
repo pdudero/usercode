@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.3 2009/11/30 09:49:17 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.4 2009/12/02 21:23:59 dudero Exp $
 //
 //
 
@@ -56,6 +56,7 @@ private:
   void plotHB(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TH1D*dist);
   void plotHE(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TProfile2D*mapd3,TH1D*dist);
   void plotHO(const DelaySettings& settings,TProfile2D*mapd4,TH1D*dist);
+  void printStatsPerRBX(const DelaySettings& settings);
 
   // ----------member data ---------------------------
 
@@ -148,7 +149,7 @@ DelaySettingPlotter::plotHB(const DelaySettings& settings,
       if (setting != BADVAL) { mapd2->Fill(-ieta,iphi,setting); dist->Fill(setting); }
     }
   }
-}
+}                                         // DelaySettingPlotter::plotHB
 
 //======================================================================
 
@@ -202,7 +203,7 @@ DelaySettingPlotter::plotHE(const DelaySettings& settings,
     if (setting != BADVAL) { mapd3->Fill(-29,iphi,setting); dist->Fill(setting); }
 
   } // phi loop
-}
+}                                         // DelaySettingPlotter::plotHE
 
 //======================================================================
 
@@ -220,7 +221,56 @@ DelaySettingPlotter::plotHO(const DelaySettings& settings,
       if (setting != BADVAL) { mapd4->Fill(ieta,iphi,setting); dist->Fill(setting); }
     }
   }
-}
+}                                         // DelaySettingPlotter::plotHO
+
+//======================================================================
+
+void
+DelaySettingPlotter::printStatsPerRBX(const DelaySettings& settings)
+{
+  std::string rbx("");
+  const std::string filename("rbxsettingstats.csv");
+  float sumsetting = 0.0;
+  int   minsetting = INT_MAX;
+  int   maxsetting = INT_MIN;
+  int   numboxes   = 0;
+  FILE *fp = fopen(filename.c_str(),"w");
+  if (!fp) {
+    cerr << "Couldn't open outputfile " << filename << " for writing" << endl;
+    return;
+  }
+
+  DelaySettings::const_iterator it;
+  for (it=settings.begin(); it!=settings.end(); it++) {
+    HcalFrontEndId feID = it->first;
+    int setting         = it->second;
+    if (rbx != feID.rbx()) {
+      if (rbx.size()) {
+	// finished with an RBX, print statistics
+	fprintf (fp,"%s\t%d\t%d\t%5.1f\n",
+		rbx.c_str(),minsetting,maxsetting,sumsetting/(float)numboxes);
+      }
+      rbx = feID.rbx();
+      sumsetting = 0.0;
+      numboxes   = 0;
+      minsetting = INT_MAX;
+      maxsetting = INT_MIN;
+    }
+    sumsetting += (float)setting;
+    if (minsetting > setting) minsetting = setting;
+    if (maxsetting < setting) maxsetting = setting;
+    numboxes++;
+  }
+
+  if (numboxes) {
+    // the last box
+    fprintf (fp,"%s\t%d\t%d\t%5.1f\n",
+	    rbx.c_str(),minsetting,maxsetting,sumsetting/(float)numboxes);
+  }
+
+  cout << "Wrote outputfile " << filename<< endl;
+
+}                               // DelaySettingPlotter::printStatsPerRBX
 
 //======================================================================
 
@@ -262,6 +312,8 @@ DelaySettingPlotter::endJob()
   plotHB(newsettings,newmapd1,newmapd2,newdist);
   plotHE(newsettings,newmapd1,newmapd2,newmapd3,newdist);
   plotHO(newsettings,newmapd4,newdist);
+
+  printStatsPerRBX(newsettings);
 }
 
 //define this as a plug-in
