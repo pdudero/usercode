@@ -1,0 +1,565 @@
+#include "RecoLocalCalo/HcalRecAlgos/interface/HcalSimpleRecAlgo.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "CalibCalorimetry/HcalAlgos/interface/HcalTimeSlew.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include <algorithm> // for "max"
+#include <math.h>
+
+#include "TProfile2D.h"
+#include "TProfile.h"
+
+static double MaximumFractionalError = 0.0005; // 0.05% error allowed from this source
+
+TProfile *p1_pulse4lowpksamp;
+TProfile *p1_pulse4hiwpksamp;
+TProfile *p1_pulse4time0;
+TH1F *h1_wpksampHBHE;
+TH1F *h1_wpksampHB;
+TH1F *h1_wpksampHE;
+TH1F *h1_cortimeHBHE;
+TH1F *h1_cortimeHB;
+TH1F *h1_cortimeHE;
+TH1F *h1_cortimeNoPkbin1;
+TH1F *h1_lutindex;
+TH2F *h2_indexVsWpksamp;
+TH2F *h2_wpksampVsEHBHE;
+TH2F *h2_wpksampVsEHB;
+TH2F *h2_wpksampVsEHE;
+TH2F *h2_cortimeVsEHBHE;
+TH2F *h2_cortimeVsEHB;
+TH2F *h2_cortimeVsEHE;
+TH2F *h2_wpksamp4time0;
+TH2F *h2_timeVsShiftHBHE;
+TH2F *h2_timeVsShiftHB;
+TH2F *h2_timeVsShiftHE;
+TH2F *h2_timeVSmaxIHBHE;
+TH2F *h2_timeVSmaxIHB;
+TH2F *h2_timeVSmaxIHE;
+TH1F *h1_correctionHBHE;
+TH1F *h1_maxIHBHE;
+TH1F *h1_maxIHB;
+TH1F *h1_maxIHE;
+TH1F *h1_maxI4lowpksampHBHE;
+TH1F *h1_maxI4lowpksampHB;
+TH1F *h1_maxI4lowpksampHE;
+TH1F *h1_maxI4hiwpksampHBHE;
+TH1F *h1_maxI4hiwpksampHB;
+TH1F *h1_maxI4hiwpksampHE;
+TProfile2D *p2d_wpksampVsEtaAndEHBHE;
+TProfile2D *p2d_wpksampVsEtaAndEHB;
+TProfile2D *p2d_wpksampVsEtaAndEHE;
+TProfile2D *p2d_cortimeVsEtaAndEHBHE;
+TProfile2D *p2d_cortimeVsEtaAndEHB;
+TProfile2D *p2d_cortimeVsEtaAndEHE;
+
+HcalSimpleRecAlgo::HcalSimpleRecAlgo(int firstSample, int samplesToAdd, bool correctForTimeslew, bool correctForPulse, float phaseNS) : 
+  firstSample_(firstSample), 
+  samplesToAdd_(samplesToAdd), 
+  correctForTimeslew_(correctForTimeslew) {
+  if (correctForPulse) 
+    pulseCorr_=std::auto_ptr<HcalPulseContainmentCorrection>(new HcalPulseContainmentCorrection(samplesToAdd_,phaseNS,MaximumFractionalError));
+
+  std::cout << "primary constructor, algo this = " << (int)this << std::endl;
+
+  edm::Service<TFileService> fs;
+  dir_ = new TFileDirectory(fs->mkdir("HitReconstructor"));
+
+  p1_pulse4lowpksamp= dir_->make<TProfile>("p1_pulse4lowpksamp", "Digi shape for wpksamp<0.5, HBHE", 3,-1.5,1.5);
+  p1_pulse4hiwpksamp= dir_->make<TProfile>("p1_pulse4hiwpksamp", "Digi shape for wpksamp>1.5, HBHE", 3,-1.5,1.5);
+  p1_pulse4time0    = dir_->make<TProfile>("p1_pulse4time0",     "Digi shape for time=0.0, HBHE",    3,-1.5,1.5);
+
+  h1_maxI4lowpksampHBHE= dir_->make<TH1F>("h1_maxI4lowpksampHBHE", "Peak sample number for wpksamp<0.5, HBHE", 11,-1.5,9.5);
+  h1_maxI4lowpksampHB  = dir_->make<TH1F>("h1_maxI4lowpksampHB",   "Peak sample number for wpksamp<0.5, HB",   11,-1.5,9.5);
+  h1_maxI4lowpksampHE  = dir_->make<TH1F>("h1_maxI4lowpksampHE",   "Peak sample number for wpksamp<0.5, HE",   11,-1.5,9.5);
+  h1_maxI4hiwpksampHBHE= dir_->make<TH1F>("h1_maxI4hiwpksampHBHE", "Peak sample number for wpksamp>1.5, HBHE", 11,-1.5,9.5);
+  h1_maxI4hiwpksampHB  = dir_->make<TH1F>("h1_maxI4hiwpksampHB",   "Peak sample number for wpksamp>1.5, HB",   11,-1.5,9.5);
+  h1_maxI4hiwpksampHE  = dir_->make<TH1F>("h1_maxI4hiwpksampHE",   "Peak sample number for wpksamp>1.5, HE",   11,-1.5,9.5);
+
+  h1_maxIHBHE = dir_->make<TH1F>("h1_maxIHBHE", "Peak sample number (hit E > 5.0GeV), HBHE", 11,-1.5,9.5);
+  h1_maxIHB   = dir_->make<TH1F>("h1_maxIHB",   "Peak sample number (hit E > 5.0GeV), HB", 11,-1.5,9.5);
+  h1_maxIHE   = dir_->make<TH1F>("h1_maxIHE",   "Peak sample number (hit E > 5.0GeV), HE", 11,-1.5,9.5);
+
+  h1_wpksampHBHE = dir_->make<TH1F>("h1_wpksampHBHE","Weighted Peak Sample, HBHE",41,-2.05,2.05);
+  h1_wpksampHB   = dir_->make<TH1F>("h1_wpksampHB",  "Weighted Peak Sample, HB",  41,-2.05,2.05);
+  h1_wpksampHE   = dir_->make<TH1F>("h1_wpksampHE",  "Weighted Peak Sample, HE",  41,-2.05,2.05);
+
+  h1_cortimeHBHE = dir_->make<TH1F>("h1_cortimeHBHE","Corrected Hit Time (E>1.0GeV), HBHE",199,-99.5,99.5);
+  h1_cortimeHB   = dir_->make<TH1F>("h1_cortimeHB",  "Corrected Hit Time (E>1.0GeV), HB",  199,-99.5,99.5);
+  h1_cortimeHE   = dir_->make<TH1F>("h1_cortimeHE",  "Corrected Hit Time (E>1.0GeV), HE",  199,-99.5,99.5);
+
+  //h1_cortimeNoPkbin1 = dir_->make<TH1F>("h1_cortimeNoPkbin1","Corrected Hit Time (E>1.0GeV, pkbin=1 excluded), HBHE",199,-99.5,99.5);
+  h1_lutindex = dir_->make<TH1F>("h1_lutindex","LUT index (0-49), HBHE", 51, -0.5, 50.5);
+  h2_wpksampVsEHBHE = dir_->make<TH2F>("h2_wpksampVsEHBHE",
+				   "Weighted Peak Sample Vs Energy, HBHE; Hit Energy (GeV); Weighted Peak Sample",
+				   61,-0.25,30.25, 41,-0.025,2.025);
+  h2_wpksampVsEHB = dir_->make<TH2F>("h2_wpksampVsEHB",
+				   "Weighted Peak Sample Vs Energy, HB; Hit Energy (GeV); Weighted Peak Sample",
+				   61,-0.25,30.25, 41,-0.025,2.025);
+  h2_wpksampVsEHE = dir_->make<TH2F>("h2_wpksampVsEHE",
+				   "Weighted Peak Sample Vs Energy, HE; Hit Energy (GeV); Weighted Peak Sample",
+				   61,-0.25,30.25, 41,-0.025,2.025);
+  h2_cortimeVsEHBHE = dir_->make<TH2F>("h2_cortimeVsEHBHE",
+				       "Corrected Hit Time Vs Energy, HBHE; Hit Energy (GeV); Hit Time (ns)",
+				       31,-.5,30.5,199,-99.5,99.5);
+  h2_cortimeVsEHB = dir_->make<TH2F>("h2_cortimeVsEHB",
+				     "Corrected Hit Time Vs Energy, HB; Hit Energy (GeV); Hit Time (ns)",
+				     31,-.5,30.5,199,-99.5,99.5);
+  h2_cortimeVsEHE = dir_->make<TH2F>("h2_cortimeVsEHE",
+				     "Corrected Hit Time Vs Energy, HE; Hit Energy (GeV); Hit Time (ns)",
+				     31,-.5,30.5,199,-99.5,99.5);
+  h2_wpksamp4time0 = dir_->make<TH2F>("h2_wpksamp4time0",
+				      "Weighted Peak Sample & Peak Sample (time==0.0), HBHE; Weighted Peak Sample; Peak Sample",
+				      41,-0.025,2.025, 11,-1.5,9.5);
+  p2d_wpksampVsEtaAndEHBHE = dir_->make<TProfile2D>("p2d_wpksampVsEtaAndEHBHE",
+						"Weighted Peak Sample Vs Eta And Energy, HBHE; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  p2d_wpksampVsEtaAndEHB = dir_->make<TProfile2D>("p2d_wpksampVsEtaAndEHB",
+						"Weighted Peak Sample Vs Eta And Energy, HB; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  p2d_wpksampVsEtaAndEHE = dir_->make<TProfile2D>("p2d_wpksampVsEtaAndEHE",
+						"Weighted Peak Sample Vs Eta And Energy, HE; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  p2d_cortimeVsEtaAndEHBHE = dir_->make<TProfile2D>("p2d_cortimeVsEtaAndEHBHE",
+						"Corrected Hit Time Vs Eta And Energy, HBHE; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  p2d_cortimeVsEtaAndEHB = dir_->make<TProfile2D>("p2d_cortimeVsEtaAndEHB",
+						"Corrected Hit Time Vs Eta And Energy, HB; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  p2d_cortimeVsEtaAndEHE = dir_->make<TProfile2D>("p2d_cortimeVsEtaAndEHE",
+						"Corrected Hit Time Vs Eta And Energy, HE; #eta; Hit Energy (GeV)",
+						59,-29.5,29.5,31,-.5,30.5);
+  h2_indexVsWpksamp = dir_->make<TH2F>("h2_indexVsWpksamp",
+				       "LUT index vs. Weighted Peak Sample, HBHE; Weighted Peak Sample; LUT index",
+				       41,-0.025,2.025,51,-0.5,50.5);
+  h2_timeVsShiftHBHE = dir_->make<TH2F>("h2_timeVsShiftHBHE",
+				    "Hit Time vs Time Shift, HBHE; Time Shift (ns); Hit Time (ns)",
+				    51,-0.25,25.25,126,-50.5,75.5);
+  h2_timeVsShiftHB = dir_->make<TH2F>("h2_timeVsShiftHB",
+				    "Hit Time vs Time Shift, HB; Time Shift (ns); Hit Time (ns)",
+				    51,-0.25,25.25,126,-50.5,75.5);
+  h2_timeVsShiftHE = dir_->make<TH2F>("h2_timeVsShiftHE",
+				    "Hit Time vs Time Shift, HE; Time Shift (ns); Hit Time (ns)",
+				    51,-0.25,25.25,126,-50.5,75.5);
+  h2_timeVSmaxIHBHE= dir_->make<TH2F>("h2_timeVSmaxIHBHE",
+				    "Hit Time vs Peak Sample Number, HBHE; Peak Sample Number; Hit Time (ns)",
+				  11,-1.5,9.5,151,-75.5,75.5);
+  h2_timeVSmaxIHB= dir_->make<TH2F>("h2_timeVSmaxIHB",
+				    "Hit Time vs Peak Sample Number, HB; Peak Sample Number; Hit Time (ns)",
+				  11,-1.5,9.5,151,-75.5,75.5);
+  h2_timeVSmaxIHE= dir_->make<TH2F>("h2_timeVSmaxIHE",
+				    "Hit Time vs Peak Sample Number, HE; Peak Sample Number; Hit Time (ns)",
+				  11,-1.5,9.5,151,-75.5,75.5);
+
+  h1_correctionHBHE = dir_->make<TH1F>("h1_correctionHBHE","Calib correction, HBHE; Correction (ns)", 51, -25.5, 25.5);
+}
+
+HcalSimpleRecAlgo::HcalSimpleRecAlgo(int firstSample, int samplesToAdd) : 
+  firstSample_(firstSample), 
+  samplesToAdd_(samplesToAdd), 
+  correctForTimeslew_(false) {
+}
+
+///Timeshift correction for HPDs based on the position of the peak ADC measurement.
+///  Allows for an accurate determination of the relative phase of the pulse shape from
+///  the HPD.  Calculated based on a weighted sum of the -1,0,+1 samples relative to the peak
+///  as follows:  wpksamp = (0*sample[0] + 1*sample[1] + 2*sample[2]) / (sample[0] + sample[1] + sample[2])
+///  where sample[1] is the maximum ADC sample value.
+static float timeshift_ns_hbheho(float wpksamp);
+
+///Same as above, but for the HF PMTs.
+static float timeshift_ns_hf(float wpksamp);
+
+
+namespace HcalSimpleRecAlgoImpl {
+  template<class Digi, class RecHit>
+  inline RecHit reco(const Digi& digi, const HcalCoder& coder, const HcalCalibrations& calibs, 
+		     int ifirst, int n, bool slewCorrect, const HcalPulseContainmentCorrection* corr,
+		     HcalTimeSlew::BiasSetting slewFlavor) {
+    CaloSamples tool;
+    coder.adc2fC(digi,tool);
+
+    bool isHB = (digi.id().subdet() == HcalBarrel);
+    bool isHE = (digi.id().subdet() == HcalEndcap);
+    int  ieta = digi.id().ieta();
+
+    double ampl=0; int maxI = -1; double maxA = -1e10; float ta=0;
+    double fc_ampl=0;
+    for (int i=ifirst; i<tool.size() && i<n+ifirst; i++) {
+      int capid=digi[i].capid();
+      ta = (tool[i]-calibs.pedestal(capid)); // pedestal subtraction
+      fc_ampl+=ta; 
+      ta*= calibs.respcorrgain(capid) ; // fC --> GeV
+      ampl+=ta;
+      if(ta>maxA){
+	maxA=ta;
+	maxI=i;
+      }
+    }
+
+    float time = -9999;
+    float timeshift = -9999;
+    float t0 = -9999.;
+    float t2 = -9999.;
+    float wpksamp = -9999;
+
+    ////Cannot calculate time value with max ADC sample at first or last position in window....
+    if(maxI==0 || maxI==(tool.size()-1)) {      
+      LogDebug("HCAL Pulse") << "HcalSimpleRecAlgo::reconstruct :" 
+					       << " Invalid max amplitude position, " 
+					       << " max Amplitude: "<< maxI
+					       << " first: "<<ifirst
+					       << " last: "<<(tool.size()-1)
+					       << std::endl;
+    } else {
+      maxA=fabs(maxA);
+      int capid=digi[maxI-1].capid();
+      float t0 = fabs((tool[maxI-1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );
+      //t0 = ((tool[maxI-1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );
+      capid=digi[maxI+1].capid();
+      float t2 = fabs((tool[maxI+1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );
+      //t2 = ((tool[maxI+1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );
+
+      /********** TRY THIS ********** /
+      double minA=t0;
+      if (maxA<minA) minA=maxA;
+      if (t2<minA)   minA=t2;
+      if (minA<0) { maxA-=minA; t0-=minA; t2-=minA; } // positivizes all samples
+      /********** TRY THIS **********/
+
+      wpksamp = (t0 + maxA + t2);
+      if (wpksamp!=0) wpksamp=(maxA + 2.0*t2) / wpksamp; 
+
+      timeshift = timeshift_ns_hbheho(wpksamp);
+      time = (maxI - digi.presamples())*25.0 + timeshift;
+
+      if (wpksamp < 0.5) {
+	p1_pulse4lowpksamp->Fill(-1.,t0); p1_pulse4lowpksamp->Fill(0.,maxA); p1_pulse4lowpksamp->Fill(1.,t2);
+
+	if (isHB) { h1_maxI4lowpksampHBHE->Fill(maxI); h1_maxI4lowpksampHB->Fill(maxI); }
+	if (isHE) { h1_maxI4lowpksampHBHE->Fill(maxI); h1_maxI4lowpksampHE->Fill(maxI); }
+      }
+      if (wpksamp > 1.5) {
+	p1_pulse4hiwpksamp->Fill(-1.,t0); p1_pulse4hiwpksamp->Fill(0.,maxA); p1_pulse4hiwpksamp->Fill(1.,t2);
+
+	if (isHB) { h1_maxI4hiwpksampHBHE->Fill(maxI); h1_maxI4hiwpksampHB->Fill(maxI); }
+	if (isHE) { h1_maxI4hiwpksampHBHE->Fill(maxI); h1_maxI4hiwpksampHE->Fill(maxI); }
+      }
+
+      if (corr!=0) {
+	// Apply phase-based amplitude correction:
+	ampl *= corr->getCorrection(fc_ampl);
+	//      std::cout << fc_ampl << " --> " << corr->getCorrection(fc_ampl) << std::endl;
+      }
+    
+      if (slewCorrect) time-=HcalTimeSlew::delay(std::max(1.0,fc_ampl),slewFlavor);
+
+      if (isHB) { h2_wpksampVsEHBHE->Fill(ampl,wpksamp); h2_wpksampVsEHB->Fill(ampl,wpksamp); }
+      if (isHE) { h2_wpksampVsEHBHE->Fill(ampl,wpksamp); h2_wpksampVsEHE->Fill(ampl,wpksamp); }
+
+      if (ampl > 1.0) {
+	if (isHB) { h1_maxIHBHE->Fill(maxI); h1_maxIHB->Fill(maxI); }
+	if (isHE) { h1_maxIHBHE->Fill(maxI); h1_maxIHE->Fill(maxI); }
+
+	if (isHB) { h1_wpksampHBHE->Fill(wpksamp); h1_wpksampHB->Fill(wpksamp); }
+	if (isHE) { h1_wpksampHBHE->Fill(wpksamp); h1_wpksampHE->Fill(wpksamp); }
+  
+	if (isHB) { p2d_wpksampVsEtaAndEHBHE->Fill(ieta,ampl,wpksamp); 
+	            p2d_wpksampVsEtaAndEHB  ->Fill(ieta,ampl,wpksamp); }
+	if (isHE) { p2d_wpksampVsEtaAndEHBHE->Fill(ieta,ampl,wpksamp);
+	            p2d_wpksampVsEtaAndEHE  ->Fill(ieta,ampl,wpksamp); }
+      }
+    }
+
+    time=time-calibs.timecorr(); // time calibration
+
+    if (isHB) { p2d_cortimeVsEtaAndEHBHE->Fill(ieta,ampl,time);
+                p2d_cortimeVsEtaAndEHB  ->Fill(ieta,ampl,time);
+                h2_cortimeVsEHBHE->Fill(ampl,time);
+	        h2_cortimeVsEHB  ->Fill(ampl,time); }
+    if (isHE) { p2d_cortimeVsEtaAndEHBHE->Fill(ieta,ampl,time);
+                p2d_cortimeVsEtaAndEHE  ->Fill(ieta,ampl,time);
+                h2_cortimeVsEHBHE->Fill(ampl,time);
+	        h2_cortimeVsEHE  ->Fill(ampl,time); }
+
+    if (ampl > 1.0) {
+      if (isHB) { h1_cortimeHBHE->Fill(time); h1_cortimeHB->Fill(time); }
+      if (isHE) { h1_cortimeHBHE->Fill(time); h1_cortimeHE->Fill(time); }
+      //if (maxI != 1) h1_cortimeNoPkbin1->Fill(time);
+      if (isHB) { h2_timeVsShiftHBHE->Fill(timeshift,time); h2_timeVsShiftHB->Fill(timeshift,time); }
+      if (isHE) { h2_timeVsShiftHBHE->Fill(timeshift,time); h2_timeVsShiftHE->Fill(timeshift,time); }
+    }
+
+    if (ampl > 5.0) {
+      if (isHB) { h2_timeVSmaxIHBHE->Fill(maxI,time); h2_timeVSmaxIHB->Fill(maxI,time); }
+      if (isHE) { h2_timeVSmaxIHBHE->Fill(maxI,time); h2_timeVSmaxIHE->Fill(maxI,time); }
+    }
+    if (isHB || isHE) h1_correctionHBHE->Fill(calibs.timecorr());
+
+    if (time == 0.0) {
+      h2_wpksamp4time0->Fill(wpksamp,maxI);
+      p1_pulse4time0->Fill(-1.,t0); p1_pulse4time0->Fill(0.,maxA); p1_pulse4time0->Fill(1.,t2);
+    }
+
+    return RecHit(digi.id(),ampl,time);    
+  }
+}
+
+HBHERecHit HcalSimpleRecAlgo::reconstruct(const HBHEDataFrame& digi, const HcalCoder& coder, const HcalCalibrations& calibs) const {
+  return HcalSimpleRecAlgoImpl::reco<HBHEDataFrame,HBHERecHit>(digi,coder,calibs,
+							       firstSample_,samplesToAdd_,correctForTimeslew_,
+							       pulseCorr_.get(),
+							       HcalTimeSlew::Medium);
+}
+
+HORecHit HcalSimpleRecAlgo::reconstruct(const HODataFrame& digi, const HcalCoder& coder, const HcalCalibrations& calibs) const {
+  return HcalSimpleRecAlgoImpl::reco<HODataFrame,HORecHit>(digi,coder,calibs,
+							   firstSample_,samplesToAdd_,correctForTimeslew_,
+							   pulseCorr_.get(),
+							   HcalTimeSlew::Slow);
+}
+
+HFRecHit HcalSimpleRecAlgo::reconstruct(const HFDataFrame& digi, const HcalCoder& coder, const HcalCalibrations& calibs) const {
+  CaloSamples tool;
+  coder.adc2fC(digi,tool);
+  
+  double ampl=0; int maxI = -1; double maxA = -1e10; float ta=0;
+  for (int i=firstSample_; i<tool.size() && i<samplesToAdd_+firstSample_; i++) {
+    int capid=digi[i].capid();
+    ta = (tool[i]-calibs.pedestal(capid))*calibs.respcorrgain(capid);
+    ampl+=ta;
+    if(ta>maxA){
+      maxA=ta;
+      maxI=i;
+    }
+  }
+
+  float time=-9999.0;
+  ////Cannot calculate time value with max ADC sample at first or last position in window....
+  if(maxI==0 || maxI==(tool.size()-1)) {
+      LogDebug("HCAL Pulse") << "HcalSimpleRecAlgo::reconstruct :" 
+					       << " Invalid max amplitude position, " 
+					       << " max Amplitude: "<< maxI
+					       << " first: "<<firstSample_
+					       << " last: "<<(tool.size()-1)
+					       << std::endl;
+  } else {
+    maxA=fabs(maxA);  
+    int capid=digi[maxI-1].capid();
+    float t0 = fabs((tool[maxI-1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );
+    capid=digi[maxI+1].capid();
+    float t2 = fabs((tool[maxI+1]-calibs.pedestal(capid))*calibs.respcorrgain(capid) );    
+    float wpksamp = (t0 + maxA + t2);
+    if (wpksamp!=0) wpksamp=(maxA + 2.0*t2) / wpksamp; 
+    time = (maxI - digi.presamples())*25.0 + timeshift_ns_hf(wpksamp);
+  }
+
+  time=time-calibs.timecorr();
+
+  return HFRecHit(digi.id(),ampl,time); 
+}
+
+// timeshift implementation
+
+static const float wpksamp0_hbheho = 0.680178;
+static const float scale_hbheho    = 0.819786;
+static const int   num_bins_hbheho = 50;
+
+static const float actual_ns_hbheho[num_bins_hbheho] = {
+ 0.00000, // 0.000-0.020
+ 0.41750, // 0.020-0.040
+ 0.81500, // 0.040-0.060
+ 1.21000, // 0.060-0.080
+ 1.59500, // 0.080-0.100
+ 1.97250, // 0.100-0.120
+ 2.34750, // 0.120-0.140
+ 2.71250, // 0.140-0.160
+ 3.07500, // 0.160-0.180
+ 3.43500, // 0.180-0.200
+ 3.79000, // 0.200-0.220
+ 4.14250, // 0.220-0.240
+ 4.49250, // 0.240-0.260
+ 4.84250, // 0.260-0.280
+ 5.19000, // 0.280-0.300
+ 5.53750, // 0.300-0.320
+ 5.89000, // 0.320-0.340
+ 6.23750, // 0.340-0.360
+ 6.59250, // 0.360-0.380
+ 6.95250, // 0.380-0.400
+ 7.31000, // 0.400-0.420
+ 7.68000, // 0.420-0.440
+ 8.05500, // 0.440-0.460
+ 8.43000, // 0.460-0.480
+ 8.83250, // 0.480-0.500
+ 9.23250, // 0.500-0.520
+ 9.65500, // 0.520-0.540
+10.09500, // 0.540-0.560
+10.54750, // 0.560-0.580
+11.04500, // 0.580-0.600
+11.55750, // 0.600-0.620
+12.13000, // 0.620-0.640
+12.74500, // 0.640-0.660
+13.41250, // 0.660-0.680
+14.18500, // 0.680-0.700
+15.02750, // 0.700-0.720
+15.92250, // 0.720-0.740
+16.82500, // 0.740-0.760
+17.70000, // 0.760-0.780
+18.52500, // 0.780-0.800
+19.28750, // 0.800-0.820
+19.99750, // 0.820-0.840
+20.67250, // 0.840-0.860
+21.31250, // 0.860-0.880
+21.90750, // 0.880-0.900
+22.48750, // 0.900-0.920
+23.02750, // 0.920-0.940
+23.55250, // 0.940-0.960
+24.05000, // 0.960-0.980
+24.53750, // 0.980-1.000
+};
+
+float timeshift_ns_hbheho(float wpksamp) {
+  int index=(int)(0.5+num_bins_hbheho*(wpksamp-wpksamp0_hbheho)/scale_hbheho);
+
+  if      (index <    0) {
+    h1_lutindex->Fill(0);
+    h2_indexVsWpksamp->Fill(wpksamp,0);
+    return actual_ns_hbheho[0];
+  }
+  else if (index >= num_bins_hbheho) {
+    h1_lutindex->Fill(num_bins_hbheho-1);
+    h2_indexVsWpksamp->Fill(wpksamp,num_bins_hbheho-1);
+    return actual_ns_hbheho[num_bins_hbheho-1];
+  }
+
+  h1_lutindex->Fill(index);
+  h2_indexVsWpksamp->Fill(wpksamp,index);
+
+  return actual_ns_hbheho[index];
+}
+
+static const float wpksamp0_hf = 0.500053;
+static const float scale_hf    = 0.999683;
+static const int   num_bins_hf = 100;
+
+static const float actual_ns_hf[num_bins_hf] = {
+ 0.00250, // 0.000-0.010
+ 0.08000, // 0.010-0.020
+ 0.16000, // 0.020-0.030
+ 0.23750, // 0.030-0.040
+ 0.31750, // 0.040-0.050
+ 0.39500, // 0.050-0.060
+ 0.47500, // 0.060-0.070
+ 0.55500, // 0.070-0.080
+ 0.63000, // 0.080-0.090
+ 0.70000, // 0.090-0.100
+ 0.77000, // 0.100-0.110
+ 0.84000, // 0.110-0.120
+ 0.91000, // 0.120-0.130
+ 0.98000, // 0.130-0.140
+ 1.05000, // 0.140-0.150
+ 1.12000, // 0.150-0.160
+ 1.19000, // 0.160-0.170
+ 1.26000, // 0.170-0.180
+ 1.33000, // 0.180-0.190
+ 1.40000, // 0.190-0.200
+ 1.47000, // 0.200-0.210
+ 1.54000, // 0.210-0.220
+ 1.61000, // 0.220-0.230
+ 1.68000, // 0.230-0.240
+ 1.75000, // 0.240-0.250
+ 1.82000, // 0.250-0.260
+ 1.89000, // 0.260-0.270
+ 1.96000, // 0.270-0.280
+ 2.03000, // 0.280-0.290
+ 2.10000, // 0.290-0.300
+ 2.17000, // 0.300-0.310
+ 2.24000, // 0.310-0.320
+ 2.31000, // 0.320-0.330
+ 2.38000, // 0.330-0.340
+ 2.45000, // 0.340-0.350
+ 2.52000, // 0.350-0.360
+ 2.59000, // 0.360-0.370
+ 2.68500, // 0.370-0.380
+ 2.79250, // 0.380-0.390
+ 2.90250, // 0.390-0.400
+ 3.01000, // 0.400-0.410
+ 3.11750, // 0.410-0.420
+ 3.22500, // 0.420-0.430
+ 3.33500, // 0.430-0.440
+ 3.44250, // 0.440-0.450
+ 3.55000, // 0.450-0.460
+ 3.73250, // 0.460-0.470
+ 4.02000, // 0.470-0.480
+ 4.30750, // 0.480-0.490
+ 4.59500, // 0.490-0.500
+ 6.97500, // 0.500-0.510
+10.98750, // 0.510-0.520
+13.03750, // 0.520-0.530
+14.39250, // 0.530-0.540
+15.39500, // 0.540-0.550
+16.18250, // 0.550-0.560
+16.85250, // 0.560-0.570
+17.42750, // 0.570-0.580
+17.91500, // 0.580-0.590
+18.36250, // 0.590-0.600
+18.76500, // 0.600-0.610
+19.11250, // 0.610-0.620
+19.46000, // 0.620-0.630
+19.76500, // 0.630-0.640
+20.03500, // 0.640-0.650
+20.30250, // 0.650-0.660
+20.57250, // 0.660-0.670
+20.79250, // 0.670-0.680
+21.00250, // 0.680-0.690
+21.21000, // 0.690-0.700
+21.42000, // 0.700-0.710
+21.62750, // 0.710-0.720
+21.79000, // 0.720-0.730
+21.95250, // 0.730-0.740
+22.11500, // 0.740-0.750
+22.27750, // 0.750-0.760
+22.44000, // 0.760-0.770
+22.60500, // 0.770-0.780
+22.73250, // 0.780-0.790
+22.86000, // 0.790-0.800
+22.98500, // 0.800-0.810
+23.11250, // 0.810-0.820
+23.23750, // 0.820-0.830
+23.36500, // 0.830-0.840
+23.49000, // 0.840-0.850
+23.61750, // 0.850-0.860
+23.71500, // 0.860-0.870
+23.81250, // 0.870-0.880
+23.91250, // 0.880-0.890
+24.01000, // 0.890-0.900
+24.10750, // 0.900-0.910
+24.20750, // 0.910-0.920
+24.30500, // 0.920-0.930
+24.40500, // 0.930-0.940
+24.50250, // 0.940-0.950
+24.60000, // 0.950-0.960
+24.68250, // 0.960-0.970
+24.76250, // 0.970-0.980
+24.84000, // 0.980-0.990
+24.92000  // 0.990-1.000
+};
+
+float timeshift_ns_hf(float wpksamp) {
+  float flx = (num_bins_hf*(wpksamp - wpksamp0_hf)/scale_hf);
+  int index = (int)flx;
+  float yval;
+  
+  if      (index <    0)        return actual_ns_hf[0];
+  else if (index >= num_bins_hf-1) return actual_ns_hf[num_bins_hf-1];
+
+  // else interpolate:
+  float y1       = actual_ns_hf[index];
+  float y2       = actual_ns_hf[index+1];
+
+  // float delta_x  = 1/(float)num_bins_hf;
+  // yval = y1 + (y2-y1)*(flx-(float)index)/delta_x;
+
+  yval = y1 + (y2-y1)*(flx-(float)index);
+  return yval;
+}
