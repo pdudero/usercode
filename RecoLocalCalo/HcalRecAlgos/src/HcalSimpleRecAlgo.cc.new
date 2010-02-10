@@ -20,9 +20,11 @@ TH1F *h1_wpksampHE;
 TH1F *h1_cortimeHBHE;
 TH1F *h1_cortimeHB;
 TH1F *h1_cortimeHE;
+TH1F *h1_treco50HBHE;
 TH1F *h1_cortimeNoPkbin1;
 TH1F *h1_lutindex;
 TH2F *h2_indexVsWpksamp;
+TH2F *h2_timeshiftVsWpksamp;
 TH2F *h2_wpksampVsEHBHE;
 TH2F *h2_wpksampVsEHB;
 TH2F *h2_wpksampVsEHE;
@@ -36,6 +38,9 @@ TH2F *h2_timeVsShiftHE;
 TH2F *h2_timeVSmaxIHBHE;
 TH2F *h2_timeVSmaxIHB;
 TH2F *h2_timeVSmaxIHE;
+TH2F *h2_treco50VsCortimeHBHE;
+TH2F *h2_treco50corVsSlewCorrect;
+TH2F *h2_treco50VSwpksampHBHE;
 TH1F *h1_correctionHBHE;
 TH1F *h1_maxIHBHE;
 TH1F *h1_maxIHB;
@@ -88,6 +93,8 @@ HcalSimpleRecAlgo::HcalSimpleRecAlgo(int firstSample, int samplesToAdd, bool cor
   h1_cortimeHB   = dir_->make<TH1F>("h1_cortimeHB",  "Corrected Hit Time (E>1.0GeV), HB",  199,-99.5,99.5);
   h1_cortimeHE   = dir_->make<TH1F>("h1_cortimeHE",  "Corrected Hit Time (E>1.0GeV), HE",  199,-99.5,99.5);
 
+  h1_treco50HBHE = dir_->make<TH1F>("h1_treco50HBHE","T_{reco50} (E>1.0GeV), HBHE",199,-99.5,99.5);
+
   //h1_cortimeNoPkbin1 = dir_->make<TH1F>("h1_cortimeNoPkbin1","Corrected Hit Time (E>1.0GeV, pkbin=1 excluded), HBHE",199,-99.5,99.5);
   h1_lutindex = dir_->make<TH1F>("h1_lutindex","LUT index (0-49), HBHE", 61, -0.5, 60.5);
   h2_wpksampVsEHBHE = dir_->make<TH2F>("h2_wpksampVsEHBHE",
@@ -111,6 +118,19 @@ HcalSimpleRecAlgo::HcalSimpleRecAlgo(int firstSample, int samplesToAdd, bool cor
   h2_wpksamp4time0 = dir_->make<TH2F>("h2_wpksamp4time0",
 				      "Weighted Peak Sample & Peak Sample (time==0.0), HBHE; Weighted Peak Sample; Peak Sample",
 				      41,-0.025,2.025, 11,-1.5,9.5);
+
+  h2_treco50corVsSlewCorrect = dir_->make<TH2F> ("h2_treco50corVsSlewCorrect",
+			 "T_{reco50} Correction Vs. Slew Correction (E>2GeV); Slew Correction (ns); T_{reco50} Correction (ns)",
+						 23,-0.25,11.25,41,-0.25,20.25);
+
+  h2_treco50VsCortimeHBHE = dir_->make<TH2F>("h1_treco50VsCortimeHBHE",
+					     "T_{reco50} Vs. Corrected Hit Time (E>1.0GeV), HBHE; Corrected hit Time; T_{reco50}",
+					     199,-99.5,99.5,199,-99.5,99.5);
+
+  h2_treco50VSwpksampHBHE = dir_->make<TH2F>("h1_treco50VSwpksampHBHE",
+					     "T_{reco50} Vs. (maxI-1)+wpksamp (E>1.0GeV), HBHE; (maxI-1)+wpksamp; T_{reco50}",
+					     41,-0.025,2.025,199,-99.5,99.5);
+
   p2d_wpksampVsEtaAndEHBHE = dir_->make<TProfile2D>("p2d_wpksampVsEtaAndEHBHE",
 						"Weighted Peak Sample Vs Eta And Energy, HBHE; #eta; Hit Energy (GeV)",
 						59,-29.5,29.5,31,-.5,30.5);
@@ -132,15 +152,18 @@ HcalSimpleRecAlgo::HcalSimpleRecAlgo(int firstSample, int samplesToAdd, bool cor
   h2_indexVsWpksamp = dir_->make<TH2F>("h2_indexVsWpksamp",
 				       "LUT index vs. Weighted Peak Sample, HBHE; Weighted Peak Sample; LUT index",
 				       41,-0.025,2.025,61,-0.5,60.5);
+  h2_timeshiftVsWpksamp = dir_->make<TH2F>("h2_timeshiftVsWpksamp",
+				       "Time shift vs. Weighted Peak Sample, HBHE; Weighted Peak Sample; Time Shift (ns)",
+					   41,-0.025,2.025,63,-6.25,25.25);
   h2_timeVsShiftHBHE = dir_->make<TH2F>("h2_timeVsShiftHBHE",
 				    "Hit Time vs Time Shift, HBHE; Time Shift (ns); Hit Time (ns)",
-				    51,-0.25,25.25,126,-50.5,75.5);
+					63,-6.25,25.25,126,-50.5,75.5);
   h2_timeVsShiftHB = dir_->make<TH2F>("h2_timeVsShiftHB",
 				    "Hit Time vs Time Shift, HB; Time Shift (ns); Hit Time (ns)",
-				    51,-0.25,25.25,126,-50.5,75.5);
+				      63,-6.25,25.25,126,-50.5,75.5);
   h2_timeVsShiftHE = dir_->make<TH2F>("h2_timeVsShiftHE",
 				    "Hit Time vs Time Shift, HE; Time Shift (ns); Hit Time (ns)",
-				    51,-0.25,25.25,126,-50.5,75.5);
+				      63,-6.25,25.25,126,-50.5,75.5);
   h2_timeVSmaxIHBHE= dir_->make<TH2F>("h2_timeVSmaxIHBHE",
 				    "Hit Time vs Peak Sample Number, HBHE; Peak Sample Number; Hit Time (ns)",
 				  11,-1.5,9.5,151,-75.5,75.5);
@@ -233,6 +256,8 @@ namespace HcalSimpleRecAlgoImpl {
       timeshift = timeshift_ns_hbheho(wpksamp);
       time = (maxI - digi.presamples())*25.0 + timeshift;
 
+      h2_timeshiftVsWpksamp->Fill(wpksamp,timeshift);
+
       if (wpksamp < 0.5) {
 	p1_pulse4lowpksamp->Fill(-1.,t0); p1_pulse4lowpksamp->Fill(0.,maxA); p1_pulse4lowpksamp->Fill(1.,t2);
 
@@ -282,12 +307,21 @@ namespace HcalSimpleRecAlgoImpl {
                 h2_cortimeVsEHBHE->Fill(ampl,time);
 	        h2_cortimeVsEHE  ->Fill(ampl,time); }
 
+    float treco50cor = 8./3.* log(ampl/50.);
+    float treco50 = time + treco50cor;
+
+    if (ampl > 2.0)
+      h2_treco50corVsSlewCorrect->Fill(HcalTimeSlew::delay(std::max(1.0,fc_ampl),slewFlavor),-treco50cor);
+
     if (ampl > 1.0) {
-      if (isHB) { h1_cortimeHBHE->Fill(time); h1_cortimeHB->Fill(time); }
-      if (isHE) { h1_cortimeHBHE->Fill(time); h1_cortimeHE->Fill(time); }
-      //if (maxI != 1) h1_cortimeNoPkbin1->Fill(time);
-      if (isHB) { h2_timeVsShiftHBHE->Fill(timeshift,time); h2_timeVsShiftHB->Fill(timeshift,time); }
-      if (isHE) { h2_timeVsShiftHBHE->Fill(timeshift,time); h2_timeVsShiftHE->Fill(timeshift,time); }
+      h1_cortimeHBHE->Fill(time);
+      h1_treco50HBHE->Fill(treco50);
+      h2_treco50VsCortimeHBHE->Fill(time,treco50);
+      h2_treco50VSwpksampHBHE->Fill((float)(maxI-1)+wpksamp,treco50);
+      h2_timeVsShiftHBHE->Fill(timeshift,time);
+
+      if (isHB) { h1_cortimeHB->Fill(time); h2_timeVsShiftHB->Fill(timeshift,time); }
+      if (isHE) { h1_cortimeHE->Fill(time); h2_timeVsShiftHE->Fill(timeshift,time); }
     }
 
     if (ampl > 5.0) {
@@ -363,7 +397,7 @@ HFRecHit HcalSimpleRecAlgo::reconstruct(const HFDataFrame& digi, const HcalCoder
 
 static const float wpksamp0_hbheho = 0.500043;
 static const float scale_hbheho    = 1.00001;
-static const int   num_bins_hbheho = 60;
+static const int   num_bins_hbheho = 61;
 
 static const float actual_ns_hbheho[num_bins_hbheho] = {
 -5.44000, // 0.500, 0.000-0.017
@@ -426,17 +460,20 @@ static const float actual_ns_hbheho[num_bins_hbheho] = {
 23.53250, // 1.450, 0.950-0.967
 24.03750, // 1.467, 0.967-0.983
 24.53250, // 1.483, 0.983-1.000
+25.00000  // 1.500, 1.000-1.017 - keep for interpolation
 };
 
 float timeshift_ns_hbheho(float wpksamp) {
-  int index=(int)(0.5+num_bins_hbheho*(wpksamp-wpksamp0_hbheho)/scale_hbheho);
+  float flx = ((num_bins_hbheho-1)*(wpksamp - wpksamp0_hbheho)/scale_hbheho);
+  int index = (int)flx;
+  float yval;
 
   if      (index <    0) {
     h1_lutindex->Fill(0);
     h2_indexVsWpksamp->Fill(wpksamp,0);
     return actual_ns_hbheho[0];
   }
-  else if (index >= num_bins_hbheho) {
+  else if (index >= num_bins_hbheho-1) {
     h1_lutindex->Fill(num_bins_hbheho-1);
     h2_indexVsWpksamp->Fill(wpksamp,num_bins_hbheho-1);
     return actual_ns_hbheho[num_bins_hbheho-1];
@@ -445,7 +482,16 @@ float timeshift_ns_hbheho(float wpksamp) {
   h1_lutindex->Fill(index);
   h2_indexVsWpksamp->Fill(wpksamp,index);
 
-  return actual_ns_hbheho[index];
+  // else interpolate:
+  float y1 = actual_ns_hbheho[index];
+  float y2 = actual_ns_hbheho[index+1];
+
+  yval = y1 + (y2-y1)*(flx-(float)index);
+
+  if ((wpksamp > 1.484) && (yval < 24.53250))
+    printf ("%f\t%f\t%d\t%f\t%f\t%f\n", wpksamp, flx, index, y1, y2, yval);
+
+  return yval;
 }
 
 static const float wpksamp0_hf = 0.500053;
