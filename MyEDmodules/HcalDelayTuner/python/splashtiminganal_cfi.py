@@ -9,7 +9,7 @@ hbtimeanal = cms.EDAnalyzer('SplashTimingAnalyzer',
     ),
 
     subdet            = cms.untracked.string("HB"),
-    splashPlusZside   = cms.bool(True),
+    splashPlusZside   = cms.untracked.bool(True),
     runDescription    = cms.untracked.string(""),
     globalTimeOffset  = cms.double(0.0),
     badEventList      = cms.vint32(),
