@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.hh,v 1.2 2009/11/20 19:12:48 dudero Exp $
+// $Id: HcalDelayTunerInput.hh,v 1.3 2009/12/04 14:40:28 dudero Exp $
 //
 //
 
@@ -79,6 +79,7 @@ private:
   std::vector<std::string> xmlfileNames_;
   std::vector<std::string> timecorrFileNames_;
   std::string              timecorrScanFmt_;
+  std::string              settingScanFmt_;
 					
 };
 

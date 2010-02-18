@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.cc,v 1.3 2009/11/20 19:12:48 dudero Exp $
+// $Id: HcalDelayTunerInput.cc,v 1.4 2009/11/30 09:45:35 dudero Exp $
 //
 //
 
@@ -42,6 +42,7 @@ HcalDelayTunerInput::HcalDelayTunerInput(const edm::ParameterSet& iConfig)
   xmlfileNames_ = iConfig.getUntrackedParameter<vector<string> >("fileNames",empty);
   timecorrFileNames_ = iConfig.getUntrackedParameter<vector<string> >("timecorrFilenames",empty);
   timecorrScanFmt_   = iConfig.getUntrackedParameter<string>("timecorrScanFmt","");
+  settingScanFmt_   = iConfig.getUntrackedParameter<string>("settingScanFmt","");
 
   cout << "Opening " << xmlfileNames_.size() << " file(s) for reading: " << endl;
   for (size_t i=0; i<xmlfileNames_.size(); i++)
@@ -86,9 +87,11 @@ HcalDelayTunerInput::getSamplingDelays (DelaySettings& delays)
 
   while (!feof(fp) && fgets(line,128,fp)) {
     if (line[0]=='#') continue;
-    int num = sscanf(line,"%s %d %d %d %d", rbx, &rm, &card, &qie, &setting);
+    int num = sscanf(line,settingScanFmt_.c_str(),
+		     rbx, &rm, &card, &qie, &setting);
     if (num != 5) 
-      throw cms::Exception("Couldn't scan input line") << line;
+      throw cms::Exception("ScanFmt string doesn't match input")
+	<< line << settingScanFmt_ << endl;
 
     if (rbx[0] == 'Z') continue; // ZDC
     HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
