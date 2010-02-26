@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.1 2010/01/26 13:54:40 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.2 2010/02/02 19:44:06 dudero Exp $
 //
 //
 
@@ -27,9 +27,12 @@
 #include <math.h> // floor
 
 // user include files
-#include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
-
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
+#include "CalibFormats/HcalObjects/interface/HcalCalibrations.h"
+#include "CalibFormats/HcalObjects/interface/HcalCoderDb.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
+
 #include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 #include "MyEDmodules/HcalDelayTuner/interface/BeamDelayTunerAlgos.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
@@ -42,6 +45,12 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 
+inline string int2str(int i) {
+  std::ostringstream ss;
+  ss << i;
+  return ss.str();
+}
+
 //
 // constructors and destructor
 //
@@ -50,6 +59,16 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
   HcalDelayTunerAlgos(iConfig),
   timecor_(timecor)
 {
+  std::vector<int> badEventVec =
+    iConfig.getParameter<vector<int> >("badEventList");
+  for (size_t i=0; i<badEventVec.size(); i++)
+    badEventSet_.insert(badEventVec[i]);
+
+  std::vector<int> acceptedBxVec =
+    iConfig.getParameter<vector<int> >("acceptedBxNums");
+  for (size_t i=0; i<acceptedBxVec.size(); i++)
+    acceptedBxNums_.insert(acceptedBxVec[i]);
+
   // cut string vector initialized in order
   // all cuts applied on top of the previous one
   //
@@ -69,20 +88,49 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
 
 //==================================================================
 
-template<class Digi>
 void
-BeamDelayTunerAlgos::fillDigiPulse(TProfile *pulseHist,
-				   const Digi& frame)
+BeamDelayTunerAlgos::bookHistos4lastCut(void)
 {
-  float integral = pulseHist->Integral();
-  if (integral != 0.0) pulseHist->Scale(1./integral);
+  char title[128]; std::string titlestr;
 
-  for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
-    int rawadc = frame[isample].adc();
-    pulseHist->Fill(isample,rawadc);
+  std::vector<myAnalHistos::HistoParams_t> v_hpars1d;
+  std::vector<myAnalHistos::HistoParams_t> v_hpars2d;
 
-  } // loop over samples in digi
-}
+  HcalDelayTunerAlgos::bookHistos4lastCut();
+
+  string runnumstr = int2str(runnum_);
+
+  st_rhCorTimesPlusVsMinus_ = "p2d_rhCorTimesPlusVsMinus" + mysubdetstr_;
+  add2dHisto(st_rhCorTimesPlusVsMinus_,
+"Average Times Per Event, Plus vs. Minus, "+mysubdetstr_+", Run "+runnumstr+"; Minus (ns); Plus (ns)",
+	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_, v_hpars2d);
+
+  st_nHitsPlus_ = "h1d_nHits"+mysubdetstr_+"P";
+  sprintf (title, "# Hits, %sP, Run %d; # Hits", mysubdetstr_.c_str(), runnum_);
+  titlestr = string(title);
+  add1dHisto( st_nHitsPlus_, titlestr, 1301,-0.5, 1300.5, v_hpars1d);
+
+  st_nHitsMinus_ = "h1d_nHits"+mysubdetstr_+"M";
+  sprintf (title, "# Hits, %sM, Run %d; # Hits", mysubdetstr_.c_str(), runnum_);
+  titlestr = string(title);
+  add1dHisto( st_nHitsMinus_, titlestr, 1301,-0.5, 1300.5, v_hpars1d);
+
+  st_totalEplus_ = "h1d_totalE"+mysubdetstr_+"P";
+  sprintf (title, "# Hits, %sP, Run %d; # Hits", mysubdetstr_.c_str(), runnum_);
+  titlestr = string(title);
+  add1dHisto( st_totalEplus_, titlestr, 1301,-0.5, 1300.5, v_hpars1d);
+
+  st_totalEminus_ = "h1d_totalE"+mysubdetstr_+"M";
+  sprintf (title, "# Hits, %sM, Run %d; # Hits", mysubdetstr_.c_str(), runnum_);
+  titlestr = string(title);
+  add1dHisto( st_totalEminus_, titlestr, 1301,-0.5, 1300.5, v_hpars1d);
+
+  myAnalHistos *myAH = getHistos4cut(st_lastCut_);
+  myAH->book1d<TH1F> (v_hpars1d);
+  myAH->book2d<TH2F> (v_hpars2d);
+
+}                         // BeamDelayTunerAlgos::bookHistos4lastCut
 
 //==================================================================
 
@@ -134,73 +182,49 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       corTime_ -= it->second;
     }
 
-    fillHistos4cut("cut0none");
+    // If we have digis, do them too.
+    //
+    CaloSamples dfC; // dfC is the linearized (fC) digi
     if (digihandle.isValid() && (idig < digihandle->size())) {
-      const Digi& frame = (*digihandle)[idig];
-      if (frame.id() != rh.id()) {
+      const Digi&   df =   (*digihandle)[idig];
+      if (df.id() != rh.id()) {
 	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
       }
-      fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(st_avgPulse_),frame);
-      fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
-      if (corTime_ == 0.0)
-	fillDigiPulse(getHistos4cut("cut0none")->get<TProfile>(st_avgPulseTeq0_),frame);
+      const HcalQIECoder *qieCoder = conditions_->getHcalCoder( df.id() );
+      const HcalQIEShape *qieShape = conditions_->getHcalShape();
+      HcalCoderDb coder( *qieCoder, *qieShape );
+      coder.adc2fC( df, dfC );
     }
+    digifC_ = dfC;
 
-    if (rh.energy() > minHitGeV_) {
-      fillHistos4cut("cut1minHitGeV");
-      if (digihandle.isValid() && (idig < digihandle->size())) {
-	const Digi& frame = (*digihandle)[idig];
-	fillDigiPulse(getHistos4cut("cut1minHitGeV")->get<TProfile>(st_avgPulse_),frame);
-	fillDigiPulse(getHistos4cut("cut1minHitGeV")->get<TProfile>
-		      (((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
-      }
-      if (acceptedBxNums_.empty() || inSet<int>(acceptedBxNums_,bxnum_)) {
-	fillHistos4cut("cut2bxnum");
-	if (digihandle.isValid() && (idig < digihandle->size())) {
-	  const Digi& frame = (*digihandle)[idig];
-	  fillDigiPulse(getHistos4cut("cut2bxnum")->get<TProfile>(st_avgPulse_),frame);
-	  fillDigiPulse(getHistos4cut("cut2bxnum")->get<TProfile>
-			(((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
-	}
-	if (!(hitflags_ & globalFlagMask_)) {
-	  fillHistos4cut("cut3badFlags");
-	  if (digihandle.isValid() && (idig < digihandle->size())) {
-	    const Digi& frame = (*digihandle)[idig];
-	    fillDigiPulse(getHistos4cut("cut3badFlags")->get<TProfile>(st_avgPulse_),frame);
-	    fillDigiPulse(getHistos4cut("cut3badFlags")->get<TProfile>
-			  (((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
-	  }
-	  if (badEventSet_.empty() || notInSet<int>(badEventSet_,evtnum_)) {
-//	  if (evtnum_<1061000) {                      // for run 120042
-	    fillHistos4cut("cut4badEvents");
-	    if (digihandle.isValid() && (idig < digihandle->size())) {
-	      const Digi& frame = (*digihandle)[idig];
-	      fillDigiPulse(getHistos4cut("cut4badEvents")->get<TProfile>(st_avgPulse_),frame);
-	      fillDigiPulse(getHistos4cut("cut4badEvents")->get<TProfile>
-			    (((zside>0)?st_avgPulsePlus_:st_avgPulseMinus_)),frame);
+    fillHistos4cut("cut0none");
+    if (rh.energy() > minHitGeV_) {   fillHistos4cut("cut1minHitGeV");
+      if (acceptedBxNums_.empty() ||
+	  inSet<int>(acceptedBxNums_,bxnum_)) { fillHistos4cut("cut2bxnum");
+	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut("cut3badFlags");
+	  if (badEventSet_.empty() ||
+	      notInSet<int>(badEventSet_,evtnum_)) { fillHistos4cut("cut4badEvents");
 
-	      // for comparison of +/- timing
-	      if (zside > 0) { totalEplus  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus++;  }
-	      else           { totalEminus += hitenergy_; weightedTminus += hitenergy_*corTime_; nhitsminus++; }
+	    // for comparison of +/- timing
+	    if (zside > 0) {
+	      totalEplus  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus++;
+	    } else {
+	      totalEminus += hitenergy_; weightedTminus += hitenergy_*corTime_; nhitsminus++;
 	    }
 #if 0
-	    if (abs(detID_.ieta()) != 16) {
-	      fillHistos4cut("cut5tower16");
+	    if (abs(detID_.ieta()) != 16) {  fillHistos4cut("cut5tower16");
 	      if ((corTime_ >= timeWindowMinNS_) &&
-		  (corTime_ <= timeWindowMaxNS_)   ) {
-		fillHistos4cut("cut6aInTimeWindow");
-	      }
+		  (corTime_ <= timeWindowMaxNS_)   ) { fillHistos4cut("cut6aInTimeWindow"); }
 	      if ((corTime_ < timeWindowMinNS_) ||
-		  (corTime_ > timeWindowMaxNS_)   ) {
-		fillHistos4cut("cut6bOutOfTimeWindow");
-	      }
+		  (corTime_ > timeWindowMaxNS_)   )  { fillHistos4cut("cut6bOutOfTimeWindow"); }
 	    }
 #endif
 	  }
 	}
       }
     }
-    tree_->Fill();
+
+    //tree_->Fill();
 
   } // loop over rechits
 
@@ -220,10 +244,9 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
     myAH->fill1d<TH1F>(st_totalEminus_,totalEminus);
 
     if (avgTminus>50) cerr<<"avgTminus="<<avgTminus<<", nhitsminus="<<nhitsminus<<", totalEminus="<<totalEminus<<endl;
-    if (avgTplus >50) cerr<<"avgTplus="<<avgTplus<<", nhitsplus="<<nhitsplus<<", totalEplus="<<totalEplus<<endl;
+    if (avgTplus >50) cerr<<"avgTplus=" <<avgTplus <<", nhitsplus=" <<nhitsplus <<", totalEplus=" <<totalEplus<<endl;
   }
-
-}                       // BeamDelayTunerAlgos::processDigisAndRecHits
+}                         // BeamDelayTunerAlgos::processDigisAndRecHits
 
 //======================================================================
 

@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.4 2010/01/26 13:58:10 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.5 2010/02/02 19:45:46 dudero Exp $
 //
 //
 
@@ -26,11 +26,13 @@
 #include "TH1F.h"
 #include "TProfile2D.h"
 
+#include "CalibFormats/CaloObjects/interface/CaloSamples.h"
+#include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
+
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalCut.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
-#include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 
 //
 // class declaration
@@ -74,6 +76,9 @@ protected:
   virtual void   bookHistos4allCuts  (void);
   virtual void   bookHistos4lastCut  (void);
 
+  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiHisto    (HcalDetId detId);
+  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiPerEhisto(HcalDetId detId);
+
   virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
 
   virtual myAnalHistos *getHistos4cut(const std::string& cutstr);
@@ -88,10 +93,10 @@ protected:
   template<class Digi,class RecHit>
   void    processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
-  template<class Digi>
-  void    fillDigiPulse          (TH1F *pulseHist,
-				  const Digi& frame);
 #endif
+  void    fillDigiPulseHistos    (TProfile   *pulseHist,
+				  TProfile2D *pulseHistPerE);
+
   virtual void add1dHisto        (const std::string& name, const std::string& title,
 				  int nbinsx, double minx, double maxx,
 				  std::vector<myAnalHistos::HistoParams_t>& v_hpars1d);
@@ -136,8 +141,9 @@ protected:
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
   uint32_t          maxEventNum2plot_;
-  int               unravelHBatIeta_;
   bool              selfSynchronize_; // versus synchronize to the system reference
+  bool              normalizeDigis_;
+  bool              doPerChannel_;
 
   HcalSubdetector   mysubdet_;
   TimesPerDetId     exthitcors_; // misc. external hit time corrections
@@ -162,6 +168,8 @@ protected:
   float           totalE_;
   int             neventsProcessed_;
 
+  CaloSamples     digifC_;
+
   // The collection of names of histos per subdetector
   std::string st_rhEnergies_;
   std::string st_totalEperEv_;
@@ -181,13 +189,8 @@ protected:
   // Plus/Minus Breakdown
   std::string st_rhCorTimesPlus_;
   std::string st_rhCorTimesMinus_;
-  std::string st_rhCorTimesPlusVsMinus_;
   std::string st_avgPulsePlus_;
   std::string st_avgPulseMinus_;
-  std::string st_nHitsPlus_;
-  std::string st_nHitsMinus_;
-  std::string st_totalEplus_;
-  std::string st_totalEminus_;
 
   // eta/phi/depth breakdowns:
 
@@ -196,9 +199,6 @@ protected:
   std::vector<std::string>         v_st_rhTvsRMperIetaD2HEM_;
   std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEP_;
   std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEM_;
-
-  std::map<int,std::string>        m_unravelHBperRM_;
-  std::map<int,std::string>        m_unravelHBperPhi_;
 
   std::string st_nHitsPerIetaIphi_;
 
@@ -221,6 +221,8 @@ protected:
   std::string st_rhTvsEtaEnergy_;
   std::string st_rhEmap_;
   std::string st_uncorTimingVsE_, st_corTimingVsE_;
+  std::string st_rhTprofplusd1_, st_rhTprofplusd2_, st_rhTprofminusd2_, st_rhTprofminusd1_;
+  std::string st_pulsePerEbinPlus_, st_pulsePerEbinMinus_;
 
   bool firstEvent_;
   std::vector<std::string> v_cuts_;             // vector of cut strings
@@ -232,8 +234,13 @@ protected:
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
 
+  TFileDirectory *digidir_;
+  std::map<uint32_t,TProfile*> digisPerId;
+  std::map<uint32_t,TProfile2D*> digisPerIdPerE;
+
   TProfile2D *last2dprof_;
   TH1F       *last1ddist_;
+
 };
 
 #endif // _MYEDMODULESHCALDELAYTUNERALGOS

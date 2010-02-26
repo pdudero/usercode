@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.8 2009/12/04 14:36:00 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.1 2010/01/26 13:59:52 dudero Exp $
 //
 //
 
@@ -30,7 +30,9 @@
 #include "TH1F.h"
 #include "TProfile2D.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
 
 //
@@ -49,14 +51,8 @@ private:
 
   // ---------- private methods ---------------------------
 
-  template<class Digi>
-  void   fillDigiPulse          (TProfile *pulseHist,
-				 const Digi& frame);
-#if 0
-  template<class Digi,class RecHit>
-  void   processDigisAndRecHits (const edm::SortedCollection<Digi>&   digis,
-				 const edm::SortedCollection<RecHit>& rechits);
-#endif
+  void   bookHistos4lastCut     (void);
+
   template<class Digi,class RecHit>
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
@@ -65,7 +61,14 @@ private:
 
   BeamHitTimeCorrector *timecor_; // beam hit time (vertex displacement) corrector
 
+  edm::ESHandle<HcalDbService>  conditions_;
+
   // The collection of names of histos per subdetector
+  std::string st_rhCorTimesPlusVsMinus_;
+  std::string st_nHitsPlus_;
+  std::string st_nHitsMinus_;
+  std::string st_totalEplus_;
+  std::string st_totalEminus_;
 };
 
 #endif // _MYEDMODULESBEAMDELAYTUNERALGOS

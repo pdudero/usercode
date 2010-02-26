@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.8 2009/12/02 13:45:54 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.9 2009/12/04 14:36:00 dudero Exp $
 //
 //
 
@@ -27,9 +27,12 @@
 #include <math.h> // floor
 
 // user include files
-#include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
-
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
+#include "CalibFormats/HcalObjects/interface/HcalCalibrations.h"
+#include "CalibFormats/HcalObjects/interface/HcalCoderDb.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
+
 #include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 #include "MyEDmodules/HcalDelayTuner/interface/SplashDelayTunerAlgos.hh"
 
@@ -49,6 +52,21 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   HcalDelayTunerAlgos(iConfig),
   timecor_(timecor)
 {
+  // HB towers with ieta >= this parameter are excluded from the HB average
+  // over ieta and have their phi profiles plotted separately
+  //
+  unravelHBatIeta_    = abs(iConfig.getParameter<int>("unravelHBatIeta"));
+
+  std::vector<int> badEventVec =
+    iConfig.getParameter<vector<int> >("badEventList");
+  for (size_t i=0; i<badEventVec.size(); i++)
+    badEventSet_.insert(badEventVec[i]);
+
+  std::vector<int> acceptedBxVec =
+    iConfig.getParameter<vector<int> >("acceptedBxNums");
+  for (size_t i=0; i<acceptedBxVec.size(); i++)
+    acceptedBxNums_.insert(acceptedBxVec[i]);
+
   // cut string vector initialized in order
   // all cuts applied on top of the previous one
   //
@@ -68,17 +86,114 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
 
 //==================================================================
 
-template<class Digi>
 void
-SplashDelayTunerAlgos::fillDigiPulse(TH1F *pulseHist,
-				     const Digi& frame)
+SplashDelayTunerAlgos::bookHistos4lastCut(void)
 {
-  for (int isample = 0; isample < std::min(10,frame.size()); ++isample) {
-    int rawadc = frame[isample].adc();
-    pulseHist->Fill(isample,rawadc);
+  HcalDelayTunerAlgos::bookHistos4lastCut();
 
-  } // loop over samples in digi
-}
+  /********** SPLASH-SPECIFIC HISTOS: ************/
+
+  char name[40];   std::string namestr;
+  char title[128]; std::string titlestr;
+  std::vector<myAnalHistos::HistoParams_t> v_hpars1dprof;
+
+  if (mysubdet_ == HcalBarrel) {
+    st_avgTimePerRMd1_ =  "p1d_avgTimePerRMd1" + mysubdetstr_;
+    sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerRMd1_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+
+    st_avgTimePerRMd2_ =  "p1d_avgTimePerRMd2" + mysubdetstr_;
+    sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerRMd2_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+    
+    st_avgTimePerPhid1_ =  "p1d_avgTimePerPhid1" + mysubdetstr_;
+    sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerPhid1_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+
+    st_avgTimePerPhid2_ =  "p1d_avgTimePerPhid2" + mysubdetstr_;
+    sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
+	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
+    titlestr = string(title);
+    add1dHisto( st_avgTimePerPhid2_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+
+    //
+    // Make profiles of timing vs RM and phi for individual ietas/depths
+    //
+    for (int absieta=unravelHBatIeta_; absieta<=16; absieta++) {
+      int maxdepth = (absieta<15) ? 1:2;
+      for (int depth=1; depth<=maxdepth; depth++) {
+	// vs. RM
+	sprintf(name,"p1d_rhTvsRM4ieta%02dd%dHB",absieta,depth);
+	sprintf(title,"RecHit Time/RM for |i#eta|=%d, depth=%d, Run %d; iRM; Time (ns)",
+		absieta,depth,runnum_);
+	titlestr = string(title);
+	namestr  = string(name);
+	int key=(absieta*10)+depth;
+	m_unravelHBperRM_.insert(std::pair<int,string>(key,namestr));
+	add1dHisto(namestr,titlestr,145,-72.5,72.5,v_hpars1dprof);
+      
+	// vs. phi
+	sprintf(name,"p1d_rhTvsPhi4ieta%02dd%dHB",absieta,depth);
+	sprintf(title,"RecHit Time/#iphi for |i#eta|=%d, depth=%d, Run %d; i#phi; Time (ns)",
+		absieta,depth,runnum_);
+	titlestr = string(title);
+	namestr  = string(name);
+	m_unravelHBperPhi_.insert(std::pair<int,string>(key,namestr));
+	add1dHisto(namestr,titlestr,145,-72.5,72.5,v_hpars1dprof);
+
+      } // loop over depth
+    } // loop over ieta
+
+    getHistos4cut(st_lastCut_)->book1d<TProfile>(v_hpars1dprof);
+
+  } // if HB
+}                       // SplashDelayTunerAlgos::bookHistos4lastCut
+
+//==================================================================
+
+void
+SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
+{
+  HcalDelayTunerAlgos::fillHistos4cut(cutstr);
+
+  myAnalHistos *myAH = getHistos4cut(cutstr);
+  int        absieta = detID_.ietaAbs();
+  int           iphi = detID_.iphi();
+  int          depth = detID_.depth();
+  int          zside = detID_.zside();
+  int           iRBX = atoi(((feID_.rbx()).substr(3,2)).c_str());
+  int       iRMinRBX = feID_.rm();
+  int            iRM = zside * ((iRBX-1)*4 + iRMinRBX);
+  int    signed_iphi = zside*iphi;
+
+  // Splash-specific histos
+  if (cutstr == st_lastCut_) {
+    if ((mysubdet_ == HcalBarrel) &&
+	(absieta >= unravelHBatIeta_) ) {
+      int key = (absieta*10) + depth;
+      myAH->fill1d<TProfile> (m_unravelHBperRM_[key], iRM, corTime_);
+      myAH->fill1d<TProfile> (m_unravelHBperPhi_[key], signed_iphi, corTime_);
+    } else if (mysubdet_ == HcalEndcap) {
+#if 0
+      int iRMavg2 = ((iRM-sign(iRM))/2)+sign(iRM);
+      myAH->fill1d<TProfile> (st_avgTimePer2RMs_, iRMavg2, corTime_);
+      myAH->fill1d<TProfile> (v_st_rhTvsRMperPixHE_[ipix-1],iRM,corTime_);
+      if (depth==2) {
+	const std::string& hRM =(ieta>0)?v_st_rhTvsRMperIetaD2HEP_[ieta-18]:v_st_rhTvsRMperIetaD2HEM_[-ieta-18];
+	const std::string& hPhi=(ieta>0)?v_st_rhTvsPhiperIetaD2HEP_[ieta-18]:v_st_rhTvsPhiperIetaD2HEM_[-ieta-18];
+	myAH->fill1d<TProfile>(hRM,iRM,corTime_);
+	myAH->fill1d<TProfile>(hPhi,iphi,corTime_);
+      }
+#endif
+    }
+  }
+}                           // SplashDelayTunerAlgos::fillHistos4cut
 
 //==================================================================
 
@@ -122,50 +237,34 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
       corTime_ -= it->second;
     }
 
-    fillHistos4cut("cut0none");
+    // If we have digis, do them too.
+    CaloSamples dfC; // empty digi
     if (digihandle.isValid() && (idig < digihandle->size())) {
-      const Digi& frame = (*digihandle)[idig];
-      if (frame.id() != rh.id()) {
-	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
+      const Digi&   df =   (*digihandle)[idig];
+      if (rh.id() != df.id()) {
+	edm::LogError("Digis and Rechits aren't tracking!") << df.id() << rh.id() << std::endl;
       }
-      fillDigiPulse(getHistos4cut("cut0none")->get<TH1F>(st_avgPulse_),frame);
+      const HcalQIECoder *qieCoder = conditions_->getHcalCoder( df.id() );
+      const HcalQIEShape *qieShape = conditions_->getHcalShape();
+      HcalCoderDb coder( *qieCoder, *qieShape );
+      coder.adc2fC( df, dfC );
     }
+    digifC_ = dfC;
 
-    if (rh.energy() > minHitGeV_) {
-      fillHistos4cut("cut1minHitGeV");
-      if (digihandle.isValid() && (idig < digihandle->size())) {
-	const Digi& frame = (*digihandle)[idig];
-	fillDigiPulse(getHistos4cut("cut1minHitGeV")->get<TH1F>(st_avgPulse_),frame);
-      }
-      if (inSet<int>(acceptedBxNums_,bxnum_)) {
-	fillHistos4cut("cut2bxnum");
-	if (digihandle.isValid() && (idig < digihandle->size())) {
-	  const Digi& frame = (*digihandle)[idig];
-	  fillDigiPulse(getHistos4cut("cut2bxnum")->get<TH1F>(st_avgPulse_),frame);
-	}
-	if (!(hitflags_ & globalFlagMask_)) {
-	  fillHistos4cut("cut3badFlags");
-	  if (digihandle.isValid() && (idig < digihandle->size())) {
-	    const Digi& frame = (*digihandle)[idig];
-	    fillDigiPulse(getHistos4cut("cut3badFlags")->get<TH1F>(st_avgPulse_),frame);
-	  }
-	  if (notInSet<int>(badEventSet_,evtnum_)) {
+    fillHistos4cut("cut0none");
+
+    if (rh.energy() > minHitGeV_)            { fillHistos4cut("cut1minHitGeV");
+      if (inSet<int>(acceptedBxNums_,bxnum_)) { fillHistos4cut("cut2bxnum");
+	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut("cut3badFlags");
 //	  if (evtnum_<1061000) {                      // for run 120042
-	    fillHistos4cut("cut4badEvents");
-	    if (digihandle.isValid() && (idig < digihandle->size())) {
-	      const Digi& frame = (*digihandle)[idig];
-	      fillDigiPulse(getHistos4cut("cut4badEvents")->get<TH1F>(st_avgPulse_),frame);
-	    }
+	  if (notInSet<int>(badEventSet_,evtnum_)){ fillHistos4cut("cut4badEvents");
 #if 0
-	    if (abs(detID_.ieta()) != 16) {
-	      fillHistos4cut("cut5tower16");
+	    if (abs(detID_.ieta()) != 16) {	      fillHistos4cut("cut5tower16");
 	      if ((corTime_ >= timeWindowMinNS_) &&
-		  (corTime_ <= timeWindowMaxNS_)   ) {
-		fillHistos4cut("cut6aInTimeWindow");
+		  (corTime_ <= timeWindowMaxNS_)   ) { fillHistos4cut("cut6aInTimeWindow");
 	      }
 	      if ((corTime_ < timeWindowMinNS_) ||
-		  (corTime_ > timeWindowMaxNS_)   ) {
-		fillHistos4cut("cut6bOutOfTimeWindow");
+		  (corTime_ > timeWindowMaxNS_)   ) {  fillHistos4cut("cut6bOutOfTimeWindow");
 	      }
 	    }
 #endif

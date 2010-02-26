@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.7 2009/11/30 09:46:32 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.8 2009/12/04 14:36:00 dudero Exp $
 //
 //
 
@@ -30,7 +30,9 @@
 #include "TH1F.h"
 #include "TProfile2D.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
 
 //
@@ -61,11 +63,22 @@ private:
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 
+  void bookHistos4lastCut(void);
+  void fillHistos4cut(const std::string& cutstr);
+
   // ----------member data ---------------------------
+
+  int unravelHBatIeta_;
 
   SplashHitTimeCorrector *timecor_; // splash hit time geometry corrector
 
+  edm::ESHandle<HcalDbService>  conditions_;
+
   // The collection of names of histos per subdetector
+
+  std::map<int,std::string>        m_unravelHBperRM_;
+  std::map<int,std::string>        m_unravelHBperPhi_;
+
 };
 
 #endif // _MYEDMODULESSPLASHDELAYTUNERALGOS
