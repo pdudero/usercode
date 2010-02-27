@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.5 2009/10/27 02:45:39 dudero Exp $
+// $Id: myEventData.hh,v 1.6 2009/11/09 01:10:19 dudero Exp $
 //
 //
 
@@ -80,6 +80,7 @@ private:
 
   // configurable parameter:
   edm::InputTag      fedRawDataTag_;
+  edm::InputTag      tbTrigDataTag_;
   edm::InputTag      laserDigiTag_;
   edm::InputTag      hbheRechitTag_;
   edm::InputTag      hbheDigiTag_;
