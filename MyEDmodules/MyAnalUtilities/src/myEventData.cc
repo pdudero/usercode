@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.4 2009/07/27 16:09:58 dudero Exp $
+// $Id: myEventData.cc,v 1.5 2009/11/09 01:10:20 dudero Exp $
 //
 //
 
@@ -41,6 +41,7 @@
 //
 myEventData::myEventData(const edm::ParameterSet& edPset) :
   fedRawDataTag_(edPset.getUntrackedParameter<edm::InputTag>("fedRawDataLabel",edm::InputTag(""))),
+  tbTrigDataTag_(edPset.getUntrackedParameter<edm::InputTag>("tbTrigDataLabel",edm::InputTag(""))),
   laserDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("laserDigiLabel",edm::InputTag(""))),
   hbheRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheRechitLabel",edm::InputTag(""))),
   hbheDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheDigiLabel",edm::InputTag(""))),
@@ -55,6 +56,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
 {
   if (verbose_) {
     cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
+    cout << "tbTrigDataTag_ = " << tbTrigDataTag_ << endl;
     cout << "laserDigiTag_  = " << laserDigiTag_  << endl;
     cout << "hbheRechitTag_ = " << hbheRechitTag_ << endl;
     cout << "hbheDigiTag_   = " << hbheDigiTag_   << endl;
@@ -88,20 +90,13 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   bxn_     = iEvent.bunchCrossing();
 
   // Always try to get the HcalTBtrigger data regardless
-  try {
+  if (tbTrigDataTag_.label().size())
     if(!iEvent.getByType(hcaltbtrigdata_)) {
       if (verbose_)
 	cerr << "myEventData::get: " <<
 	  "HCAL TB trigger data not found, "<< hcaltbtrigdata_ << std::endl;
-    } else {
-      if (verbose_) 
+    } else if (verbose_) 
 	cout << "myEventData::get: " << "Got HCAL TB trigger data " << std::endl;
-    }
-  } catch (...) {
-    if (verbose_)
-      cerr << "myEventData::get: " <<
-	"HCAL TB trigger data not found, "<< hcaltbtrigdata_ << std::endl;
-  }
 
   if (fedRawDataTag_.label().size())
     if(!iEvent.getByLabel(fedRawDataTag_,laserdigi_)) {
