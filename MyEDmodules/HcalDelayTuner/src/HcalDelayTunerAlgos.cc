@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.8 2010/02/26 23:34:30 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.9 2010/03/01 06:51:56 dudero Exp $
 //
 //
 
@@ -755,10 +755,10 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
   myAH->book2d<TProfile2D>(v_hpars2dprof);
 
   // Digi pulses binned by energy, by hemisphere
-  titlestr = "Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample \# ; E_{hit} (GeV); fC";
+  titlestr = "Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
   myAH->book2dvary<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
 			       10,-0.5,9.5, nEbins, digEbins);
-  titlestr = "Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample \# ; E_{hit} (GeV); fC";
+  titlestr = "Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
   myAH->book2dvary<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
 			       10,-0.5,9.5, nEbins, digEbins);
 
