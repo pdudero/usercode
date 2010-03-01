@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.5 2010/02/02 19:45:46 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.6 2010/02/26 23:37:24 dudero Exp $
 //
 //
 
@@ -44,7 +44,7 @@ public:
   virtual ~HcalDelayTunerAlgos() {}
 
   virtual void process  (const myEventData&);
-  virtual void beginJob (const edm::EventSetup&);
+  virtual void beginJob ();
   virtual void endJob();
 
   void detChannelTimes(TimesPerDetId& chtimes);

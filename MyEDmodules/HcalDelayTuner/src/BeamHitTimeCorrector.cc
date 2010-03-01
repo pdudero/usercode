@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.cc,v 1.2 2009/12/04 14:37:18 dudero Exp $
+// $Id: BeamHitTimeCorrector.cc,v 1.1 2010/01/26 13:54:40 dudero Exp $
 //
 //
 
@@ -65,6 +65,6 @@ BeamHitTimeCorrector::correctTime4(const HcalDetId& id)
 //======================================================================
 
 void
-BeamHitTimeCorrector::init(const edm::EventSetup& iSetup)
+BeamHitTimeCorrector::init(const edm::ParameterSet& iConfig)
 {
 }                                       // BeamHitTimeCorrector::init

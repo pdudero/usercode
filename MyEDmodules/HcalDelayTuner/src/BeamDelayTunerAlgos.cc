@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.2 2010/02/02 19:44:06 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.3 2010/02/26 23:34:30 dudero Exp $
 //
 //
 
@@ -84,6 +84,7 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
 #endif
   st_lastCut_ = "cut4badEvents";
 
+  timecor_->init(iConfig);
 }                        // BeamDelayTunerAlgos::BeamDelayTunerAlgos
 
 //==================================================================

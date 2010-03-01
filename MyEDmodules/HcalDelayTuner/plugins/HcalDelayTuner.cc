@@ -13,12 +13,13 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTuner.cc,v 1.2 2009/11/20 19:24:03 dudero Exp $
+// $Id: HcalDelayTuner.cc,v 1.1 2009/12/04 14:33:02 dudero Exp $
 //
 //
 
 
 // system include files
+#include <limits.h>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"

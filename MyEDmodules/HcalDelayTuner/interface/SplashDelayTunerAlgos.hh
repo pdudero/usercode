@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.8 2009/12/04 14:36:00 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.9 2010/02/26 23:37:24 dudero Exp $
 //
 //
 
@@ -46,6 +46,7 @@ public:
   ~SplashDelayTunerAlgos() {}
 
   void process      (const myEventData&);
+  void beginJob     (const edm::EventSetup&);
 
 private:
 
@@ -75,6 +76,8 @@ private:
   edm::ESHandle<HcalDbService>  conditions_;
 
   // The collection of names of histos per subdetector
+  std::string st_unravelTimePerPhid1_, st_unravelTimePerPhid2_;
+  std::string st_unravelTimePerRMd1_,  st_unravelTimePerRMd2_;
 
   std::map<int,std::string>        m_unravelHBperRM_;
   std::map<int,std::string>        m_unravelHBperPhi_;

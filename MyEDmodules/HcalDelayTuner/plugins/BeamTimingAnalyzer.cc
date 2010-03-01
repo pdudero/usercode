@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.2 2009/12/04 14:39:04 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.1 2010/01/26 13:57:23 dudero Exp $
 //
 //
 
@@ -44,15 +44,14 @@ public:
   ~BeamTimingAnalyzer();
 
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
-  virtual void endJob() ;
+  virtual void endJob();
 
   // ----------member data ---------------------------
 
   myEventData           *eventData_;
   BeamDelayTunerAlgos   *algo_;
-  BeamHitTimeCorrector  *timecor_;
   std::set<uint32_t>     s_runs_; // set of run numbers run over
 };
 
@@ -76,9 +75,9 @@ BeamTimingAnalyzer::BeamTimingAnalyzer(const edm::ParameterSet& iConfig)
     iConfig.getUntrackedParameter<edm::ParameterSet>("eventDataPset");
 
   eventData_ = new myEventData(edPset);
-  timecor_   = new BeamHitTimeCorrector();
+  BeamHitTimeCorrector *timecor   = new BeamHitTimeCorrector();
 
-  algo_ = new BeamDelayTunerAlgos(iConfig,timecor_);
+  algo_ = new BeamDelayTunerAlgos(iConfig,timecor);
 }
 
 BeamTimingAnalyzer::~BeamTimingAnalyzer() {
@@ -107,10 +106,9 @@ BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-BeamTimingAnalyzer::beginJob(const edm::EventSetup& es)
+BeamTimingAnalyzer::beginJob()
 {
-  timecor_->init(es);
-  algo_->beginJob(es);
+  algo_->beginJob();
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

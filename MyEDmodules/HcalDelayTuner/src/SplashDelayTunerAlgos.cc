@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.9 2009/12/04 14:36:00 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.10 2010/02/26 23:34:30 dudero Exp $
 //
 //
 
@@ -81,7 +81,6 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   v_cuts_.push_back("cut6bOutOfTimeWindow");
 #endif
   st_lastCut_ = "cut4badEvents";
-
 }                    // SplashDelayTunerAlgos::SplashDelayTunerAlgos
 
 //==================================================================
@@ -98,29 +97,29 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
   std::vector<myAnalHistos::HistoParams_t> v_hpars1dprof;
 
   if (mysubdet_ == HcalBarrel) {
-    st_avgTimePerRMd1_ =  "p1d_avgTimePerRMd1" + mysubdetstr_;
+    st_unravelTimePerRMd1_ =  "p1d_unravelTimePerRMd1" + mysubdetstr_;
     sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
 	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
     titlestr = string(title);
-    add1dHisto( st_avgTimePerRMd1_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+    add1dHisto( st_unravelTimePerRMd1_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
-    st_avgTimePerRMd2_ =  "p1d_avgTimePerRMd2" + mysubdetstr_;
+    st_unravelTimePerRMd2_ =  "p1d_unravelTimePerRMd2" + mysubdetstr_;
     sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); iRM; Time (ns)",
 	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
     titlestr = string(title);
-    add1dHisto( st_avgTimePerRMd2_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+    add1dHisto( st_unravelTimePerRMd2_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
     
-    st_avgTimePerPhid1_ =  "p1d_avgTimePerPhid1" + mysubdetstr_;
+    st_unravelTimePerPhid1_ =  "p1d_unravelTimePerPhid1" + mysubdetstr_;
     sprintf (title, "Avg. Time (Depth 1, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
 	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
     titlestr = string(title);
-    add1dHisto( st_avgTimePerPhid1_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+    add1dHisto( st_unravelTimePerPhid1_,titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
-    st_avgTimePerPhid2_ =  "p1d_avgTimePerPhid2" + mysubdetstr_;
+    st_unravelTimePerPhid2_ =  "p1d_unravelTimePerPhid2" + mysubdetstr_;
     sprintf (title, "Avg. Time (Depth 2, abs(i#eta)=1-%d), %s (Run %d); i#phi; Time (ns)",
 	     std::min(16,unravelHBatIeta_-1), mysubdetstr_.c_str(), runnum_);
     titlestr = string(title);
-    add1dHisto( st_avgTimePerPhid2_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
+    add1dHisto( st_unravelTimePerPhid2_, titlestr, 145,-72.5, 72.5, v_hpars1dprof);
 
     //
     // Make profiles of timing vs RM and phi for individual ietas/depths
@@ -174,11 +173,28 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 
   // Splash-specific histos
   if (cutstr == st_lastCut_) {
-    if ((mysubdet_ == HcalBarrel) &&
-	(absieta >= unravelHBatIeta_) ) {
-      int key = (absieta*10) + depth;
-      myAH->fill1d<TProfile> (m_unravelHBperRM_[key], iRM, corTime_);
-      myAH->fill1d<TProfile> (m_unravelHBperPhi_[key], signed_iphi, corTime_);
+    if (mysubdet_ == HcalBarrel) {
+      if (absieta >= unravelHBatIeta_) {
+	int key = (absieta*10) + depth;
+	myAH->fill1d<TProfile> (m_unravelHBperRM_[key], iRM, corTime_);
+	myAH->fill1d<TProfile> (m_unravelHBperPhi_[key], signed_iphi, corTime_);
+      } else {
+	std::string unravelTimePerPhi, unravelTimePerRM;
+	switch(depth) {
+	case 1:
+	  unravelTimePerPhi = st_unravelTimePerPhiD1_;
+	  unravelTimePerRM  = st_unravelTimePerRMD1_;
+	  break;
+	case 2:
+	  unravelTimePerPhi = st_unravelTimePerPhiD2_;
+	  unravelTimePerRM  = st_unravelTimePerRMD2_;
+	  break;
+	default:
+	  edm::LogWarning("Invalid depth in rechit collection! detId = ") << detID_ << std::endl;
+	}
+	myAH->fill1d<TProfile> (unravelTimePerPhi, signed_iphi, corTime_);
+	myAH->fill1d<TProfile> (unravelTimePerRM,     iRM,      corTime_);
+      }
     } else if (mysubdet_ == HcalEndcap) {
 #if 0
       int iRMavg2 = ((iRM-sign(iRM))/2)+sign(iRM);
@@ -254,7 +270,8 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
     fillHistos4cut("cut0none");
 
     if (rh.energy() > minHitGeV_)            { fillHistos4cut("cut1minHitGeV");
-      if (inSet<int>(acceptedBxNums_,bxnum_)) { fillHistos4cut("cut2bxnum");
+      if (acceptedBxNums_.empty() ||
+	  inSet<int>(acceptedBxNums_,bxnum_))  { fillHistos4cut("cut2bxnum");
 	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut("cut3badFlags");
 //	  if (evtnum_<1061000) {                      // for run 120042
 	  if (notInSet<int>(badEventSet_,evtnum_)){ fillHistos4cut("cut4badEvents");
@@ -300,3 +317,15 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
   }
   neventsProcessed_++;
 }
+
+//======================================================================
+
+void
+SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
+{
+  iSetup.get<HcalDbRecord>().get( conditions_ );
+  timecor_->init(iSetup);
+
+  HcalDelayTunerAlgos::beginJob();
+}
+

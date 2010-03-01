@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.7 2010/02/02 19:44:06 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.8 2010/02/26 23:34:30 dudero Exp $
 //
 //
 
@@ -357,9 +357,6 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_avgPulse_   = "h1d_pulse" + mysubdetstr_;
   add1dHisto(st_avgPulse_,"Average Pulse Shape, " + mysubdetstr_,10,-0.5,9.5,v_hpars1dprof);
-
-  st_avgPulseTeq0_   = "h1d_pulseTeq0" + mysubdetstr_;
-  add1dHisto(st_avgPulseTeq0_,"Average Pulse Shape, hittime=0.0, " + mysubdetstr_,10,-0.5,9.5,v_hpars1dprof);
 
   st_avgPulsePlus_   = "h1d_pulse" + mysubdetstr_ + "P";
   add1dHisto(st_avgPulsePlus_,"Average Pulse Shape, " + mysubdetstr_+"P",10,-0.5,9.5,v_hpars1dprof);
@@ -1108,7 +1105,7 @@ HcalDelayTunerAlgos::process(const myEventData& ed)
 //======================================================================
 
 void
-HcalDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
+HcalDelayTunerAlgos::beginJob()
 {
   neventsProcessed_=0;
 

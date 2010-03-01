@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashTimingAnalyzer.cc,v 1.1 2009/11/09 00:59:05 dudero Exp $
+// $Id: SplashTimingAnalyzer.cc,v 1.2 2009/12/04 14:39:04 dudero Exp $
 //
 //
 
@@ -44,7 +44,7 @@ public:
   ~SplashTimingAnalyzer();
 
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginJob() ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
 
@@ -52,8 +52,8 @@ private:
 
   myEventData            *eventData_;
   SplashDelayTunerAlgos  *algo_;
-  SplashHitTimeCorrector *timecor_;
   std::set<uint32_t>      s_runs_; // set of run numbers run over
+  bool                    firstEvent_;
 };
 
 //
@@ -76,10 +76,10 @@ SplashTimingAnalyzer::SplashTimingAnalyzer(const edm::ParameterSet& iConfig)
     iConfig.getUntrackedParameter<edm::ParameterSet>("eventDataPset");
 
   eventData_ = new myEventData(edPset);
-  timecor_   = new
+  SplashHitTimeCorrector *timecor  = new
     SplashHitTimeCorrector(iConfig.getUntrackedParameter<bool>("splashPlusZside"));
 
-  algo_ = new SplashDelayTunerAlgos(iConfig,timecor_);
+  algo_ = new SplashDelayTunerAlgos(iConfig,timecor);
 }
 
 SplashTimingAnalyzer::~SplashTimingAnalyzer() {
@@ -97,6 +97,13 @@ SplashTimingAnalyzer::~SplashTimingAnalyzer() {
 void
 SplashTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  if (firstEvent_) {
+    // Because the framework geniuses got rid of this capability in beginJob!
+    algo_->beginJob(iSetup);
+    firstEvent_ = false;
+  }
+
+
   eventData_->get(iEvent,iSetup);
 
   uint32_t runn = eventData_->runNumber();
@@ -108,10 +115,8 @@ SplashTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-SplashTimingAnalyzer::beginJob(const edm::EventSetup& es)
+SplashTimingAnalyzer::beginJob()
 {
-  timecor_->init(es);
-  algo_->beginJob(es);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
