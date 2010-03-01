@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.10 2010/02/26 23:34:30 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.11 2010/03/01 06:51:57 dudero Exp $
 //
 //
 
@@ -182,12 +182,12 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 	std::string unravelTimePerPhi, unravelTimePerRM;
 	switch(depth) {
 	case 1:
-	  unravelTimePerPhi = st_unravelTimePerPhiD1_;
-	  unravelTimePerRM  = st_unravelTimePerRMD1_;
+	  unravelTimePerPhi = st_unravelTimePerPhid1_;
+	  unravelTimePerRM  = st_unravelTimePerRMd1_;
 	  break;
 	case 2:
-	  unravelTimePerPhi = st_unravelTimePerPhiD2_;
-	  unravelTimePerRM  = st_unravelTimePerRMD2_;
+	  unravelTimePerPhi = st_unravelTimePerPhid2_;
+	  unravelTimePerRM  = st_unravelTimePerRMd2_;
 	  break;
 	default:
 	  edm::LogWarning("Invalid depth in rechit collection! detId = ") << detID_ << std::endl;
