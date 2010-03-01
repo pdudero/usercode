@@ -3,11 +3,13 @@ import FWCore.ParameterSet.Config as cms
 hbtimeanal = cms.EDAnalyzer('SplashTimingAnalyzer',
                              
     eventDataPset = cms.untracked.PSet(
-#     hbheDigiLabel   = cms.untracked.InputTag("hcalDigis"),
+      hbheDigiLabel   = cms.untracked.InputTag("hcalDigis"),
       hbheRechitLabel = cms.untracked.InputTag("hbhereco"),
       verbose         = cms.untracked.bool(False)
     ),
 
+    normalizeDigis    = cms.bool(False),
+    doPerChannel      = cms.bool(True),
     subdet            = cms.untracked.string("HB"),
     splashPlusZside   = cms.untracked.bool(True),
     runDescription    = cms.untracked.string(""),
@@ -37,5 +39,5 @@ hotimeanal.eventDataPset.hbheRechitLabel=cms.untracked.InputTag("")
 hftimeanal = hotimeanal.clone(subdet=cms.untracked.string("HF"))
 hotimeanal.eventDataPset.hoRechitLabel=cms.untracked.InputTag("horeco")
 hftimeanal.eventDataPset.hfRechitLabel=cms.untracked.InputTag("hfreco")
-#hotimeanal.eventDataPset.hoDigiLabel=cms.untracked.InputTag("hcalDigis")
-#hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
+hotimeanal.eventDataPset.hoDigiLabel=cms.untracked.InputTag("hcalDigis")
+hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
