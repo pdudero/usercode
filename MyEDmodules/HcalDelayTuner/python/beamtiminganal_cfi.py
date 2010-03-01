@@ -8,6 +8,8 @@ hbtimeanal = cms.EDAnalyzer('BeamTimingAnalyzer',
       verbose         = cms.untracked.bool(False)
     ),
 
+    normalizeDigis    = cms.bool(True),
+    doPerChannel      = cms.bool(True),
     subdet            = cms.untracked.string("HB"),
     runDescription    = cms.untracked.string(""),
     globalTimeOffset  = cms.double(0.0),
