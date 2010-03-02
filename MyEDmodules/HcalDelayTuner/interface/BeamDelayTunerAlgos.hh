@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.1 2010/01/26 13:59:52 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.2 2010/02/26 23:37:24 dudero Exp $
 //
 //
 
@@ -46,6 +46,7 @@ public:
   ~BeamDelayTunerAlgos() {}
 
   void process      (const myEventData&);
+  void beginJob     (const edm::EventSetup& iSetup);
 
 private:
 
