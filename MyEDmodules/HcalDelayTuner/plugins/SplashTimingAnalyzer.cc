@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashTimingAnalyzer.cc,v 1.2 2009/12/04 14:39:04 dudero Exp $
+// $Id: SplashTimingAnalyzer.cc,v 1.3 2010/03/01 06:52:33 dudero Exp $
 //
 //
 
@@ -80,6 +80,8 @@ SplashTimingAnalyzer::SplashTimingAnalyzer(const edm::ParameterSet& iConfig)
     SplashHitTimeCorrector(iConfig.getUntrackedParameter<bool>("splashPlusZside"));
 
   algo_ = new SplashDelayTunerAlgos(iConfig,timecor);
+
+  firstEvent_ = true;
 }
 
 SplashTimingAnalyzer::~SplashTimingAnalyzer() {

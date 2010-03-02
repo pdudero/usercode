@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.1 2010/01/26 13:57:23 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.2 2010/03/01 06:52:33 dudero Exp $
 //
 //
 
@@ -53,6 +53,7 @@ private:
   myEventData           *eventData_;
   BeamDelayTunerAlgos   *algo_;
   std::set<uint32_t>     s_runs_; // set of run numbers run over
+  bool                    firstEvent_;
 };
 
 //
@@ -78,6 +79,8 @@ BeamTimingAnalyzer::BeamTimingAnalyzer(const edm::ParameterSet& iConfig)
   BeamHitTimeCorrector *timecor   = new BeamHitTimeCorrector();
 
   algo_ = new BeamDelayTunerAlgos(iConfig,timecor);
+
+  firstEvent_ = true;
 }
 
 BeamTimingAnalyzer::~BeamTimingAnalyzer() {
@@ -95,6 +98,12 @@ BeamTimingAnalyzer::~BeamTimingAnalyzer() {
 void
 BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  if (firstEvent_) {
+    // Because the framework geniuses got rid of this capability in beginJob!
+    algo_->beginJob(iSetup);
+    firstEvent_ = false;
+  }
+
   eventData_->get(iEvent,iSetup);
 
   uint32_t runn = eventData_->runNumber();
@@ -108,7 +117,6 @@ BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 void 
 BeamTimingAnalyzer::beginJob()
 {
-  algo_->beginJob();
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
