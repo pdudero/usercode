@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.3 2010/02/26 23:34:30 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.4 2010/03/01 06:51:56 dudero Exp $
 //
 //
 
@@ -83,8 +83,6 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
   v_cuts_.push_back("cut6bOutOfTimeWindow");
 #endif
   st_lastCut_ = "cut4badEvents";
-
-  timecor_->init(iConfig);
 }                        // BeamDelayTunerAlgos::BeamDelayTunerAlgos
 
 //==================================================================
@@ -266,3 +264,15 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
   }
   neventsProcessed_++;
 }
+
+//======================================================================
+
+void
+BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
+{
+  iSetup.get<HcalDbRecord>().get( conditions_ );
+  timecor_->init();
+
+  HcalDelayTunerAlgos::beginJob();
+}
+
