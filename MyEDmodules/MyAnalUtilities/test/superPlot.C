@@ -464,16 +464,12 @@ processLayoutSection(FILE      *fp,
     string value = v_tokens[1];
 
     if (key == "npadsx") {
-      if (isdigit(value[0])) {
-	unsigned npadsx = value[0] - '0';
-	if (npadsx > 1) wc.npadsx = npadsx;
-      }
+      unsigned long npadsx = str2int(value);
+      if (npadsx > 1) wc.npadsx = npadsx;
     }
     else if (key == "npadsy") {
-      if (isdigit(value[0])) {
-	unsigned npadsy = value[0] - '0';
-	if (npadsy > 1) wc.npadsy = npadsy;
-      }
+      unsigned long npadsy = str2int(value);
+      if (npadsy > 1) wc.npadsy = npadsy;
     }
     else if (key == "padxdim") {
       unsigned long padxdim = str2int(value);
@@ -1187,7 +1183,7 @@ processHmathSection(FILE *fp,
       h1 = (TH1 *)firstone->Clone();
       if (key == "weightsum")
 	h1->SetBit(TH1::kIsAverage);  // <========== Addends also have to have this set.
-      for (uint32_t i=1; i<v_tokens.size(); i++) {
+      for (unsigned i=1; i<v_tokens.size(); i++) {
 	TH1 *addend = (TH1 *)findHisto(v_tokens[i]);
 	if (!addend) continue;
 	h1->Add(addend,1.0);
@@ -1236,7 +1232,101 @@ processHmathSection(FILE *fp,
     } else if (key == "skipbinatx")
       skipbinatx = str2flt(value);
 
-    else if (!h1) {  // all other keys must have "path" defined
+    //------------------------------
+    else if (key == "projectx") {
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      string binspec = value; // range of bins to project
+
+      // binspec of form
+      //
+      Tokenize(binspec,v_tokens,":");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(v_tokens[0]);
+      if (op == glmap_id2histo.end()) {
+	cerr << "Histo ID " << value;
+	cerr << " not found, histo operand must be defined before ";
+	cerr << key << endl;
+	continue;
+      }
+      TH2 *tmph2 = (TH2 *)op->second->histo();
+
+      binspec = v_tokens[1];
+      Tokenize(binspec,v_tokens,"-");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      string newname = string(tmph2->GetName())+"_"+binspec;
+      int lobin=str2int(v_tokens[0]);
+      int hibin=str2int(v_tokens[1]);
+      if (lobin > hibin) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      h1 = (TH1 *)tmph2->ProjectionX(newname.c_str(),lobin,hibin);
+      wh = new wTH1(h1);
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+
+    //------------------------------
+    } else if (key == "projecty") {
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined before path key" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      string binspec = value; // range of bins to project
+
+      // binspec of form
+      //
+      Tokenize(binspec,v_tokens,":");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(v_tokens[0]);
+      if (op == glmap_id2histo.end()) {
+	cerr << "Histo ID " << value;
+	cerr << " not found, histo operand must be defined before ";
+	cerr << key << endl;
+	continue;
+      }
+      TH2 *tmph2 = (TH2 *)op->second->histo();
+
+      binspec = v_tokens[1];
+      Tokenize(binspec,v_tokens,"-");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      string newname = string(tmph2->GetName())+"_"+binspec;
+      int lobin=str2int(v_tokens[0]);
+      int hibin=str2int(v_tokens[1]);
+      if (lobin > hibin) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      h1 = (TH1 *)tmph2->ProjectionY(newname.c_str(),lobin,hibin);
+      wh = new wTH1(h1);
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+
+    } else if (!h1) {  // all other keys must have "path" defined
       cerr << "an operation key must be defined before key " << key << endl;
       break;
     }
