@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.2 2010/02/26 23:37:24 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.3 2010/03/02 21:08:16 dudero Exp $
 //
 //
 
@@ -52,11 +52,18 @@ private:
 
   // ---------- private methods ---------------------------
 
+  bool   isHFPMThit             (const HFRecHit& queried,
+				 float partnerEnergy);
+
+  void   fillHFD1D2histos       (const HFRecHit& rhd1, float corTime1,
+				 const HFRecHit& rhd2, float corTime2);
+
   void   bookHistos4lastCut     (void);
 
   template<class Digi,class RecHit>
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
+  void   processHFPMThits       (const edm::Handle<HFRecHitCollection>& rechithandle);
 
   // ----------member data ---------------------------
 
@@ -70,6 +77,11 @@ private:
   std::string st_nHitsMinus_;
   std::string st_totalEplus_;
   std::string st_totalEminus_;
+
+  std::string st_rhCorTimesD1vsD2plusVerified_;
+  std::string st_rhCorTimesD1vsD2minusVerified_;
+  std::string st_rhCorTimesD1vsD2plusPMT_;
+  std::string st_rhCorTimesD1vsD2minusPMT_;
 };
 
 #endif // _MYEDMODULESBEAMDELAYTUNERALGOS
