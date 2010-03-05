@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.9 2010/03/01 06:51:56 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.10 2010/03/01 08:19:36 dudero Exp $
 //
 //
 
@@ -454,7 +454,6 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 void
 HcalDelayTunerAlgos::bookHistos4lastCut(void)
 {
-  char name[40];   std::string namestr;
   char title[128]; std::string titlestr;
 
   std::vector<myAnalHistos::HistoParams_t> v_hpars1d;
@@ -558,6 +557,7 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
       //
       // Make profiles of timing vs RM for individual pixels
       //
+      char name[40];
       for (int ipix=1; ipix<=19; ipix++) {
 	sprintf(name,"p1d_rhTvsRM4pix%02dHE",ipix);
 	sprintf(title,"RecHit Time/RM for pixel %d, HE, Run %d",ipix, runnum_);
@@ -765,16 +765,16 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
   if (mysubdet_ == HcalForward) {
     // variable bin timing maps for HF
     myAH->book2dvarx<TProfile2D>(st_rhTprofplusd1_,
-				 "Depth 1 RecHit Time Map-Profile, HFP; radius; iphi",
-				 28, hftwrEdges,72, -6.28, 6.28);
+				 "RecHit Timing, HFP Depth 1; radius; iphi",
+				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofplusd2_,
-				 "Depth 2 RecHit Time Map-Profile, HFP; radius; iphi",
+				 "RecHit Timing, HFP Depth 2; radius; iphi",
 				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofminusd1_,
-				 "Depth 1 RecHit Time Map-Profile, HFM; radius; iphi",
+				 "RecHit Timing, HFM Depth 1; radius; iphi",
 				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofminusd2_,
-				 "Depth 2 RecHit Time Map-Profile, HFM; radius; iphi",
+				 "RecHit Timing, HFM Depth 2; radius; iphi",
 				 28, hftwrEdges,36, 0.0, 6.28);
   }
 
@@ -820,7 +820,8 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
 
     // make digi subfolder in the final cut folder
     myAnalHistos *myAH = getHistos4cut(st_lastCut_);
-    digidir_ = new TFileDirectory(myAH->dir()->mkdir("Digis"));
+    digidir_ = new TFileDirectory(myAH->dir()->mkdir("DigisPerID"));
+    rhdir_   = new TFileDirectory(myAH->dir()->mkdir("corTimesPerID"));
 #if 0
     /* Book per channel histos */
     TFileDirectory *lastdir = myAH->dir();
@@ -853,7 +854,7 @@ HcalDelayTunerAlgos::bookDigiHisto(HcalDetId detId)
   uint32_t denseId = detID_.denseIndex();
   stringstream name;
   name << detId;
-  return digisPerId.insert
+  return digisPerId_.insert
     (std::pair<uint32_t,TProfile*>
      (denseId,(TProfile *)digidir_->make<TProfile>
       (name.str().c_str(),name.str().c_str(),10,-0.5,9.5)));
@@ -869,10 +870,26 @@ HcalDelayTunerAlgos::bookDigiPerEhisto(HcalDetId detId)
   title << detId;
   string name = title.str() + "perE";
   title << "; ; E_{hit}(GeV)";
-  return digisPerIdPerE.insert
+  return digisPerIdPerE_.insert
     (std::pair<uint32_t,TProfile2D*>
      (denseId,(TProfile2D *)digidir_->make<TProfile2D>
       (name.c_str(),title.str().c_str(),10,-0.5,9.5,nEbins,digEbins)));
+}
+
+//======================================================================
+
+std::pair<std::map<uint32_t,TH1D*>::iterator, bool>
+HcalDelayTunerAlgos::bookCorTimeHisto(HcalDetId detId)
+{
+  uint32_t denseId = detID_.denseIndex();
+  stringstream name, title;
+  name << detId;
+  title << name.str() << "; RecHit Time (ns)";
+  return corTimesPerId_.insert
+    (std::pair<uint32_t,TH1D*>
+     (denseId,(TH1D *)rhdir_->make<TH1D>
+      (name.str().c_str(),title.str().c_str(),
+       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_)));
 }
 
 //======================================================================
@@ -1012,7 +1029,7 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       else if ((ieta>= 11)&&(ieta<= 15))myAH->fill1d<TProfile>(st_avgTimePerPhiRing2P_,iphi,corTime_);
 
     } else if (mysubdet_ == HcalForward) {
-      double angle  = TMath::Pi()*(iphi+1)/36.;
+      double angle  = TMath::Pi()*(iphi-1)/36.;
       double radius = hftwrRadii[41-absieta];
       //cout << ieta << " --> " << radius << endl;
       switch (depth) {
@@ -1039,19 +1056,29 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
 
     // Now per channel...
     if (doPerChannel_) {
-      std::map<uint32_t,TProfile*>::const_iterator it = digisPerId.find(denseId);
-      if (it == digisPerId.end()) {
+      std::map<uint32_t,TProfile*>::const_iterator it = digisPerId_.find(denseId);
+      if (it == digisPerId_.end()) {
 	std::pair<std::map<uint32_t,TProfile*>::iterator, bool>
 	  retval = bookDigiHisto(detID_);
 	it = retval.first;
       }
-      std::map<uint32_t,TProfile2D*>::const_iterator it2 = digisPerIdPerE.find(denseId);
-      if (it2 == digisPerIdPerE.end()) {
+      std::map<uint32_t,TProfile2D*>::const_iterator it2 = digisPerIdPerE_.find(denseId);
+      if (it2 == digisPerIdPerE_.end()) {
 	std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool>
 	  retval = bookDigiPerEhisto(detID_);
 	it2 = retval.first;
       }
       fillDigiPulseHistos(it->second, it2->second);
+
+      // Corrected hit time per channel
+      std::map<uint32_t,TH1D*>::const_iterator it3 = corTimesPerId_.find(denseId);
+      if (it3 == corTimesPerId_.end()) {
+	std::pair<std::map<uint32_t,TH1D*>::iterator, bool>
+	  retval = bookCorTimeHisto(detID_);
+	it3 = retval.first;
+      }
+      it3->second->Fill(corTime_);
+
     }
   } // if last cut
 }                                 // HcalDelayTunerAlgos::fillHistos4cut
