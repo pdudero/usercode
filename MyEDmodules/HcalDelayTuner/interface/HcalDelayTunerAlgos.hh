@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.6 2010/02/26 23:37:24 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.7 2010/03/01 06:52:17 dudero Exp $
 //
 //
 
@@ -78,6 +78,7 @@ protected:
 
   std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiHisto    (HcalDetId detId);
   std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiPerEhisto(HcalDetId detId);
+  std::pair<std::map<uint32_t,TH1D*>::iterator,       bool> bookCorTimeHisto (HcalDetId detId);
 
   virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
 
@@ -234,9 +235,10 @@ protected:
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
 
-  TFileDirectory *digidir_;
-  std::map<uint32_t,TProfile*> digisPerId;
-  std::map<uint32_t,TProfile2D*> digisPerIdPerE;
+  TFileDirectory *digidir_, *rhdir_;
+  std::map<uint32_t,TProfile*> digisPerId_;
+  std::map<uint32_t,TProfile2D*> digisPerIdPerE_;
+  std::map<uint32_t,TH1D*> corTimesPerId_;
 
   TProfile2D *last2dprof_;
   TH1F       *last1ddist_;
