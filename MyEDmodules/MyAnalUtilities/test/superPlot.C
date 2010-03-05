@@ -31,6 +31,8 @@ using namespace std;
 #include "tdrstyle4timing.C"
 #include "drawStandardTexts.C"
 
+#define LINELEN 512
+
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),
 			rightmargin(0.),leftmargin(0.),
@@ -116,6 +118,7 @@ static map<string, wTH1 *>      glmap_id2histo;
 static map<string, TGraph *>    glmap_id2graph;
 static map<string, wLegend_t *> glmap_id2legend; // the map...of legends
 static map<string, wLabel_t *>  glmap_id2label;
+static map<string, TFile *>     glmap_id2rootfile;
 
 static string nullstr;
 
@@ -184,10 +187,9 @@ void Tokenize(const string& str,
 
 bool getLine(FILE *fp, string& theline, const string& callerid="")
 { 
-  char linein[256];
+  char linein[LINELEN];
 
-
-  if (!feof(fp) && fgets(linein,256,fp)) {
+  if (!feof(fp) && fgets(linein,LINELEN,fp)) {
     if (strlen(linein) && (linein[strlen(linein)-1] == '\n'))
       linein[strlen(linein)-1] = '\0';
     theline = string(linein);
@@ -213,11 +215,11 @@ const string& extractAlias(const string& input)
 
 //======================================================================
 
-TH1 *findHisto(const string& hid)
+TH1 *findHisto(const string& hid, const std::string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
-    cerr << "Histo ID " << hid << " not found, math ops must be defined after the operands" << endl;
+    cerr << "Histo ID " << hid << " " << errmsg << endl;
     return NULL;
   }
   return it->second->histo();
@@ -282,7 +284,7 @@ void loadVectorsFromFile(const char *filename,
 			 TVectorD&   vx,
 			 TVectorD&   vy)
 {
-  char linein[128];
+  char linein[LINELEN];
   vector<double> v;
 
   FILE *fp = fopen(filename, "r");
@@ -294,7 +296,7 @@ void loadVectorsFromFile(const char *filename,
 
   cout << "Loading vectors from file " << filename;
 
-  while (!feof(fp) && fgets(linein,128,fp)) {
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
     double x, y;
     if (sscanf(linein, "%lf %lf", &x, &y) != 2) {
       cerr << "scan failed, file " << filename << ", line = " << linein << endl;
@@ -324,7 +326,7 @@ void loadVectorsFromFile(const char *filename,
 			 TVectorD&   exl,TVectorD&   exh,
 			 TVectorD&   eyl,TVectorD&   eyh)
 {
-  char linein[128];
+  char linein[LINELEN];
   vector<double> v;
 
   FILE *fp = fopen(filename, "r");
@@ -336,7 +338,7 @@ void loadVectorsFromFile(const char *filename,
 
   cout << "Loading vectors from file " << filename;
 
-  while (!feof(fp) && fgets(linein,128,fp)) {
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
     double x, y, ymin,ymax;
     if (sscanf(linein, "%lf %lf %lf %lf", &x, &ymin, &ymax, &y) != 4) {
       cerr << "scan failed, file " << filename << ", line = " << linein << endl;
@@ -637,13 +639,6 @@ void processCommonHistoParams(const string& key,
   else if (key == "xndiv")  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
   else if (key == "yndiv")  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
-  // stats box
-  else if (key == "statson")    wh.SetStats(str2int(value) != 0);
-  else if (key == "statsx1ndc") wh.SetStats(wh.statsAreOn(),str2flt(value));
-  else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),0.0,str2flt(value));
-  else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,str2flt(value));
-  else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,0.0,str2flt(value));
-
   else if (key == "xmin") {
     xmin = str2flt(value);
     wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
@@ -668,6 +663,37 @@ void processCommonHistoParams(const string& key,
     zmax = str2flt(value);
     wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
   }
+
+  else if (key == "xbinlabels") {
+    vector<string> v_tokens;
+    Tokenize(value,v_tokens,",");
+    if (!v_tokens.size()) {
+      cerr << "expect comma-separated list of bin labels ";
+      cerr << value << endl;
+    }
+    cout << "Loaded " << v_tokens.size() << " x-axis bin labels" << endl;
+    for (int ibin=1; ibin<=std::min((int)v_tokens.size(),wh.histo()->GetNbinsX()); ibin++)
+      wh.histo()->GetXaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
+  }
+
+  else if (key == "ybinlabels") {
+    vector<string> v_tokens;
+    Tokenize(value,v_tokens,",");
+    if (!v_tokens.size()) {
+      cerr << "expect comma-separated list of bin labels ";
+      cerr << value << endl;
+    }
+    for (int ibin=1; ibin<=std::min((int)v_tokens.size(),wh.histo()->GetNbinsY()); ibin++)
+      wh.histo()->GetYaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
+  }
+
+  // stats box
+  else if (key == "statson")    wh.SetStats(str2int(value) != 0);
+  else if (key == "statsx1ndc") wh.SetStats(wh.statsAreOn(),str2flt(value));
+  else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),0.0,str2flt(value));
+  else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,str2flt(value));
+  else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,0.0,str2flt(value));
+
   else if (key == "erroroption") {
     // only for TProfiles.
     // allowed options are
@@ -716,7 +742,7 @@ void processCommonHistoParams(const string& key,
   else {
     cerr << "unknown key " << key << endl;
   }
-}
+}                                            // processCommonHistoParams
 
 //======================================================================
 
@@ -765,10 +791,17 @@ wTH1 *getHistoFromSpec(const string& hid,
     }
     wth1 = hit->second;
   } else {
-    rootfile = new TFile(rootfn.c_str());
+    // Now check to see if this file has already been opened...
+    map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
+    if (it != glmap_id2rootfile.end())
+      rootfile = it->second;
+    else
+      rootfile = new TFile(rootfn.c_str());
+
     if (rootfile->IsZombie()) {
       cerr << "File failed to open, " << rootfn << endl;
     } else {
+      glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
       TH1 *h1 = (TH1 *)rootfile->Get(hspec.c_str());
       if (!h1) {
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
@@ -833,7 +866,7 @@ processHistoSection(FILE *fp,
     } else if (key == "clone") {
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before clone key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(value);
       if (it == glmap_id2histo.end()) {
@@ -848,7 +881,7 @@ processHistoSection(FILE *fp,
     } else if (key == "path") {
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (wth1) {
 	cerr << "histo already defined" << endl; continue;
@@ -860,7 +893,7 @@ processHistoSection(FILE *fp,
     } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (wth1) {
 	cerr << "histo already defined" << endl; continue;
@@ -966,7 +999,7 @@ processGraphSection(FILE *fp,
     } else if (key == "vectorfile") {
     //------------------------------
       if (!gid) {
-	cerr << "id key must be defined before vectorfile key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       string path = value;
       if (gr) {
@@ -1030,6 +1063,7 @@ processHmathSection(FILE *fp,
 		    bool& new_section)
 {
   vector<string> v_tokens;
+  vector<TH1*>   v_histos2dize;
 
   wTH1  *wh  = NULL;
   string *hid = NULL;
@@ -1074,7 +1108,7 @@ processHmathSection(FILE *fp,
     } else if (key == "unaryop") {  // unary operation /+-* with a constant
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
@@ -1142,7 +1176,7 @@ processHmathSection(FILE *fp,
     //------------------------------
 
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
@@ -1195,17 +1229,13 @@ processHmathSection(FILE *fp,
     } else if (key == "integright") {  // sweep from low-high x-bins and integrate to the right
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
       }
-      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(value);
-      if (op == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
-	continue;
-      }
-      TH1 *tmph1 = op->second->histo();
+      TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
+      if (!tmph1) continue;
       h1 = (TH1 *)IntegrateRight(tmph1,skipbinatx);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
@@ -1214,17 +1244,13 @@ processHmathSection(FILE *fp,
     } else if (key == "integleft") {  // sweep from low-high x-bins and integrate to the left
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
       }
-      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(value);
-      if (op == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value << " not found, histo operand must be defined before math ops" << endl;
-	continue;
-      }
-      TH1 *tmph1 = op->second->histo();
+      TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
+      if (!tmph1) continue;
       h1 = (TH1 *)IntegrateLeft(tmph1);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
@@ -1236,7 +1262,7 @@ processHmathSection(FILE *fp,
     else if (key == "projectx") {
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
@@ -1251,15 +1277,8 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(v_tokens[0]);
-      if (op == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value;
-	cerr << " not found, histo operand must be defined before ";
-	cerr << key << endl;
-	continue;
-      }
-      TH2 *tmph2 = (TH2 *)op->second->histo();
-
+      TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
+      if (!tmph2) continue;
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1283,7 +1302,7 @@ processHmathSection(FILE *fp,
     } else if (key == "projecty") {
     //------------------------------
       if (!hid) {
-	cerr << "id key must be defined before path key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
@@ -1298,15 +1317,8 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      map<string,wTH1 *>::const_iterator op = glmap_id2histo.find(v_tokens[0]);
-      if (op == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value;
-	cerr << " not found, histo operand must be defined before ";
-	cerr << key << endl;
-	continue;
-      }
-      TH2 *tmph2 = (TH2 *)op->second->histo();
-
+      TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
+      if (!tmph2) continue;
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1326,7 +1338,46 @@ processHmathSection(FILE *fp,
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
-    } else if (!h1) {  // all other keys must have "path" defined
+    //------------------------------
+    } else if (key == "x2Dize") {  // means to take a collection of 1d plots and make a
+    //------------------------------  2d plot by laying them sequentially along the x-axis
+
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      Tokenize(value,v_tokens,",");
+      if (!v_tokens.size()) {
+	cerr << "expect comma-separated list of at least two histo ids to 2D-ize!";
+	cerr << theline << endl;
+	continue;
+      }
+
+      for (unsigned i=0; i<v_tokens.size(); i++) {
+	TH1 *tmph1 = findHisto(v_tokens[i],"histo operand must be defined before math ops");
+	if (!tmph1) continue;
+	v_histos2dize.push_back(tmph1);
+      }
+      cout << "x-2d-izing " << v_histos2dize.size() << " histos" << endl;
+      int nbinsx = v_histos2dize.size();
+      if (nbinsx) {
+	TAxis   *xax = v_histos2dize[0]->GetXaxis();
+	int   nbinsy = xax->GetNbins();
+	h1 = new TH2D(hid->c_str(),hid->c_str(),
+		      v_histos2dize.size(),1.0,(float)v_histos2dize.size(),
+		      nbinsy,xax->GetXmin(),xax->GetXmax());
+	for (int i=1; i<=nbinsx; i++) {
+	  TH1 *src = v_histos2dize[i-1];
+	  for (int j=1; j<=xax->GetNbins(); j++)
+	    ((TH2D *)h1)->SetBinContent(i,j,src->GetBinContent(j));
+	}
+	wh = new wTH1(h1);
+	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+      }
+
+    } else if (!h1) {  // all other keys must have one of the above ops defined 1st
       cerr << "an operation key must be defined before key " << key << endl;
       break;
     }
