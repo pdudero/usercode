@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.5 2010/02/02 19:57:48 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.6 2010/02/18 21:06:12 dudero Exp $
 //
 //
 
@@ -56,7 +56,9 @@ private:
   void plotHB(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TH1D*dist);
   void plotHE(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TProfile2D*mapd3,TH1D*dist);
   void plotHO(const DelaySettings& settings,TProfile2D*mapd4,TH1D*dist);
-  void plotHF(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TH1D*dist);
+  void plotHF(const DelaySettings& settings,
+	      TProfile2D*mapHFPd1,TProfile2D*mapHFPd2,
+	      TProfile2D*mapHFMd1,TProfile2D*mapHFMd2,TH1D*dist);
   void printStatsPerRBX(const DelaySettings& settings);
 
   // ----------member data ---------------------------
@@ -69,6 +71,54 @@ private:
 //
 // constants, enums and typedefs
 //
+
+static const double hftwrRadii[] = { // in meters
+  1.570-1.423,  // 41
+  1.570-1.385,  // 40
+  1.570-1.350,  // 39
+  1.570-1.308,  // 38
+  1.570-1.258,  // 37
+  1.570-1.198,  // 36
+  1.570-1.127,  // 35
+  1.570-1.042,  // 34
+  1.570-0.941,  // 33
+  1.570-0.821,  // 32
+  1.570-0.677,  // 31
+  1.570-0.505,  // 30
+  1.570-0.344   // 29
+};
+
+static const double hftwrEdges[] = {  // in meters
+-(1.570- 0.207),
+-(1.570-(0.505+0.344)/2.), // 29
+-(1.570-(0.677+0.505)/2.), // 30
+-(1.570-(0.821+0.677)/2.), // 31
+-(1.570-(0.941+0.821)/2.), // 32
+-(1.570-(1.042+0.941)/2.), // 33
+-(1.570-(1.127+1.042)/2.), // 34
+-(1.570-(1.198+1.127)/2.), // 35
+-(1.570-(1.258+1.198)/2.), // 36
+-(1.570-(1.308+1.258)/2.), // 37
+-(1.570-(1.350+1.308)/2.), // 38
+-(1.570-(1.385+1.350)/2.), // 39
+-(1.570-(1.423+1.385)/2.), // 40
+-(1.570-1.445),            // 41
+  0.,                      // ieta
+  1.570-1.445,             // 41
+  1.570-(1.423+1.385)/2.,  // 40
+  1.570-(1.385+1.350)/2.,  // 39
+  1.570-(1.350+1.308)/2.,  // 38
+  1.570-(1.308+1.258)/2.,  // 37
+  1.570-(1.258+1.198)/2.,  // 36
+  1.570-(1.198+1.127)/2.,  // 35
+  1.570-(1.127+1.042)/2.,  // 34
+  1.570-(1.042+0.941)/2.,  // 33
+  1.570-(0.941+0.821)/2.,  // 32
+  1.570-(0.821+0.677)/2.,  // 31
+  1.570-(0.677+0.505)/2.,  // 30
+  1.570-(0.505+0.344)/2.,  // 29
+  1.570- 0.207
+};
 
 //
 // static data member definitions
@@ -277,28 +327,31 @@ DelaySettingPlotter::printStatsPerRBX(const DelaySettings& settings)
 
 void
 DelaySettingPlotter::plotHF(const DelaySettings& settings,
-			    TProfile2D *mapd1, TProfile2D *mapd2, TH1D *dist)
+			    TProfile2D *mapHFPd1, TProfile2D *mapHFPd2,
+			    TProfile2D *mapHFMd1, TProfile2D *mapHFMd2,
+			    TH1D *dist)
 {
   cout <<"plotHF" << endl;
   int settingd1, settingd2;
   DelaySettings::const_iterator it;
   for (int iphi=1; iphi <= 71; iphi+=2) {
     for (int ieta=29; ieta<=41; ieta++) {
-      if (!ieta) continue;
+      double angle  = TMath::Pi()*(iphi-1)/36.;
+      double radius = hftwrRadii[41-ieta];
       // Plus side
       settingd1 = getSetting4(settings,HcalForward,ieta,iphi,1);
-      if (settingd1 != BADVAL) { mapd1->Fill(ieta,iphi,settingd1); dist->Fill(settingd1); }
       settingd2 = getSetting4(settings,HcalForward,ieta,iphi,2);
-      if (settingd2 != BADVAL) { mapd2->Fill(ieta,iphi,settingd2); dist->Fill(settingd2); }
+      if (settingd1 != BADVAL) { mapHFPd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
+      if (settingd2 != BADVAL) { mapHFPd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
 
       // Minus side
       settingd1 = getSetting4(settings,HcalForward,-ieta,iphi,1);
-      if (settingd1 != BADVAL) { mapd1->Fill(-ieta,iphi,settingd1); dist->Fill(settingd1); }
       settingd2 = getSetting4(settings,HcalForward,-ieta,iphi,2);
-      if (settingd2 != BADVAL) { mapd2->Fill(-ieta,iphi,settingd2); dist->Fill(settingd2); }
+      if (settingd1 != BADVAL) { mapHFMd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
+      if (settingd2 != BADVAL) { mapHFMd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
     }
   }
-}
+}                                         // DelaySettingPlotter::plotHF
 
 //======================================================================
 
@@ -318,8 +371,7 @@ DelaySettingPlotter::endJob()
   lmap_ = new HcalLogicalMap(gen.createMap());
   
   DelaySettings oldsettings, newsettings;
-  inpold_->getSamplingDelays(oldsettings);
-  inpnew_->getSamplingDelays(newsettings);
+  inpold_->getSamplingDelays(oldsettings);  inpnew_->getSamplingDelays(newsettings);
 
   TProfile2D*oldmapd1=fs->make<TProfile2D>("oldmapd1","Old Delay Settings, Depth 1;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
   TProfile2D*oldmapd2=fs->make<TProfile2D>("oldmapd2","Old Delay Settings, Depth 2;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
@@ -327,10 +379,16 @@ DelaySettingPlotter::endJob()
   TProfile2D*oldmapd4=fs->make<TProfile2D>("oldmapd4","Old Delay Settings, Depth 4;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
   TH1D*olddist =fs->make<TH1D>("olddist","Old DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
 
+  // variable bin delay maps for HF
+  TProfile2D*oldmapHFPd1=fs->make<TProfile2D>("oldmapHFPd1","RecHit Timing, HFP Depth 1; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*oldmapHFPd2=fs->make<TProfile2D>("oldmapHFPd2","RecHit Timing, HFP Depth 2; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*oldmapHFMd1=fs->make<TProfile2D>("oldmapHFMd1","RecHit Timing, HFM Depth 1; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*oldmapHFMd2=fs->make<TProfile2D>("oldmapHFMd2","RecHit Timing, HFM Depth 2; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+
   plotHB(oldsettings,oldmapd1,oldmapd2,olddist);
   plotHE(oldsettings,oldmapd1,oldmapd2,oldmapd3,olddist);
   plotHO(oldsettings,oldmapd4,olddist);
-  plotHF(oldsettings,oldmapd1,oldmapd2,olddist);
+  plotHF(oldsettings,oldmapHFPd1,oldmapHFPd2,oldmapHFMd1,oldmapHFMd2,olddist);
 
   TProfile2D*newmapd1=fs->make<TProfile2D>("newmapd1","New Delay Settings, Depth 1;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
   TProfile2D*newmapd2=fs->make<TProfile2D>("newmapd2","New Delay Settings, Depth 2;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
@@ -338,10 +396,16 @@ DelaySettingPlotter::endJob()
   TProfile2D*newmapd4=fs->make<TProfile2D>("newmapd4","New Delay Settings, Depth 4;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
   TH1D*newdist =fs->make<TH1D>("newdist","New DelaySettings Distro; Delay Setting (ns)", 25,-0.5,24.5);
 
+  // variable bin delay maps for HF
+  TProfile2D*newmapHFPd1=fs->make<TProfile2D>("newmapHFPd1","RecHit Timing, HFP Depth 1; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*newmapHFPd2=fs->make<TProfile2D>("newmapHFPd2","RecHit Timing, HFP Depth 2; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*newmapHFMd1=fs->make<TProfile2D>("newmapHFMd1","RecHit Timing, HFM Depth 1; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+  TProfile2D*newmapHFMd2=fs->make<TProfile2D>("newmapHFMd2","RecHit Timing, HFM Depth 2; radius; iphi",28,hftwrEdges,36,0.0,6.28);
+
   plotHB(newsettings,newmapd1,newmapd2,newdist);
   plotHE(newsettings,newmapd1,newmapd2,newmapd3,newdist);
   plotHO(newsettings,newmapd4,newdist);
-  plotHF(newsettings,newmapd1,newmapd2,newdist);
+  plotHF(newsettings,newmapHFPd1,newmapHFPd2,newmapHFMd1,newmapHFMd2,newdist);
 
   printStatsPerRBX(newsettings);
 }
