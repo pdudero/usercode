@@ -20,6 +20,8 @@ TIMEMODCEILING=9999 #Phase skip? Subtract off 25ns if greater than
 FIRSTSAMPLE=2 #Simple reconstructor
 SAMPLESTOADD=5 #Simple reconstructor
 
+GLOBALOFFSETNS=-65
+
 EVENTS=-1
 #EVENTS=10
 
@@ -120,7 +122,7 @@ process.hfreco.samplesToAdd = ${SAMPLESTOADD}
 process.hcalLaserReco = cms.EDProducer( "HcalLaserReco" )
 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("laserTimingAnal_run$1_TDC${TDCWINDOW}_ENERGY${ENTHRESH}.root"),
+    fileName = cms.string("laserTimingAnal_run$1_TDC${TDCWINDOW}_ENERGY${ENTHRESH}_GLOFFSET${GLOBALOFFSETNS}.root"),
     closeFileFast = cms.untracked.bool(False)
 )
 
@@ -131,6 +133,7 @@ process.hfdelayser.TDCpars.TDCCutWindow = cms.double(${TDCWINDOW})
 process.hfdelayser.TDCpars.CorrectedTimeModCeiling = cms.int32(${CORRECTEDTIMEMODCEILING})
 process.hfdelayser.TDCpars.TimeModCeiling = cms.int32(${TIMEMODCEILING})
 #process.hfdelayser.eventDataPset.verbose = cms.untracked.bool(True)
+process.hfdelayser.globalTimeOffset = cms.double(${GLOBALOFFSETNS})
 
 #LogicalMapFilename = cms.untracked.string("HCALmapHBEF_Jun.19.2008.txt")
    
