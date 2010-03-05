@@ -8,6 +8,7 @@
 <use name=DataFormats/HcalRecHit>
 <use name=CondFormats/HcalObjects>
 <use name=CalibFormats/HcalObjects>
+<use name=CalibFormats/CaloObjects>
 <use name=CalibCalorimetry/HcalAlgos>
 <use name=Geometry/Records>
 <use name=Geometry/CaloGeometry>
