@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.10 2010/03/01 08:19:36 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.11 2010/03/05 13:25:21 dudero Exp $
 //
 //
 
@@ -391,6 +391,14 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
   st_corTimingVsE_ = "h2d_corTimingVsE" + mysubdetstr_;
   add2dHisto(st_corTimingVsE_,
 "RecHit Timing vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
+	     (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
+	     recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+	     v_hpars2d);
+
+  st_corTimingVsED1_ = "h2d_corTimingVsED1" + mysubdetstr_;
+  add2dHisto(st_corTimingVsED1_,
+"RecHit Timing vs. Energy, "+mysubdetstr_+" Depth 1; Rechit Energy (GeV); Rechit Time (ns)",
 	     (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_),
 	     recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
@@ -923,6 +931,7 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   if (depth==1) {
     myAH->fill1d<TH1F> (st_rhCorTimesD1_, corTime_);
     myAH->fill1d<TProfile> (st_avgTperEvD1_, evtnum_, corTime_);
+    myAH->fill2d<TH2F>(st_corTimingVsED1_,  hitenergy_,corTime_);
   }
 
   for (int ibit=0; ibit<20; ibit++) {
