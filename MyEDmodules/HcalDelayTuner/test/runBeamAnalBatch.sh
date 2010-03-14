@@ -6,18 +6,31 @@ then
     exit
 fi
 
+
 if [[ -e ./anal_setup.rc ]] 
 then
     source ./anal_setup.rc
 fi
 
+#command line arg overrides RC file
+if (( $# > 0 ))
+then
+    RUN=$1
+fi
+
+#define files
 CFGFILE=./beamTimingAnal_run${RUN}_cfg.py
 LOGFILE=./beamTimingAnal_run${RUN}.log
 #ANALOUTPUT=$2
 #ARG1=$1
-#ANALOUTPUT=`printf "${ANALOUTPUTFMT}" ${ARG1} ${ARG1}`
-ANALOUTPUT=beamTimingAnal_run${RUN}.root
-INCFILE="${INCLUDEFILE%.py}"
+if (( ${#ANALOUTPUTFMT} ))
+then
+    ANALOUTPUT=`printf "${ANALOUTPUTFMT}" ${RUN}`
+fi
+if (( ${#SKIMOUTPUTFMT} ))
+then
+    SKIMOUTPUT=`printf "${SKIMOUTPUTFMT}" ${RUN}`
+fi
 
 if (( ${#EVENTLIMIT} == 0 )) 
 then
@@ -26,16 +39,18 @@ fi
 
 echo "Processing $RUN..."
 
+# Piece together the config file
+#==================================================
+
 cat > ${CFGFILE} << EOF1
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BEAMTIMEANAL")
+process = cms.Process("BEAMTIMEANAL2")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( ${EVENTLIMIT} )
 )
 
-process.load("MyEDmodules.HcalDelayTuner.${INCFILE}")
 #-----------------------------
 # Hcal Conditions: from Global Conditions Tag 
 #-----------------------------
@@ -44,13 +59,115 @@ process.load("MyEDmodules.HcalDelayTuner.${INCFILE}")
 #
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.TFileService = cms.Service("TFileService", 
     fileName = cms.string("${ANALOUTPUT}"),
     closeFileFast = cms.untracked.bool(False)
 )
+EOF1
 
-#process.load("MyEDmodules.HcalDelayTuner.L1skimdef_Bits42or43_cfi")
+#==================================================
+
+if (( ${#INCLUDEFILE} > 0 ))
+then
+    INCFILE="${INCLUDEFILE%.py}"
+else
+    INCFILE=`printf "run%sfiles_cfi" $RUN`
+fi
+
+cat >>${CFGFILE} <<EOF2
+process.load("MyEDmodules.HcalDelayTuner.${INCFILE}")
+EOF2
+
+#==================================================
+
+if (( ${#EVENTRANGE} > 0 ))
+then
+cat >>${CFGFILE} <<EOF3
+process.source.eventsToProcess = cms.untracked.VEventRange('${EVENTRANGE}')
+EOF3
+fi
+
+#==================================================
+
+if (( ${#L1TTBITS} > 0 ))
+then
+    cat >>${CFGFILE} <<EOF4
+process.load("L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff")
+process.load("HLTrigger.HLTfilters.hltLevel1GTSeed_cfi")
+process.hltLevel1GTSeed.L1TechTriggerSeeding = cms.bool(True)
+process.hltLevel1GTSeed.L1SeedsLogicalExpression = cms.string("${L1TTBITS}")
+EOF4
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.hltLevel1GTSeed"
+    else
+	MYPATH="process.hltLevel1GTSeed"
+    fi
+fi
+
+#==================================================
+
+if (( ${#HLTPATHS} > 0 ))
+then
+    cat >>${CFGFILE} <<EOF5
+process.load("HLTrigger.HLTfilters.hltHighLevel_cfi")
+process.hltHighLevel.HLTPaths = cms.vstring(${HLTPATHS})
+#process.MessageLogger.debugModules = cms.untracked.vstring("hltHighLevel")
+EOF5
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.hltHighLevel"
+    else
+	MYPATH="process.hltHighLevel"
+    fi
+fi
+
+#==================================================
+
+if (( ${#INCLUDELS} > 0  ||  ${#EXCLUDELS} > 0  ||  ${#INCLUDEBX} > 0 ))
+then
+    cat >>${CFGFILE} <<EOF6
+process.riFilt = cms.EDFilter("RunInfoFilter",
+    eventNumbers = cms.vint32(),
+    bunchNumbers = cms.vint32(${INCLUDEBX}),
+    includeLSnumbers=cms.vint32(${INCLUDELS}),
+    excludeLSnumbers=cms.vint32(${EXCLUDELS}),
+    runNumbers=cms.vint32(${RUN})
+)
+# For use with the RunInfoFilter:
+process.TFileService = cms.Service("TFileService", 
+    fileName = cms.string("run${RUN}_riskim.root"),
+    closeFileFast = cms.untracked.bool(False)
+)
+EOF6
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.riFilt"
+    else
+	MYPATH="process.riFilt"
+    fi
+fi
+
+#==================================================
+
+if [ ${DODIGIS} ]
+then
+    cat >>${CFGFILE} <<EOF7
+process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
+EOF7
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.hcalDigis"
+    else
+	MYPATH="process.hcalDigis"
+    fi
+fi
+
+#==================================================
+
+cat >>${CFGFILE} <<EOF8
 process.load("MyEDmodules.HcalDelayTuner.beamtiminganal_cfi")
 process.hbtimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
@@ -81,37 +198,63 @@ process.hftimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hftimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hftimeanal.minHitGeV            = cms.double(${MINHITGEV})
 process.hftimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
-EOF1
+EOF8
 
-### Mode-dependent part
-
-if [[ "${MODE}" == "HASDIGIS" ]]
+if [ ${#DODIGIS} -o ${#HASDIGIS} ]
     then
-cat >> ${CFGFILE}<<EOF2
-# If you want Digis...
-process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
+cat >> ${CFGFILE}<<EOF9
+# Need conditions to convert digi ADC to fC in the analyzer
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'FIRSTCOLL::All'
+process.GlobalTag.globaltag = '${GLOBALTAG}'
 process.hbtimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hetimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
-EOF2
+EOF9
     else
 echo Assume no digis in input.
 fi    
 
-cat >> ${CFGFILE}<<EOF3
+#==================================================
+
+cat >> ${CFGFILE}<<EOF10
 process.allAnals=cms.Sequence(
                      process.hbtimeanal+
                      process.hetimeanal+
                      process.hftimeanal)
+EOF10
 
-process.p = cms.Path(process.allAnals)
-EOF3
+if (( ${#MYPATH} > 0 ))
+then
+    MYPATH="${MYPATH}*process.allAnals"
+else
+    MYPATH="process.allAnals"
+fi
+
+cat >>${CFGFILE} <<EOF11
+process.p = cms.Path(${MYPATH})
+EOF11
+
+if (( ${#SKIMOUTPUT} )) && (( ${#CASTOROUTPUTLOC} ))
+then
+    if (( ${#KEEPDROP} < 4 ))
+    then
+	KEEPDROP="keep *"
+    fi
+cat >>${CFGFILE} <<EOF12
+# Output module configuration
+process.out = cms.OutputModule("PoolOutputModule",
+    fileName = cms.untracked.string('${SKIMOUTPUT}'),
+    # save only events passing the full path
+    SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
+    outputCommands = cms.untracked.vstring('${KEEPDROP}')
+)
+process.e = cms.EndPath(process.out)
+EOF12
+fi
 
 if [[ "${RUNMODE}" == "BATCH" ]]
     then
-~/private/bin/lsfbare.perl ${PWD} ${CFGFILE} ${LOGFILE} ${ANALOUTPUT} ${CASTOROUTPUTLOC} ${LOCALRT}
+~/private/bin/lsfbare.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${ANALOUTPUT} ${SKIMOUTPUT} ${CASTOROUTPUTLOC}
     else
     cmsRun ${CFGFILE} 2>&1 >${LOGFILE}
 fi
