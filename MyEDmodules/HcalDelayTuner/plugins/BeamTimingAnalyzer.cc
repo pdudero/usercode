@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.2 2010/03/01 06:52:33 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.3 2010/03/02 21:33:27 dudero Exp $
 //
 //
 
@@ -44,7 +44,6 @@ public:
   ~BeamTimingAnalyzer();
 
 private:
-  virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob();
 
@@ -111,12 +110,6 @@ BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     s_runs_.insert(runn);
 
   algo_->process(*eventData_);
-}
-
-// ------------ method called once each job just before starting event loop  ------------
-void 
-BeamTimingAnalyzer::beginJob()
-{
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
