@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.8 2010/03/05 13:26:31 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.9 2010/03/05 13:49:21 dudero Exp $
 //
 //
 
@@ -26,6 +26,8 @@
 #include "TH1F.h"
 #include "TProfile2D.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "CalibFormats/CaloObjects/interface/CaloSamples.h"
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 
@@ -44,7 +46,7 @@ public:
   virtual ~HcalDelayTunerAlgos() {}
 
   virtual void process  (const myEventData&);
-  virtual void beginJob ();
+  virtual void beginJob (const edm::EventSetup& iSetup);
   virtual void endJob();
 
   void detChannelTimes(TimesPerDetId& chtimes);
@@ -76,9 +78,11 @@ protected:
   virtual void   bookHistos4allCuts  (void);
   virtual void   bookHistos4lastCut  (void);
 
-  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiHisto    (HcalDetId detId);
-  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiPerEhisto(HcalDetId detId);
-  std::pair<std::map<uint32_t,TH1D*>::iterator,       bool> bookCorTimeHisto (HcalDetId detId);
+  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiHisto     (HcalDetId detId);
+  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiPerEhisto (HcalDetId detId);
+  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiEhisto    (HcalDetId detId);
+  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiEperEhisto(HcalDetId detId);
+  std::pair<std::map<uint32_t,TH1D*>::iterator,       bool> bookCorTimeHisto  (HcalDetId detId);
 
   virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
 
@@ -96,7 +100,9 @@ protected:
 				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 #endif
   void    fillDigiPulseHistos    (TProfile   *pulseHist,
-				  TProfile2D *pulseHistPerE);
+				  TProfile2D *pulseHistPerE,
+				  TProfile   *pulseHistE,
+				  TProfile2D *pulseHistEPerE);
 
   virtual void add1dHisto        (const std::string& name, const std::string& title,
 				  int nbinsx, double minx, double maxx,
@@ -125,6 +131,8 @@ protected:
   virtual void projectResults          (const TimesPerDetId& chtimes,
 					int iterationnumber);
 
+  float   recoTimeFromAvgPulseHF       (TProfile *avgPulse);
+
   // ----------member data ---------------------------
 
   // Timing Analyzer Parameters:
@@ -139,15 +147,19 @@ protected:
   uint32_t          recHitTscaleNbins_;
   double            recHitTscaleMinNs_;
   double            recHitTscaleMaxNs_;
+  uint32_t          recHitEscaleNbins_;
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
   uint32_t          maxEventNum2plot_;
   bool              selfSynchronize_; // versus synchronize to the system reference
   bool              normalizeDigis_;
   bool              doPerChannel_;
+  bool              doTree_;
 
   HcalSubdetector   mysubdet_;
   TimesPerDetId     exthitcors_; // misc. external hit time corrections
+
+  int   firstsamp_, nsamps_, presamples_;
 
   std::vector<tCorrection> corList_;
 
@@ -169,7 +181,12 @@ protected:
   float           totalE_;
   int             neventsProcessed_;
 
-  CaloSamples     digifC_;
+  CaloSamples        digifC_;
+  std::vector<float> digiGeV_;
+
+  edm::ESHandle<HcalDbService>  conditions_;
+
+  std::string     runnumstr_;
 
   // The collection of names of histos per subdetector
   std::string st_rhEnergies_;
@@ -219,6 +236,8 @@ protected:
   std::string st_rhTuncProfd1_,st_rhTuncProfd2_,st_rhTuncProfd3_,st_rhTuncProfd4_;
   std::string st_rhTcorProfd1_,st_rhTcorProfd2_,st_rhTcorProfd3_,st_rhTcorProfd4_;
   std::string st_rhTprofRBXd1_,st_rhTprofRBXd2_,st_rhTprofRBXd3_,st_rhTprofRBXd4_;
+  std::string st_rhTavgCorProfd1_,st_rhTavgCorProfd2_,st_rhTavgCorProfd3_,st_rhTavgCorProfd4_;
+  std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhTvsEtaEnergy_;
   std::string st_rhEmap_;
   std::string st_uncorTimingVsE_, st_corTimingVsE_, st_corTimingVsED1_;
@@ -235,10 +254,13 @@ protected:
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
 
-  TFileDirectory *digidir_, *rhdir_;
-  std::map<uint32_t,TProfile*> digisPerId_;
+  // per channel
+  TFileDirectory *dgfCdir_, *dGeVdir_, *rhdir_;
+  std::map<uint32_t,TProfile*>   digisPerId_;
+  std::map<uint32_t,TProfile*>   digisEperId_;
   std::map<uint32_t,TProfile2D*> digisPerIdPerE_;
-  std::map<uint32_t,TH1D*> corTimesPerId_;
+  std::map<uint32_t,TProfile2D*> digisEperIdPerE_;
+  std::map<uint32_t,TH1D*>       corTimesPerId_;
 
   TProfile2D *last2dprof_;
   TH1F       *last1ddist_;
