@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.2 2009/11/20 19:12:48 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.3 2010/02/26 23:34:30 dudero Exp $
 //
 //
 
@@ -54,6 +54,8 @@ public:
   void endAnal();
 
 private:
+  template<class Digi>
+  void    processDigi             (const Digi& df);
   template<class RecHit, class Digi >
   void    processRecHitsAndDigis  (const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle,
 				   const edm::Handle<edm::SortedCollection<Digi>   >& digihandle);

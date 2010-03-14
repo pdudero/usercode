@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.4 2010/03/05 13:25:21 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.5 2010/03/14 16:07:18 dudero Exp $
 //
 //
 
@@ -71,6 +71,31 @@ LaserDelayTunerAlgos::LaserDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   firstEvent_ = true;
 }                          // LaserDelayTunerAlgos::LaserDelayTunerAlgos
 
+//==================================================================
+// Following routine receives digi in ADC (df)
+// and sets member variables digifC_ and digiGeV_ as output.
+//
+template<class Digi>
+void
+LaserDelayTunerAlgos::processDigi(const Digi& df)
+{
+  CaloSamples dfC; // dfC is the linearized (fC) digi
+
+  digiGeV_.clear();
+  const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
+  const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
+  const HcalQIEShape *qieShape   = conditions_->getHcalShape();
+  HcalCoderDb coder( *qieCoder, *qieShape );
+  coder.adc2fC( df, dfC );
+  digiGeV_.resize(dfC.size());
+  for (int i=0; i<dfC.size(); i++) {
+    int capid=df[i].capid();
+    digiGeV_[i] = (dfC[i]-calibs.pedestal(capid)); // pedestal subtraction
+    digiGeV_[i]*= calibs.respcorrgain(capid) ;    // fC --> GeV
+  }
+  digifC_ = dfC;
+}
+
 //======================================================================
 
 template<class RecHit, class Digi >
@@ -113,19 +138,14 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
 #endif
 
     // Digi histogram(s)
-
-    CaloSamples dfC; // empty digi
-    if (digihandle.isValid() && (idf < digihandle->size())) {
-      const Digi&   df =   (*digihandle)[idf];
-      if (rh.id() != df.id()) {
-	edm::LogError("Digis and Rechits aren't tracking!") << df.id() << rh.id() << std::endl;
-      }
-      const HcalQIECoder *qieCoder = conditions_->getHcalCoder( df.id() );
-      const HcalQIEShape *qieShape = conditions_->getHcalShape();
-      HcalCoderDb coder( *qieCoder, *qieShape );
-      coder.adc2fC( df, dfC );
+    //
+    if (digihandle.isValid() &&
+	(idf < digihandle->size())) {
+      const Digi&  df = (*digihandle)[idf];
+      if (df.id() != rh.id())
+	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
+      processDigi<Digi>(df);
     }
-    digifC_ = dfC;
 
     fillHistos4cut("cutNone");
 
