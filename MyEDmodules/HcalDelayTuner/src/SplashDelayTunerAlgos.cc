@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.11 2010/03/01 06:51:57 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.12 2010/03/01 08:20:01 dudero Exp $
 //
 //
 
@@ -289,7 +289,7 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
 	}
       }
     }
-    tree_->Fill();
+    if (doTree_) tree_->Fill();
 
   } // loop over rechits
 
@@ -323,9 +323,7 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
 void
 SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
 {
-  iSetup.get<HcalDbRecord>().get( conditions_ );
   timecor_->init(iSetup);
-
-  HcalDelayTunerAlgos::beginJob();
+  HcalDelayTunerAlgos::beginJob(iSetup);
 }
 

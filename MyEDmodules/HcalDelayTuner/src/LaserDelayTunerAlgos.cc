@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.3 2010/02/26 23:34:30 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.4 2010/03/05 13:25:21 dudero Exp $
 //
 //
 
@@ -293,9 +293,8 @@ LaserDelayTunerAlgos::process(const myEventData& ed)
 void
 LaserDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
 {
-  iSetup.get<HcalDbRecord>().get( conditions_ );
   TDCalgo_->beginJob(iSetup);
-  HcalDelayTunerAlgos::beginJob();
+  HcalDelayTunerAlgos::beginJob(iSetup);
 }
 
 //======================================================================
