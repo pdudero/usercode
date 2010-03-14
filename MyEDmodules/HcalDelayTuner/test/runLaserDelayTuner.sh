@@ -10,6 +10,7 @@ then
 fi
 
 ENTHRESH=25 #Energy threshold
+#ENTHRESH=5 #Energy threshold
 
 TDCCENT=1142
 TDCWINDOW=2 #TDC Mean +/- window
@@ -21,6 +22,7 @@ FIRSTSAMPLE=2 #Simple reconstructor
 SAMPLESTOADD=5 #Simple reconstructor
 
 GLOBALOFFSETNS=-65
+#GLOBALOFFSETNS=0
 
 EVENTS=-1
 #EVENTS=10
@@ -134,6 +136,7 @@ process.hfdelayser.TDCpars.CorrectedTimeModCeiling = cms.int32(${CORRECTEDTIMEMO
 process.hfdelayser.TDCpars.TimeModCeiling = cms.int32(${TIMEMODCEILING})
 #process.hfdelayser.eventDataPset.verbose = cms.untracked.bool(True)
 process.hfdelayser.globalTimeOffset = cms.double(${GLOBALOFFSETNS})
+process.hfdelayser.TrecoParams.firstSample = cms.int32(2)
 
 #LogicalMapFilename = cms.untracked.string("HCALmapHBEF_Jun.19.2008.txt")
    
