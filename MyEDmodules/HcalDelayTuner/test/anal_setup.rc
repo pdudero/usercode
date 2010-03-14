@@ -1,12 +1,26 @@
+#
+# Skim defs
+#
+#HLTPATHS=
+#INCLUDELS=
+#EXCLUDELS=
+#INCLUDEBX=
+#L1TTBITS='0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)'
+#DODIGIS=1
+#SKIMOUTPUTFMT="run%s_bscnobhskim_pool.root"
+#CASTOROUTPUTLOC=/castor/cern.ch/user/d/dudero/Beam2009skims
+#KEEPDROP="'drop *','keep *_gtDigis_*_*','keep *_hcalDigis_*_*','keep *_hbhereco_*_*','keep *_horeco_*_*','keep *_hfreco_*_*','keep HcalNoiseSummary_*_*_*','keep recoVertexs_*_*_*'"
+#
+# Analysis defs
+#
 GLOBALTOFFSET=0.0
-BXNUMS=
 GLOBAL_FLAG_MASK=0xC0003
+HASDIGIS=1
 MINHITGEV=1.
 MAXGEV2PLOT=200
 MAXEVENTNUM=300000000
-MODE=HASDIGIS
-RUN="124009-124230"
-RUNDESCR='Runs 124009-124230, TT bits 9,40,41'
-INCLUDEFILE=runs124009-124230myskim_cfi.py
+RUNDESCRFMT='Runs %d, BSC No Beam Halo'
 RUNMODE=BATCH
-CASTOROUTPUTLOC=/castor/cern.ch/user/d/dudero/Beam2009skims
+ANALOUTPUTFMT="beamTimingAnal_run%s.root"
+GLOBALTAG=FIRSTCOLL::All
+#EVENTLIMIT=1000
