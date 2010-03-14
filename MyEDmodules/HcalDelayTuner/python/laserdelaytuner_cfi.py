@@ -30,6 +30,12 @@ hbdelayser = cms.EDAnalyzer('LaserTimingAnalyzer',
       verbose         = cms.untracked.bool(False)
     ),
                              
+    TrecoParams = cms.PSet(
+      firstSample     = cms.int32(3),
+      numSamples      = cms.int32(4),
+      preSamples      = cms.int32(4)
+    ),
+                             
     TDCpars = cms.untracked.PSet(
       TDCCutCenter = cms.untracked.double(1142),
       TDCCutWindow = cms.untracked.double(6),
