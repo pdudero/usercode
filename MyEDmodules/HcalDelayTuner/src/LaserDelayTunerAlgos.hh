@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.3 2010/02/26 23:34:30 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.4 2010/03/14 18:41:20 dudero Exp $
 //
 //
 
@@ -69,7 +69,6 @@ private:
   // The collection of names of histos per subdetector
   std::string TDCLaserFireTime_;
 
-  edm::ESHandle<HcalDbService>  conditions_;
   LaserDelayTunerTDCalgos      *TDCalgo_;
 };
 
