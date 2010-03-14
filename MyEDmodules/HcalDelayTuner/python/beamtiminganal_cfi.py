@@ -7,6 +7,12 @@ hbtimeanal = cms.EDAnalyzer('BeamTimingAnalyzer',
       hbheRechitLabel = cms.untracked.InputTag("hbhereco"),
       verbose         = cms.untracked.bool(False)
     ),
+                             
+    TrecoParams = cms.PSet(
+      firstSample     = cms.int32(3),
+      numSamples      = cms.int32(4),
+      preSamples      = cms.int32(4)
+    ),
 
     normalizeDigis    = cms.bool(True),
     doPerChannel      = cms.bool(True),
