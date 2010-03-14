@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.9 2010/03/05 13:49:21 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.10 2010/03/14 17:57:51 dudero Exp $
 //
 //
 
@@ -236,7 +236,7 @@ protected:
   std::string st_rhTuncProfd1_,st_rhTuncProfd2_,st_rhTuncProfd3_,st_rhTuncProfd4_;
   std::string st_rhTcorProfd1_,st_rhTcorProfd2_,st_rhTcorProfd3_,st_rhTcorProfd4_;
   std::string st_rhTprofRBXd1_,st_rhTprofRBXd2_,st_rhTprofRBXd3_,st_rhTprofRBXd4_;
-  std::string st_rhTavgCorProfd1_,st_rhTavgCorProfd2_,st_rhTavgCorProfd3_,st_rhTavgCorProfd4_;
+  std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhTvsEtaEnergy_;
   std::string st_rhEmap_;
