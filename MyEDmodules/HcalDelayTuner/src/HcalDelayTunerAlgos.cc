@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.12 2010/03/05 13:48:46 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.13 2010/03/14 16:07:18 dudero Exp $
 //
 //
 
@@ -247,7 +247,7 @@ HcalDelayTunerAlgos::recoTimeFromAvgPulseHF(TProfile *avgPulse)
 
   float wpksamp = (t0 + maxval + t2);
   if (wpksamp!=0) wpksamp=(maxval + 2.0f*t2) / wpksamp;
-  return (maxbin - presamples_)*25.0f + timeshift_ns_hf(wpksamp);
+  return (maxbin - presamples_ - 1)*25.0f + timeshift_ns_hf(wpksamp);
 }
 
 //
@@ -925,16 +925,16 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
   if (mysubdet_ == HcalForward) {
     // variable bin timing maps for HF
     myAH->book2dvarx<TProfile2D>(st_rhTprofplusd1_,
-				 "RecHit Timing, HFP Depth 1; radius; iphi",
+				 "RecHit Timing, HFP Depth 1; radius; i#phi",
 				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofplusd2_,
-				 "RecHit Timing, HFP Depth 2; radius; iphi",
+				 "RecHit Timing, HFP Depth 2; radius; i#phi",
 				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofminusd1_,
-				 "RecHit Timing, HFM Depth 1; radius; iphi",
+				 "RecHit Timing, HFM Depth 1; radius; i#phi",
 				 28, hftwrEdges,36, 0.0, 6.28);
     myAH->book2dvarx<TProfile2D>(st_rhTprofminusd2_,
-				 "RecHit Timing, HFM Depth 2; radius; iphi",
+				 "RecHit Timing, HFM Depth 2; radius; i#phi",
 				 28, hftwrEdges,36, 0.0, 6.28);
   }
 
@@ -987,42 +987,36 @@ HcalDelayTunerAlgos::bookHistos4lastCut(void)
     v_hpars2dprof.clear();
 
     if (mysubdet_ != HcalOuter) {
-      // times from average pulse shapes determined in endJob
-      st_rhTavgCorProfd1_  = "p2d_rhTavgCorPerIetaIphiD1" + mysubdetstr_;
-      add2dHisto(st_rhTavgCorProfd1_,
-"Depth 1 T_{reco} Map from Avg. Pulse/Channel, "+mysubdetstr_+", Run "+runnumstr_+"; i#eta; i#phi",
-		 83, -41.5,  41.5, 72, 0.5, 72.5,
-		 v_hpars2dprof);
-
-      st_rhTavgCorProfd2_  = "p2d_rhTavgCorPerIetaIphiD2" + mysubdetstr_;
-      add2dHisto(st_rhTavgCorProfd2_,
-"Depth 2 T_{reco} Map from Avg. Pulse/Channel, "+mysubdetstr_+", Run "+runnumstr_+"; i#eta; i#phi",
-		 83, -41.5,  41.5, 72, 0.5, 72.5,
-		 v_hpars2dprof);
 
       st_rhTavgCorPlus_ = "h1d_rhTavgCor" + mysubdetstr_ + "P";
-  add1dHisto( st_rhTavgCorPlus_,
+      add1dHisto( st_rhTavgCorPlus_,
 "T_{reco} Distro from Avg. Pulse/Channel, "+mysubdetstr_+"P, Run "+runnumstr_+"; Rechit Time (ns)",
-	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
+		  recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
       st_rhTavgCorMinus_ = "h1d_rhTavgCor" + mysubdetstr_ + "M";
-  add1dHisto( st_rhTavgCorMinus_,
+      add1dHisto( st_rhTavgCorMinus_,
 "T_{reco} Distro from Avg. Pulse/Channel, "+mysubdetstr_+"M, Run "+runnumstr_+"; Rechit Time (ns)",
-	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
+		  recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
-      if (mysubdet_ == HcalEndcap) {
-	st_rhTavgCorProfd3_  = "p2d_rhTavgCorPerIetaIphiD3HE";
-	add2dHisto(st_rhTavgCorProfd3_,
-"Depth 3 T_{reco} Map from Avg. Pulse/Channel, HE, Run "+runnumstr_+"; i#eta; i#phi",
-		   83, -41.5,  41.5, 72, 0.5, 72.5,
-		   v_hpars2dprof);
+      if (mysubdet_ == HcalForward) {
+	// times from average pulse shapes determined in endJob
+	st_rhTavgCorProfHFPd1_  = "p2d_rhTavgCorProfHFPd1";
+	titlestr = "HFP Depth 1 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+	myAH->book2dvarx<TProfile2D>(st_rhTavgCorProfHFPd1_, titlestr.c_str(),
+				     28, hftwrEdges,36, 0.0, 6.28);
+	st_rhTavgCorProfHFPd2_  = "p2d_rhTavgCorProfHFPd2";
+	titlestr = "HFP Depth 2 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+	myAH->book2dvarx<TProfile2D>(st_rhTavgCorProfHFPd2_, titlestr.c_str(),
+				     28, hftwrEdges,36, 0.0, 6.28);
+	st_rhTavgCorProfHFMd1_  = "p2d_rhTavgCorProfHFMd1";
+	titlestr = "HFM Depth 1 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+	myAH->book2dvarx<TProfile2D>(st_rhTavgCorProfHFMd1_, titlestr.c_str(),
+				     28, hftwrEdges,36, 0.0, 6.28);
+	st_rhTavgCorProfHFMd2_  = "p2d_rhTavgCorProfHFMd2";
+	titlestr = "HFM Depth 2 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+	myAH->book2dvarx<TProfile2D>(st_rhTavgCorProfHFMd2_, titlestr.c_str(),
+				     28, hftwrEdges,36, 0.0, 6.28);
       }
-    } else {
-      st_rhTavgCorProfd4_  = "p2d_rhTavgCorPerIetaIphiD4HO";
-      add2dHisto(st_rhTavgCorProfd4_,
-"Depth 4 T_{reco} Map from Avg. Pulse/Channel, HO, Run "+runnumstr_+"; i#eta; i#phi",
-		 83, -41.5,  41.5, 72, 0.5, 72.5,
-		 v_hpars2dprof);
     }
 
     myAnalHistos *myAH = getHistos4cut(st_lastCut_);
@@ -1271,11 +1265,11 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
       double angle  = TMath::Pi()*(iphi-1)/36.;
       double radius = hftwrRadii[41-absieta];
       //cout << ieta << " --> " << radius << endl;
-      switch (depth) {
-      case 1: myAH->fill2d<TProfile2D>((zside>0)?st_rhTprofplusd1_:st_rhTprofminusd1_,
-				       radius,angle,corTime_); break;
-      case 2: myAH->fill2d<TProfile2D>((zside>0)?st_rhTprofplusd2_:st_rhTprofminusd2_,
-				       radius,angle,corTime_); break;
+      switch (zside*depth) {
+      case -2:myAH->fill2d<TProfile2D>(st_rhTprofminusd2_,radius,angle,corTime_);break;
+      case -1:myAH->fill2d<TProfile2D>(st_rhTprofminusd1_,radius,angle,corTime_);break;
+      case  1:myAH->fill2d<TProfile2D>(st_rhTprofplusd1_, radius,angle,corTime_);break;
+      case  2:myAH->fill2d<TProfile2D>(st_rhTprofplusd2_, radius,angle,corTime_);break;
       }
     } else {
       myAH->fill1d<TProfile> (avgRMt,     iRM,      corTime_);
@@ -1597,20 +1591,27 @@ HcalDelayTunerAlgos::endJob()
       if (mysubdet_ == HcalForward)
 	tRecoFromAvgPulse = recoTimeFromAvgPulseHF(tp) - calibs.timecorr();
 
-      // Find the map to put the result in
-      std::string st_rhTavgCorProf;
-      switch (detID.depth()) {
-      case 1: st_rhTavgCorProf = st_rhTavgCorProfd1_; break;
-      case 2: st_rhTavgCorProf = st_rhTavgCorProfd2_; break;
-      case 3: st_rhTavgCorProf = st_rhTavgCorProfd3_; break;
-      case 4: st_rhTavgCorProf = st_rhTavgCorProfd4_; break;
-      default: break;
-      }
-      TProfile2D *tp2d=getHistos4cut(st_lastCut_)->get<TProfile2D>(st_rhTavgCorProf);
-      tp2d->Fill(detID.ieta(),detID.iphi(),tRecoFromAvgPulse);
+      tRecoFromAvgPulse -= globalToffset_;
 
       if (detID.zside() > 0) h1plus->Fill(tRecoFromAvgPulse);
-      else                   h1minus->Fill(tRecoFromAvgPulse);
+      else                  h1minus->Fill(tRecoFromAvgPulse);
+
+      if (mysubdet_ == HcalForward) {
+	// Find the map to put the result in
+	std::string st_rhTavgCorProf;
+	switch (detID.zside()*detID.depth()) {
+	case -2: st_rhTavgCorProf = st_rhTavgCorProfHFMd2_; break;
+	case -1: st_rhTavgCorProf = st_rhTavgCorProfHFMd1_; break;
+	case  1: st_rhTavgCorProf = st_rhTavgCorProfHFPd1_; break;
+	case  2: st_rhTavgCorProf = st_rhTavgCorProfHFPd2_; break;
+	default: break;
+	}
+	double angle  = TMath::Pi()*(detID.iphi()-1)/36.;
+	double radius = hftwrRadii[41-detID.ietaAbs()];
+
+	TProfile2D *tp2d=getHistos4cut(st_lastCut_)->get<TProfile2D>(st_rhTavgCorProf);
+	tp2d->Fill(radius,angle,tRecoFromAvgPulse);
+      }
     }
   }
 
