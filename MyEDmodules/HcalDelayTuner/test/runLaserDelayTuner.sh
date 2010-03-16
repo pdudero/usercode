@@ -100,6 +100,7 @@ process.prefer("GlobalTag")
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1)
+process.MessageLogger.cerr.FwkReport.reportEvery = 50
 
 #-----------------------------
 # Hcal Digis and RecHits
