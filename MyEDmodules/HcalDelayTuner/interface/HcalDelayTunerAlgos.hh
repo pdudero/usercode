@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.10 2010/03/14 17:57:51 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.11 2010/03/14 22:44:47 dudero Exp $
 //
 //
 
@@ -151,6 +151,7 @@ protected:
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
   uint32_t          maxEventNum2plot_;
+  uint32_t          minEvents4avgT_;
   bool              selfSynchronize_; // versus synchronize to the system reference
   bool              normalizeDigis_;
   bool              doPerChannel_;
@@ -239,7 +240,8 @@ protected:
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhTvsEtaEnergy_;
-  std::string st_rhEmap_;
+  std::string st_rhEmap_,st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
+  std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;
   std::string st_uncorTimingVsE_, st_corTimingVsE_, st_corTimingVsED1_;
   std::string st_rhTprofplusd1_, st_rhTprofplusd2_, st_rhTprofminusd2_, st_rhTprofminusd1_;
   std::string st_pulsePerEbinPlus_, st_pulsePerEbinMinus_;
