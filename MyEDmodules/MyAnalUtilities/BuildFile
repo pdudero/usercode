@@ -4,6 +4,7 @@
 <use name=DataFormats/HcalDigi>
 <use name=DataFormats/HcalRecHit>
 <use name=DataFormats/CaloTowers>
+<use name=DataFormats/Provenance>
 <use name=DataFormats/METReco>
 <use name=SimDataFormats/CaloHit>
 <use name=PhysicsTools/UtilAlgos>
