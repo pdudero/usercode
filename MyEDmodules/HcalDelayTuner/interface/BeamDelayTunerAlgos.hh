@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.4 2010/03/05 13:49:11 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.5 2010/03/14 17:56:53 dudero Exp $
 //
 //
 
@@ -60,6 +60,9 @@ private:
 
   void   bookHistos4allCuts     (void);
   void   bookHistos4lastCut     (void);
+
+  template<class Digi>
+  void processZDCDigi           (const Digi& df);
 
   template<class Digi>
   void   processDigi            (const Digi& df);

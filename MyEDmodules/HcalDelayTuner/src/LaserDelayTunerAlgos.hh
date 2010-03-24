@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.4 2010/03/14 18:41:20 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.5 2010/03/14 22:41:34 dudero Exp $
 //
 //
 
@@ -54,6 +54,8 @@ public:
   void endAnal();
 
 private:
+  template<class Digi>
+  void processZDCDigi             (const Digi& df);
   template<class Digi>
   void    processDigi             (const Digi& df);
   template<class RecHit, class Digi >

@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.6 2010/03/05 13:48:02 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.7 2010/03/14 17:54:11 dudero Exp $
 //
 //
 
@@ -26,6 +26,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "DataFormats/Provenance/interface/EventID.h"
 #include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
 #include "CalibFormats/HcalObjects/interface/HcalCalibrations.h"
 #include "CalibFormats/HcalObjects/interface/HcalCoderDb.h"
@@ -299,6 +300,15 @@ BeamDelayTunerAlgos::bookHistos4lastCut(void)
   myAH->book1d<TH1F> (v_hpars1d);
   myAH->book2d<TH2F> (v_hpars2d);
 
+  // Book for individual event ranges
+  std::map<std::string, myAnalCut *>::const_iterator it;
+  for (it = m_ercuts_.begin(); it != m_ercuts_.end(); it++) {
+    myAnalCut *cut  = it->second;
+    myAH            = cut->histos();
+    myAH->book1d<TH1F> (v_hpars1d);
+    myAH->book2d<TH2F> (v_hpars2d);
+  }
+
 }                         // BeamDelayTunerAlgos::bookHistos4lastCut
 
 //==================================================================
@@ -347,7 +357,7 @@ BeamDelayTunerAlgos::fillHFD1D2histos(const std::string& cutstr,
     // occupancy plot:
     // Increment *all* bins with energy <= hit energy at the given ieta
     //
-    TH2D *h2Docc = myAH->get<TH2D>(st_OccVsEtaEnergyBothOverThresh_);
+    TH2D *h2Docc = myAH->get<TH2D>(st_OccVsEtaEnergyBothOverThresh_.c_str());
     for (int ibin=1;ibin<h2Docc->GetNbinsY(); ibin++) {
       double binmin = h2Docc->GetYaxis()->GetBinLowEdge(ibin);
       double binctr = h2Docc->GetYaxis()->GetBinCenter(ibin);
@@ -414,6 +424,50 @@ void BeamDelayTunerAlgos::findConfirmedHits(
 //
 template<class Digi>
 void
+BeamDelayTunerAlgos::processZDCDigi(const Digi& df)
+{
+  CaloSamples dfC; // dfC is the linearized (fC) digi
+
+  digiGeV_.clear();
+  const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
+  const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
+  const HcalQIEShape *qieShape   = conditions_->getHcalShape();
+  HcalCoderDb coder( *qieCoder, *qieShape );
+  coder.adc2fC( df, dfC );
+  digiGeV_.resize(dfC.size());
+
+  double prenoise = 0; double postnoise = 0; 
+  int noiseslices = 0;
+  double noise = 0;
+ 
+  for(int k = 0 ; k < dfC.size() && k < firstsamp_; k++){
+    prenoise += dfC[k];
+    noiseslices++;
+  }
+  for(int j = (nsamps_ + firstsamp_ + 1); j <dfC.size(); j++){
+    postnoise += dfC[j];
+    noiseslices++;
+  }
+     
+  if(noiseslices != 0)
+    noise = (prenoise+postnoise)/float(noiseslices);
+  else
+    noise = 0;
+
+  for (int i=0; i<dfC.size(); i++) {
+    int capid=df[i].capid();
+    digiGeV_[i] = (dfC[i]-noise); // pickup noise subtraction
+    digiGeV_[i]*= calibs.respcorrgain(capid) ;    // fC --> GeV
+  }
+  digifC_ = dfC;
+}                             // BeamDelayTunerAlgos::processZDCDigi
+
+//==================================================================
+// Following routine receives digi in ADC (df)
+// and sets member variables digifC_ and digiGeV_ as output.
+//
+template<class Digi>
+void
 BeamDelayTunerAlgos::processDigi(const Digi& df)
 {
   CaloSamples dfC; // dfC is the linearized (fC) digi
@@ -461,16 +515,19 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 
     const RecHit& rh  = rechits[irh];
 
-    if (rh.id().subdet() != mysubdet_)
-      continue; // HB and HE handled by separate instances of this class!
-
-    if (inSet<int>(detIds2mask_,rh.id().hashed_index())) continue;
+    if (rh.id().det() == DetId::Hcal) {
+      detID_ = HcalDetId(rh.id());
+      feID_  = lmap_->getHcalFrontEndId(detID_);
+      if (detID_.subdet() != mysubdet_)	continue; // HB and HE handled by separate instances of this class!
+      if (inSet<int>(detIds2mask_,detID_.hashed_index())) continue;
+    }
+    else if ((rh.id().det() == DetId::Calo) && 
+	     (rh.id().subdetId() == 2)) // ZDC
+      zdcDetID_ = HcalZDCDetId(rh.id());
 
     hittime_   = rh.time() - globalToffset_;
     hitenergy_ = rh.energy();
     hitflags_  = rh.flags();
-    detID_     = rh.id();
-    feID_      = lmap_->getHcalFrontEndId(detID_);
 
     int  zside = detID_.zside();
 
@@ -483,6 +540,8 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       corTime_ -= it->second;
     }
 
+    totalE_ += hitenergy_;
+
     // If we have digis, do them too.
     //
     if (digihandle.isValid() &&
@@ -490,7 +549,11 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       const Digi&  df = (*digihandle)[idig];
       if (df.id() != rh.id())
 	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
-      processDigi<Digi>(df);
+      if ((rh.id().det() == DetId::Calo) && 
+	  (rh.id().subdetId() == 2)) { // ZDC
+	processZDCDigi<Digi>(df);
+      } else
+	processDigi<Digi>(df);
     }
 
     fillHistos4cut(st_cutNone_);
@@ -522,11 +585,26 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 		if (it != exthitcors_.end()) corTime2 -= it->second;
 
 		if (!isHFPMThit(*hitit1,hitit1->energy()) &&
-		    !isHFPMThit(*hitit2,hitit2->energy())   )
+		    !isHFPMThit(*hitit2,hitit2->energy())   ) {
 		  fillHistos4cut(st_cutPMT_);
 
-		if (detID_.depth() == 1) // so as not to double-count
-		  fillHFD1D2histos(st_cutPMT_,*hitit1, corTime1,*hitit2, corTime2);
+		  if (detID_.depth() == 1) // so as not to double-count
+		    fillHFD1D2histos(st_cutPMT_,*hitit1, corTime1,*hitit2, corTime2);
+
+		  if (splitByEventRange_) {
+		    std::vector<edm::EventRange>::const_iterator erit;
+		    for (erit=v_eventRanges_.begin(); erit!=v_eventRanges_.end(); erit++) {
+		      edm::EventID thisevent(runnum_,evtnum_);
+		      if (contains(*erit,thisevent)) {
+			stringstream ername;
+			ername << *erit;
+			fillHistos4cut(ername.str());
+			if (detID_.depth() == 1) // so as not to double-count
+			  fillHFD1D2histos(ername.str(),*hitit1, corTime1,*hitit2, corTime2);
+		      }
+		    }
+		  }
+		}
 	      }
 	    }
 
@@ -548,7 +626,7 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
   // now that we have the total energy...
   // cout << evtnum_ << "\t" << totalE_ << endl;
 
-  myAH->fill1d<TH1F>(st_totalEperEv_,evtnum_,totalE_);
+  myAH->fill1d<TH1F>(st_totalEperEv_,fevtnum_,totalE_);
 
   if ((totalEminus > 10.0) && (totalEplus > 10.0)) {
     float avgTminus = weightedTminus/totalEminus;
@@ -577,6 +655,7 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
   case HcalBarrel:
   case HcalEndcap:  processDigisAndRecHits<HBHEDataFrame,HBHERecHit>(ed.hbhedigis(),ed.hbherechits()); break;
   case HcalOuter:   processDigisAndRecHits<HODataFrame,    HORecHit>(ed.hodigis(),  ed.horechits());   break;
+  case HcalOther:   processDigisAndRecHits<ZDCDataFrame,  ZDCRecHit>(ed.zdcdigis(), ed.zdcrechits());  break;
   case HcalForward:
     findConfirmedHits(ed.hfrechits());
     processDigisAndRecHits<HFDataFrame,HFRecHit>(ed.hfdigis(), ed.hfrechits());

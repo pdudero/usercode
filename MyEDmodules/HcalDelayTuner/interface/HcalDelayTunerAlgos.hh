@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.11 2010/03/14 22:44:47 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.12 2010/03/16 21:07:56 dudero Exp $
 //
 //
 
@@ -27,6 +27,7 @@
 #include "TProfile2D.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "DataFormats/HcalDigi/interface/ZDCDataFrame.h"
 #include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "CalibFormats/CaloObjects/interface/CaloSamples.h"
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
@@ -78,12 +79,6 @@ protected:
   virtual void   bookHistos4allCuts  (void);
   virtual void   bookHistos4lastCut  (void);
 
-  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiHisto     (HcalDetId detId);
-  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiPerEhisto (HcalDetId detId);
-  std::pair<std::map<uint32_t,TProfile*>::iterator,   bool> bookDigiEhisto    (HcalDetId detId);
-  std::pair<std::map<uint32_t,TProfile2D*>::iterator, bool> bookDigiEperEhisto(HcalDetId detId);
-  std::pair<std::map<uint32_t,TH1D*>::iterator,       bool> bookCorTimeHisto  (HcalDetId detId);
-
   virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
 
   virtual myAnalHistos *getHistos4cut(const std::string& cutstr);
@@ -112,6 +107,19 @@ protected:
 				  int nbinsx, double minx, double maxx,
 				  int nbinsy, double miny, double maxy,
 				  std::vector<myAnalHistos::HistoParams_t>& v_hpars2d);
+
+  virtual void add1dAFhisto      (const std::string& name, const std::string& title,
+				  int nbinsx, double minx, double maxx,
+				  void *filladdrx, void *filladdrw,
+				  detIDfun_t detIDfun,
+				  std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1d);
+
+  virtual void add2dAFhisto      (const std::string& name, const std::string& title,
+				  int nbinsx, double minx, double maxx,
+				  int nbinsy, double miny, double maxy,
+				  void *filladdrx, void *filladdry, void *filladdrw,
+				  detIDfun_t detIDfun,
+				  std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2d);
   
   virtual void detChanCorsByPhiDepth   (const std::vector<TProfile *>& profsByPhi,
 					const tCorrection& tcor,
@@ -132,6 +140,14 @@ protected:
 					int iterationnumber);
 
   float   recoTimeFromAvgPulseHF       (TProfile *avgPulse);
+
+  void bookHOdetail  (std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
+		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
+  void bookHEdetail  (std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
+		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
+  void bookD1D2detail(std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
+		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
+  void bookHFdetail  (myAnalHistos *myAH);
 
   // ----------member data ---------------------------
 
@@ -154,6 +170,7 @@ protected:
   uint32_t          minEvents4avgT_;
   bool              selfSynchronize_; // versus synchronize to the system reference
   bool              normalizeDigis_;
+  bool              splitByEventRange_;
   bool              doPerChannel_;
   bool              doTree_;
 
@@ -164,13 +181,26 @@ protected:
 
   std::vector<tCorrection> corList_;
 
-  // Tree and branch vars:
+  std::vector<edm::EventRange> v_eventRanges_;
+
+  // Tree/branch/histo autofill vars:
   TTree          *tree_;
   HcalFrontEndId  feID_;
   HcalDetId       detID_;
+  HcalZDCDetId    zdcDetID_;
+  float           fsubdet_;
+  float           fRBX_;
+  float           fRBXsigned_;
+  float           fRM_;
+  float           fieta_; // everything is float for the autofill routines.
+  float           fiphi_;
+  float           fiphisigned_;
+  float           fangle_;
+  float           fradius_;
   uint32_t        lsnum_;
   uint32_t        bxnum_;
   uint32_t        evtnum_;
+  float           fevtnum_;
   uint32_t        runnum_;
   float           hittime_;        // reconstructed hit time-globalToffset
   float           corTime_;        // corrected for both global offset and algo-specific
@@ -189,66 +219,56 @@ protected:
 
   std::string     runnumstr_;
 
-  // The collection of names of histos per subdetector
-  std::string st_rhEnergies_;
+  // keep histo names if they have to be individually referred to
+  // for any reason (non-autofilled, post-processing corrections, etc.)
+  //
+
+  // Whole subdetector
+  std::string st_rhCorTimes_;
   std::string st_totalEperEv_;
-  std::string st_avgTperEvD1_;
   std::string st_avgPulse_;
   std::string st_avgPulseTeq0_;
   std::string st_digiColSize_;
   std::string st_rhColSize_;
-  std::string st_rhUncorTimes_;
-  std::string st_rhCorTimes_;
-  std::string st_rhCorTimesD1_;
   std::string st_rhFlagBits_;
   std::string st_rhHBHEtimingShapedCuts_;
 
-  // Breakdowns:
-
   // Plus/Minus Breakdown
-  std::string st_rhCorTimesPlus_;
-  std::string st_rhCorTimesMinus_;
   std::string st_avgPulsePlus_;
   std::string st_avgPulseMinus_;
 
   // eta/phi/depth breakdowns:
-
-  std::vector<std::string>         v_st_rhTvsRMperPixHE_;
-  std::vector<std::string>         v_st_rhTvsRMperIetaD2HEP_;
-  std::vector<std::string>         v_st_rhTvsRMperIetaD2HEM_;
-  std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEP_;
-  std::vector<std::string>         v_st_rhTvsPhiperIetaD2HEM_;
-
-  std::string st_nHitsPerIetaIphi_;
-
-  std::string st_avgTimePerRBX_;
-  std::string st_avgTimePer2RMs_;
-  std::string st_avgTimePerPhid1_, st_avgTimePerPhid2_;
-  std::string st_avgTimePerPhid3_, st_avgTimePerPhid4_;
-  std::string st_avgTimePerRMd1_,  st_avgTimePerRMd2_;
-  std::string st_avgTimePerRMd3_,  st_avgTimePerRMd4_;
-  std::string st_avgTuncPerIetad1_,st_avgTuncPerIetad2_;
-  std::string st_avgTuncPerIetad3_,st_avgTuncPerIetad4_;
-  std::string st_avgTcorPerIetad1_,st_avgTcorPerIetad2_;
-  std::string st_avgTcorPerIetad3_,st_avgTcorPerIetad4_;
+  std::string st_avgTimePerPhid1_;
+  std::string st_avgTimePerPhid2_;
+  std::string st_avgTimePerPhid3_;
+  std::string st_avgTcorPerIetad1_;
+  std::string st_avgTcorPerIetad2_;
+  std::string st_avgTcorPerIetad3_;
+  std::string st_rhTcorProfd1_;
+  std::string st_rhTcorProfd2_;
+  std::string st_rhTcorProfd3_;
+  std::string st_rhTcorProfd4_;
+  std::string st_avgTimePerPhiRing2M_;
+  std::string st_avgTimePerPhiRing1M_;
   std::string st_avgTimePerPhiRing0_;
-  std::string st_avgTimePerPhiRing1M_, st_avgTimePerPhiRing1P_;
-  std::string st_avgTimePerPhiRing2M_, st_avgTimePerPhiRing2P_;
-  std::string st_rhTuncProfd1_,st_rhTuncProfd2_,st_rhTuncProfd3_,st_rhTuncProfd4_;
-  std::string st_rhTcorProfd1_,st_rhTcorProfd2_,st_rhTcorProfd3_,st_rhTcorProfd4_;
-  std::string st_rhTprofRBXd1_,st_rhTprofRBXd2_,st_rhTprofRBXd3_,st_rhTprofRBXd4_;
+  std::string st_avgTimePerPhiRing1P_;
+  std::string st_avgTimePerPhiRing2P_;
+  std::string st_rhTprofRBXd1_;
+  std::string st_rhTprofRBXd2_;
+  std::string st_rhTprofRBXd3_;
+  std::string st_avgTimePerRMd1_;
+
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
-  std::string st_rhTvsEtaEnergy_;
-  std::string st_rhEmap_,st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
+  std::string st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
   std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;
-  std::string st_uncorTimingVsE_, st_corTimingVsE_, st_corTimingVsED1_;
-  std::string st_rhTprofplusd1_, st_rhTprofplusd2_, st_rhTprofminusd2_, st_rhTprofminusd1_;
+  std::string st_rhTprofHFPd1_, st_rhTprofHFPd2_, st_rhTprofHFMd2_, st_rhTprofHFMd1_;
   std::string st_pulsePerEbinPlus_, st_pulsePerEbinMinus_;
 
   bool firstEvent_;
   std::vector<std::string> v_cuts_;             // vector of cut strings
   std::map<std::string, myAnalCut *> m_cuts_;
+  std::map<std::string, myAnalCut *> m_ercuts_; // event range cuts
   std::map<uint32_t,TH1F *> m_perChHistos_;
   std::set<int>  badEventSet_;
   std::set<int>  acceptedBxNums_;
@@ -256,13 +276,6 @@ protected:
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
 
-  // per channel
-  TFileDirectory *dgfCdir_, *dGeVdir_, *rhdir_;
-  std::map<uint32_t,TProfile*>   digisPerId_;
-  std::map<uint32_t,TProfile*>   digisEperId_;
-  std::map<uint32_t,TProfile2D*> digisPerIdPerE_;
-  std::map<uint32_t,TProfile2D*> digisEperIdPerE_;
-  std::map<uint32_t,TH1D*>       corTimesPerId_;
 
   TProfile2D *last2dprof_;
   TH1F       *last1ddist_;

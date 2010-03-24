@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.5 2010/03/14 16:07:18 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.6 2010/03/14 18:41:20 dudero Exp $
 //
 //
 
@@ -77,6 +77,50 @@ LaserDelayTunerAlgos::LaserDelayTunerAlgos(const edm::ParameterSet& iConfig) :
 //
 template<class Digi>
 void
+LaserDelayTunerAlgos::processZDCDigi(const Digi& df)
+{
+  CaloSamples dfC; // dfC is the linearized (fC) digi
+
+  digiGeV_.clear();
+  const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
+  const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
+  const HcalQIEShape *qieShape   = conditions_->getHcalShape();
+  HcalCoderDb coder( *qieCoder, *qieShape );
+  coder.adc2fC( df, dfC );
+  digiGeV_.resize(dfC.size());
+
+  double prenoise = 0; double postnoise = 0; 
+  int noiseslices = 0;
+  double noise = 0;
+ 
+  for(int k = 0 ; k < dfC.size() && k < firstsamp_; k++){
+    prenoise += dfC[k];
+    noiseslices++;
+  }
+  for(int j = (nsamps_ + firstsamp_ + 1); j <dfC.size(); j++){
+    postnoise += dfC[j];
+    noiseslices++;
+  }
+     
+  if(noiseslices != 0)
+    noise = (prenoise+postnoise)/float(noiseslices);
+  else
+    noise = 0;
+
+  for (int i=0; i<dfC.size(); i++) {
+    int capid=df[i].capid();
+    digiGeV_[i] = (dfC[i]-noise); // pickup noise subtraction
+    digiGeV_[i]*= calibs.respcorrgain(capid) ;    // fC --> GeV
+  }
+  digifC_ = dfC;
+}                            // LaserDelayTunerAlgos::processZDCDigi
+
+//==================================================================
+// Following routine receives digi in ADC (df)
+// and sets member variables digifC_ and digiGeV_ as output.
+//
+template<class Digi>
+void
 LaserDelayTunerAlgos::processDigi(const Digi& df)
 {
   CaloSamples dfC; // dfC is the linearized (fC) digi
@@ -94,7 +138,7 @@ LaserDelayTunerAlgos::processDigi(const Digi& df)
     digiGeV_[i]*= calibs.respcorrgain(capid) ;    // fC --> GeV
   }
   digifC_ = dfC;
-}
+}                                   // LaserDelayTunerAlgos::processDigi
 
 //======================================================================
 
@@ -117,14 +161,18 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
 
     const RecHit& rh = rechits[irh];
 
-    if (rh.id().subdet() != mysubdet_)
-      continue; // HB and HE handled by separate instances of this class!
+    if (rh.id().det() == DetId::Hcal) {
+      detID_ = HcalDetId(rh.id());
+      feID_  = lmap_->getHcalFrontEndId(detID_);
+      if (detID_.subdet() != mysubdet_)	continue; // HB and HE handled by separate instances of this class!
+    }
+    else if ((rh.id().det() == DetId::Calo) && 
+	     (rh.id().subdetId() == 2)) // ZDC
+      zdcDetID_ = HcalZDCDetId(rh.id());
 
     hittime_   = rh.time() - globalToffset_;
     hitenergy_ = rh.energy();
     hitflags_  = rh.flags();
-    detID_     = rh.id();
-    feID_      = lmap_->getHcalFrontEndId(detID_);
     totalE_   += hitenergy_;
 
     corTime_   = TDCalgo_->correctTimeForJitter(hittime_);
@@ -144,7 +192,11 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
       const Digi&  df = (*digihandle)[idf];
       if (df.id() != rh.id())
 	cerr << "WARNING: digis and rechits aren't tracking..." << endl;
-      processDigi<Digi>(df);
+      if ((rh.id().det() == DetId::Calo) && 
+	  (rh.id().subdetId() == 2)) // ZDC
+	processZDCDigi<Digi>(df);
+      else
+	processDigi<Digi>(df);
     }
 
     fillHistos4cut("cutNone");
@@ -208,7 +260,7 @@ void
 LaserDelayTunerAlgos::detChannelTimes(TimesPerDetId& chtimes)
 {
   myAnalHistos *myAH = m_cuts_["cutAll"]->histos();
-  TProfile *tp = myAH->get<TProfile>(st_avgTimePerRMd1_);
+  TProfile *tp = myAH->get<TProfile>(st_avgTimePerRMd1_.c_str());
 
   float minRMtime = 1e99;
   for (int ibin=1; ibin<=tp->GetNbinsX(); ibin++) {
@@ -236,7 +288,7 @@ LaserDelayTunerAlgos::detChannelTimes(TimesPerDetId& chtimes)
     sprintf (rbx,"%s%c%02d",mysubdetstr_.c_str(),((iRM>0)?'P':'M'),iRBX);
 
     double avgtimeThisRM = tp->GetBinContent(ibin);
-    double time = (int)(avgtimeThisRM - (double)iFloorRMtime);
+    //double time = (int)(avgtimeThisRM - (double)iFloorRMtime);
 
     for (int i=1; i<4; i++) {
       for (int j=0; j<5; j++) {
@@ -302,11 +354,15 @@ LaserDelayTunerAlgos::process(const myEventData& ed)
     processRecHitsAndDigis<HFRecHit,HFDataFrame>(ed.hfrechits(),
 						 ed.hfdigis());
     break;
+  case HcalOther:
+    processRecHitsAndDigis<ZDCRecHit,ZDCDataFrame>(ed.zdcrechits(),
+						   ed.zdcdigis()); 
+    break;
   default:
     break;
   }
   neventsProcessed_++;
-}
+}                                       // LaserDelayTunerAlgos::process
 
 //======================================================================
 
