@@ -13,18 +13,19 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.5 2009/11/09 01:10:20 dudero Exp $
+// $Id: myEventData.cc,v 1.6 2010/02/27 00:43:46 dudero Exp $
 //
 //
 
 
 // system include files
 #include <memory>
-#include <vector>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "FWCore/ParameterSet/interface/Registry.h"
+#include "DataFormats/Provenance/interface/ParameterSetID.h"
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
 
 //
@@ -49,6 +50,8 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   hfDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hfDigiLabel",edm::InputTag(""))),
   hoRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("hoRechitLabel",edm::InputTag(""))),
   hoDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hoDigiLabel",edm::InputTag(""))),
+  zdcRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcRechitLabel",edm::InputTag(""))),
+  zdcDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcDigiLabel",edm::InputTag(""))),
   simHitTag_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
   metTag_(edPset.getUntrackedParameter<edm::InputTag>("metLabel",edm::InputTag(""))),
   twrTag_(edPset.getUntrackedParameter<edm::InputTag>("twrLabel",edm::InputTag(""))),
@@ -64,12 +67,32 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
     cout << "hfDigiTag_     = " << hfDigiTag_     << endl;
     cout << "hoRechitTag_   = " << hoRechitTag_   << endl;
     cout << "hoDigiTag_     = " << hoDigiTag_     << endl;
+    cout << "zdcRechitTag_  = " << zdcRechitTag_  << endl;
+    cout << "zdcDigiTag_    = " << zdcDigiTag_    << endl;
     cout << "simHitTag_     = " << simHitTag_     << endl;
     cout << "metTag_        = " << metTag_        << endl;
     cout << "twrTag_        = " << twrTag_        << endl;
   }
 }
 
+
+//======================================================================
+
+
+const std::vector<edm::EventRange>
+myEventData::getEventRanges(void)
+{
+  using namespace edm;
+  static const std::vector<EventRange> empty;
+  pset::Registry* reg = pset::Registry::instance();
+  ParameterSetID toplevel = pset::getProcessParameterSetID(reg);
+  ParameterSet pSet;
+  reg->getMapped(toplevel, pSet);
+  ParameterSet sourcePSet;
+  sourcePSet  = pSet.getParameter<ParameterSet>("@main_input");
+  return
+    sourcePSet.getUntrackedParameter<std::vector<EventRange> >("eventsToProcess",empty);
+}
 
 //======================================================================
 
@@ -163,6 +186,21 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	"Digis not found, "<< hoDigiTag_ << std::endl;
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got HO digis "<< hoDigiTag_ << std::endl;
+  
+  if (zdcRechitTag_.label().size())
+    if (!iEvent.getByLabel(zdcRechitTag_,zdcrechits_)) {
+      cerr << "myEventData::get: " <<
+	"ZDC Rechits not found, " << zdcRechitTag_ << std::endl;
+      return;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got ZDC Rechits " << zdcRechitTag_ << std::endl;
+
+  if (zdcDigiTag_.label().size())
+    if(!iEvent.getByLabel(zdcDigiTag_,zdcdigis_)) {
+      cerr << "myEventData::get: " <<
+	"Digis not found, "<< zdcDigiTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got ZDC digis "<< zdcDigiTag_ << std::endl;
 
   // CaloTowers
   if (twrTag_.label().size())

@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.6 2009/11/09 01:10:19 dudero Exp $
+// $Id: myEventData.hh,v 1.7 2010/02/27 00:43:03 dudero Exp $
 //
 //
 
@@ -26,13 +26,11 @@
 // user include files
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
+#include "DataFormats/Provenance/interface/EventRange.h"
 #include "DataFormats/FEDRawData/interface/FEDRawData.h"
 #include "DataFormats/FEDRawData/interface/FEDRawDataCollection.h"
 #include "DataFormats/FEDRawData/interface/FEDNumbering.h"
-#ifdef CMSSW3XX
 #include "DataFormats/HcalDigi/interface/HcalCalibrationEventTypes.h"
-#endif
 #include "DataFormats/HcalDigi/interface/HcalLaserDigi.h"
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
@@ -55,6 +53,9 @@ public:
 
   void get(const edm::Event&, const edm::EventSetup&);
 
+  static const
+  std::vector<edm::EventRange> getEventRanges(void);
+
   inline edm::Handle<HcalTBTriggerData>      hcaltbtrigdata(void) const { return hcaltbtrigdata_; }
   inline edm::Handle<FEDRawDataCollection>   fedrawdata(void)    const { return fedrawdata_;  }
   inline edm::Handle<HcalLaserDigi>          laserdigi(void)     const { return laserdigi_;   }
@@ -64,6 +65,8 @@ public:
   inline edm::Handle<HFDigiCollection>       hfdigis(void)       const { return hfdigis_;     }
   inline edm::Handle<HORecHitCollection>     horechits(void)     const { return horechits_;   }
   inline edm::Handle<HODigiCollection>       hodigis(void)       const { return hodigis_;     }
+  inline edm::Handle<ZDCRecHitCollection>    zdcrechits(void)    const { return zdcrechits_;  }
+  inline edm::Handle<ZDCDigiCollection>      zdcdigis(void)      const { return zdcdigis_;    }
   inline edm::Handle<CaloTowerCollection>    towers(void)        const { return towers_;      }
   inline edm::Handle<CaloMETCollection>      recmet(void)        const { return recmet_;      }
   inline edm::Handle<edm::PCaloHitContainer> simhits(void)       const { return hsimhits_;    }
@@ -88,6 +91,8 @@ private:
   edm::InputTag      hfDigiTag_;
   edm::InputTag      hoRechitTag_;
   edm::InputTag      hoDigiTag_;
+  edm::InputTag      zdcRechitTag_;
+  edm::InputTag      zdcDigiTag_;
   edm::InputTag      simHitTag_;
   edm::InputTag      metTag_;
   edm::InputTag      twrTag_;
@@ -109,9 +114,10 @@ private:
   edm::Handle<HFDigiCollection>       hfdigis_;
   edm::Handle<HORecHitCollection>     horechits_;
   edm::Handle<HODigiCollection>       hodigis_;
+  edm::Handle<ZDCRecHitCollection>    zdcrechits_;
+  edm::Handle<ZDCDigiCollection>      zdcdigis_;
   edm::Handle<CaloTowerCollection>    towers_;
   edm::Handle<CaloMETCollection>      recmet_;
-
 };
 
 #endif // _MYEDMODULESMYANALUTILITIES
