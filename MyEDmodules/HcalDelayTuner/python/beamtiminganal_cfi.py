@@ -14,14 +14,15 @@ hbtimeanal = cms.EDAnalyzer('BeamTimingAnalyzer',
       preSamples      = cms.int32(4)
     ),
 
-    normalizeDigis    = cms.bool(True),
-    doPerChannel      = cms.bool(True),
-    subdet            = cms.untracked.string("HB"),
-    runDescription    = cms.untracked.string(""),
-    globalTimeOffset  = cms.double(0.0),
-    badEventList      = cms.vint32(),
-    acceptedBxNums    = cms.vint32(),
-    detIds2mask       = cms.vint32(),
+    normalizeDigis     = cms.bool(True),
+    doPerChannel       = cms.bool(True),
+    minEvents4avgT     = cms.int32(10),
+    subdet             = cms.untracked.string("HB"),
+    runDescription     = cms.untracked.string(""),
+    globalTimeOffset   = cms.double(0.0),
+    badEventList       = cms.vint32(),
+    acceptedBxNums     = cms.vint32(),
+    detIds2mask        = cms.vint32(),
     globalRecHitFlagMask = cms.int32(0),
     minHitGeV          = cms.double(2),
     timeWindowMinNS    = cms.double(-100.0),
@@ -46,3 +47,7 @@ hotimeanal.eventDataPset.hoRechitLabel=cms.untracked.InputTag("horeco")
 hftimeanal.eventDataPset.hfRechitLabel=cms.untracked.InputTag("hfreco")
 #hotimeanal.eventDataPset.hoDigiLabel=cms.untracked.InputTag("hcalDigis")
 #hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
+
+zdctimeanal = hftimeanal.clone(subdet=cms.untracked.string("ZDC"))
+zdctimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
+zdctimeanal.eventDataPset.zdcRechitLabel=cms.untracked.InputTag("zdcreco")

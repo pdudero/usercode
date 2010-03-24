@@ -12,7 +12,9 @@ fi
 ENTHRESH=25 #Energy threshold
 #ENTHRESH=5 #Energy threshold
 
+#TDCCENT=1158
 TDCCENT=1142
+#TDCWINDOW=6 #TDC Mean +/- window
 TDCWINDOW=2 #TDC Mean +/- window
 
 CORRECTEDTIMEMODCEILING=9999 #Phase skip? Subtract off 25ns if greater than
@@ -47,6 +49,8 @@ else
 RUNS=`printf \"file:/bigspool/usc/USC_%06d.root\" $1`
 fi
 echo ${RUNS}
+
+EVENTRANGE=$1:0-$1:500
 
 CFGFILE=runLaserDelayTuner_$1_cfg.py
 cat > ${CFGFILE} << EOF
@@ -121,6 +125,7 @@ process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
 process.load("RecoLocalCalo.HcalRecProducers.HcalSimpleReconstructor_hf_cfi")
 process.hfreco.firstSample = ${FIRSTSAMPLE}
 process.hfreco.samplesToAdd = ${SAMPLESTOADD}
+#process.load("RecoLocalCalo.HcalRecProducers.HcalSimpleReconstructor_zdc_cfi")
 
 process.hcalLaserReco = cms.EDProducer( "HcalLaserReco" )
 
@@ -139,13 +144,24 @@ process.hfdelayser.TDCpars.TimeModCeiling = cms.int32(${TIMEMODCEILING})
 process.hfdelayser.globalTimeOffset = cms.double(${GLOBALOFFSETNS})
 process.hfdelayser.TrecoParams.firstSample = cms.int32(2)
 
+process.zdcdelayser.TDCpars.TDCCutCenter = cms.double(${TDCCENT})
+process.zdcdelayser.TDCpars.TDCCutWindow = cms.double(${TDCWINDOW})
+process.zdcdelayser.TDCpars.CorrectedTimeModCeiling = cms.int32(${CORRECTEDTIMEMODCEILING})
+process.zdcdelayser.TDCpars.TimeModCeiling = cms.int32(${TIMEMODCEILING})
+process.zdcdelayser.globalTimeOffset = cms.double(${GLOBALOFFSETNS})
+#process.zdcdelayser.eventDataPset.verbose = cms.untracked.bool(True)
+#process.zdcdelayser.TrecoParams.firstSample = cms.int32(2)
+
 #LogicalMapFilename = cms.untracked.string("HCALmapHBEF_Jun.19.2008.txt")
    
 process.p = cms.Path(process.hcalDigis * 
                      process.tbunpack  *
                      process.hcalLaserReco *
                      process.hfreco *
-                     process.hfdelayser )
+#                     process.zdcreco *
+                     process.hfdelayser
+#                     process.zdcdelayser
+ )
  
 # Output module configuration
 #process.out = cms.OutputModule("PoolOutputModule",

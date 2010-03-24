@@ -14,7 +14,7 @@ hbdelayser = cms.EDAnalyzer('LaserTimingAnalyzer',
     recHitTscaleMinNs  = cms.double(-100.5),
     recHitTscaleMaxNs  = cms.double(100.5),
     maxEventNum2plot   = cms.int32(1000),
-    minEvent4avgT      = cms.int32(10),
+    minEvents4avgT     = cms.int32(10),
     CorrectionsList    = cms.VPSet(),
     detIds2mask        = cms.vint32(),
     normalizeDigis     = cms.bool(False),
@@ -28,6 +28,7 @@ hbdelayser = cms.EDAnalyzer('LaserTimingAnalyzer',
       hbheRechitLabel = cms.untracked.InputTag("hbhereco"),
       hfRechitLabel   = cms.untracked.InputTag(""),
       hoRechitLabel   = cms.untracked.InputTag(""),
+      zdcRechitLabel  = cms.untracked.InputTag(""),
       verbose         = cms.untracked.bool(False)
     ),
                              
@@ -38,10 +39,10 @@ hbdelayser = cms.EDAnalyzer('LaserTimingAnalyzer',
     ),
                              
     TDCpars = cms.untracked.PSet(
-      TDCCutCenter = cms.untracked.double(1142),
-      TDCCutWindow = cms.untracked.double(6),
-      CorrectedTimeModCeiling = cms.untracked.int32(9999),
-      TimeModCeiling = cms.untracked.int32(9999)
+      TDCCutCenter = cms.double(1142),
+      TDCCutWindow = cms.double(6),
+      CorrectedTimeModCeiling = cms.int32(9999),
+      TimeModCeiling = cms.int32(9999)
     ),
 
     bottomfeeder = cms.untracked.int32(0xbadf00d)
@@ -58,3 +59,11 @@ hodelayser.eventDataPset.hoRechitLabel=cms.untracked.InputTag("horeco")
 
 hfdelayser.eventDataPset.hfRechitLabel=cms.untracked.InputTag("hfreco")
 hfdelayser.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
+
+zdcdelayser = hfdelayser.clone(subdet=cms.untracked.string("ZDC"))
+zdcdelayser.eventDataPset.hfRechitLabel=cms.untracked.InputTag("")
+zdcdelayser.eventDataPset.zdcRechitLabel=cms.untracked.InputTag("zdcreco")
+zdcdelayser.eventDataPset.hfDigiLabel=cms.untracked.InputTag("")
+zdcdelayser.eventDataPset.zdcDigiLabel=cms.untracked.InputTag("hcalDigis")
+zdcdelayser.TrecoParams.firstSample=cms.int32(4)
+zdcdelayser.TrecoParams.numSamples=cms.int32(3)
