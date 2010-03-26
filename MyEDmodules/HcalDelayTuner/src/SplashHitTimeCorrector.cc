@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashHitTimeCorrector.cc,v 1.1 2009/11/09 00:57:59 dudero Exp $
+// $Id: SplashHitTimeCorrector.cc,v 1.2 2009/12/04 14:37:18 dudero Exp $
 //
 //
 
@@ -29,7 +29,7 @@
 // user include files
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "MyEDmodules/HcalDelayTuner/interface/SplashHitTimeCorrector.hh"

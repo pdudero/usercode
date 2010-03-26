@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.6 2010/03/14 18:41:20 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.7 2010/03/24 01:08:32 dudero Exp $
 //
 //
 
@@ -272,7 +272,7 @@ LaserDelayTunerAlgos::detChannelTimes(TimesPerDetId& chtimes)
   }
 
   // no rounding.
-  int iFloorRMtime = (int)(floor(minRMtime));
+  //int iFloorRMtime = (int)(floor(minRMtime));
 
 
   printf("Settings for subdet %s Depth 1:\n",mysubdetstr_.c_str());
