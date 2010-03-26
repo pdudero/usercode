@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.hh,v 1.2 2010/03/01 06:52:17 dudero Exp $
+// $Id: BeamHitTimeCorrector.hh,v 1.3 2010/03/02 21:08:16 dudero Exp $
 //
 //
 
@@ -26,7 +26,7 @@
 // user include files
 
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileDirectory.h"
+#include "CommonTools/Utils/interface/TFileDirectory.h"
 
 //
 // class declaration

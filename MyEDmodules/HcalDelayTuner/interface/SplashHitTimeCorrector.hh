@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashHitTimeCorrector.hh,v 1.1 2009/11/09 00:58:34 dudero Exp $
+// $Id: SplashHitTimeCorrector.hh,v 1.2 2009/12/04 14:37:18 dudero Exp $
 //
 //
 
@@ -27,7 +27,7 @@
 
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileDirectory.h"
+#include "CommonTools/Utils/interface/TFileDirectory.h"
 
 #include "TProfile2D.h"
 

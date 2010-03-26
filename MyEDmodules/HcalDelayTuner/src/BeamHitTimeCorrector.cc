@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.cc,v 1.2 2010/03/01 06:51:56 dudero Exp $
+// $Id: BeamHitTimeCorrector.cc,v 1.3 2010/03/02 21:07:50 dudero Exp $
 //
 //
 
@@ -29,7 +29,7 @@
 // user include files
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "MyEDmodules/HcalDelayTuner/interface/BeamHitTimeCorrector.hh"
