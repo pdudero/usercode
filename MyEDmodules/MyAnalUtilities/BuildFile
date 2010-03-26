@@ -7,7 +7,6 @@
 <use name=DataFormats/Provenance>
 <use name=DataFormats/METReco>
 <use name=SimDataFormats/CaloHit>
-<use name=PhysicsTools/UtilAlgos>
 <export>
    <lib name=MyEDmodulesMyAnalUtilities>
 </export>
