@@ -49,5 +49,7 @@ hftimeanal.eventDataPset.hfRechitLabel=cms.untracked.InputTag("hfreco")
 #hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
 
 zdctimeanal = hftimeanal.clone(subdet=cms.untracked.string("ZDC"))
-zdctimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
+zdctimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("")
+zdctimeanal.eventDataPset.zdcDigiLabel=cms.untracked.InputTag("hcalDigis")
+zdctimeanal.eventDataPset.hfRechitLabel=cms.untracked.InputTag("")
 zdctimeanal.eventDataPset.zdcRechitLabel=cms.untracked.InputTag("zdcreco")
