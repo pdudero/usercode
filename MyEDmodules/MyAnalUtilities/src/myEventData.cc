@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.6 2010/02/27 00:43:46 dudero Exp $
+// $Id: myEventData.cc,v 1.7 2010/03/24 01:15:57 dudero Exp $
 //
 //
 
@@ -80,7 +80,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
 
 
 const std::vector<edm::EventRange>
-myEventData::getEventRanges(void)
+myEventData::getEvents2Process(void)
 {
   using namespace edm;
   static const std::vector<EventRange> empty;
@@ -92,6 +92,24 @@ myEventData::getEventRanges(void)
   sourcePSet  = pSet.getParameter<ParameterSet>("@main_input");
   return
     sourcePSet.getUntrackedParameter<std::vector<EventRange> >("eventsToProcess",empty);
+}
+
+//======================================================================
+
+
+const std::vector<edm::LuminosityBlockRange>
+myEventData::getLumis2Process(void)
+{
+  using namespace edm;
+  static const std::vector<LuminosityBlockRange> empty;
+  pset::Registry* reg = pset::Registry::instance();
+  ParameterSetID toplevel = pset::getProcessParameterSetID(reg);
+  ParameterSet pSet;
+  reg->getMapped(toplevel, pSet);
+  ParameterSet sourcePSet;
+  sourcePSet  = pSet.getParameter<ParameterSet>("@main_input");
+  return
+    sourcePSet.getUntrackedParameter<std::vector<LuminosityBlockRange> >("lumisToProcess",empty);
 }
 
 //======================================================================

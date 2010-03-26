@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.7 2010/02/27 00:43:03 dudero Exp $
+// $Id: myEventData.hh,v 1.8 2010/03/24 01:15:57 dudero Exp $
 //
 //
 
@@ -27,6 +27,7 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/Provenance/interface/EventRange.h"
+#include "DataFormats/Provenance/interface/LuminosityBlockRange.h"
 #include "DataFormats/FEDRawData/interface/FEDRawData.h"
 #include "DataFormats/FEDRawData/interface/FEDRawDataCollection.h"
 #include "DataFormats/FEDRawData/interface/FEDNumbering.h"
@@ -53,8 +54,8 @@ public:
 
   void get(const edm::Event&, const edm::EventSetup&);
 
-  static const
-  std::vector<edm::EventRange> getEventRanges(void);
+  static const std::vector<edm::EventRange>          getEvents2Process(void);
+  static const std::vector<edm::LuminosityBlockRange> getLumis2Process(void);
 
   inline edm::Handle<HcalTBTriggerData>      hcaltbtrigdata(void) const { return hcaltbtrigdata_; }
   inline edm::Handle<FEDRawDataCollection>   fedrawdata(void)    const { return fedrawdata_;  }
