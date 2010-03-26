@@ -46,7 +46,7 @@ cat > ${CFGFILE} << EOF1
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BEAMTIMEANAL2")
+process = cms.Process("BEAMTIMEANAL")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( ${EVENTLIMIT} )
 )
@@ -55,7 +55,6 @@ process.maxEvents = cms.untracked.PSet (
 # Hcal Conditions: from Global Conditions Tag 
 #-----------------------------
 # 31X:
-#process.load("CalibCalorimetry.HcalPlugins.Hcal_Conditions_forGlobalTag_cff")
 #
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
@@ -82,23 +81,47 @@ EOF2
 
 #==================================================
 
-if (( ${#EVENTRANGE} > 0 ))
+if (( ${#EVRANGES} > 0 ))
 then
 cat >>${CFGFILE} <<EOF3
-process.source.eventsToProcess = cms.untracked.VEventRange('${EVENTRANGE}')
+process.source.eventsToProcess = cms.untracked.VEventRange(${EVRANGES})
 EOF3
+fi
+
+#==================================================
+
+if (( ${#LSRANGES} > 0 ))
+then
+cat >>${CFGFILE} <<EOF3
+process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange(${LSRANGES})
+EOF3
+fi
+
+#==================================================
+
+if [ ${DOUNPACKALL} ]
+then
+    cat >>${CFGFILE} <<EOF4
+process.load('Configuration/StandardSequences/RawToDigi_Data_cff')
+EOF4
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.RawToDigi"
+    else
+	MYPATH="process.RawToDigi"
+    fi
 fi
 
 #==================================================
 
 if (( ${#L1TTBITS} > 0 ))
 then
-    cat >>${CFGFILE} <<EOF4
+    cat >>${CFGFILE} <<EOF5
 process.load("L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff")
 process.load("HLTrigger.HLTfilters.hltLevel1GTSeed_cfi")
 process.hltLevel1GTSeed.L1TechTriggerSeeding = cms.bool(True)
 process.hltLevel1GTSeed.L1SeedsLogicalExpression = cms.string("${L1TTBITS}")
-EOF4
+EOF5
     if (( ${#MYPATH} > 0 ))
     then
 	MYPATH="${MYPATH}*process.hltLevel1GTSeed"
@@ -111,11 +134,11 @@ fi
 
 if (( ${#HLTPATHS} > 0 ))
 then
-    cat >>${CFGFILE} <<EOF5
+    cat >>${CFGFILE} <<EOF6
 process.load("HLTrigger.HLTfilters.hltHighLevel_cfi")
 process.hltHighLevel.HLTPaths = cms.vstring(${HLTPATHS})
 #process.MessageLogger.debugModules = cms.untracked.vstring("hltHighLevel")
-EOF5
+EOF6
     if (( ${#MYPATH} > 0 ))
     then
 	MYPATH="${MYPATH}*process.hltHighLevel"
@@ -128,7 +151,7 @@ fi
 
 if (( ${#INCLUDELS} > 0  ||  ${#EXCLUDELS} > 0  ||  ${#INCLUDEBX} > 0 ))
 then
-    cat >>${CFGFILE} <<EOF6
+    cat >>${CFGFILE} <<EOF7
 process.riFilt = cms.EDFilter("RunInfoFilter",
     eventNumbers = cms.vint32(),
     bunchNumbers = cms.vint32(${INCLUDEBX}),
@@ -141,7 +164,7 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string("run${RUN}_riskim.root"),
     closeFileFast = cms.untracked.bool(False)
 )
-EOF6
+EOF7
     if (( ${#MYPATH} > 0 ))
     then
 	MYPATH="${MYPATH}*process.riFilt"
@@ -152,11 +175,11 @@ fi
 
 #==================================================
 
-if [ ${DODIGIS} ]
+if [ ${DOUNPACKHCAL} ]
 then
-    cat >>${CFGFILE} <<EOF7
+    cat >>${CFGFILE} <<EOF8
 process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
-EOF7
+EOF8
     if (( ${#MYPATH} > 0 ))
     then
 	MYPATH="${MYPATH}*process.hcalDigis"
@@ -167,7 +190,74 @@ fi
 
 #==================================================
 
-cat >>${CFGFILE} <<EOF8
+if [ ${DOFULLRECO} ]
+then
+    cat >>${CFGFILE} <<EOF9
+process.load('Configuration/StandardSequences/Services_cff')
+process.load('Configuration/StandardSequences/GeometryExtended_cff')
+process.load('Configuration/StandardSequences/MagneticField_38T_cff')
+process.load('Configuration/StandardSequences/Reconstruction_cff')
+process.load('Configuration/StandardSequences/EndOfProcess_cff')
+process.load('Configuration/EventContent/EventContent_cff')
+EOF9
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.reconstruction"
+    else
+	MYPATH="process.reconstruction"
+    fi
+elif [ ${DOHCALRECO} ]
+then
+    cat >>${CFGFILE} <<EOF99
+process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
+process.load("CalibCalorimetry.HcalPlugins.Hcal_Conditions_forGlobalTag_cff")
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cfi")
+process.GlobalTag.globaltag = '${GLOBALTAG}'
+process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hbhe_cfi")
+process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_ho_cfi")
+process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hf_cfi")
+process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_zdc_cfi")
+process.myreco=cms.Sequence(process.hbhereco+
+                            process.horeco+
+			    process.hfreco+
+			    process.zdcreco)
+EOF99
+    if (( ${#HBHE_FIRSTSAMPLE} >0 ))
+    then
+	cat >>${CFGFILE} <<EOF999
+process.hbhereco.firstSample=cms.int32(${HBHE_FIRSTSAMPLE})
+EOF999
+    fi
+    if (( ${#HBHE_SAMPLESTOADD} >0 ))
+    then
+	cat >>${CFGFILE} <<EOF9999
+process.hbhereco.samplesToAdd=cms.int32(${HBHE_SAMPLESTOADD})
+EOF9999
+    fi
+    if (( ${#HF_FIRSTSAMPLE} >0 ))
+    then
+	cat >>${CFGFILE} <<EOF99999
+process.hfreco.firstSample=cms.int32(${HF_FIRSTSAMPLE})
+EOF99999
+    fi
+    if (( ${#HF_SAMPLESTOADD} >0 ))
+    then
+	cat >>${CFGFILE} <<EOF999999
+process.hfreco.samplesToAdd=cms.int32(${HF_SAMPLESTOADD})
+EOF999999
+    fi
+    if (( ${#MYPATH} > 0 ))
+    then
+
+	MYPATH="${MYPATH}*process.myreco"
+    else
+	MYPATH="process.myreco"
+    fi
+fi
+
+#==================================================
+
+cat >>${CFGFILE} <<EOF10
 process.load("MyEDmodules.HcalDelayTuner.beamtiminganal_cfi")
 process.hbtimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
@@ -193,35 +283,66 @@ process.hftimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hftimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hftimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hftimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
-#process.hftimeanal.detIds2mask          = cms.vint32(-6,20,4,-6,10,4)
 process.hftimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hftimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hftimeanal.minHitGeV            = cms.double(${MINHITGEV})
 process.hftimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
-EOF8
+process.hftimeanal.splitByEventRange    = cms.untracked.bool(True)
 
-if [ ${#DODIGIS} -o ${#HASDIGIS} ]
+process.hotimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
+process.hotimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.hotimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.hotimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hotimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
+process.hotimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
+process.hotimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.hotimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
+
+process.zdctimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
+process.zdctimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.zdctimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.zdctimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.zdctimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
+process.zdctimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
+process.zdctimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.zdctimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
+EOF10
+
+if [ ${#DOUNPACKHCAL} -o ${#HASDIGIS} ]
     then
-cat >> ${CFGFILE}<<EOF9
+cat >> ${CFGFILE}<<EOF11
 # Need conditions to convert digi ADC to fC in the analyzer
-process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = '${GLOBALTAG}'
 process.hbtimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hetimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
-EOF9
+process.hotimeanal.eventDataPset.hoDigiLabel=cms.untracked.InputTag("hcalDigis")
+process.zdctimeanal.eventDataPset.zdcDigiLabel=cms.untracked.InputTag("hcalDigis")
+EOF11
     else
 echo Assume no digis in input.
 fi    
 
+if [ ${#DOTREE} ]
+    then
+cat >> ${CFGFILE}<<EOF12
+process.hbtimeanal.doTree=cms.untracked.bool(${DOTREE})
+process.hetimeanal.doTree=cms.untracked.bool(${DOTREE})
+process.hftimeanal.doTree=cms.untracked.bool(${DOTREE})
+process.hotimeanal.doTree=cms.untracked.bool(${DOTREE})
+process.zdctimeanal.doTree=cms.untracked.bool(${DOTREE})
+EOF12
+fi    
+
 #==================================================
 
-cat >> ${CFGFILE}<<EOF10
+cat >> ${CFGFILE}<<EOF13
 process.allAnals=cms.Sequence(
                      process.hbtimeanal+
                      process.hetimeanal+
-                     process.hftimeanal)
-EOF10
+                     process.hftimeanal+
+                     process.hotimeanal+
+		     process.zdctimeanal)
+EOF13
 
 if (( ${#MYPATH} > 0 ))
 then
@@ -230,9 +351,9 @@ else
     MYPATH="process.allAnals"
 fi
 
-cat >>${CFGFILE} <<EOF11
+cat >>${CFGFILE} <<EOF14
 process.p = cms.Path(${MYPATH})
-EOF11
+EOF14
 
 if (( ${#SKIMOUTPUT} )) && (( ${#CASTOROUTPUTLOC} ))
 then
@@ -240,7 +361,7 @@ then
     then
 	KEEPDROP="keep *"
     fi
-cat >>${CFGFILE} <<EOF12
+cat >>${CFGFILE} <<EOF15
 # Output module configuration
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('${SKIMOUTPUT}'),
@@ -249,7 +370,7 @@ process.out = cms.OutputModule("PoolOutputModule",
     outputCommands = cms.untracked.vstring('${KEEPDROP}')
 )
 process.e = cms.EndPath(process.out)
-EOF12
+EOF15
 fi
 
 if [[ "${RUNMODE}" == "BATCH" ]]
