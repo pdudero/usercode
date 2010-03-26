@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.12 2010/03/16 21:07:56 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.13 2010/03/24 01:09:40 dudero Exp $
 //
 //
 
@@ -82,7 +82,7 @@ protected:
   virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
 
   virtual myAnalHistos *getHistos4cut(const std::string& cutstr);
-  virtual void         fillHistos4cut(const std::string& cutstr);
+  virtual void         fillHistos4cut(const std::string& cutstr,bool filldetail=false);
 
   virtual void   compileCorrections(const std::vector<edm::ParameterSet>& corList);
 #if 0
@@ -141,13 +141,12 @@ protected:
 
   float   recoTimeFromAvgPulseHF       (TProfile *avgPulse);
 
-  void bookHOdetail  (std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
-		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
-  void bookHEdetail  (std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
-		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
-  void bookD1D2detail(std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1dprof_af,
-		      std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2dprof_af);
-  void bookHFdetail  (myAnalHistos *myAH);
+  void bookHOdetail       (myAnalHistos *myAH);
+  void bookHEdetail       (myAnalHistos *myAH);
+  void bookD1D2detail     (myAnalHistos *myAH);
+  void bookHFbasicProfiles(myAnalHistos *myAH);
+  void bookHFdetail       (myAnalHistos *myAH);
+  void bookPerChanDetail  (myAnalHistos *myAH);
 
   // ----------member data ---------------------------
 
@@ -180,8 +179,8 @@ protected:
   int   firstsamp_, nsamps_, presamples_;
 
   std::vector<tCorrection> corList_;
-
-  std::vector<edm::EventRange> v_eventRanges_;
+  std::vector<edm::EventRange>           v_events2process_;
+  std::vector<edm::LuminosityBlockRange>  v_lumis2process_;
 
   // Tree/branch/histo autofill vars:
   TTree          *tree_;
@@ -189,6 +188,7 @@ protected:
   HcalDetId       detID_;
   HcalZDCDetId    zdcDetID_;
   float           fsubdet_;
+  float           fring_;
   float           fRBX_;
   float           fRBXsigned_;
   float           fRM_;
@@ -253,9 +253,7 @@ protected:
   std::string st_avgTimePerPhiRing0_;
   std::string st_avgTimePerPhiRing1P_;
   std::string st_avgTimePerPhiRing2P_;
-  std::string st_rhTprofRBXd1_;
-  std::string st_rhTprofRBXd2_;
-  std::string st_rhTprofRBXd3_;
+  std::string st_rhTprofRBX_;
   std::string st_avgTimePerRMd1_;
 
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
@@ -265,11 +263,14 @@ protected:
   std::string st_rhTprofHFPd1_, st_rhTprofHFPd2_, st_rhTprofHFMd2_, st_rhTprofHFMd1_;
   std::string st_pulsePerEbinPlus_, st_pulsePerEbinMinus_;
 
+  std::map<uint32_t,TH1F *> m_perChHistos_;
+
   bool firstEvent_;
   std::vector<std::string> v_cuts_;             // vector of cut strings
   std::map<std::string, myAnalCut *> m_cuts_;
-  std::map<std::string, myAnalCut *> m_ercuts_; // event range cuts
-  std::map<uint32_t,TH1F *> m_perChHistos_;
+  std::map<std::string, myAnalCut *> m_ercuts_; // event range/lumi range cuts
+  std::map<std::string, edm::EventRange> m_evRanges_;
+  std::map<std::string, edm::LuminosityBlockRange> m_lsRanges_;
   std::set<int>  badEventSet_;
   std::set<int>  acceptedBxNums_;
   std::set<int>  detIds2mask_;
