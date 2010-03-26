@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.8 2010/02/27 00:42:35 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.9 2010/03/24 01:18:59 dudero Exp $
 //
 //
 
@@ -37,13 +37,25 @@
 #include "TProfile2D.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "DataFormats/DetId/interface/DetId.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 //
 // class declaration
 //
 typedef bool (*detIDfun_t)(const DetId&);
+
+struct eqstr{
+  bool operator()(const char* s1, const char* s2) const {
+    return strcmp(s1,s2)==0;
+  }
+};
+
+struct eqint{
+  bool operator()(uint32_t i1, uint32_t i2) const {
+    return i1==i2;
+  }
+};
 
 template <class Tkey>
 class myAnalHistosTC {
@@ -98,7 +110,9 @@ public:
     }
   };
 
-  typedef  __gnu_cxx::hash_map<Tkey, Histo_t> myHashmap_t;
+  //typedef  __gnu_cxx::hash_map<Tkey, Histo_t> myHashmap_t;
+  typedef  std::map<Tkey, Histo_t> myHashmap_t;
+
   typedef boost::transform_iterator<
     histoFromIterator, typename myHashmap_t::iterator> iterator;
 
@@ -115,7 +129,7 @@ public:
   explicit myAnalHistosTC(const std::string& dirdescr);
   explicit myAnalHistosTC(const std::string& dirdescr,
 			  TFileDirectory& subdir);
-  ~myAnalHistosTC() {}
+  ~myAnalHistosTC();
 
   template<class T> T *book1d(const HistoParams_t& pars, bool verbose=true);
   template<class T> T *book2d(const HistoParams_t& pars, bool verbose=true);
@@ -182,6 +196,8 @@ public:
   template <class Tdata> // e.g., double or float
   void autofill(void);
 
+  void dump(void);
+
   void setCurDetId(DetId detId) { curDetID_ = detId; }
 
   TFileDirectory *dir(void) { return dir_; }
@@ -206,6 +222,8 @@ private:
 
   // ----------member data ---------------------------
 
+  std::string myname_;
+
   TFileDirectory *dir_;
   myHashmap_t *hm_histos_;
   myHashmap_t *hm_histos_af_;
@@ -215,7 +233,7 @@ private:
 };
 
 //======================================================================
-typedef myAnalHistosTC<const char *> myAnalHistos; // most common use case
+typedef myAnalHistosTC<std::string> myAnalHistos; // most common use case
 typedef myAnalHistosTC<uint32_t>    perChanHistos; // most common use case
 //======================================================================
 
@@ -233,9 +251,18 @@ myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr)
 {
   edm::Service<TFileService> fs;
   dir_ = new TFileDirectory(fs->mkdir(dirdescr));
+  myname_ = dirdescr;
 
   hm_histos_    = new myHashmap_t;
   hm_histos_af_ = new myHashmap_t;
+}
+
+template <class Tkey>
+myAnalHistosTC<Tkey>::~myAnalHistosTC()
+{
+  delete dir_;
+  delete hm_histos_;
+  delete hm_histos_af_;
 }
 
 //======================================================================
@@ -248,6 +275,7 @@ myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr,
 				     TFileDirectory& subdir)
 {
   dir_ = new TFileDirectory(subdir.mkdir(dirdescr));
+  myname_ = dirdescr;
 
   hm_histos_    = new myHashmap_t;
   hm_histos_af_ = new myHashmap_t;
@@ -264,13 +292,18 @@ T *myAnalHistosTC<Tkey>::book1d(const HistoParams_t& pars,bool verbose)
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << pars.name << std::endl;
   //std::cout << ", this=" << (int)this << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(),
 			      histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx);
-  (*hm_histos_)[histo.hpars.name.c_str()] = histo;
-  //std::cout << "hm_histos_.size() = " << hm_histos_.size() << std::endl;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << pars.name << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -285,13 +318,18 @@ T *myAnalHistosTC<Tkey>::book1d(Tkey key, const HistoParams_t& pars,bool verbose
   histo.hpars = pars;
 
   if (verbose)
-    std::cout << "booking standard histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << histo.hpars.name << std::endl;
   //std::cout << ", this=" << (int)this << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(),
 			      histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx);
-  (*hm_histos_)[key] = histo;
-  //std::cout << "hm_histos_.size() = " << hm_histos_.size() << std::endl;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -320,11 +358,17 @@ T *myAnalHistosTC<Tkey>::book2d(const HistoParams_t& pars,bool verbose)
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << histo.hpars.name << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
 			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy);
-  (*hm_histos_)[histo.hpars.name.c_str()] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << pars.name << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -340,11 +384,17 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key, const HistoParams_t& pars,bool verbose
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << histo.hpars.name << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
 			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy);
-  (*hm_histos_)[key] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -379,11 +429,17 @@ T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
   histo.ptr = dir_->make <T> (name.c_str(), title,
 			      nbinsx, xbins,
 			      nbinsy, ymin, ymax);
-  (*hm_histos_)[name.c_str()] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << name << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -408,11 +464,17 @@ T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
   histo.ptr = dir_->make <T> (name.c_str(), title,
 			      nbinsx, xmin, xmax,
 			      nbinsy, ybins);
-  (*hm_histos_)[name.c_str()] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << name << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -438,11 +500,17 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
   histo.ptr = dir_->make <T> (name.c_str(), title,
 			      nbinsx, xbins,
 			      nbinsy, ymin, ymax);
-  (*hm_histos_)[key] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -468,11 +536,17 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking standard histogram " << name << std::endl;
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
   histo.ptr = dir_->make <T> (name.c_str(), title,
 			      nbinsx, xmin, xmax,
 			      nbinsy, ybins);
-  (*hm_histos_)[key] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -494,15 +568,23 @@ T *myAnalHistosTC<Tkey>::book1d(const HistoAutoFill_t& haf,bool verbose)
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking autofill histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking autofill histogram " << histo.hpars.name << std::endl;
   //std::cout << ", this=" << (int)this << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(),
 			      histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx);
-  (*hm_histos_af_)[histo.hpars.name.c_str()] = histo;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_af_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << haf.hpars.name << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
+
+//======================================================================
 
 template <class Tkey>
 template<class T>
@@ -524,14 +606,21 @@ T *myAnalHistosTC<Tkey>::book2d(const HistoAutoFill_t& haf,bool verbose)
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
-    std::cout << "booking autofill histogram " << histo.hpars.name << std::endl;
+    std::cout << myname_ << ": booking autofill histogram " << histo.hpars.name << std::endl;
   histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
 			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
 			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy);
-  (*hm_histos_af_)[histo.hpars.name.c_str()] = histo;
 
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_af_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << haf.hpars.name << std::endl;
+  }
   return (T *)histo.ptr;
 }
+
+//======================================================================
 
 template <class Tkey>
 template<class T>
@@ -557,17 +646,18 @@ T *
 myAnalHistosTC<Tkey>::bookClone(const std::string& cloneName,const T& h,
 				bool verbose)
 {
-  //edm::LogInfo("booking clone histogram ") << cloneName << std::endl;
   if (verbose)
-    std::cout << "booking clone histogram " << cloneName;
-  //std::cout << ", this=" << (int)this << std::endl;
+    std::cout << myname_ << ": booking clone histogram " << cloneName;
   Histo_t histo;
   histo.ptr = (TH1 *)dir_->make <T, T> (h);
-  //std::cout << "Before SetName: " << histo.ptr->GetName() << std::endl;
   histo.ptr->SetName(cloneName.c_str());
-  //std::cout << "After  SetName: " << histo.ptr->GetName() << std::endl;
-  (*hm_histos_)[cloneName.c_str()] = histo;
-  //std::cout << "hm_histos_.size() = " << hm_histos_.size() << std::endl;
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(cloneName,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << cloneName << std::endl;
+  }
 
   return (T *)histo.ptr;
 }
@@ -581,17 +671,17 @@ myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
 {
   typename myHashmap_t::const_iterator ith;
 
-  ith = hm_histos_->find(hname.c_str());
+  ith = hm_histos_->find(hname);
 
   if (ith != hm_histos_->end()) {
     T *p = (T *)ith->second.ptr;
-    if (!p) std::cout << "NULL POINTER for histo " << hname << "!!!" << std::endl;
+    if (!p) std::cout << myname_ << ": NULL POINTER for histo " << hname << "!!!" << std::endl;
     else
       p->Fill(val,weight);
   } else {
     //    edm::LogError("Couldn't find hash for " + hname + "! ") 
-     throw cms::Exception("Couldn't find hash for " + hname + "! val=") 
-      << val << "\tweight=" << weight << std::endl;
+    throw cms::Exception("Couldn't find hash for " + hname)  <<"! val"<< val << "\tweight=" << weight << std::endl;
+    //dump();
   }
 }
 
@@ -606,12 +696,13 @@ myAnalHistosTC<Tkey>::fill1d(const std::map<std::string,double>& vals)
   for (itv = vals.begin(); itv != vals.end(); itv++) {
     typename myHashmap_t::const_iterator ith;
 
-    ith = hm_histos_.find(itv->first.c_str());
+    ith = hm_histos_.find(itv->first);
     if (ith != hm_histos_->end()) {
       T *p = (T *)ith->second.ptr;
       p->Fill(itv->second);
     } else {
-      edm::LogError("Couldn't find hash for " + itv->first + "!") << std::endl;
+      edm::LogError("Couldn't find hash for " + itv->first + "!");
+      //dump();
     }
   }
 }
@@ -625,14 +716,15 @@ myAnalHistosTC<Tkey>::fill2d(const std::string& hname,double valx,double valy,do
 {
   typename myHashmap_t::const_iterator ith;
 
-  ith = hm_histos_->find(hname.c_str());
+  ith = hm_histos_->find(hname);
   if (ith != hm_histos_->end()) {
     T *p = (T *)ith->second.ptr;
-    if (!p) std::cout << "NULL POINTER for histo " << hname << "!!!" << std::endl;
+    if (!p) std::cout << myname_ << ": NULL POINTER for histo " << hname << "!!!" << std::endl;
     p->Fill(valx,valy,weight);
   } else {
-    edm::LogError("Couldn't find hash for " + hname + "! valx=")
+    std::cout << myname_ << ": couldn't find hash for "+hname << "! valx="
       << valx << "\tvaly=" << valy << "\tweight=" << weight << std::endl;
+    //dump();
   }
 }
 
@@ -647,12 +739,13 @@ myAnalHistosTC<Tkey>::fill2d(const std::map<std::string,std::pair<double,double>
   for (itv = vals.begin(); itv != vals.end(); itv++) {
     typename myHashmap_t::const_iterator ith;;
 
-    ith = hm_histos_->find(itv->first.c_str());
+    ith = hm_histos_->find(itv->first);
     if (ith != hm_histos_->end()) {
       T *p = (T *)ith->second.ptr;
       p->Fill(itv->second.first,itv->second.second);
     } else {
-      edm::LogError("Couldn't find hash for " + itv->first + "!") << std::endl;
+      std::cout << myname_ << ": couldn't find hash for "+itv->first+"!" << std::endl;
+      //dump();
     }
   }
 }
@@ -668,6 +761,15 @@ myAnalHistosTC<Tkey>::get(Tkey key)
   typename myHashmap_t::const_iterator ith = hm_histos_->find(key);
   if (ith != hm_histos_->end())
     p = (T *)ith->second.ptr;
+  else {
+    ith = hm_histos_af_->find(key);
+    if (ith != hm_histos_af_->end())
+      p = (T *)ith->second.ptr;
+    else {
+      std::cout << myname_ << ": couldn't get key " << key << std::endl;
+      //dump();
+    }
+  }
   return p;
 }
 
@@ -723,6 +825,19 @@ myAnalHistosTC<Tkey>::exists(Tkey key)
 //======================================================================
 
 template <class Tkey>
+void
+myAnalHistosTC<Tkey>::dump(void)
+{
+  typename myHashmap_t::const_iterator ith;
+  std::cout << myname_ << ": ";
+  for (ith = hm_histos_->begin(); ith != hm_histos_->end(); ith++)
+    std::cout << ith->first << " ";
+  std::cout << std::endl;
+}
+
+//======================================================================
+
+template <class Tkey>
 template <class Tdata>
 void
 myAnalHistosTC<Tkey>::autofill(void)
@@ -746,6 +861,5 @@ myAnalHistosTC<Tkey>::autofill(void)
     }
   } // histo loop
 }
-
 
 #endif // _MYANALHISTOS
