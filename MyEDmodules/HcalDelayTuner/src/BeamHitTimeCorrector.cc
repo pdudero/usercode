@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.cc,v 1.4 2010/03/26 15:50:08 dudero Exp $
+// $Id: BeamHitTimeCorrector.cc,v 1.5 2010/03/27 18:36:05 dudero Exp $
 //
 //
 
@@ -82,6 +82,7 @@ BeamHitTimeCorrector::init(const edm::Handle<reco::VertexCollection>& vertices)
     const reco::Vertex& v = (*vertices)[0];
     if (v.isValid() && !v.isFake()) {
       vertex_z_ = v.z();
+      h1d_vertexZ_->Fill(vertex_z_);
     }
   }
 }                                       // BeamHitTimeCorrector::init

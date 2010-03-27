@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.9 2010/03/26 15:44:35 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.10 2010/03/27 18:36:05 dudero Exp $
 //
 //
 
@@ -207,7 +207,7 @@ BeamDelayTunerAlgos::bookHistos4allCuts(void)
     add2dHisto(st_R2vsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
 
     titlestr       =
-      "Vertex Z correction vs. Hit Time, Run "+runnumstr_+"; Correction (ns); Hit Time (ns)",
+      "Vertex Z correction vs. Hit Time, Run "+runnumstr_+"; Hit Time (ns); Correction (ns)",
     st_TcorVsThit_ = "h2d_TcorVsThit";
     add2dHisto(st_TcorVsThit_, titlestr, 
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
