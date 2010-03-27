@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.8 2010/03/24 01:15:57 dudero Exp $
+// $Id: myEventData.hh,v 1.9 2010/03/26 16:27:11 dudero Exp $
 //
 //
 
@@ -38,6 +38,8 @@
 #include "DataFormats/METReco/interface/CaloMET.h"
 #include "DataFormats/METReco/interface/CaloMETCollection.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBTriggerData.h"
 
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
@@ -71,6 +73,7 @@ public:
   inline edm::Handle<CaloTowerCollection>    towers(void)        const { return towers_;      }
   inline edm::Handle<CaloMETCollection>      recmet(void)        const { return recmet_;      }
   inline edm::Handle<edm::PCaloHitContainer> simhits(void)       const { return hsimhits_;    }
+  inline edm::Handle<reco::VertexCollection> vertices(void)      const { return vertices_;    }
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
@@ -97,6 +100,7 @@ private:
   edm::InputTag      simHitTag_;
   edm::InputTag      metTag_;
   edm::InputTag      twrTag_;
+  edm::InputTag      vertexTag_;
   bool               verbose_;
 
   edm::EventID eventId_;
@@ -119,6 +123,7 @@ private:
   edm::Handle<ZDCDigiCollection>      zdcdigis_;
   edm::Handle<CaloTowerCollection>    towers_;
   edm::Handle<CaloMETCollection>      recmet_;
+  edm::Handle<reco::VertexCollection> vertices_;
 };
 
 #endif // _MYEDMODULESMYANALUTILITIES

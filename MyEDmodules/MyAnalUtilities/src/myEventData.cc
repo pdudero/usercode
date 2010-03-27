@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.7 2010/03/24 01:15:57 dudero Exp $
+// $Id: myEventData.cc,v 1.8 2010/03/26 16:27:12 dudero Exp $
 //
 //
 
@@ -55,6 +55,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   simHitTag_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
   metTag_(edPset.getUntrackedParameter<edm::InputTag>("metLabel",edm::InputTag(""))),
   twrTag_(edPset.getUntrackedParameter<edm::InputTag>("twrLabel",edm::InputTag(""))),
+  vertexTag_(edPset.getUntrackedParameter<edm::InputTag>("vertexLabel",edm::InputTag(""))),
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
   if (verbose_) {
@@ -72,6 +73,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
     cout << "simHitTag_     = " << simHitTag_     << endl;
     cout << "metTag_        = " << metTag_        << endl;
     cout << "twrTag_        = " << twrTag_        << endl;
+    cout << "vertexTag_     = " << vertexTag_     << endl;
   }
 }
 
@@ -235,4 +237,12 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	"Calo MET not found, " << metTag_ << std::endl;
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got Calo MET " << metTag_ << std::endl;
+  
+  // Reco Vertices
+  if (vertexTag_.label().size())
+    if (!iEvent.getByLabel(vertexTag_, vertices_)) {
+      cerr << "myEventData::get: " <<
+	"Reco::Vertex collection not found, " << vertexTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got Vertices " << vertexTag_ << std::endl;
 }
