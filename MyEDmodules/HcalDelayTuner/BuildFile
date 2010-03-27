@@ -6,6 +6,7 @@
 <use name=DataFormats/FEDRawData>
 <use name=DataFormats/HcalDetId>
 <use name=DataFormats/HcalRecHit>
+<use name=DataFormats/VertexReco>
 <use name=CondFormats/HcalObjects>
 <use name=CalibFormats/HcalObjects>
 <use name=CalibFormats/CaloObjects>

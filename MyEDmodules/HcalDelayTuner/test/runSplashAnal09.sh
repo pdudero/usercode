@@ -53,8 +53,9 @@ case $VAR1 in
        export MAXEVENTNUM=1600000
        ;;
   "3") export RUN=121943
-#      export FILES="'file:/afs/cern.ch/user/d/dudero/scratch0/data/Splash09skims/run121943-rhskim.root'"
-       export FILES="'/store/data/BeamCommissioning09/PhysicsMuonBkg/RECO/v2/000/121/943/80633910-12D6-DE11-8D71-001D09F2932B.root'"
+#       export FILES="'file:/afs/cern.ch/user/d/dudero/scratch0/data/Splash09skims/run121943-rhskim.root'"
+       export FILES="'rfio:/castor/cern.ch/user/d/dudero/Splash2009skims/run121943-rhskim.root'"
+#       export FILES="'/store/data/BeamCommissioning09/PhysicsMuonBkg/RECO/v2/000/121/943/80633910-12D6-DE11-8D71-001D09F2932B.root'"
        export RUNDESCR="'Run 121943 Splash from +Z'"
        export GLOBALTOFFSET=34.84
        export SPLASHZSIDEPLUS=True
@@ -173,10 +174,20 @@ process.hotimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hotimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hotimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 
+process.hftimeanal.runDescription       = cms.untracked.string(${RUNDESCR})
+process.hftimeanal.splashPlusZside      = cms.untracked.bool(${SPLASHZSIDEPLUS})
+process.hftimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
+process.hftimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
+process.hftimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+#process.hftimeanal.detIds2mask          = cms.vint32(-6,20,4,-6,10,4)
+process.hftimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
+process.hftimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
+
 process.p = cms.Path(
                      process.hbtimeanal+
                      process.hetimeanal+
-                     process.hotimeanal)
+                     process.hotimeanal+
+                     process.hftimeanal)
 EOF
 
 cmsRun ${CFGFILE} 2>&1 | tee ./logs/splashTimingAnalyzer_run$RUN.log

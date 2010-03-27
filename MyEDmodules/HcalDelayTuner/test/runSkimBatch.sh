@@ -8,21 +8,33 @@ else
     echo "LOCALRT=${LOCALRT}"
 fi
 
-if [[ $# > 0 ]]
-then
-    echo Processing $1
-    source $1
-elif [[ -e ./skim_setup.rc ]] 
+#if [[ $# > 0 ]]
+#then
+#    echo Processing $1
+#    source $1
+#elif...
+if [[ -e ./skim_setup.rc ]] 
 then
     source ./skim_setup.rc
 fi
 
+#command line arg overrides RC file
+if (( $# > 0 ))
+then
+    RUN=$1
+fi
+
 echo "Processing $RUN..."
 
+#define files
 CFGFILE=run${RUN}_myskim_cfg.py
 LOGFILE=run${RUN}_myskim.log
 INCLUDEFILE=run${RUN}files_cfi
-SKIMOUTPUT=myskim_run${RUN}_pool.root
+
+if (( ${#SKIMOUTPUTFMT} ))
+then
+    SKIMOUTPUT=`printf "${SKIMOUTPUTFMT}" ${RUN}`
+fi
 
 if (( ${#MAXOUTPUTEVENTS} ==0  ))
 then
@@ -41,6 +53,7 @@ process.load("MyEDmodules.HcalDelayTuner.${INCLUDEFILE}")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
 process.MessageLogger.cerr.threshold = cms.untracked.string("INFO")
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 EOF1
 
 #==================================================
@@ -141,4 +154,7 @@ process.e = cms.EndPath(process.out)
 
 EOF6
 
-~/private/bin/lsfbare.perl ${PWD} ${CFGFILE} ${LOGFILE} ${SKIMOUTPUT} ${CASTORSKIMLOC} ${LOCALRT}
+# Right now the arguments to lsfbare.perl have changed...
+#
+#~/private/bin/lsfcafskim.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${SKIMOUTPUT} ${CASTORSKIMLOC}
+~/private/bin/lsfbareskim.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${SKIMOUTPUT} ${CASTORSKIMLOC}

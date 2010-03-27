@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.5 2010/03/14 17:56:53 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.6 2010/03/24 01:09:40 dudero Exp $
 //
 //
 
@@ -61,6 +61,9 @@ private:
   void   bookHistos4allCuts     (void);
   void   bookHistos4lastCut     (void);
 
+  void   fillHistos4cut         (const std::string& cutstr,
+				 bool filldetail=false);
+
   template<class Digi>
   void processZDCDigi           (const Digi& df);
 
@@ -102,6 +105,7 @@ private:
   std::string st_RvsIeta_;
   std::string st_R2vsIeta_;
 
+  std::string st_TcorVsThit_;
   std::string st_LvsSHF_;
 };
 

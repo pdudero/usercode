@@ -1,9 +1,11 @@
 RUN=
 HLTPATHS=
-L1TTBITS='9 OR 40 OR 41'
+L1TTBITS='0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)'
+#L1TTBITS='9 OR 40 OR 41'
 INCLUDELS=
 EXCLUDELS=
 INCLUDEBX=
 DODIGIS=1
-KEEPDROP="'drop *','keep *_hcalDigis_*_*','keep *_hbhereco_*_*','keep *_horeco_*_*','keep *_hfreco_*_*','keep HcalNoiseSummary_*_*_*','keep recoVertexs_*_*_*'"
+KEEPDROP="'drop *','keep *_gtDigis_*_*','keep *_hcalDigis_*_*','keep *_hbhereco_*_*','keep *_horeco_*_*','keep *_hfreco_*_*','keep HcalNoiseSummary_*_*_*','keep recoVertexs_*_*_*'"
 CASTORSKIMLOC=/castor/cern.ch/user/d/dudero/Beam2009skims
+SKIMOUTPUTFMT="run%s_bscnobhskim_pool.root"

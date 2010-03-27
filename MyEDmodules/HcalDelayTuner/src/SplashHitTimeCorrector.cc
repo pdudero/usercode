@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashHitTimeCorrector.cc,v 1.2 2009/12/04 14:37:18 dudero Exp $
+// $Id: SplashHitTimeCorrector.cc,v 1.3 2010/03/26 15:41:14 dudero Exp $
 //
 //
 
@@ -53,7 +53,7 @@ SplashHitTimeCorrector::SplashHitTimeCorrector(bool plusZsideSplash) :
 void
 SplashHitTimeCorrector::bookHistos(void)
 {
-  // Initialize the cuts for the run and add them to the global map
+  // One profile per depth
   for (int i=1; i<=4; i++) {
     char name[40];
     char title[128];

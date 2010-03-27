@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.8 2010/03/24 01:08:32 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.9 2010/03/26 15:44:35 dudero Exp $
 //
 //
 
@@ -187,23 +187,31 @@ BeamDelayTunerAlgos::bookHistos4allCuts(void)
   HcalDelayTunerAlgos::bookHistos4allCuts();
   
   if (mysubdet_ == HcalForward) {
-    titlestr    = "Hits/Tower vs. (L-S)/(L+S) & E_{twr}, Run "+runnumstr_+"; (L-S)/(L+S); E_{twr} (GeV)";
+    titlestr    =
+      "Hits/Tower vs. (L-S)/(L+S) & E_{twr}, Run "+runnumstr_+"; (L-S)/(L+S); E_{twr} (GeV)";
     st_RvsEtwr_ = "h2d_RvsEtwrHF";
     add2dHisto(st_RvsEtwr_, titlestr, 40,-1.0,1.0,
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
     
-    titlestr     = "Hits/Tower vs. S/(L+S) & E_{twr}, Run "+runnumstr_+"; S/(L+S); E_{twr} (GeV)",
-      st_R2vsEtwr_ = "h2d_R2vsEtwrHF";
+    titlestr     = "Hits/Tower vs. S/(L+S) & E_{twr}, Run "+runnumstr_+"; S/(L+S); E_{twr} (GeV)";
+    st_R2vsEtwr_ = "h2d_R2vsEtwrHF";
     add2dHisto(st_R2vsEtwr_, titlestr, 40,-1.0,1.0,
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
     
-    titlestr    = "Hits/Tower vs. (L-S)/(L+S) & i#eta, Run "+runnumstr_+"; (L-S)/(L+S); i#eta",
-      st_RvsIeta_ = "h2d_RvsIetaHF";
+    titlestr    = "Hits/Tower vs. (L-S)/(L+S) & i#eta, Run "+runnumstr_+"; (L-S)/(L+S); i#eta";
+    st_RvsIeta_ = "h2d_RvsIetaHF";
     add2dHisto(st_RvsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
     
-    titlestr     = "Hits/Tower vs. S/(L+S) & i#eta, Run "+runnumstr_+"; S/(L+S); i#eta",
-      st_R2vsIeta_ = "h2d_R2vsIetaHF";
+    titlestr     = "Hits/Tower vs. S/(L+S) & i#eta, Run "+runnumstr_+"; S/(L+S); i#eta";
+    st_R2vsIeta_ = "h2d_R2vsIetaHF";
     add2dHisto(st_R2vsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
+
+    titlestr       =
+      "Vertex Z correction vs. Hit Time, Run "+runnumstr_+"; Correction (ns); Hit Time (ns)",
+    st_TcorVsThit_ = "h2d_TcorVsThit";
+    add2dHisto(st_TcorVsThit_, titlestr, 
+	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+	       50,-5.0,5.0, v_hpars2d);
     
     std::map<std::string,myAnalCut *>::const_iterator cutit;
     for (cutit = m_cuts_.begin(); cutit != m_cuts_.end(); cutit++)
@@ -213,6 +221,21 @@ BeamDelayTunerAlgos::bookHistos4allCuts(void)
       cutit->second->histos()->book2d<TH2F>(v_hpars2d);
   }
 }                         // BeamDelayTunerAlgos::bookHistos4allCuts
+
+//==================================================================
+
+void
+BeamDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,
+				    bool filldetail)
+{
+  HcalDelayTunerAlgos::fillHistos4cut(cutstr);
+
+  if ((mysubdet_ == HcalForward) ||
+      (mysubdet_ == HcalOther) ) {
+    myAnalHistos *myAH =   getHistos4cut(cutstr);
+    myAH->fill2d<TH2D>(st_TcorVsThit_,hittime_,correction_ns_);
+  }
+}                             // BeamDelayTunerAlgos::fillHistos4cut
 
 //==================================================================
 
@@ -524,10 +547,13 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       feID_  = lmap_->getHcalFrontEndId(detID_);
       if (detID_.subdet() != mysubdet_)	continue; // HB and HE handled by separate instances of this class!
       if (inSet<int>(detIds2mask_,detID_.hashed_index())) continue;
+      correction_ns_ = timecor_->correctTime4(detID_);
     }
     else if ((rh.id().det() == DetId::Calo) && 
-	     (rh.id().subdetId() == 2)) // ZDC
+	     (rh.id().subdetId() == 2)) { // ZDC
       zdcDetID_ = HcalZDCDetId(rh.id());
+      correction_ns_ = timecor_->correctTime4(zdcDetID_);
+    }
 
     hittime_   = rh.time() - globalToffset_;
     hitenergy_ = rh.energy();
@@ -535,8 +561,8 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 
     int  zside = detID_.zside();
 
-    correction_ns_ = timecor_->correctTime4(detID_);
-    corTime_       = hittime_ - correction_ns_;
+    //corTime   = hittime_ - correction_ns_; not yet...
+    corTime_   = hittime_;
 
     TimesPerDetId::const_iterator it = exthitcors_.find(detID_);
     if (it != exthitcors_.end()) {
@@ -667,6 +693,9 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
 {
   HcalDelayTunerAlgos::process(ed);
 
+  timecor_->init(ed.vertices());
+
+
   switch (mysubdet_) {
   case HcalBarrel:
   case HcalEndcap:  processDigisAndRecHits<HBHEDataFrame,HBHERecHit>(ed.hbhedigis(),ed.hbherechits()); break;
@@ -686,8 +715,6 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
 void
 BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
 {
-  timecor_->init();
-
   HcalDelayTunerAlgos::beginJob(iSetup);
 
   std::cout << "----------------------------------------"  << "\n";

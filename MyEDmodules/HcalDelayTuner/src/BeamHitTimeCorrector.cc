@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.cc,v 1.3 2010/03/02 21:07:50 dudero Exp $
+// $Id: BeamHitTimeCorrector.cc,v 1.4 2010/03/26 15:50:08 dudero Exp $
 //
 //
 
@@ -34,8 +34,6 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "MyEDmodules/HcalDelayTuner/interface/BeamHitTimeCorrector.hh"
 
-#include "TProfile.h"
-
 //
 // constructors and destructor
 //
@@ -51,6 +49,8 @@ BeamHitTimeCorrector::BeamHitTimeCorrector(void)
 void
 BeamHitTimeCorrector::bookHistos(void)
 {
+  h1d_vertexZ_ = rootdir_->make<TH1D>("h1d_vertexZ","Primary Vertex Z",
+				      200,-100.0,100.0);
 }                                                          // bookHistos
 
 //======================================================================
@@ -59,12 +59,29 @@ float
 BeamHitTimeCorrector::correctTime4(const HcalDetId& id)
 {
   float thecor = 0.0;
+  if (id.subdet() == HcalForward)
+    thecor = -1.0*id.zside()*vertex_z_/30.; // c = 30cm/ns
   return thecor;
 }                                // BeamHitTimeCorrector::correctTime4
 
 //======================================================================
 
-void
-BeamHitTimeCorrector::init()
+float
+BeamHitTimeCorrector::correctTime4(const HcalZDCDetId& id)
 {
+  return (-1.0*id.zside()*vertex_z_/30.); // c = 30cm/ns
+}                                // BeamHitTimeCorrector::correctTime4
+
+//======================================================================
+
+void
+BeamHitTimeCorrector::init(const edm::Handle<reco::VertexCollection>& vertices)
+{
+  vertex_z_ = 0.;
+  if (vertices.isValid() && vertices->size()) {
+    const reco::Vertex& v = (*vertices)[0];
+    if (v.isValid() && !v.isFake()) {
+      vertex_z_ = v.z();
+    }
+  }
 }                                       // BeamHitTimeCorrector::init

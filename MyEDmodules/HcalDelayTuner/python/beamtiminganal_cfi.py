@@ -5,6 +5,7 @@ hbtimeanal = cms.EDAnalyzer('BeamTimingAnalyzer',
     eventDataPset = cms.untracked.PSet(
 #     hbheDigiLabel   = cms.untracked.InputTag("hcalDigis"),
       hbheRechitLabel = cms.untracked.InputTag("hbhereco"),
+      vertexLabel     = cms.untracked.InputTag("offlinePrimaryVertices"),
       verbose         = cms.untracked.bool(False)
     ),
                              

@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamHitTimeCorrector.hh,v 1.3 2010/03/02 21:08:16 dudero Exp $
+// $Id: BeamHitTimeCorrector.hh,v 1.4 2010/03/26 15:51:29 dudero Exp $
 //
 //
 
@@ -26,7 +26,13 @@
 // user include files
 
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
+#include "DataFormats/HcalDetId/interface/HcalZDCDetId.h"
 #include "CommonTools/Utils/interface/TFileDirectory.h"
+#include "DataFormats/Common/interface/Handle.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+
+#include "TH1D.h"
 
 //
 // class declaration
@@ -37,8 +43,11 @@ public:
   BeamHitTimeCorrector();
   ~BeamHitTimeCorrector() {}
 
-  void  init         ();
-  float correctTime4 (const HcalDetId& id);
+  void  init(const edm::Handle<reco::VertexCollection>& vertices);
+
+  // returns a subtractive corrector:
+  float correctTime4 (const HcalDetId&    id);
+  float correctTime4 (const HcalZDCDetId& id);
 
 private:
   void   bookHistos      (void);
@@ -46,6 +55,8 @@ private:
   // ----------member data ---------------------------
 
   TFileDirectory      *rootdir_;
+  double               vertex_z_;
+  TH1D                *h1d_vertexZ_;
 };
 
 #endif // _MYEDMODULESBEAMHITTIMECORRECTOR
