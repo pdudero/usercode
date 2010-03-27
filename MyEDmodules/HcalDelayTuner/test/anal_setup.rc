@@ -1,18 +1,60 @@
-RUN=130910bdskim
+#Possible variables:
+#RUN=string
+#EVENTLIMIT=number
+#INCLUDEFILE=.py file
+#EVRANGES=runnum:evmin-runnum:evmax
+#LSRANGES=runnum:lsmin-runnum:lsmax
+#
+# Trigger filter skim vars:
+#L1TTBITS=comma-separated list of integers
+#HLTPATHS=comma-separated list of strings
+#
+# RunInfoFilter skim vars:
+#INCLUDELS=comma-separated list of integers
+#EXCLUDELS=comma-separated list of integers
+#INCLUDEBX=comma-separated list of integers
+#
+#DOUNPACKALL=0 or 1
+#DOUNPACKHCAL=0 or 1
+#HASDIGIS=0 or 1
+#DOFULLRECO=0 or 1
+#DOHCALRECO=0 or 1
+#
+#Reco parameters:
+#HBHE_FIRSTSAMPLE=0-9
+#HBHE_SAMPLESTOADD=1-9
+#HF_FIRSTSAMPLE=0-9
+#HF_SAMPLESTOADD=1-9
+#
+#Analysis parameters
+#DOTREE=True or Falsle
+#RUNDESCR=string
+#GLOBAL_FLAG_MASK=0xC0003
+#BAD_EVENT_LIST=comma-separated list of integers
+#BXNUMS=comma-separated list of integers
+#GLOBALTOFFSET=integer nanoseconds
+#MINHITGEV=float
+#MAXEVENTNUM=large integer
+#MAXGEV2PLOT=float
+#
+#Output parameters
+#ANALOUTPUTFMT=printf format for anal root file
+#SKIMOUTPUT=skim root file name
+#CASTOROUTPUTLOC=castor path to store skim output
+#
 GLOBALTOFFSET=0.0
-BXNUMS=51
 GLOBAL_FLAG_MASK=0xC0003
 MINHITGEV=2.
 MAXGEV2PLOT=100
 MAXEVENTNUM=30000000
-DOTREE=True
-DOUNPACKHCAL=1
+DOUNPACKHCAL=0
+HASDIGIS=1
 DOHCALRECO=1
-GLOBALTAG='GR10_P_V3::All'
-RUNDESCR='Run 130910 2.36GeV HFTTP Trigger'
+GLOBALTAG='GR10_P_V0::All'
+RUNDESCR='2009 runs, BSC trigger'
 HBHE_FIRSTSAMPLE=2
 HBHE_SAMPLESTOADD=5
 HF_FIRSTSAMPLE=3
 HF_SAMPLESTOADD=4
-LSRANGES=\"130910:250-130910:MAX\"
-ANALOUTPUTFMT='bta_%s.root'
+ANALOUTPUTFMT='bta_run%s.root'
+RUNMODE=BATCH
