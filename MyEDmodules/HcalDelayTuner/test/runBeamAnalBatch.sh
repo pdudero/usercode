@@ -46,7 +46,7 @@ cat > ${CFGFILE} << EOF1
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BEAMTIMEANAL")
+process = cms.Process("BEAMTIMEANAL2")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( ${EVENTLIMIT} )
 )
@@ -99,7 +99,7 @@ fi
 
 #==================================================
 
-if [ ${DOUNPACKALL} ]
+if (( ${DOUNPACKALL} ))
 then
     cat >>${CFGFILE} <<EOF4
 process.load('Configuration/StandardSequences/RawToDigi_Data_cff')
@@ -175,7 +175,7 @@ fi
 
 #==================================================
 
-if [ ${DOUNPACKHCAL} ]
+if (( ${DOUNPACKHCAL} ))
 then
     cat >>${CFGFILE} <<EOF8
 process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
@@ -190,7 +190,7 @@ fi
 
 #==================================================
 
-if [ ${DOFULLRECO} ]
+if (( ${DOFULLRECO} ))
 then
     cat >>${CFGFILE} <<EOF9
 process.load('Configuration/StandardSequences/Services_cff')
@@ -206,7 +206,7 @@ EOF9
     else
 	MYPATH="process.reconstruction"
     fi
-elif [ ${DOHCALRECO} ]
+elif (( ${DOHCALRECO} ))
 then
     cat >>${CFGFILE} <<EOF99
 process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
@@ -264,7 +264,7 @@ process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hbtimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hbtimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hbtimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.hbtimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.hbtimeanal.minHitGeV            = cms.double(${HBHE_MINHITGEV})
 process.hbtimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hbtimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 #process.hbtimeanal.unravelHBatIeta      = cms.int32(14)
@@ -276,7 +276,7 @@ process.hetimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hetimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hetimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hetimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.hetimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.hetimeanal.minHitGeV            = cms.double(${HBHE_MINHITGEV})
 process.hetimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 
 process.hftimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
@@ -285,7 +285,7 @@ process.hftimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hftimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hftimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hftimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.hftimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.hftimeanal.minHitGeV            = cms.double(${HF_MINHITGEV})
 process.hftimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 process.hftimeanal.splitByEventRange    = cms.untracked.bool(True)
 
@@ -295,7 +295,7 @@ process.hotimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hotimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.hotimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hotimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.hotimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.hotimeanal.minHitGeV            = cms.double(${HO_MINHITGEV})
 process.hotimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 
 process.zdctimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
@@ -304,11 +304,11 @@ process.zdctimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.zdctimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
 process.zdctimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.zdctimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
-process.zdctimeanal.minHitGeV            = cms.double(${MINHITGEV})
+process.zdctimeanal.minHitGeV            = cms.double(${ZDC_MINHITGEV})
 process.zdctimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 EOF10
 
-if [ ${#DOUNPACKHCAL} -o ${#HASDIGIS} ]
+if (( ${#DOUNPACKHCAL} || ${#HASDIGIS} ))
     then
 cat >> ${CFGFILE}<<EOF11
 # Need conditions to convert digi ADC to fC in the analyzer
@@ -322,8 +322,9 @@ EOF11
 echo Assume no digis in input.
 fi    
 
-if [ ${#DOTREE} ]
+if (( ${#DOTREE} ))
     then
+    echo DOTREE=${DOTREE}, ${#DOTREE}
 cat >> ${CFGFILE}<<EOF12
 process.hbtimeanal.doTree=cms.untracked.bool(${DOTREE})
 process.hetimeanal.doTree=cms.untracked.bool(${DOTREE})
@@ -375,8 +376,13 @@ fi
 
 if [[ "${RUNMODE}" == "BATCH" ]]
     then
-~/private/bin/lsfbare.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${ANALOUTPUT} ${SKIMOUTPUT} ${CASTOROUTPUTLOC}
+    if (( ${#BATCH_SEMA4} ))
+    then
+	~/private/bin/lsfbare.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${ANALOUTPUT} ${BATCH_SEMA4} ${SKIMOUTPUT} ${CASTOROUTPUTLOC}
     else
+	~/private/bin/lsfbare.perl ${PWD} ${LOCALRT} ${CFGFILE} ${LOGFILE} ${ANALOUTPUT} junk ${SKIMOUTPUT} ${CASTOROUTPUTLOC}
+    fi
+else
     cmsRun ${CFGFILE} 2>&1 >${LOGFILE}
 fi
 #rm ${CFGFILE}
