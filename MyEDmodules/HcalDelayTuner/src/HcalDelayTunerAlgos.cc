@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.16 2010/03/24 01:08:32 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.17 2010/03/26 15:47:33 dudero Exp $
 //
 //
 
@@ -927,6 +927,11 @@ HcalDelayTunerAlgos::bookHFdetail(myAnalHistos *myAH)
     st_rhTavgCorProfHFMd1_ = "p2d_rhTavgCorProfHFMd1";
     st_rhTavgCorProfHFMd2_ = "p2d_rhTavgCorProfHFMd2";
 
+    st_TS34ratioProfHFPd1_ = "p2d_TS34ratioProfHFPd1";
+    st_TS34ratioProfHFPd2_ = "p2d_TS34ratioProfHFPd2";
+    st_TS34ratioProfHFMd1_ = "p2d_TS34ratioProfHFMd1";
+    st_TS34ratioProfHFMd2_ = "p2d_TS34ratioProfHFMd2";
+
     titlestr =
       "HFP Depth 1 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
     myAH->book2d<TProfile2D>(st_rhTavgCorProfHFPd1_, titlestr.c_str(),
@@ -942,6 +947,23 @@ HcalDelayTunerAlgos::bookHFdetail(myAnalHistos *myAH)
     titlestr =
       "HFM Depth 2 T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
     myAH->book2d<TProfile2D>(st_rhTavgCorProfHFMd2_, titlestr.c_str(),
+			     28, hftwrEdges,36, 0.0, 6.28);
+
+    titlestr =
+      "HFP Depth 1 TS3/(TS3+TS4) Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+    myAH->book2d<TProfile2D>(st_TS34ratioProfHFPd1_, titlestr.c_str(),
+			     28, hftwrEdges,36, 0.0, 6.28);
+    titlestr =
+      "HFP Depth 2 TS3/(TS3+TS4) Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+    myAH->book2d<TProfile2D>(st_TS34ratioProfHFPd2_, titlestr.c_str(),
+			     28, hftwrEdges,36, 0.0, 6.28);
+    titlestr =
+      "HFM Depth 1 TS3/(TS3+TS4) Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+    myAH->book2d<TProfile2D>(st_TS34ratioProfHFMd1_, titlestr.c_str(),
+			     28, hftwrEdges,36, 0.0, 6.28);
+    titlestr =
+      "HFM Depth 2 TS3/(TS3+TS4) Map from Avg. Pulse/Channel, Run "+runnumstr_+"; radius; i#phi";
+    myAH->book2d<TProfile2D>(st_TS34ratioProfHFMd2_, titlestr.c_str(),
 			     28, hftwrEdges,36, 0.0, 6.28);
   }
 }                                  //  HcalDelayTunerAlgos::bookHFdetail
@@ -1284,13 +1306,22 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,bool filldetail)
   int  absieta = detID_.ietaAbs();
   int    zside = detID_.zside();
   int    depth = detID_.depth();
+
+  fieta_    = (float)detID_.ieta();
+  fiphi_    = (float)detID_.iphi();
   
   if (mysubdet_ == HcalOther) {
     zside = zdcDetID_.zside();
   }
 
-  fieta_    = (float)detID_.ieta();
-  fiphi_    = (float)detID_.iphi();
+  // need front end id: 
+  int iRBX    = atoi(((feID_.rbx()).substr(3,2)).c_str());
+  fRBX_       = (float)iRBX;
+  int        iRMinRBX = feID_.rm();
+  //int   ipix = feID_.pixel();
+  fRM_         = (float)(zside * ((iRBX-1)*4 + iRMinRBX));
+  fiphisigned_ = zside*fiphi_;
+    
 
   fsubdet_ = fring_ = 0.;
   switch (mysubdet_) {
@@ -1305,6 +1336,7 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,bool filldetail)
   if (mysubdet_ == HcalOther) myAH->setCurDetId(zdcDetID_);
   else                        myAH->setCurDetId(detID_);
 
+  // make sure all autofill variables are set by this point!
   myAH->autofill<float>();
 
   if ((mysubdet_ == HcalBarrel)||
@@ -1351,14 +1383,6 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,bool filldetail)
 
 
   if (filldetail) {
-    // need front end id: 
-    int iRBX    = atoi(((feID_.rbx()).substr(3,2)).c_str());
-    fRBX_       = (float)iRBX;
-    int        iRMinRBX = feID_.rm();
-    //int            ipix = feID_.pixel();
-    fRM_         = (float)(zside * ((iRBX-1)*4 + iRMinRBX));
-    fiphisigned_ = zside*fiphi_;
-    
     //cout << detId << "\t" << feID.rbx() << "\t" << feID.rbx().substr(3,2) << "\t";
     //cout << feID.rm() << " maps to RBX/RM# " << iRBX << "/" << iRM << endl;
 
@@ -1390,22 +1414,24 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,bool filldetail)
 	dix = detID_.denseIndex(); title << detID_;
       }
 
-      perChanHistos *digifCHistos  = myAH->getAttachedHisto<uint32_t>("DigisfCperID");
-      perChanHistos *digiGeVHistos = myAH->getAttachedHisto<uint32_t>("DigisGeVperID");
-      perChanHistos *rhperidHistos = myAH->getAttachedHisto<uint32_t>("corTimesPerID");
+      perChanHistos *digifChistos      = myAH->getAttachedHisto<uint32_t>("DigisfCperID");
+      perChanHistos *digifCperEhistos  = myAH->getAttachedHisto<uint32_t>("DigisfCperEperID");
+      perChanHistos *digiGeVhistos     = myAH->getAttachedHisto<uint32_t>("DigisGeVperID");
+      perChanHistos *digiGeVperEhistos = myAH->getAttachedHisto<uint32_t>("DigisGeVperEperID");
+      perChanHistos *rhperidHistos     = myAH->getAttachedHisto<uint32_t>("corTimesPerID");
 
       perChanHistos::HistoParams_t hpars(title.str(),title.str(),10,-0.5,9.5);
 
       TProfile   *tp1, *tp2;
       TProfile2D *tp3, *tp4;
       TH1F *h1f;
-      tp1 = digifCHistos->exists(dix)      ?         // Digis in fC, all energies
-	digifCHistos->get<TProfile>(dix) :
-	digifCHistos->book1d<TProfile>(dix,hpars,false);
+      tp1 = digifChistos->exists(dix)      ?         // Digis in fC, all energies
+	digifChistos->get<TProfile>(dix) :
+	digifChistos->book1d<TProfile>(dix,hpars,false);
 
-      tp2 = digiGeVHistos->exists(dix)     ?        // Digis in GeV, all energies
-	digiGeVHistos->get<TProfile>(dix) :
-	digiGeVHistos->book1d<TProfile>(dix,hpars,false);
+      tp2 = digiGeVhistos->exists(dix) ?            // Digis in GeV, all energies
+	digiGeVhistos->get<TProfile>(dix) :
+	digiGeVhistos->book1d<TProfile>(dix,hpars,false);
 
       perChanHistos::HistoParams_t
 	hpars2(title.str(),title.str(),
@@ -1418,14 +1444,14 @@ HcalDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,bool filldetail)
       hpars.name  += "perE";
       hpars.title += "; ; E_{hit}(GeV)";
 
-      tp3 = digifCHistos->exists(dix)       ?      // Digis in fC, binned energies
-	digifCHistos->get<TProfile2D>(dix) :
-	digifCHistos->book2d<TProfile2D>
+      tp3 = digifCperEhistos->exists(dix)  ?      // Digis in fC, binned energies
+	digifCperEhistos->get<TProfile2D>(dix) :
+	digifCperEhistos->book2d<TProfile2D>
 	(dix,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
 
-      tp4 = digiGeVHistos->exists(dix)      ?     // Digis in GeV, binned energies
-	digifCHistos->get<TProfile2D>(dix) :
-	digiGeVHistos->book2d<TProfile2D>
+      tp4 = digiGeVperEhistos->exists(dix) ?     // Digis in GeV, binned energies
+	digiGeVperEhistos->get<TProfile2D>(dix) :
+	digiGeVperEhistos->book2d<TProfile2D>
 	(dix,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
 
       fillDigiPulseHistos(tp1,tp3,tp2,tp4);
@@ -1720,10 +1746,10 @@ HcalDelayTunerAlgos::endJob()
     TH1F *h1plus =lastAH->get<TH1F>(st_rhTavgCorPlus_.c_str());
     TH1F *h1minus=lastAH->get<TH1F>(st_rhTavgCorMinus_.c_str());
 
-    perChanHistos *digifCHistos = lastAH->getAttachedHisto<uint32_t>("DigisfCperID");
+    perChanHistos *digiGeVHistos = lastAH->getAttachedHisto<uint32_t>("DigisGeVperID");
 
     perChanHistos::iterator it;
-    for (it = digifCHistos->begin(); it != digifCHistos->end(); it++) {
+    for (it = digiGeVHistos->begin(); it != digiGeVHistos->end(); it++) {
       int zside,depth;
       float timecorr;
       if (mysubdet_ == HcalOther) {
@@ -1749,16 +1775,27 @@ HcalDelayTunerAlgos::endJob()
 
       if (mysubdet_ == HcalForward) {
 	// Find the map to put the result in
-	std::string st_rhTavgCorProf;
+	std::string st_rhTavgCorProf, st_TS34ratioProf;
 	switch (zside*depth) {
-	case -2: st_rhTavgCorProf = st_rhTavgCorProfHFMd2_; break;
-	case -1: st_rhTavgCorProf = st_rhTavgCorProfHFMd1_; break;
-	case  1: st_rhTavgCorProf = st_rhTavgCorProfHFPd1_; break;
-	case  2: st_rhTavgCorProf = st_rhTavgCorProfHFPd2_; break;
+	case -2: st_rhTavgCorProf=st_rhTavgCorProfHFMd2_; st_TS34ratioProf=st_TS34ratioProfHFMd2_; break;
+	case -1: st_rhTavgCorProf=st_rhTavgCorProfHFMd1_; st_TS34ratioProf=st_TS34ratioProfHFMd1_; break;
+	case  1: st_rhTavgCorProf=st_rhTavgCorProfHFPd1_; st_TS34ratioProf=st_TS34ratioProfHFPd1_; break;
+	case  2: st_rhTavgCorProf=st_rhTavgCorProfHFPd2_; st_TS34ratioProf=st_TS34ratioProfHFPd2_; break;
 	default: break;
 	}
 
 	lastAH->fill2d<TProfile2D>(st_rhTavgCorProf,fradius_,fangle_,tRecoFromAvgPulse);
+
+	float ratio = 0.0f;
+	float ts3 = tp->GetBinContent(4);
+	float ts4 = tp->GetBinContent(5);
+
+	if ((ts3+ts4) > 0.0f)
+	  ratio = ts3/(ts3+ts4);
+	else
+	  ratio = -1.0;
+
+	lastAH->fill2d<TProfile2D>(st_TS34ratioProf,fradius_,fangle_,ratio);
       }
     }
   }

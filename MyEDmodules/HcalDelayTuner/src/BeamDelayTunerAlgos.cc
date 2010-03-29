@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.10 2010/03/27 18:36:05 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.11 2010/03/27 21:22:59 dudero Exp $
 //
 //
 
@@ -185,34 +185,39 @@ BeamDelayTunerAlgos::bookHistos4allCuts(void)
   std::vector<myAnalHistos::HistoParams_t> v_hpars2d;
   
   HcalDelayTunerAlgos::bookHistos4allCuts();
-  
-  if (mysubdet_ == HcalForward) {
-    titlestr    =
-      "Hits/Tower vs. (L-S)/(L+S) & E_{twr}, Run "+runnumstr_+"; (L-S)/(L+S); E_{twr} (GeV)";
-    st_RvsEtwr_ = "h2d_RvsEtwrHF";
-    add2dHisto(st_RvsEtwr_, titlestr, 40,-1.0,1.0,
-	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
-    
-    titlestr     = "Hits/Tower vs. S/(L+S) & E_{twr}, Run "+runnumstr_+"; S/(L+S); E_{twr} (GeV)";
-    st_R2vsEtwr_ = "h2d_R2vsEtwrHF";
-    add2dHisto(st_R2vsEtwr_, titlestr, 40,-1.0,1.0,
-	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
-    
-    titlestr    = "Hits/Tower vs. (L-S)/(L+S) & i#eta, Run "+runnumstr_+"; (L-S)/(L+S); i#eta";
-    st_RvsIeta_ = "h2d_RvsIetaHF";
-    add2dHisto(st_RvsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
-    
-    titlestr     = "Hits/Tower vs. S/(L+S) & i#eta, Run "+runnumstr_+"; S/(L+S); i#eta";
-    st_R2vsIeta_ = "h2d_R2vsIetaHF";
-    add2dHisto(st_R2vsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
 
+  if ((mysubdet_ == HcalForward) ||
+      (mysubdet_ == HcalOther)    )  {
     titlestr       =
       "Vertex Z correction vs. Hit Time, Run "+runnumstr_+"; Hit Time (ns); Correction (ns)",
     st_TcorVsThit_ = "h2d_TcorVsThit";
     add2dHisto(st_TcorVsThit_, titlestr, 
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
-	       50,-5.0,5.0, v_hpars2d);
+	       81,-2.025,2.025, v_hpars2d);
+
+    if (mysubdet_ == HcalForward) {
+      titlestr    =
+	"Hits/Tower vs. (L-S)/(L+S) & E_{twr}, Run "+runnumstr_+"; (L-S)/(L+S); E_{twr} (GeV)";
+      st_RvsEtwr_ = "h2d_RvsEtwrHF";
+      add2dHisto(st_RvsEtwr_, titlestr, 40,-1.0,1.0,
+		 recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
     
+      titlestr     = "Hits/Tower vs. S/(L+S) & E_{twr}, Run "+runnumstr_+"; S/(L+S); E_{twr} (GeV)";
+      st_R2vsEtwr_ = "h2d_R2vsEtwrHF";
+      add2dHisto(st_R2vsEtwr_, titlestr, 40,-1.0,1.0,
+		 recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_, v_hpars2d);
+    
+      titlestr    = "Hits/Tower vs. (L-S)/(L+S) & i#eta, Run "+runnumstr_+"; (L-S)/(L+S); i#eta";
+      st_RvsIeta_ = "h2d_RvsIetaHF";
+      add2dHisto(st_RvsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
+    
+      titlestr     = "Hits/Tower vs. S/(L+S) & i#eta, Run "+runnumstr_+"; S/(L+S); i#eta";
+      st_R2vsIeta_ = "h2d_R2vsIetaHF";
+      add2dHisto(st_R2vsIeta_, titlestr, 40,-1.0,1.0, 13,28.5,41.5, v_hpars2d);
+    }
+    /*******************
+     * BOOK 'EM, DANNO *
+     *******************/
     std::map<std::string,myAnalCut *>::const_iterator cutit;
     for (cutit = m_cuts_.begin(); cutit != m_cuts_.end(); cutit++)
       cutit->second->histos()->book2d<TH2F>(v_hpars2d);
@@ -228,7 +233,7 @@ void
 BeamDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,
 				    bool filldetail)
 {
-  HcalDelayTunerAlgos::fillHistos4cut(cutstr);
+  HcalDelayTunerAlgos::fillHistos4cut(cutstr,filldetail);
 
   if ((mysubdet_ == HcalForward) ||
       (mysubdet_ == HcalOther) ) {
