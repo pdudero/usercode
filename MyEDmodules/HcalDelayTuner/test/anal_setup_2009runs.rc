@@ -1,0 +1,69 @@
+#Possible variables:
+#RUN=string
+#EVENTLIMIT=number
+#INCLUDEFILE=.py file
+#EVRANGES=runnum:evmin-runnum:evmax
+#LSRANGES=runnum:lsmin-runnum:lsmax
+#
+# Trigger filter skim vars:
+#L1TTBITS=comma-separated list of integers
+#HLTPATHS=comma-separated list of strings
+#
+# RunInfoFilter skim vars:
+#INCLUDELS=comma-separated list of integers
+#EXCLUDELS=comma-separated list of integers
+#INCLUDEBX=comma-separated list of integers
+#
+#DOUNPACKALL=0 or 1
+#DOUNPACKHCAL=0 or 1
+#HASDIGIS=0 or 1
+#DOFULLRECO=0 or 1
+#DOHCALRECO=0 or 1
+#
+#Reco parameters:
+#HBHE_FIRSTSAMPLE=0-9
+#HBHE_SAMPLESTOADD=1-9
+#HF_FIRSTSAMPLE=0-9
+#HF_SAMPLESTOADD=1-9
+#
+#Analysis parameters
+#DOTREE=True or Falsle
+#RUNDESCR=string
+#GLOBAL_FLAG_MASK=0xC0003
+#BAD_EVENT_LIST=comma-separated list of integers
+#BXNUMS=comma-separated list of integers
+#GLOBALTOFFSET=integer nanoseconds
+#MAXEVENTNUM=large integer
+#MAXGEV2PLOT=float
+#HBHE_MINHITGEV=float
+#HF_MINHITGEV=float
+#HO_MINHITGEV=float
+#ZDC_MINHITGEV=float
+#
+#Output parameters
+#ANALOUTPUTFMT=printf format for anal root file
+#SKIMOUTPUT=skim root file name
+#CASTOROUTPUTLOC=castor path to store skim output
+#
+#Job parameters
+#RUNMODE=BATCH (optional - submits to LSF)
+#
+GLOBALTOFFSET=0.0
+GLOBAL_FLAG_MASK=0xC0003
+HBHE_MINHITGEV=2.
+HO_MINHITGEV=2.
+ZDC_MINHITGEV=5.
+HF_MINHITGEV=5.
+MAXGEV2PLOT=100
+MAXEVENTNUM=30000000
+DOUNPACKHCAL=0
+HASDIGIS=1
+DOHCALRECO=1
+GLOBALTAG='GR10_P_V0::All'
+RUNDESCR='2009 runs, BSC trigger'
+HBHE_FIRSTSAMPLE=2
+HBHE_SAMPLESTOADD=5
+HF_FIRSTSAMPLE=3
+HF_SAMPLESTOADD=4
+ANALOUTPUTFMT='bta_run%s.root'
+RUNMODE=BATCH
