@@ -15,7 +15,7 @@ hbtimeanal = cms.EDAnalyzer('BeamTimingAnalyzer',
       preSamples      = cms.int32(4)
     ),
 
-    normalizeDigis     = cms.bool(True),
+    normalizeDigis     = cms.bool(False),
     doPerChannel       = cms.bool(True),
     minEvents4avgT     = cms.int32(10),
     subdet             = cms.untracked.string("HB"),
