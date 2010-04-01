@@ -36,12 +36,12 @@ using namespace std;
 struct wPad_t {
   wPad_t(string name) : topmargin(0.),bottommargin(0.),
 			rightmargin(0.),leftmargin(0.),
-			fillcolor(10),logx(0),logy(0),
+			fillcolor(10),logx(0),logy(0),logz(0),
 			stackem(false),legid("")
   { hframe = new wTH1(name,name,100,0.0,1.0); }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
-  unsigned logx, logy;
+  unsigned logx, logy,logz;
   unsigned gridx, gridy;
   bool   stackem;
   string legid;
@@ -93,6 +93,7 @@ struct wLegend_t {
   unsigned linewidth;
   unsigned textfont;
   float    textsize;
+  string   drawoption;
   TLegend *leg;
 };
 
@@ -391,14 +392,19 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
       return true;
     }
     Tokenize(theline,v_tokens,"=");
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     if      (key == "style") {
       if (value == "TDR")
@@ -406,7 +412,11 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
       else if (value == "Plain")
 	gROOT->SetStyle("Plain");
     }
-    else if (key == "optstat")   gStyle->SetOptStat(value.c_str());
+    else if (key == "optstat")  {
+      cout << "OptStat = " << gStyle->GetOptStat() << endl;
+      gStyle->SetOptStat(value.c_str());
+      cout << "OptStat = " << gStyle->GetOptStat() << endl;
+    }
     else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
 
     // Set the position/size of the title box
@@ -423,6 +433,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "statyndc")  gStyle->SetStatY(str2flt(value));
     else if (key == "statwndc")  gStyle->SetStatW(str2flt(value));
     else if (key == "stathndc")  gStyle->SetStatH(str2flt(value));
+
+    else if (key == "painttextfmt") gStyle->SetPaintTextFormat(value.c_str());
+    else if (key == "markersize") gStyle->SetMarkerSize(str2flt(value));
     else {
       cerr << "Unknown key " << key << endl;
     }
@@ -456,14 +469,19 @@ processLayoutSection(FILE      *fp,
     }
 
     Tokenize(theline,v_tokens,"=");
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     if (key == "npadsx") {
       unsigned long npadsx = str2int(value);
@@ -526,14 +544,19 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     }
 
     Tokenize(theline,v_tokens,"=");
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     if      (key == "histos") {
       Tokenize(value,wpad->histo_ids," ,"); 
@@ -566,6 +589,7 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "legend")       wpad->legid        = value;
     else if (key == "logx")         wpad->logx         = str2int(value);
     else if (key == "logy")         wpad->logy         = str2int(value);
+    else if (key == "logz")         wpad->logz         = str2int(value);
     else if (key == "gridx")        wpad->gridx        = str2int(value);
     else if (key == "gridy")        wpad->gridy        = str2int(value);
     else if (key == "stackem")      wpad->stackem      = (bool)str2int(value);
@@ -608,8 +632,9 @@ void processCommonHistoParams(const string& key,
   if      (key == "draw")        wh.SetDrawOption(value);
   else if (key == "title")       wh.histo()->SetTitle(value.c_str());
 
-  else if (key == "markerstyle") wh.SetMarker(0,str2int(value));
   else if (key == "markercolor") wh.SetMarker(str2int(value));
+  else if (key == "markerstyle") wh.SetMarker(0,str2int(value));
+  else if (key == "markersize")  wh.SetMarker(0,0,str2flt(value));
   else if (key == "linecolor")   wh.SetLine(str2int(value));
   else if (key == "linestyle")   wh.SetLine(0,str2int(value));
   else if (key == "linewidth")   wh.SetLine(0,0,str2int(value));
@@ -843,14 +868,18 @@ processHistoSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     //--------------------
     if (key == "id") {
@@ -976,14 +1005,18 @@ processGraphSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     //--------------------
     if (key == "id") {
@@ -1085,14 +1118,18 @@ processHmathSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     //--------------------
     if (key == "id") {
@@ -1286,7 +1323,7 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      string newname = string(tmph2->GetName())+"_"+binspec;
+      string newname = string(tmph2->GetName())+"_Xbins"+binspec;
       int lobin=str2int(v_tokens[0]);
       int hibin=str2int(v_tokens[1]);
       if (lobin > hibin) {
@@ -1326,7 +1363,7 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      string newname = string(tmph2->GetName())+"_"+binspec;
+      string newname = string(tmph2->GetName())+"_Ybins"+binspec;
       int lobin=str2int(v_tokens[0]);
       int hibin=str2int(v_tokens[1]);
       if (lobin > hibin) {
@@ -1417,14 +1454,18 @@ processLegendSection(FILE *fp,
 
     Tokenize(theline,v_tokens,"=");
 
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     //--------------------
     if (key == "id") {
@@ -1450,6 +1491,7 @@ processLegendSection(FILE *fp,
     else if (key == "linewidth")  wleg->linewidth  = str2int(value);
     else if (key == "fillcolor")  wleg->fillcolor  = str2int(value);
     else if (key == "bordersize") wleg->bordersize = str2int(value);
+    else if (key == "draw")       wleg->drawoption = value;
     else {
       cerr << "unknown key " << key << endl;
     }
@@ -1485,14 +1527,19 @@ processLabelSection(FILE   *fp,
     }
 
     Tokenize(theline,v_tokens,"=");
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     //--------------------
     if (key == "id") {
@@ -1544,14 +1591,19 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
     }
 
     Tokenize(theline,v_tokens,"=");
-    if ((v_tokens.size() != 2) ||
-	(!v_tokens[0].size())  ||
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
 	(!v_tokens[1].size())    ) {
       cerr << "malformed key=value line " << theline << endl; continue;
     }
 
-    string key   = v_tokens[0];
-    string value = v_tokens[1];
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
 
     map<string,string>::const_iterator it;
     it = glmap_aliii.find(key);
@@ -1670,6 +1722,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
+  wp->vp->SetLogz(wp->logz);
   wp->vp->SetGridx(wp->gridx);
   wp->vp->SetGridy(wp->gridy);
 
@@ -1712,6 +1765,7 @@ void drawInPad(wPad_t *wp, TGraph *gr, const string& drawopt)
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
+  wp->vp->SetLogz(wp->logz);
 
   cout << "Drawing " << gr->GetName() << " with option(s) " << drawopt << endl;
 
@@ -1731,6 +1785,7 @@ void drawInPad(wPad_t *wp, THStack *stack)
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
+  wp->vp->SetLogz(wp->logz);
 
   if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
   if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
@@ -1745,7 +1800,7 @@ void drawInPad(wPad_t *wp, THStack *stack)
 
 //======================================================================
 
-void  drawPlots(wCanvas_t& wc)
+void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 {
   unsigned npads = std::min(wc.npadsx*wc.npadsy, wc.pads.size());
 
@@ -1838,12 +1893,15 @@ void  drawPlots(wCanvas_t& wc)
 	  cout << "Drawing " << hid << " => " << myHisto->histo()->GetName() << endl;
 	  drawInPad(wp,*myHisto,!j);
 	  if (myHisto->statsAreOn()) {
+	    cout << "OptStat = " <<  gStyle->GetOptStat() << endl;
 	    myHisto->DrawStats();
 	    wp->vp->Update();
 	  }
 	}
-	if (drawlegend && myHisto->GetLegendEntry().size())
+	if (drawlegend && myHisto->GetLegendEntry().size()) {
+	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
 	  myHisto->Add2Legend(wl->leg);
+	}
       }
     } // histos loop
 
@@ -1874,6 +1932,10 @@ void  drawPlots(wCanvas_t& wc)
 				rightmin,rightmax,510,"+L");
       axis->Draw();
       gPad->Update();
+      if (drawlegend && myHisto->GetLegendEntry().size()) {
+	if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
+	myHisto->Add2Legend(wl->leg);
+      }
     }
 
     if (wp->stackem) {
@@ -1940,12 +2002,26 @@ void  drawPlots(wCanvas_t& wc)
   } // pad loop
 
   prdFixOverlay();
-  //wc.c1->cd();
+
+  if (savePlot2file) {
+    wc.c1->cd();
+    // Use the first file read in and the config file name to make
+    // the filename.
+    //
+    std::string datafile,cfgfile;
+    map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
+    if (it != glmap_id2rootfile.end())
+      datafile = it->first.substr(0,it->first.find_first_of('.'));
+    cfgfile=wc.title.substr(0,wc.title.find_first_of('.'));
+    string picfile = datafile+"_"+cfgfile+".png";
+    wc.c1->SaveAs(picfile.c_str());
+  }
 }                                                           // drawPlots
 
 //======================================================================
 
 void superPlot(const string& canvasLayout="canvas.txt",
+	       bool savePlot2file=false,
 	       bool dotdrStyle=false)
 {
   glmap_histopaths2id.clear();
@@ -1968,5 +2044,5 @@ void superPlot(const string& canvasLayout="canvas.txt",
 
   }
 
-  drawPlots(*initCanvas(canvasLayout));
+  drawPlots(*initCanvas(canvasLayout),savePlot2file);
 }
