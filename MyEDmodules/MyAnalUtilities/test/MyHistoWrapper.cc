@@ -250,7 +250,7 @@ MyHistoWrapper<T>::DrawStats(void)
     return;
   }
 #if 1
-  std::cout << "Settings Stats Object for " << h_->GetName() << " to ";
+  std::cout << "Setting Stats Object for " << h_->GetName() << " to ";
   std::cout << stats_.GetX1NDC() << ", ";
   std::cout << stats_.GetX2NDC() << ", ";
   std::cout << stats_.GetY1NDC() << ", ";
