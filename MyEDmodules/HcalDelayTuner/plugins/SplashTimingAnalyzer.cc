@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashTimingAnalyzer.cc,v 1.3 2010/03/01 06:52:33 dudero Exp $
+// $Id: SplashTimingAnalyzer.cc,v 1.4 2010/03/02 21:33:27 dudero Exp $
 //
 //
 
@@ -99,14 +99,13 @@ SplashTimingAnalyzer::~SplashTimingAnalyzer() {
 void
 SplashTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  eventData_->get(iEvent,iSetup);
+
   if (firstEvent_) {
     // Because the framework geniuses got rid of this capability in beginJob!
-    algo_->beginJob(iSetup);
+    algo_->beginJob(iSetup,*eventData_);
     firstEvent_ = false;
   }
-
-
-  eventData_->get(iEvent,iSetup);
 
   uint32_t runn = eventData_->runNumber();
   if (notInSet<uint32_t>(s_runs_,runn))

@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.4 2010/03/14 18:06:14 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.5 2010/04/06 10:46:50 dudero Exp $
 //
 //
 
@@ -101,7 +101,7 @@ BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   if (firstEvent_) {
     // Because the framework geniuses got rid of this capability in beginJob!
-    algo_->beginJob(iSetup,*eventData);
+    algo_->beginJob(iSetup,*eventData_);
     firstEvent_ = false;
   }
 

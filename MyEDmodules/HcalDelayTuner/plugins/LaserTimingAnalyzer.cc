@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserTimingAnalyzer.cc,v 1.2 2009/12/04 14:39:04 dudero Exp $
+// $Id: LaserTimingAnalyzer.cc,v 1.1 2010/02/26 23:41:30 dudero Exp $
 //
 //
 
@@ -43,7 +43,7 @@ public:
   ~LaserTimingAnalyzer();
 
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  //virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
 
@@ -52,6 +52,7 @@ private:
   myEventData           *eventData_;
   LaserDelayTunerAlgos  *algo_;
   std::set<uint32_t>     s_runs_; // set of run numbers run over
+  bool                   firstEvent_;
 };
 
 //
@@ -76,6 +77,8 @@ LaserTimingAnalyzer::LaserTimingAnalyzer(const edm::ParameterSet& iConfig)
   eventData_ = new myEventData(edPset);
 
   algo_ = new LaserDelayTunerAlgos(iConfig);
+
+  firstEvent_ = true;
 }
 
 LaserTimingAnalyzer::~LaserTimingAnalyzer() {
@@ -99,14 +102,13 @@ LaserTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (notInSet<uint32_t>(s_runs_,runn))
     s_runs_.insert(runn);
 
-  algo_->process(*eventData_);
-}
+  if (firstEvent_) {
+    // Because the framework geniuses got rid of this capability in beginJob!
+    algo_->beginJob(iSetup,*eventData_);
+    firstEvent_ = false;
+  }
 
-// ------------ method called once each job just before starting event loop  ------------
-void 
-LaserTimingAnalyzer::beginJob(const edm::EventSetup& es)
-{
-  algo_->beginJob(es);
+  algo_->process(*eventData_);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
