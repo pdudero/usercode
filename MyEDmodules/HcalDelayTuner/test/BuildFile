@@ -15,3 +15,7 @@
 <library file=DelaySettingPlotter.cc name=DelaySettingPlotter>
 	<flags EDM_PLUGIN=1>
  </library>
+
+<library file=HFscanPostAnal.cc name=HFscanPostAnal>
+	<flags EDM_PLUGIN=1>
+ </library>
