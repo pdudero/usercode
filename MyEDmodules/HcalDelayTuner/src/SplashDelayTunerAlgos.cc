@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.12 2010/03/01 08:20:01 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.13 2010/03/14 16:07:18 dudero Exp $
 //
 //
 
@@ -321,9 +321,10 @@ SplashDelayTunerAlgos::process(const myEventData& ed)
 //======================================================================
 
 void
-SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
+SplashDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup,
+				const myEventData& ed)
 {
   timecor_->init(iSetup);
-  HcalDelayTunerAlgos::beginJob(iSetup);
+  HcalDelayTunerAlgos::beginJob(iSetup,ed);
 }
 

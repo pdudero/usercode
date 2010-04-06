@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.9 2010/02/26 23:37:24 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.10 2010/03/01 06:52:17 dudero Exp $
 //
 //
 
@@ -46,7 +46,7 @@ public:
   ~SplashDelayTunerAlgos() {}
 
   void process      (const myEventData&);
-  void beginJob     (const edm::EventSetup&);
+  void beginJob     (const edm::EventSetup&,const myEventData&);
 
 private:
 

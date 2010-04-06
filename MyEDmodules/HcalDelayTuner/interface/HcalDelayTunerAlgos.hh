@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.14 2010/03/26 15:52:11 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.15 2010/03/29 13:19:58 dudero Exp $
 //
 //
 
@@ -47,7 +47,7 @@ public:
   virtual ~HcalDelayTunerAlgos() {}
 
   virtual void process  (const myEventData&);
-  virtual void beginJob (const edm::EventSetup& iSetup);
+  virtual void beginJob (const edm::EventSetup& iSetup,const myEventData& ed);
   virtual void endJob();
 
   void detChannelTimes(TimesPerDetId& chtimes);
@@ -145,8 +145,8 @@ protected:
   void bookHEdetail       (myAnalHistos *myAH);
   void bookD1D2detail     (myAnalHistos *myAH);
   void bookHFbasicProfiles(myAnalHistos *myAH);
-  void bookHFdetail       (myAnalHistos *myAH);
   void bookPerChanDetail  (myAnalHistos *myAH);
+  void computeAverages    (myAnalHistos *myAH);
 
   // ----------member data ---------------------------
 
@@ -258,6 +258,8 @@ protected:
 
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
   std::string st_TS34ratioProfHFPd1_,st_TS34ratioProfHFPd2_,st_TS34ratioProfHFMd1_,st_TS34ratioProfHFMd2_;
+  std::string st_TS34ratioPolarProfHFPd1_,st_TS34ratioPolarProfHFPd2_;
+  std::string st_TS34ratioPolarProfHFMd1_,st_TS34ratioPolarProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
   std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;

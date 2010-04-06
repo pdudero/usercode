@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.11 2010/03/27 21:22:59 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.12 2010/03/29 13:39:54 dudero Exp $
 //
 //
 
@@ -718,9 +718,9 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
 //======================================================================
 
 void
-BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup)
+BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup,const myEventData& ed)
 {
-  HcalDelayTunerAlgos::beginJob(iSetup);
+  HcalDelayTunerAlgos::beginJob(iSetup,ed);
 
   std::cout << "----------------------------------------"  << "\n";
   std::cout << "Cuts being applied for " << mysubdetstr_   << ":\n";

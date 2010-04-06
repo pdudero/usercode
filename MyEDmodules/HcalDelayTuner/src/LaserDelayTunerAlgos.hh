@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.6 2010/03/24 01:08:32 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.7 2010/03/26 15:41:14 dudero Exp $
 //
 //
 
@@ -50,7 +50,7 @@ public:
   LaserDelayTunerAlgos(const edm::ParameterSet&);
   ~LaserDelayTunerAlgos() {}
   void process(const myEventData& ed);
-  void beginJob(const edm::EventSetup&);
+  void beginJob(const edm::EventSetup&,const myEventData&);
   void endAnal();
 
 private:
