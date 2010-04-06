@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.9 2010/03/24 01:18:59 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.10 2010/03/26 16:31:08 dudero Exp $
 //
 //
 
@@ -129,7 +129,7 @@ public:
   explicit myAnalHistosTC(const std::string& dirdescr);
   explicit myAnalHistosTC(const std::string& dirdescr,
 			  TFileDirectory& subdir);
-  ~myAnalHistosTC();
+  ~myAnalHistosTC() {}
 
   template<class T> T *book1d(const HistoParams_t& pars, bool verbose=true);
   template<class T> T *book2d(const HistoParams_t& pars, bool verbose=true);
@@ -200,7 +200,8 @@ public:
 
   void setCurDetId(DetId detId) { curDetID_ = detId; }
 
-  TFileDirectory *dir(void) { return dir_; }
+  TFileDirectory     *dir(void) { return dir_;    }
+  const std::string& name(void) { return myname_; }
 
 #if 0
   // common usages:
@@ -257,6 +258,7 @@ myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr)
   hm_histos_af_ = new myHashmap_t;
 }
 
+#if 0
 template <class Tkey>
 myAnalHistosTC<Tkey>::~myAnalHistosTC()
 {
@@ -264,6 +266,7 @@ myAnalHistosTC<Tkey>::~myAnalHistosTC()
   delete hm_histos_;
   delete hm_histos_af_;
 }
+#endif
 
 //======================================================================
 
