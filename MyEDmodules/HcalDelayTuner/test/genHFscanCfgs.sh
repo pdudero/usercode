@@ -119,19 +119,19 @@ cp anal_setup_hfscan.rc anal_setup.rc
 BASENAME=`printf "$BASENAMEFMT" 132658 5`
 echo "ANALOUTPUT=$BASENAME.root" >> anal_setup.rc
 echo "CFGFILE=$BASENAME.py" >> anal_setup.rc
-echo "LSRANGES=\'132658:1-132658:\'" >> anal_setup.rc
+echo "LSRANGES=\'132658:1-132658:50\'" >> anal_setup.rc
 ./genbtapy.sh 132658
 
 cp anal_setup_hfscan.rc anal_setup.rc
 BASENAME=`printf "$BASENAMEFMT" 132658 4`
 echo "ANALOUTPUT=$BASENAME.root" >> anal_setup.rc
 echo "CFGFILE=$BASENAME.py" >> anal_setup.rc
-echo "LSRANGES=\'132658:-132658:\'" >> anal_setup.rc
+echo "LSRANGES=\'132658:56-132658:120\'" >> anal_setup.rc
 ./genbtapy.sh 132658
 
 cp anal_setup_hfscan.rc anal_setup.rc
-BASENAME=`printf "$BASENAMEFMT" 132658 2`
+BASENAME=`printf "$BASENAMEFMT" 132658 3`
 echo "ANALOUTPUT=$BASENAME.root" >> anal_setup.rc
 echo "CFGFILE=$BASENAME.py" >> anal_setup.rc
-echo "LSRANGES=\'132658:-132658:\'" >> anal_setup.rc
+echo "LSRANGES=\'132658:126-132658:MAX\'" >> anal_setup.rc
 ./genbtapy.sh 132658
