@@ -13,14 +13,17 @@ echo "      Please choose"
        echo '   '
 
 echo "  1 - Run 130910 - Mar. 14, 2010"
+echo "  2 - Run 132440 - Mar. 30, 2010"
        echo '   '
 
 read VAR1
 
 SETUPFILE=anal_setup.rc
 
+echo "PROCESSNAME=BEAMTIMEANAL" >${SETUPFILE}
+
 case $VAR1 in
-    "1") echo "RUN=130910bdskim"        >${SETUPFILE}
+    "1") RUN=130910bdskim
 	echo "GLOBALTOFFSET=0.0"        >>${SETUPFILE}
 #       echo "BAD_EVENT_LIST="          >>${SETUPFILE}
 	echo "BXNUMS=51"                >>${SETUPFILE}
@@ -44,8 +47,27 @@ case $VAR1 in
 #	echo 'EVRANGES=\"130910:1-130910:10000\",\"130910:10001-130910:20000\"' >> ${SETUPFILE}
 	echo 'LSRANGES=\"130910:250-130910:MAX\"' >> ${SETUPFILE}
        ;;
+
+    "2") cat anal_setup_1stPhys.rc >>${SETUPFILE}
+	RUN=132440
+#	DATASET=/store/express/Commissioning10/ExpressPhysics/FEVT/v7/000
+#	DATASET=/store/data/Commissioning10/MinimumBias/RAW-RECO/v7/000
+#	echo "GLOBALTOFFSET=0.0"        >>${SETUPFILE}
+#       echo "BAD_EVENT_LIST="          >>${SETUPFILE}
+	echo "BXNUMS=1"                 >>${SETUPFILE}
+#	echo 'LSRANGES=\"132440:124-132440:MAX\"' >> ${SETUPFILE}
+#	echo "DOTREE=False"             >>${SETUPFILE}
+       ;;
 esac
-
-echo "ANALOUTPUTFMT='bta_%s.root'"      >>${SETUPFILE}
-
-./runBeamAnalBatch.sh
+#./runBeamAnalBatch.sh
+# Use cron job to pick it up
+#
+#cat >btajc.rc<<EOF
+#ANALFILE=${SETUPFILE}
+#DATASET=${DATASET}
+#RUNS=${RUN}
+#EOF
+#tar czvf btajc.tz btajc.rc ${SETUPFILE}
+#mv btajc.tz ~/public/inbox
+#
+./genbtapy.sh ${RUN}
