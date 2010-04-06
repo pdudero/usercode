@@ -46,7 +46,7 @@ cat > ${CFGFILE} << EOF1
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BEAMTIMEANAL2")
+process = cms.Process("${PROCESSNAME}")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( ${EVENTLIMIT} )
 )
@@ -74,7 +74,6 @@ then
 else
     INCFILE=`printf "run%sfiles_cfi" $RUN`
 fi
-
 cat >>${CFGFILE} <<EOF2
 process.load("MyEDmodules.HcalDelayTuner.${INCFILE}")
 EOF2
@@ -257,6 +256,34 @@ fi
 
 #==================================================
 
+if (( ${DOCLEANING} ))
+then
+    cat >>${CFGFILE} <<EOF999_999
+process.oneGoodVertexFilter = cms.EDFilter("VertexSelector",
+   src = cms.InputTag("offlinePrimaryVertices"),
+#   cut = cms.string("!isFake && tracksSize > 3 && abs(z) <= 15 && position.Rho <= 2"),
+   cut = cms.string("!isFake && ndof >= 5 && abs(z) <= 15"),
+   filter = cms.bool(True)   # otherwise it won't filter the events, just produce an empty vertex collection.
+)
+
+process.noscraping = cms.EDFilter("FilterOutScraping",
+                                applyfilter = cms.untracked.bool(True),
+                                debugOn = cms.untracked.bool(True),
+                                numtrack = cms.untracked.uint32(10),
+                                thresh = cms.untracked.double(0.25)
+                                )
+)
+EOF999_999
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.noscraping*process.oneGoodVertexFilter"
+    else
+	MYPATH="process.noscraping*process.oneGoodVertexFilter"
+    fi
+fi
+
+#==================================================
+
 cat >>${CFGFILE} <<EOF10
 process.load("MyEDmodules.HcalDelayTuner.beamtiminganal_cfi")
 process.hbtimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
@@ -308,7 +335,7 @@ process.zdctimeanal.minHitGeV            = cms.double(${ZDC_MINHITGEV})
 process.zdctimeanal.recHitEscaleMaxGeV   = cms.double(${MAXGEV2PLOT}.5)
 EOF10
 
-if (( ${#DOUNPACKHCAL} || ${#HASDIGIS} ))
+if (( ${#DOUNPACKALL} || ${#DOUNPACKHCAL} || ${#HASDIGIS} ))
     then
 cat >> ${CFGFILE}<<EOF11
 # Need conditions to convert digi ADC to fC in the analyzer
@@ -324,7 +351,7 @@ fi
 
 if (( ${#DOTREE} ))
     then
-    echo DOTREE=${DOTREE}, ${#DOTREE}
+    echo DOTREE=${DOTREE}
 cat >> ${CFGFILE}<<EOF12
 process.hbtimeanal.doTree=cms.untracked.bool(${DOTREE})
 process.hetimeanal.doTree=cms.untracked.bool(${DOTREE})
