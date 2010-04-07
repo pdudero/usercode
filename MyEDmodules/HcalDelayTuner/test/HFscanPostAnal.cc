@@ -13,31 +13,37 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HFscanPostAnal.cc,v 1.7 2010/03/05 13:20:16 dudero Exp $
+// $Id: HFscanPostAnal.cc,v 1.1 2010/04/06 09:31:58 dudero Exp $
 //
 //
 
 
 // system include files
+#include <string>
+#include <map>
+#include <vector>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 #include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
+#include "CommonTools/Utils/interface/TFileDirectory.h"
+#include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerXML.hh"
 
-#include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
-#include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/SplashDelayTunerAlgos.hh"
-
+#include "TMath.h"
 #include "TFile.h"
 #include "TH2I.h"
 #include "TProfile2D.h"
+#include "TGraph.h"
 
 //
 // class declaration
@@ -56,13 +62,14 @@ private:
   void collectOptimizedDigis(TH2I *hoptset,int depth);
   void genSettingTable(TH2I *optdelays,int depth);
 
-  void plotHF(const DelaySettings& settings,
-	      TProfile2D*mapHFPd1,TProfile2D*mapHFPd2,
-	      TProfile2D*mapHFMd1,TProfile2D*mapHFMd2,TH1D*dist);
+  void graphSettingsPerID(TProfile2D *tp,int depth,int delay);
 
   // ----------member data ---------------------------
 
-  HcalLogicalMap *lmap_;
+  HcalDelayTunerXML *xml_;
+  DelaySettings      optsettings_;
+  HcalLogicalMap    *lmap_;
+  bool               writeBricks_;
 
   std::map<int,TFile *> m_filesPerSetting_;
   TProfile2D *tphfpd1opt_;
@@ -74,6 +81,10 @@ private:
   TH2I       *optdel_hfpd2_;
   TH2I       *optdel_hfmd1_;
   TH2I       *optdel_hfmd2_;
+
+  TFileDirectory *graphdir_;
+  std::map<std::string,TGraph *> m_graphsPerID_;
+
 };
 
 //
@@ -128,11 +139,13 @@ static const double hftwrEdges[] = {  // in meters
   1.570- 0.207
 };
 
-inline unsigned int str2int(const string& str) {
+inline unsigned int str2int(const std::string& str) {
   return (unsigned int)strtoul(str.c_str(),NULL,0);
 }
 
 //======================================================================
+
+using namespace std;
 
 void genAdditionalProfiles(TH2 *tp, int depth)
 {
@@ -210,6 +223,22 @@ void refineTimesAndDelays(TProfile2D *p2opt,
 
 //======================================================================
 
+template<class T>
+inline int sign(T _x) { return (_x>=0)? 1:-1; }
+
+void patchRing29(TH2I *tp2)
+{
+  int zside = sign<double>(tp2->GetXaxis()->GetBinCenter(tp2->GetBin(1,1)));
+  int ibinx29 = (zside>0) ? 1 : 13;
+
+  for (int ibiny=1; ibiny<=tp2->GetNbinsY(); ibiny++) {
+    int delay = (int)tp2->GetBinContent(ibinx29+zside,ibiny);
+    tp2->SetBinContent(ibinx29,ibiny,delay);
+  }
+}
+
+//======================================================================
+
 void zeroize(TH2I *key)
 {
   for (int ibin=1; ibin<=key->GetNbinsX()*key->GetNbinsY(); ibin++)
@@ -229,6 +258,8 @@ HFscanPostAnal::HFscanPostAnal(const edm::ParameterSet& iConfig)
   edm::Service<TFileService> fs;
 
   std::cerr << "-=-=-=-=-=HFscanPostAnal Constructor=-=-=-=-=-" << std::endl;
+
+  writeBricks_ = iConfig.getUntrackedParameter<bool>("writeBricks",false);
 
   std::vector<std::string> fnamesPerSetting =
     iConfig.getParameter<std::vector<std::string> >("fileVectorOnePerSetting");
@@ -265,43 +296,13 @@ HFscanPostAnal::HFscanPostAnal(const edm::ParameterSet& iConfig)
   zeroize(optdel_hfpd2_);
   zeroize(optdel_hfpd1_);
   zeroize(optdel_hfpd1_);
+
+  graphdir_  = new TFileDirectory (fs->mkdir("SettingGraphsPerID"));
 }
 
 HFscanPostAnal::~HFscanPostAnal() {
   std::cerr << "-=-=-=-=-=HFscanPostAnal Destructor=-=-=-=-=-" << std::endl;
 }
-
-#if 0
-//======================================================================
-
-void
-HFscanPostAnal::plotHF(const DelaySettings& settings,
-			    TProfile2D *mapHFPd1, TProfile2D *mapHFPd2,
-			    TProfile2D *mapHFMd1, TProfile2D *mapHFMd2,
-			    TH1D *dist)
-{
-  cout <<"plotHF" << endl;
-  int settingd1, settingd2;
-  DelaySettings::const_iterator it;
-  for (int iphi=1; iphi <= 71; iphi+=2) {
-    for (int ieta=29; ieta<=41; ieta++) {
-      double angle  = TMath::Pi()*(iphi-1)/36.;
-      double radius = hftwrRadii[41-ieta];
-      // Plus side
-      settingd1 = getSetting4(settings,HcalForward,ieta,iphi,1);
-      settingd2 = getSetting4(settings,HcalForward,ieta,iphi,2);
-      if (settingd1 != BADVAL) { mapHFPd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
-      if (settingd2 != BADVAL) { mapHFPd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
-
-      // Minus side
-      settingd1 = getSetting4(settings,HcalForward,-ieta,iphi,1);
-      settingd2 = getSetting4(settings,HcalForward,-ieta,iphi,2);
-      if (settingd1 != BADVAL) { mapHFMd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
-      if (settingd2 != BADVAL) { mapHFMd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
-    }
-  }
-}                                              // HFscanPostAnal::plotHF
-#endif
 
 //======================================================================
 
@@ -352,6 +353,36 @@ HFscanPostAnal::collectOptimizedDigis(TH2I *hoptset,int depth)
 
 //======================================================================
 
+void HFscanPostAnal::graphSettingsPerID(TProfile2D *tp,int depth,int delay)
+{
+  for (int ibinx=1; ibinx<=tp->GetNbinsX(); ibinx++) {
+    for (int ibiny=1; ibiny<=tp->GetNbinsY(); ibiny++) {
+      if (!tp->GetBinEntries(tp->GetBin(ibinx,ibiny))) continue;
+
+      double ratio   = tp->GetBinContent(ibinx,ibiny);
+      double dieta   = tp->GetXaxis()->GetBinCenter(ibinx);
+      double diphi   = tp->GetYaxis()->GetBinCenter(ibiny);
+      if (!HcalDetId::validDetId(HcalForward,(int)dieta,(int)diphi,depth)) continue;
+      stringstream detIDstr;
+      detIDstr << HcalDetId(HcalForward,(int)dieta,(int)diphi,depth);
+
+      TGraph *gr;
+      std::map<std::string,TGraph *>::const_iterator it = m_graphsPerID_.find(detIDstr.str());
+      if (it == m_graphsPerID_.end()) {
+	gr = graphdir_->make<TGraph>();
+	gr->SetName(detIDstr.str().c_str());
+	gr->SetTitle(detIDstr.str().c_str());
+	m_graphsPerID_.insert(std::pair<std::string,TGraph *>(detIDstr.str(),gr));
+      } else 
+	gr = it->second;
+
+      gr->SetPoint(gr->GetN(),delay,ratio);
+    }
+  }
+}                                  // HFscanPostAnal::graphSettingsPerID
+
+//======================================================================
+
 void
 HFscanPostAnal::genSettingTable(TH2I *optdelays,int depth)
 {
@@ -367,18 +398,24 @@ HFscanPostAnal::genSettingTable(TH2I *optdelays,int depth)
  
   for (int ibinx=1; ibinx<=optdelays->GetNbinsX(); ibinx++) {
     for (int ibiny=1; ibiny<=optdelays->GetNbinsY(); ibiny++) {
-      int ieta = (int)optdelays->GetXaxis()->GetBinCenter(ibinx);
-      int iphi = (int)optdelays->GetYaxis()->GetBinCenter(ibiny);
-
+      int ieta  = (int)optdelays->GetXaxis()->GetBinCenter(ibinx);
+      int iphi  = (int)optdelays->GetYaxis()->GetBinCenter(ibiny);
+      int delay = (int)optdelays->GetBinContent(ibinx,ibiny);
       if (!HcalDetId::validDetId(HcalForward,ieta,iphi,depth)) continue;
 
       HcalDetId detID(HcalForward,ieta,iphi,depth);
       HcalFrontEndId feID = lmap_->getHcalFrontEndId(detID);
+#if 0
+      if (abs(ieta) == 29) // take the setting for abs(ieta)=30, same phi
+	delay = (int)optdelays->GetBinContent(ibinx+sign(ieta),ibiny);
+#endif
+      optsettings_.insert
+	  (std::pair<HcalFrontEndId,int>(feID,delay));
 
       fprintf(fp,"HF\t%3d\t%3d\t%3d\t%s\t%2d\t%3d\t%2d\t%2d\n",
 	      detID.ieta(),detID.iphi(),detID.depth(),
 	      feID.rbx().c_str(),feID.rm(),feID.qieCard(),feID.adc(),
-	      (int)optdelays->GetBinContent(ibinx,ibiny));
+	      delay);
     }
   }
   fclose(fp);
@@ -435,6 +472,11 @@ HFscanPostAnal::endJob()
     refineTimesAndDelays(tphfpd2opt_,tphfpd2,optdel_hfpd2_,delay);
     refineTimesAndDelays(tphfmd1opt_,tphfmd1,optdel_hfmd1_,delay);
     refineTimesAndDelays(tphfmd2opt_,tphfmd2,optdel_hfmd2_,delay);
+
+    graphSettingsPerID(tphfpd1,1,delay);
+    graphSettingsPerID(tphfpd2,2,delay);
+    graphSettingsPerID(tphfmd1,1,delay);
+    graphSettingsPerID(tphfmd2,2,delay);
   } // delay file loop
 
   // make additional profiles
@@ -443,6 +485,11 @@ HFscanPostAnal::endJob()
   genAdditionalProfiles(tphfpd2opt_,2);
   genAdditionalProfiles(tphfmd1opt_,1);
   genAdditionalProfiles(tphfmd2opt_,2);
+
+  patchRing29(optdel_hfpd1_);
+  patchRing29(optdel_hfpd2_);
+  patchRing29(optdel_hfmd1_);
+  patchRing29(optdel_hfmd2_);
 
   genAdditionalProfiles(optdel_hfpd1_,1);
   genAdditionalProfiles(optdel_hfpd2_,2);
@@ -456,11 +503,16 @@ HFscanPostAnal::endJob()
 
   // generate settings per feID.
   //
+  optsettings_.clear();
   genSettingTable(optdel_hfpd1_,1);
   genSettingTable(optdel_hfpd2_,2);
   genSettingTable(optdel_hfmd1_,1);
   genSettingTable(optdel_hfmd2_,2);
 
+  if (writeBricks_) {
+    HcalDelayTunerXML *xml = new HcalDelayTunerXML();
+    xml->writeDelayBricks(optsettings_);
+  }
 
 } // HFscanPostAnal::endJob
 
