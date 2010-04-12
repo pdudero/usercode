@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.cc,v 1.4 2009/11/30 09:45:35 dudero Exp $
+// $Id: HcalDelayTunerInput.cc,v 1.5 2010/02/18 21:08:05 dudero Exp $
 //
 //
 
@@ -97,6 +97,81 @@ HcalDelayTunerInput::getSamplingDelays (DelaySettings& delays)
     HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
     delays.insert(std::pair<HcalFrontEndId,int>(feID,setting));
     //cout << "read in " << feID << " old setting = " << setting << endl;
+  }
+
+  cout << "Read in sampling delay settings from " << xmlfileNames_[0] << endl;
+
+#if 0
+  // Dump for test.
+  cout<< "FrontEnd ID\t\tSetting" << endl;
+  DelaySettings::const_iterator it;
+  for (it=delays.begin(); it!=delays.end(); it++) {
+    cout << it->first << '\t' << it->second << endl;
+  }
+#endif
+}                               // HcalDelayTunerInput::getSamplingDelays
+
+// ======================================================================
+
+// Parses a list of xml files and returns a map of delay settings,
+// one for each channel
+//
+void
+HcalDelayTunerInput::getSamplingDelays (SettingsPerDetId& delays)
+{
+  if (!xmlfileNames_.size()) {
+    edm::LogWarning("Called getSamplingDelays without defining filename vector!");
+    return; // nothing to do...
+  }
+
+  if (!xmlfileNames_[0].size()) {
+    edm::LogWarning("Filename 0 is empty, aborting");
+    return; // nothing to do...
+  }
+
+  int ieta;
+  int iphi;
+  int depth;
+  int setting; // 0-24
+
+  char line[128];
+
+  delays.clear();
+
+  // Here the files are really just white-space-separated columns of
+  // RBX RM card qie delay settings
+  //
+  FILE *fp = fopen(xmlfileNames_[0].c_str(),"r");
+  if (!fp) {
+    throw cms::Exception("File doesn't exist") << xmlfileNames_[0];
+  }
+
+  while (!feof(fp) && fgets(line,128,fp)) {
+    if (line[0]=='#') continue;
+    int num = sscanf(line,settingScanFmt_.c_str(),
+		     &iphi, &ieta, &depth, &setting);
+    if (num != 4) 
+      throw cms::Exception("ScanFmt string doesn't match input")
+	<< line << settingScanFmt_ << endl;
+
+    HcalSubdetector subdet;
+    if (depth == 4) subdet = HcalOuter;
+    else if (abs(ieta)  > 29) subdet = HcalForward;
+    else if (abs(ieta)  < 16) subdet = HcalBarrel;
+    else if (abs(ieta) == 16) subdet = (depth==3) ? HcalEndcap : HcalBarrel;
+    else if (abs(ieta) == 29) {
+      if (depth == 3)  subdet = HcalEndcap;
+      else {
+	cerr << "subdet HF is assumed, ieta=" << ieta << ", depth=" << depth << endl;
+	subdet = HcalForward;
+      }
+    }
+    else subdet = HcalEndcap;
+
+    if (HcalDetId::validDetId(subdet,ieta,iphi,depth)) {
+      HcalDetId detId(subdet,ieta,iphi,depth);
+      delays.insert(std::pair<HcalDetId,int>(detId,setting));
+    }
   }
 
   cout << "Read in sampling delay settings from " << xmlfileNames_[0] << endl;

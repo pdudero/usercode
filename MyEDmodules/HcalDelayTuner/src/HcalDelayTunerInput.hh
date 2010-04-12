@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.hh,v 1.3 2009/12/04 14:40:28 dudero Exp $
+// $Id: HcalDelayTunerInput.hh,v 1.4 2010/02/18 21:08:05 dudero Exp $
 //
 //
 
@@ -36,6 +36,7 @@
 typedef std::map<HcalFrontEndId,int>   DelaySettings;
 typedef std::map<HcalFrontEndId,float> TimesPerFEchan;
 typedef std::map<HcalDetId,float>      TimesPerDetId;
+typedef std::map<HcalDetId,int>        SettingsPerDetId;
 
 //
 // class declaration
@@ -59,7 +60,8 @@ public:
   // Parses a list of xml files and returns a map of delay settings,
   // one for each channel
   //
-  void getSamplingDelays  (DelaySettings& delays);
+  void getSamplingDelays  (DelaySettings&    delays);
+  void getSamplingDelays  (SettingsPerDetId& delays);
 
   // Parses a list of xml files and returns a map of delay settings,
   // one for each channel
