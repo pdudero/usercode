@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.7 2010/03/27 18:36:04 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.8 2010/04/06 10:46:38 dudero Exp $
 //
 //
 
@@ -49,6 +49,7 @@ public:
 		     const myEventData& ed);
 
 private:
+  typedef HFRecHitCollection::const_iterator HFRecHitIt;
 
   // ---------- private methods ---------------------------
 
@@ -62,30 +63,43 @@ private:
   void   bookHistos4allCuts     (void);
   void   bookHistos4lastCut     (void);
 
+  void   fillPerEvent           (void);
+
   void   fillHistos4cut         (const std::string& cutstr,
 				 bool filldetail=false);
 
-  template<class Digi>
-  void processZDCDigi           (const Digi& df);
+  void   logLSBX                (const std::string& cutstr);
 
   template<class Digi>
-  void   processDigi            (const Digi& df);
+  void   processZDCDigi         (const Digi& df);
+
+  template<class Digi>
+  int    processDigi            (const Digi& df);
 
   template<class Digi,class RecHit>
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
   void   findConfirmedHits      (const edm::Handle<HFRecHitCollection>& rechithandle);
 
+  void   processHFconfirmedHits (const HFRecHitIt& hitit1,
+				 const HFRecHitIt& hitit2);
+
+  void   processHFunconfirmedHit(void);
+
   // ----------member data ---------------------------
 
   BeamHitTimeCorrector *timecor_; // beam hit time (vertex displacement) corrector
 
+  float avgTminus_,  avgTplus_;
+  int   nhitsminus_, nhitsplus_;
+  float totalEminus_, totalEplus_;
+
   // for HF, map of confirmed hits:
-  typedef HFRecHitCollection::const_iterator HFRecHitIt;
   std::map<uint32_t,std::pair<HFRecHitIt,HFRecHitIt> > m_confirmedHits_;
 
   // names of cuts
   std::string st_cutNone_, st_cutMinGeV_, st_cutFlags_, st_cutBx_, st_cutEv_, st_cutPMT_;
+  std::string st_cutOutOfTime_;
 
   // The collection of names of histos per subdetector
   std::string st_rhCorTimesPlusVsMinus_;
@@ -108,6 +122,11 @@ private:
 
   std::string st_TcorVsThit_;
   std::string st_LvsSHF_;
+  std::string st_LvsSpmtHitsHF_;
+  std::string st_LvsSucAndPMThitsHF_;
+  std::string st_ts43ratioVsEallHFucAndPMT_;
+  std::string st_ts43ratioVsEallHFverified_;
+  std::string st_ts43ratioVsEallHFPMT_;
 };
 
 #endif // _MYEDMODULESBEAMDELAYTUNERALGOS
