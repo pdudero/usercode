@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.5 2010/04/06 10:46:50 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.6 2010/04/06 11:22:16 dudero Exp $
 //
 //
 
@@ -115,7 +115,10 @@ BeamTimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 BeamTimingAnalyzer::endJob() {
-  algo_->endJob();
+  if (!firstEvent_) {
+    algo_->endJob();
+  } else
+    cout << "NEVER GOT A SINGLE EVENT TO PROCESS!" << endl;
 }
 
 //define this as a plug-in
