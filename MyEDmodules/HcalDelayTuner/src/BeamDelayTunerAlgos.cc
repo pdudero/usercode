@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.12 2010/03/29 13:39:54 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.13 2010/04/06 10:46:27 dudero Exp $
 //
 //
 
@@ -71,6 +71,11 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
   for (size_t i=0; i<acceptedBxVec.size(); i++)
     acceptedBxNums_.insert(acceptedBxVec[i]);
 
+  std::vector<int> acceptedPkTSvec =
+    iConfig.getParameter<vector<int> >("acceptedPkTSnumbers");
+  for (size_t i=0; i<acceptedPkTSvec.size(); i++)
+    acceptedPkTSnums_.insert(acceptedPkTSvec[i]);
+
   // cut string vector initialized in order
   // all cuts applied on top of the previous one
   //
@@ -99,7 +104,14 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
   cutstr <<  "cut" << v_cuts_.size() << "minHitGeV";
   st_cutMinGeV_ = cutstr.str();
   v_cuts_.push_back(st_cutMinGeV_);
-  
+
+  if (!acceptedPkTSnums_.empty()) {
+    cutstr.str("");
+    cutstr <<  "cut" << v_cuts_.size() << "outOfTime";
+    st_cutOutOfTime_ = cutstr.str();
+    v_cuts_.push_back(st_cutOutOfTime_);
+  }
+
   if (mysubdet_ == HcalForward) {
     cutstr.str("");
     cutstr <<  "cut" << v_cuts_.size() << "ncHits"; // non-correlated (PMT or otherwise) hits
@@ -238,7 +250,7 @@ BeamDelayTunerAlgos::fillHistos4cut(const std::string& cutstr,
   if ((mysubdet_ == HcalForward) ||
       (mysubdet_ == HcalOther) ) {
     myAnalHistos *myAH =   getHistos4cut(cutstr);
-    myAH->fill2d<TH2D>(st_TcorVsThit_,hittime_,correction_ns_);
+    myAH->fill2d<TH2F>(st_TcorVsThit_,hittime_,correction_ns_);
   }
 }                             // BeamDelayTunerAlgos::fillHistos4cut
 
@@ -257,6 +269,26 @@ BeamDelayTunerAlgos::bookHistos4lastCut(void)
   if (mysubdet_ == HcalForward) {
     // broken down by depth per Z-side and verified/PMT hits:
 
+    st_ts43ratioVsEallHFverified_ = "p2d_ts43ratioVsEallHFverified";
+    titlestr = "TS4/(TS3+TS4) vs Energy, verified hits, All HF, Run "+runnumstr_+";E (GeV); TS4/(TS3+TS4)";
+    add2dHisto(st_ts43ratioVsEallHFverified_,titlestr,
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       20,0.0,1.0,v_hpars2d);
+
+    st_ts43ratioVsEallHFPMT_ = "p2d_ts43ratioVsEallHFPMT";
+    titlestr = "TS4/(TS3+TS4) vs Energy, PMT hits, All HF, Run "+runnumstr_+";E (GeV); TS4/(TS3+TS4)";
+    add2dHisto(st_ts43ratioVsEallHFPMT_,titlestr,
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       20,0.0,1.0,v_hpars2d);
+
+    st_ts43ratioVsEallHFucAndPMT_ = "p2d_ts43ratioVsEallHFucAndPMT";
+    titlestr = "TS4/(TS3+TS4) vs Energy, Unconfirmed & PMT hits, All HF";
+    titlestr += ", Run "+runnumstr_+";E (GeV); TS4/(TS3+TS4)";
+
+    add2dHisto(st_ts43ratioVsEallHFucAndPMT_,titlestr,
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       20,0.0,1.0,v_hpars2d);
+
     st_OccVsEtaEnergyBothOverThresh_ = "h2d_OccVsEtaEnergyBothOverThreshHF";
     titlestr  = "Nhits/tower Vs i#eta & E_{hit,min}, L,S>E_{hit,min}, HF";
     titlestr += ", Run "+runnumstr_+"; |i#eta|; E_{hit,min} (GeV)";
@@ -267,6 +299,18 @@ BeamDelayTunerAlgos::bookHistos4lastCut(void)
               
     st_LvsSHF_ = "h2d_LvsSHF";
     add2dHisto(st_LvsSHF_, "Short E Vs. Long E, HF",
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       v_hpars2d);
+              
+    st_LvsSpmtHitsHF_ = "h2d_LvsSpmtHitsHF";
+    add2dHisto(st_LvsSpmtHitsHF_, "Short E Vs. Long E, PMT Hits, HF",
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+	       v_hpars2d);
+              
+    st_LvsSucAndPMThitsHF_ = "h2d_LvsSucAndPMThitsHF";
+    add2dHisto(st_LvsSucAndPMThitsHF_, "Short E Vs. Long E, PMT Hits & Unconfirmed Hits, HF",
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	       v_hpars2d);
@@ -298,6 +342,7 @@ BeamDelayTunerAlgos::bookHistos4lastCut(void)
     add2dHisto(st_rhCorTimesD1vsD2minusPMT_,titlestr,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_, v_hpars2d);
+
   }
 
   // These are not per-hit histos, but per-event histos
@@ -364,23 +409,24 @@ BeamDelayTunerAlgos::fillHFD1D2histos(const std::string& cutstr,
   if (absieta < 40)  { ntwr *= 2; }
   double weight = 1.0/(double)ntwr;
 
-  myAH->fill2d<TH2D>(st_RvsEtwr_,  calcR (L,S),(L+S),weight/13.);
-  myAH->fill2d<TH2D>(st_RvsIeta_,  calcR (L,S),absieta,weight);
-  myAH->fill2d<TH2D>(st_R2vsEtwr_, calcR2(L,S),(L+S),weight/13.);
-  myAH->fill2d<TH2D>(st_R2vsIeta_, calcR2(L,S),absieta,weight);
+  myAH->fill2d<TH2F>(st_RvsEtwr_,  calcR (L,S),(L+S),weight/13.);
+  myAH->fill2d<TH2F>(st_RvsIeta_,  calcR (L,S),absieta,weight);
+  myAH->fill2d<TH2F>(st_R2vsEtwr_, calcR2(L,S),(L+S),weight/13.);
+  myAH->fill2d<TH2F>(st_R2vsIeta_, calcR2(L,S),absieta,weight);
 
-  myAH->fill2d<TH2D>(st_LvsSHF_,L,S);
+  myAH->fill2d<TH2F>(st_LvsSHF_,L,S);
 
   int  zside = rhd1.id().zside();
 
   if (isHFPMThit(rhd1,rhd2.energy()) ||
       isHFPMThit(rhd2,rhd1.energy())   ) {
-    myAH->fill2d<TH2D>(((zside > 0) ?
+    myAH->fill2d<TH2F>(((zside > 0) ?
 			st_rhCorTimesD1vsD2plusPMT_ :
 			st_rhCorTimesD1vsD2minusPMT_),
 		       corTime1,corTime2);
+    myAH->fill2d<TH2F>(st_LvsSpmtHitsHF_,L,S);
   } else {
-    myAH->fill2d<TH2D>(((zside > 0) ?
+    myAH->fill2d<TH2F>(((zside > 0) ?
 			st_rhCorTimesD1vsD2plusVerified_ :
 			st_rhCorTimesD1vsD2minusVerified_),
 		       corTime1,corTime2);
@@ -388,7 +434,7 @@ BeamDelayTunerAlgos::fillHFD1D2histos(const std::string& cutstr,
     // occupancy plot:
     // Increment *all* bins with energy <= hit energy at the given ieta
     //
-    TH2D *h2Docc = myAH->get<TH2D>(st_OccVsEtaEnergyBothOverThresh_.c_str());
+    TH2F *h2Docc = myAH->get<TH2F>(st_OccVsEtaEnergyBothOverThresh_.c_str());
     for (int ibin=1;ibin<h2Docc->GetNbinsY(); ibin++) {
       double binmin = h2Docc->GetYaxis()->GetBinLowEdge(ibin);
       double binctr = h2Docc->GetYaxis()->GetBinCenter(ibin);
@@ -498,9 +544,12 @@ BeamDelayTunerAlgos::processZDCDigi(const Digi& df)
 // and sets member variables digifC_ and digiGeV_ as output.
 //
 template<class Digi>
-void
+int
 BeamDelayTunerAlgos::processDigi(const Digi& df)
 {
+  int   maxts = -1;
+  float maxta = -9e99;
+
   CaloSamples dfC; // dfC is the linearized (fC) digi
 
   digiGeV_.clear();
@@ -514,9 +563,185 @@ BeamDelayTunerAlgos::processDigi(const Digi& df)
     int capid=df[i].capid();
     digiGeV_[i] = (dfC[i]-calibs.pedestal(capid)); // pedestal subtraction
     digiGeV_[i]*= calibs.respcorrgain(capid) ;    // fC --> GeV
+    // Find and return maximum samples within the reco window.
+    if ((i>=firstsamp_) &&
+	(i<firstsamp_+nsamps_) &&
+	(digiGeV_[i] > maxta)) {
+      maxta = digiGeV_[i];
+      maxts = i;
+    }
   }
   digifC_ = dfC;
+
+  //float ts3   = digiGeV_[3];
+  //float ts4   = digiGeV_[4];
+  float ts3   = digifC_[3];
+  float ts4   = digifC_[4];
+  float denom = ts3+ts4;
+  ts43ratio_  = (denom > 0.0f) ? ts4/denom : -1.0;
+#if 0
+  for (int its=0; its<digisize; ++its)
+    printf("%5.1f\t",digiGeV_[its]);
+  printf ("ts43ratio=%5.3f\n",ts43ratio_);
+#endif
+
+  return maxts;
 }                                // BeamDelayTunerAlgos::processDigi
+
+
+//==================================================================
+
+void
+BeamDelayTunerAlgos::fillPerEvent(void)
+{
+  myAnalHistos *firstAH = getHistos4cut(st_cutNone_);
+  myAnalHistos *lastAH  = getHistos4cut(st_lastCut_);
+
+  logLSBX(st_cutNone_);
+  if (badEventSet_.empty() ||
+      notInSet<int>(badEventSet_,evtnum_))  {
+    if (!badEventSet_.empty())               logLSBX(st_cutEv_);
+    if (acceptedBxNums_.empty() ||
+	inSet<int>(acceptedBxNums_,bxnum_)) { 
+      if (!acceptedBxNums_.empty())          logLSBX(st_cutBx_);
+    }
+  }
+
+  firstAH->fill1d<TH1F>(st_totalEperEv_,fevtnum_,totalE_);
+
+  if ((totalEminus_ > 10.0) && (totalEplus_ > 10.0)) {
+    lastAH->fill2d<TProfile2D>(st_rhCorTimesPlusVsMinus_,avgTminus_,avgTplus_);
+    lastAH->fill1d<TH1F>(st_nHitsPlus_, nhitsplus_);
+    lastAH->fill1d<TH1F>(st_nHitsMinus_,nhitsminus_);
+    lastAH->fill1d<TH1F>(st_totalEplus_, totalEplus_);
+    lastAH->fill1d<TH1F>(st_totalEminus_,totalEminus_);
+
+    if (avgTminus_>50)
+cerr<<"avgTminus="<<avgTminus_<<", nhitsminus="<<nhitsminus_<<", totalEminus="<<totalEminus_<<endl;
+    if (avgTplus_ >50)
+cerr<<"avgTplus=" <<avgTplus_ <<", nhitsplus=" <<nhitsplus_ <<", totalEplus=" <<totalEplus_<<endl;
+  }
+
+}                               // BeamDelayTunerAlgos::fillPerEvent
+
+//==================================================================
+
+void BeamDelayTunerAlgos::logLSBX(const std::string& cutstr)
+{
+  myAnalHistos *myAH = getHistos4cut(cutstr);
+
+  int lsnum500 = (lsnum_/500) * 500;
+  stringstream range;
+  range << lsnum500 << "-" << lsnum500+499;
+  std::string hlsnumname = "h1d_lsnum"+range.str();
+  TH1F  *lsH = myAH->get<TH1F>(hlsnumname);
+
+  if (!lsH) {
+    string title = "Lumi Section Occupancy, LS="+range.str();
+    title += ", "+mysubdetstr_+", Run "+runnumstr_+"; LS Number";
+    lsH = myAH->dir()->make<TH1F>(hlsnumname.c_str(),title.c_str(),
+				  501,(float)lsnum500,lsnum500+500.f);
+  }
+
+  lsH->Fill(lsnum_);
+  myAH->fill1d<TH1F>(st_bxnum_,bxnum_);
+}                                    // BeamDelayTunerAlgos::logLSBX
+
+//==================================================================
+
+void
+BeamDelayTunerAlgos::processHFconfirmedHits(const HFRecHitIt& hitit1,
+					    const HFRecHitIt& hitit2)
+{
+  myAnalHistos *lastAH  = getHistos4cut(st_lastCut_);
+
+  // histos comparing short/long depths
+
+  float corTime1= hitit1->time() - timecor_->correctTime4(hitit1->id());
+  float corTime2= hitit2->time() - timecor_->correctTime4(hitit2->id());
+
+  // external hit corrections to apply to hits for these det IDs
+
+  TimesPerDetId::const_iterator it = exthitcors_.find(hitit1->id());
+  if (it != exthitcors_.end()) corTime1 -= it->second;
+  it = exthitcors_.find(hitit2->id());
+  if (it != exthitcors_.end()) corTime2 -= it->second;
+
+  if (detID_.depth() == 1) // so as not to double-count
+
+    // collects statistics for both PMT and verified hits
+    fillHFD1D2histos(st_cutPMT_,*hitit1, corTime1,*hitit2, corTime2);
+
+  // fill TS43ratio for PMT and verified hits
+
+  if (detID_.denseIndex() == hitit1->id().denseIndex()) {
+    if (isHFPMThit(*hitit1,hitit2->energy())) {
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFPMT_,     hitit1->energy(),ts43ratio_);
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFucAndPMT_,hitit1->energy(),ts43ratio_);
+    } else if (!isHFPMThit(*hitit2,hitit1->energy())) {
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFverified_,hitit1->energy(),ts43ratio_);
+    }
+  }
+  else if (detID_.denseIndex() == hitit2->id().denseIndex()) {
+    if (isHFPMThit(*hitit2,hitit1->energy())) {
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFPMT_,     hitit2->energy(),ts43ratio_);
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFucAndPMT_,hitit2->energy(),ts43ratio_);
+    } else if (!isHFPMThit(*hitit1,hitit2->energy())) {
+      lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFverified_,hitit2->energy(),ts43ratio_);
+    }
+  }
+
+  if (!isHFPMThit(*hitit1,hitit1->energy()) &&
+      !isHFPMThit(*hitit2,hitit2->energy())   ) {
+    fillHistos4cut(st_cutPMT_,st_cutPMT_==st_lastCut_);
+    
+    if (splitByEventRange_) {
+      std::map<std::string,edm::EventRange>::const_iterator erng=m_evRanges_.begin();
+      for (int i=0; erng!=m_evRanges_.end(); erng++,i++) {
+	edm::MinimalEventID thisevent(runnum_,evtnum_);
+	if (contains(erng->second,thisevent)) {
+	  fillHistos4cut(erng->first,true);
+	  if (detID_.depth() == 1) // so as not to double-count
+	    fillHFD1D2histos(erng->first,*hitit1, corTime1,*hitit2, corTime2);
+	}
+      }
+      std::map<std::string,edm::LuminosityBlockRange>::const_iterator lrng=m_lsRanges_.begin();
+      for (int i=0; lrng!=m_lsRanges_.end(); lrng++,i++) {
+	edm::LuminosityBlockID thisblock(runnum_,lsnum_);
+	if (contains(lrng->second,thisblock)) {
+	  fillHistos4cut(lrng->first,true);
+	  if (detID_.depth() == 1) // so as not to double-count
+	    fillHFD1D2histos(lrng->first,*hitit1, corTime1,*hitit2, corTime2);
+	}
+      }
+    } // split by event range
+  } // no PMT hits
+}                     // BeamDelayTunerAlgos::processHFconfirmedHits
+
+//==================================================================
+
+void
+BeamDelayTunerAlgos::processHFunconfirmedHit(void)
+{
+  myAnalHistos *lastAH  = getHistos4cut(st_lastCut_);
+
+  float L,S;
+
+  int curdepth   = detID_.depth();
+  int otherdepth = 1+(!(detID_.depth()-1));
+  if (curdepth==1) {
+    L=hitenergy_;
+    S=-5.0;
+  } else { // if (curdepth==2)
+    S=hitenergy_;
+    L=-5.0;
+  }
+
+  lastAH->fill2d<TH2F>(st_LvsSucAndPMThitsHF_,L,S);
+  lastAH->fill2d<TH2F>(st_ts43ratioVsEallHFucAndPMT_,
+		       hitenergy_,ts43ratio_);
+
+}                    // BeamDelayTunerAlgos::processHFunconfirmedHit
 
 //==================================================================
 
@@ -527,20 +752,19 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 {
   const edm::SortedCollection<RecHit>& rechits = *rechithandle;
 
-  myAnalHistos *myAH = getHistos4cut("cut0none");
-  myAH->fill1d<TH1F>(st_rhColSize_,rechits.size());
+  myAnalHistos *firstAH = getHistos4cut(st_cutNone_);
 
+  firstAH->fill1d<TH1F>(st_rhColSize_,rechits.size());
   if (digihandle.isValid()) {
-    myAH->fill1d<TH1F>(st_digiColSize_,digihandle->size());
+    firstAH->fill1d<TH1F>(st_digiColSize_,digihandle->size());
   }
 
-  totalE_ = 0.0;
-  float totalEplus = 0.0;
-  float totalEminus = 0.0;
+  totalE_ = totalEminus_ = totalEplus_ = 0.0;
+
   float weightedTplus = 0.0;
   float weightedTminus = 0.0;
 
-  int nhitsplus=0,nhitsminus=0;
+  nhitsplus_=nhitsminus_=0;
 
   unsigned idig=0;
   for (unsigned irh=0; irh < rechits.size(); ++irh, idig++) {
@@ -590,81 +814,55 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 	    (rh.id().subdetId() == 2)) { // ZDC
 	  processZDCDigi<Digi>(df);
 	} else {
-	  processDigi<Digi>(df);
+	  maxts_ = processDigi<Digi>(df);
 	}
 	break;
       }
     } // while
 
     fillHistos4cut(st_cutNone_);
+
     if (badEventSet_.empty() ||
 	notInSet<int>(badEventSet_,evtnum_))  {
       if (!badEventSet_.empty())               fillHistos4cut(st_cutEv_);
+
       if (acceptedBxNums_.empty() ||
 	  inSet<int>(acceptedBxNums_,bxnum_)) { 
 	if (!acceptedBxNums_.empty())          fillHistos4cut(st_cutBx_);
+
 	if (!(hitflags_ & globalFlagMask_))  { fillHistos4cut(st_cutFlags_);
+
 	  if (rh.energy() > minHitGeV_)      {
 	    fillHistos4cut(st_cutMinGeV_,st_cutMinGeV_==st_lastCut_);
 
-	    if (mysubdet_ == HcalForward) {
-	      map<uint32_t,pair<HFRecHitIt,HFRecHitIt> >::const_iterator it =
-		m_confirmedHits_.find(detID_.denseIndex());
-	      if (it != m_confirmedHits_.end()) {
-		
-		// histos comparing short/long depths
-		HFRecHitIt hitit1 = it->second.first;
-		HFRecHitIt hitit2 = it->second.second;
-		float corTime1= hitit1->time() - timecor_->correctTime4(hitit1->id());
-		float corTime2= hitit2->time() - timecor_->correctTime4(hitit2->id());
+	    if (acceptedPkTSnums_.empty() ||
+		inSet<int>(acceptedPkTSnums_,maxts_)) {
+	      if (!acceptedPkTSnums_.empty())
+		fillHistos4cut(st_cutOutOfTime_,st_cutOutOfTime_==st_lastCut_);
 
-		// external hit corrections to apply to hits for these det IDs
-		TimesPerDetId::const_iterator it = exthitcors_.find(hitit1->id());
-		if (it != exthitcors_.end()) corTime1 -= it->second;
-		it = exthitcors_.find(hitit2->id());
-		if (it != exthitcors_.end()) corTime2 -= it->second;
-
-		if (!isHFPMThit(*hitit1,hitit1->energy()) &&
-		    !isHFPMThit(*hitit2,hitit2->energy())   ) {
-		  fillHistos4cut(st_cutPMT_,st_cutPMT_==st_lastCut_);
-
-		  if (detID_.depth() == 1) // so as not to double-count
-		    fillHFD1D2histos(st_cutPMT_,*hitit1, corTime1,*hitit2, corTime2);
-
-		  if (splitByEventRange_) {
-		    std::map<std::string,edm::EventRange>::const_iterator erng=m_evRanges_.begin();
-		    for (int i=0; erng!=m_evRanges_.end(); erng++,i++) {
-		      edm::MinimalEventID thisevent(runnum_,evtnum_);
-		      if (contains(erng->second,thisevent)) {
-			fillHistos4cut(erng->first,true);
-			if (detID_.depth() == 1) // so as not to double-count
-			  fillHFD1D2histos(erng->first,*hitit1, corTime1,*hitit2, corTime2);
-		      }
-		    }
-		    std::map<std::string,edm::LuminosityBlockRange>::const_iterator lrng=m_lsRanges_.begin();
-		    for (int i=0; lrng!=m_lsRanges_.end(); lrng++,i++) {
-		      edm::LuminosityBlockID thisblock(runnum_,lsnum_);
-		      if (contains(lrng->second,thisblock)) {
-			fillHistos4cut(lrng->first,true);
-			if (detID_.depth() == 1) // so as not to double-count
-			  fillHFD1D2histos(lrng->first,*hitit1, corTime1,*hitit2, corTime2);
-		      }
-		    }
-		  } // split by event range
-		} // no PMT hits
-	      } // is confirmed hit
-	    } // is HF
+	      if (mysubdet_ == HcalForward) {
+		map<uint32_t,pair<HFRecHitIt,HFRecHitIt> >::const_iterator it =
+		  m_confirmedHits_.find(detID_.denseIndex());
+		if (it != m_confirmedHits_.end()) {
+		  processHFconfirmedHits(it->second.first,
+					 it->second.second);
+		} // is confirmed hit
+		else {
+		  processHFunconfirmedHit();
+		}
+	      } // is HF
+	    } // is in time
 
 	    // for comparison of +/- timing
 	    if (zside > 0) {
-	      totalEplus  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus++;
+	      totalEplus_  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus_++;
 	    } else {
-	      totalEminus += hitenergy_; weightedTminus += hitenergy_*corTime_; nhitsminus++;
+	      totalEminus_ += hitenergy_; weightedTminus += hitenergy_*corTime_; nhitsminus_++;
 	    }
-	  }
-	}
-      }
-    }
+	  } // minHitGeV
+	} // flag mask
+      } // bxnum
+    } // not bad event
 
     if (doTree_) tree_->Fill();
 
@@ -672,22 +870,10 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 
   // now that we have the total energy...
   // cout << evtnum_ << "\t" << totalE_ << endl;
+  avgTminus_ = weightedTminus/totalEminus_;
+  avgTplus_  = weightedTplus/totalEplus_;
 
-  myAH->fill1d<TH1F>(st_totalEperEv_,fevtnum_,totalE_);
-
-  if ((totalEminus > 10.0) && (totalEplus > 10.0)) {
-    float avgTminus = weightedTminus/totalEminus;
-    float avgTplus  = weightedTplus/totalEplus;
-    myAnalHistos *myAH =   getHistos4cut(st_lastCut_);
-    myAH->fill2d<TProfile2D>(st_rhCorTimesPlusVsMinus_,avgTminus,avgTplus);
-    myAH->fill1d<TH1F>(st_nHitsPlus_, nhitsplus);
-    myAH->fill1d<TH1F>(st_nHitsMinus_,nhitsminus);
-    myAH->fill1d<TH1F>(st_totalEplus_, totalEplus);
-    myAH->fill1d<TH1F>(st_totalEminus_,totalEminus);
-
-    if (avgTminus>50) cerr<<"avgTminus="<<avgTminus<<", nhitsminus="<<nhitsminus<<", totalEminus="<<totalEminus<<endl;
-    if (avgTplus >50) cerr<<"avgTplus=" <<avgTplus <<", nhitsplus=" <<nhitsplus <<", totalEplus=" <<totalEplus<<endl;
-  }
+  fillPerEvent();
 }                         // BeamDelayTunerAlgos::processDigisAndRecHits
 
 //======================================================================
@@ -699,7 +885,6 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
   HcalDelayTunerAlgos::process(ed);
 
   timecor_->init(ed.vertices());
-
 
   switch (mysubdet_) {
   case HcalBarrel:
