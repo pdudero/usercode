@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.15 2010/03/29 13:19:58 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.16 2010/04/06 10:46:38 dudero Exp $
 //
 //
 
@@ -94,10 +94,11 @@ protected:
   void    processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 #endif
-  void    fillDigiPulseHistos    (TProfile   *pulseHist,
-				  TProfile2D *pulseHistPerE,
-				  TProfile   *pulseHistE,
-				  TProfile2D *pulseHistEPerE);
+  void    fillDigiPulseHistos    (TProfile   *hpulse,
+				  TProfile2D *hpulsePerE=NULL,
+				  TProfile   *hpulseE=NULL,
+				  TProfile2D *hpulseEPerE=NULL,
+				  TH2F       *hts43ratio=NULL);
 
   virtual void add1dHisto        (const std::string& name, const std::string& title,
 				  int nbinsx, double minx, double maxx,
@@ -205,7 +206,7 @@ protected:
   float           hittime_;        // reconstructed hit time-globalToffset
   float           corTime_;        // corrected for both global offset and algo-specific
   float           correction_ns_;  // algo-specific hit time correction in nanoseconds
-
+  uint32_t        maxts_;
   uint32_t        hitflags_;
   float           hitenergy_;
 
@@ -214,6 +215,7 @@ protected:
 
   CaloSamples        digifC_;
   std::vector<float> digiGeV_;
+  float              ts43ratio_; // for HF.
 
   edm::ESHandle<HcalDbService>  conditions_;
 
@@ -222,6 +224,8 @@ protected:
   // keep histo names if they have to be individually referred to
   // for any reason (non-autofilled, post-processing corrections, etc.)
   //
+
+  std::string st_bxnum_;
 
   // Whole subdetector
   std::string st_rhCorTimes_;
@@ -257,9 +261,9 @@ protected:
   std::string st_avgTimePerRMd1_;
 
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
-  std::string st_TS34ratioProfHFPd1_,st_TS34ratioProfHFPd2_,st_TS34ratioProfHFMd1_,st_TS34ratioProfHFMd2_;
-  std::string st_TS34ratioPolarProfHFPd1_,st_TS34ratioPolarProfHFPd2_;
-  std::string st_TS34ratioPolarProfHFMd1_,st_TS34ratioPolarProfHFMd2_;
+  std::string st_TS43ratioProfHFPd1_,st_TS43ratioProfHFPd2_,st_TS43ratioProfHFMd1_,st_TS43ratioProfHFMd2_;
+  std::string st_TS43ratioPolarProfHFPd1_,st_TS43ratioPolarProfHFPd2_;
+  std::string st_TS43ratioPolarProfHFMd1_,st_TS43ratioPolarProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
   std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;
@@ -276,6 +280,7 @@ protected:
   std::map<std::string, edm::LuminosityBlockRange> m_lsRanges_;
   std::set<int>  badEventSet_;
   std::set<int>  acceptedBxNums_;
+  std::set<int>  acceptedPkTSnums_;
   std::set<int>  detIds2mask_;
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
