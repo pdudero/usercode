@@ -113,7 +113,7 @@ struct wLabel_t {
 
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
-static map<string, string>      glmap_histopaths2id;  // keep track of histos read in
+static map<string, string>      glmap_objpaths2id;  // keep track of objects read in
 static map<string, string>      glmap_aliii; // better than aliases
 static map<string, wTH1 *>      glmap_id2histo;
 static map<string, TGraph *>    glmap_id2graph;
@@ -165,21 +165,30 @@ size_t ci_find(const string& str1, const string& str2)
 
 void Tokenize(const string& str,
 	      vector<string>& tokens,
-	      const string& delimiters = " ")
+	      const string& delimiters = " ",
+	      bool include_delimiters=false)
 {
   tokens.clear();
 
   // Skip delimiters at beginning.
   string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  if (include_delimiters && lastPos>0)
+    tokens.push_back(str.substr(0,lastPos));
+
   // Find first "non-delimiter".
-  string::size_type pos     = str.find_first_of(delimiters, lastPos);
+  string::size_type pos = str.find_first_of(delimiters, lastPos);
 
   while (string::npos != pos || string::npos != lastPos) {
     // Found a token, add it to the vector.
     tokens.push_back(str.substr(lastPos, pos - lastPos));
-    // Skip delimiters.  Note the "not_of"
+
     lastPos = str.find_first_not_of(delimiters, pos);
-    // Find next "non-delimiter"
+
+    if (include_delimiters && pos!=string::npos) {
+      tokens.push_back(str.substr(pos, lastPos-pos));
+    } //else skip delimiters.
+
+    // Find next delimiter
     pos = str.find_first_of(delimiters, lastPos);
   }
 }                                                            // Tokenize
@@ -213,6 +222,26 @@ const string& extractAlias(const string& input)
   }
   return it->second;
 }
+
+//======================================================================
+
+void buildStringFromAliii(const string& input, 
+			  const string& delimiters,
+			  string& output)
+{
+  assert (delimiters.find('@') == string::npos);
+  const bool include_delimiters = true;
+
+  output.clear();
+  vector<string> v_tokens;
+  Tokenize(input,v_tokens, delimiters,include_delimiters);
+  for (size_t i=0; i<v_tokens.size(); i++) {
+    if (v_tokens[i][0] == '@')
+      output += extractAlias(v_tokens[i].substr(1));
+    else
+      output += v_tokens[i];
+  }
+}                                                // buildStringFromAliii
 
 //======================================================================
 
@@ -571,7 +600,7 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       if (!wpad->altyh_ids.size()) wpad->altyh_ids.push_back(value);
     }
     else if (key == "graphs") {
-      Tokenize(value,wpad->graph_ids," ,"); 
+      Tokenize(value,wpad->graph_ids,","); 
       if (!wpad->graph_ids.size()) wpad->graph_ids.push_back(value);
     }
     else if (key == "labels") {
@@ -663,6 +692,7 @@ void processCommonHistoParams(const string& key,
   else if (key == "zlabelfont")   wh.SetZaxis("",false,0,0,0,0,str2int(value));
   else if (key == "xndiv")  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
   else if (key == "yndiv")  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
+  else if (key == "zndiv")  wh.SetZaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
   else if (key == "xmin") {
     xmin = str2flt(value);
@@ -796,19 +826,21 @@ wTH1 *getHistoFromSpec(const string& hid,
     if (!rootfn.size()) return NULL;
   }
 
-  // Check for histo alias
+  // Check for histo alias, which can consist of multiple aliii...
+  //
   string hspec = v_tokens[1];
-  if (hspec[0] == '@') {  // reference to an alias defined in ALIAS section
-    hspec = extractAlias(hspec.substr(1));
+  if (hspec.find('@') != string::npos) {
+    string temp=hspec;
+    buildStringFromAliii(temp,"/",hspec);
     if (!hspec.size()) return NULL;
   }
 
   fullspec = rootfn + hspec;
 
-  map<string,string>::const_iterator it = glmap_histopaths2id.find(fullspec);
-  if (it != glmap_histopaths2id.end()) {
+  map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
+  if (it != glmap_objpaths2id.end()) {
     // Allow the possibility to run the script a second time in root
-    cout << "histo " << fullspec << " already read in, here it is" << endl;
+    cout << "Object " << fullspec << " already read in, here it is" << endl;
     map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
     if (hit == glmap_id2histo.end()) {
       cout << "oops, sorry, I lied." << endl;
@@ -832,7 +864,7 @@ wTH1 *getHistoFromSpec(const string& hid,
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
       } else {
 	// success, record that you read it in.
-	glmap_histopaths2id.insert(pair<string,string>(fullspec,hid));
+	glmap_objpaths2id.insert(pair<string,string>(fullspec,hid));
 	wth1 = new wTH1(h1);
 	glmap_id2histo.insert(pair<string,wTH1 *>(hid,wth1));
       }
@@ -840,6 +872,78 @@ wTH1 *getHistoFromSpec(const string& hid,
   }
   return wth1;
 }                                                    // getHistoFromSpec
+
+//======================================================================
+
+TGraph *getGraphFromSpec(const string& gid,
+			 const string& spec)
+{
+  TGraph  *gr     = NULL;
+  TFile *rootfile = NULL;
+  vector<string> v_tokens;
+  string fullspec;     // potentially expanded from aliases.
+
+  cout << "processing " << spec << endl;
+
+  Tokenize(spec,v_tokens,":");
+  if ((v_tokens.size() != 2) ||
+      (!v_tokens[0].size())  ||
+      (!v_tokens[1].size())    ) {
+    cerr << "malformed root graph path file:folder/subfolder/.../graph " << spec << endl;
+    return NULL;
+  }
+
+  // Check for file alias
+  string rootfn = v_tokens[0];
+  if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
+    rootfn = extractAlias(rootfn.substr(1));
+    if (!rootfn.size()) return NULL;
+  }
+
+  // Check for graph alias
+  string gspec = v_tokens[1];
+  if (gspec.find('@') != string::npos) {
+    string temp=gspec;
+    buildStringFromAliii(temp,"/",gspec);
+    if (!gspec.size()) return NULL;
+  }
+
+  fullspec = rootfn + gspec;
+
+  map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
+  if (it != glmap_objpaths2id.end()) {
+    // Allow the possibility to run the script a second time in root
+    cout << "Object " << fullspec << " already read in, here it is" << endl;
+    map<string,TGraph *>::const_iterator git = glmap_id2graph.find(it->second);
+    if (git == glmap_id2graph.end()) {
+      cout << "oops, sorry, I lied." << endl;
+      return NULL;
+    }
+    gr = git->second;
+  } else {
+    // Now check to see if this file has already been opened...
+    map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
+    if (it != glmap_id2rootfile.end())
+      rootfile = it->second;
+    else
+      rootfile = new TFile(rootfn.c_str());
+
+    if (rootfile->IsZombie()) {
+      cerr << "File failed to open, " << rootfn << endl;
+    } else {
+      glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
+      gr = (TGraph *)rootfile->Get(gspec.c_str());
+      if (!gr) {
+	cerr << "couldn't find " << gspec << " in " << rootfn << endl;
+      } else {
+	// success, record that you read it in.
+	glmap_objpaths2id.insert(pair<string,string>(fullspec,gid));
+	glmap_id2graph.insert(pair<string,TGraph *>(gid,gr));
+      }
+    }
+  }
+  return gr;
+}                                                    // getGraphFromSpec
 
 //======================================================================
 
@@ -899,7 +1003,8 @@ processHistoSection(FILE *fp,
       }
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(value);
       if (it == glmap_id2histo.end()) {
-	cerr << "Histo ID " << value << " not found, clone must be defined after the clonee" << endl;break;
+	cerr << "Histo ID " << value << " not found,";
+	cerr << "clone must be defined after the clonee" << endl;
 	break;
       }
       wth1 = it->second->Clone(string(it->second->histo()->GetName())+"_clone",
@@ -987,6 +1092,8 @@ processGraphSection(FILE *fp,
   TGraph *gr  = NULL;
   float xoffset=0.0,yoffset=0.0, yscale=1.0;
   int  lcolor=1,lstyle=1,lwidth=1;
+  int  mcolor=1,mstyle=3,msize=1;
+  int  yndiv=510;
   TVectorD vx,vy,exl,exh,eyl,eyh;
   bool asymerrors = false;
 
@@ -1022,7 +1129,7 @@ processGraphSection(FILE *fp,
     if (key == "id") {
     //--------------------
       if (gid != NULL) {
-	cerr << "no more than one id per histo section allowed " << value << endl;
+	cerr << "no more than one id per graph section allowed " << value << endl;
 	break;
       }
 
@@ -1041,8 +1148,9 @@ processGraphSection(FILE *fp,
       if (inSet<string>(glset_graphFilesReadIn,path)) {
 	cerr << "vector file " << path << " already read in" << endl; break;
       }
-      if (path[0] == '@') {  // reference to a file defined in FILES section
-	path= extractAlias(path.substr(1));
+      if (path.find('@') != string::npos) {
+	string temp=path;
+	buildStringFromAliii(temp,"/",path);
 	if (!path.size()) continue;
       }
 
@@ -1050,15 +1158,33 @@ processGraphSection(FILE *fp,
 	loadVectorsFromFile(path.c_str(),vx,vy,exl,exh,eyl,eyh);
       else
 	loadVectorsFromFile(path.c_str(),vx,vy);
-    }
-    else {
-      if      (key == "xoffset")   xoffset = str2flt(value);
-      else if (key == "yoffset")   yoffset = str2flt(value);
-      else if (key == "yscale")    yscale  = str2flt(value);
-      else if (key == "linecolor") lcolor  = str2int(value);
-      else if (key == "linestyle") lstyle  = str2int(value);
-      else if (key == "linewidth") lwidth  = str2int(value);
-      else if (key == "asymerrors") asymerrors = (bool)str2int(value);
+
+    //------------------------------
+    } else if (key == "path") {
+    //------------------------------
+
+      if (!gid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (gr) {
+	cerr << "graph already defined" << endl; continue;
+      }
+      gr  = getGraphFromSpec(*gid,value);
+      if (!gr) continue;
+
+    } else {
+      // "gr" is not defined yet!
+      if      (key == "xoffset")     xoffset = str2flt(value);
+      else if (key == "yoffset")     yoffset = str2flt(value);
+      else if (key == "yscale")      yscale  = str2flt(value);
+      else if (key == "linecolor")   lcolor  = str2int(value);
+      else if (key == "linestyle")   lstyle  = str2int(value);
+      else if (key == "linewidth")   lwidth  = str2int(value);
+      else if (key == "markercolor") mcolor  = str2int(value);
+      else if (key == "markerstyle") mstyle  = str2int(value);
+      else if (key == "markersize")  msize   = str2int(value);
+      else if (key == "asymerrors")  asymerrors = (bool)str2int(value);
+      else if (key == "yndiv")       yndiv   = str2int(value);
       else {
 	cerr << "unknown key " << key << endl;
       }
@@ -1077,12 +1203,17 @@ processGraphSection(FILE *fp,
     else
       gr = new TGraph(vx,vy);
 
-    gr->SetLineColor(lcolor);
     gr->SetLineStyle(lstyle);
+    gr->SetLineColor(lcolor);
     gr->SetLineWidth(lwidth);
+    gr->SetLineStyle(mstyle);
+    gr->SetLineWidth(msize);
+    gr->SetMarkerColor(mcolor);
+    gr->SetMarkerStyle(mstyle);
+    gr->SetMarkerSize(msize);
+    gr->GetYaxis()->SetNdivisions(yndiv);
+
     glmap_id2graph.insert(pair<string,TGraph *>(*gid,gr));
-  } else {
-    cerr << "couldn't construct graph " << gid << endl;
   }
 
   return (gr != NULL);
@@ -1175,7 +1306,8 @@ processHmathSection(FILE *fp,
       histop = findHisto(arg1);
       if (!histop) {	// trying scanning a double
 	if(!sscanf(arg1.c_str(),"%lg",&constant)) {
-	  cerr << arg1 << ": it's not a known histo, and it's not a number. I'm outta here." << endl;
+	  cerr << arg1 << ": it's not a known histo, and it's not a number.";
+	  cerr << "I'm outta here." << endl;
 	  continue;
 	} else {
 	  // arg2 must be a histogram
@@ -1374,6 +1506,63 @@ processHmathSection(FILE *fp,
       h1 = (TH1 *)tmph2->ProjectionY(newname.c_str(),lobin,hibin);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+    }
+    //------------------------------
+    else if (key.find("slice") != string::npos) {
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      string binspec = value; // range of bins to project
+
+      // binspec of form
+      //
+      Tokenize(binspec,v_tokens,":");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
+      if (!tmph2) continue;
+      binspec = v_tokens[1];
+      Tokenize(binspec,v_tokens,"-");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+
+      int lobin=str2int(v_tokens[0]);
+      int hibin=str2int(v_tokens[1]);
+      if (lobin > hibin) {
+	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	cerr << theline << endl;
+	continue;
+      }
+
+      string newname = string(tmph2->GetName())+"_Ybins"+binspec;
+      TObjArray *aSlices = new TObjArray();
+      if (key.find("x")!=string::npos) tmph2->FitSlicesX(0,lobin,hibin,0, "QNR",aSlices);
+      else if (key.find("y")!=string::npos) tmph2->FitSlicesY(0,lobin,hibin,0,"QNR",aSlices);
+      else continue;
+      
+      if (key.find("mean")!=string::npos) {
+	h1 = (TH1 *)(*aSlices)[1];
+      } else if (key.find("rms")!=string::npos) {
+	h1 = (TH1 *)(*aSlices)[2];
+      } else if (key.find("chi2")!=string::npos) {
+	h1 = (TH1 *)(*aSlices)[aSlices->GetEntriesFast()-1];
+      }
+      if (h1) {
+	wh = new wTH1((TH1 *)h1->Clone()); // h1 points to a "dead histo walking"
+	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+      } else {
+	cerr << "Unknown key '" << key << "'" << endl;
+      }
 
     //------------------------------
     } else if (key == "x2Dize") {  // means to take a collection of 1d plots and make a
@@ -1605,13 +1794,25 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
       value+=v_tokens[i];
     }
 
-    map<string,string>::const_iterator it;
-    it = glmap_aliii.find(key);
-    if (it != glmap_aliii.end()) {
-      cerr << "Error in ALIAS section: key " << key << " already defined." << endl;
-    } else
-      glmap_aliii.insert(pair<string,string>(key,value));
-
+    if (key=="includefile") { // reserved for putting aliii in a separate file
+      FILE *fp = fopen(value.c_str(),"r");
+      if (!fp) {
+	cerr<<"Error, couldn't open alias include file '"<<value<<"'"<<endl;
+	exit(-1);
+      }
+      cout << "Loading include file '" << value << "'" << endl;
+      processAliasSection(fp,theline,new_section);
+    } else {
+      map<string,string>::const_iterator it;
+      it = glmap_aliii.find(key);
+      if (it != glmap_aliii.end()) {
+	cerr << "Error in ALIAS section: key '" << key;
+	cerr << "' already defined." << endl;
+      } else {
+	glmap_aliii.insert(pair<string,string>(key,value));
+	cout << "alias '" << key << "' added" << endl;
+      }
+    }
   } // while loop
 
   return true;
@@ -1709,7 +1910,7 @@ wCanvas_t *initCanvas(const string& cLayoutFile)
        << wc->padxmargin << "x" << wc->padymargin << endl;
 
   return wc;
-}
+}                                                          // initCanvas
 
 //======================================================================
 
@@ -1753,7 +1954,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 #endif
 
   wp->vp->Update();
-}
+}                                                           // drawInPad
 
 //======================================================================
 
@@ -1767,13 +1968,12 @@ void drawInPad(wPad_t *wp, TGraph *gr, const string& drawopt)
   wp->vp->SetLogy(wp->logy);
   wp->vp->SetLogz(wp->logz);
 
-  cout << "Drawing " << gr->GetName() << " with option(s) " << drawopt << endl;
+  cout<<"Drawing "<<gr->GetName()<<" with option(s) "<<drawopt<<endl;
 
   gr->Draw(drawopt.c_str());
 
   wp->vp->Update();
-}
-
+}                                                           // drawInPad
 
 //======================================================================
 
@@ -1795,8 +1995,7 @@ void drawInPad(wPad_t *wp, THStack *stack)
   stack->Draw();
 
   wp->vp->Update();
-}
-
+}                                                           // drawInPad
 
 //======================================================================
 
@@ -1807,6 +2006,10 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
   wLegend_t *wl = NULL;
+
+  /***************************************************
+   * LOOP OVER PADS...
+   ***************************************************/
 
   vector<vector<string> >::const_iterator it;
   for (unsigned i = 0; i< npads; i++) {
@@ -1876,6 +2079,10 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
       stack = new THStack(wp->hframe->histo()->GetName(),
 			  wp->hframe->histo()->GetTitle());
 
+    /***************************************************
+     * LOOP OVER HISTOS DEFINED FOR PAD...
+     ***************************************************/
+
     for (unsigned j = 0; j < wp->histo_ids.size(); j++) {
       string& hid = wp->histo_ids[j];
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
@@ -1890,7 +2097,8 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 	if (wp->stackem) {
 	  stack->Add(myHisto->histo());
 	} else {
-	  cout << "Drawing " << hid << " => " << myHisto->histo()->GetName() << endl;
+	  cout << "Drawing " << hid << " => ";
+	  cout << myHisto->histo()->GetName() << endl;
 	  drawInPad(wp,*myHisto,!j);
 	  if (myHisto->statsAreOn()) {
 	    cout << "OptStat = " <<  gStyle->GetOptStat() << endl;
@@ -1944,11 +2152,11 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
     }
 
     /***************************************************
-     * Draw each graph
+     * LOOP OVER GRAPHS DEFINED FOR PAD...
      ***************************************************/
 
     for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
-      string drawopt("P");
+      string drawopt("CP");
       string& gid = wp->graph_ids[j];
       map<string,TGraph *>::const_iterator it = glmap_id2graph.find(gid);
       if (it == glmap_id2graph.end()) {
@@ -2011,9 +2219,13 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
     std::string datafile,cfgfile;
     map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
     if (it != glmap_id2rootfile.end())
-      datafile = it->first.substr(0,it->first.find_first_of('.'));
-    cfgfile=wc.title.substr(0,wc.title.find_first_of('.'));
+      datafile = it->first.substr(0,it->first.find_last_of('.'));
+    size_t startpos=wc.title.find_last_of('/');
+    if (startpos==string::npos) startpos = 0;
+    else startpos++;
+    cfgfile=wc.title.substr(startpos,wc.title.find_last_of('.')-startpos);
     string picfile = datafile+"_"+cfgfile+".png";
+    cout << "saving to..." << picfile << endl;
     wc.c1->SaveAs(picfile.c_str());
   }
 }                                                           // drawPlots
@@ -2024,7 +2236,7 @@ void superPlot(const string& canvasLayout="canvas.txt",
 	       bool savePlot2file=false,
 	       bool dotdrStyle=false)
 {
-  glmap_histopaths2id.clear();
+  glmap_objpaths2id.clear();
   glmap_aliii.clear();
   glmap_id2histo.clear();
   glmap_id2graph.clear();
