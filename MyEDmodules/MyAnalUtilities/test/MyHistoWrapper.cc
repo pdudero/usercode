@@ -77,6 +77,7 @@ public:
       if (legdrawopt.find("L") != string::npos)
 	if (legdrawopt.find("E") != string::npos) legdrawopt = "LE";
 	else                                      legdrawopt = "L";
+      else if (legdrawopt.find("HISTO") != string::npos) legdrawopt = "L";
       else if (legdrawopt.find("P") != string::npos) legdrawopt = "P";
       else if (legdrawopt.find("F") != string::npos) legdrawopt = "F";
     }
