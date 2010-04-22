@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.10 2010/03/26 16:31:08 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.11 2010/04/06 11:29:20 dudero Exp $
 //
 //
 
@@ -36,7 +36,6 @@
 #include "TH2D.h"
 #include "TProfile2D.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "DataFormats/DetId/interface/DetId.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
@@ -683,7 +682,7 @@ myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
       p->Fill(val,weight);
   } else {
     //    edm::LogError("Couldn't find hash for " + hname + "! ") 
-    throw cms::Exception("Couldn't find hash for " + hname)  <<"! val"<< val << "\tweight=" << weight << std::endl;
+    throw cms::Exception("Couldn't find hash for " + hname)  <<"! val="<< val << "\tweight=" << weight << std::endl;
     //dump();
   }
 }
