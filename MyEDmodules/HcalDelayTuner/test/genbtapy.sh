@@ -200,6 +200,7 @@ process.hbtimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hbtimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hbtimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hbtimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hbtimeanal.acceptedPkTSnumbers  = cms.vint32(${HBHETSNUMS})
 process.hbtimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hbtimeanal.minHitGeV            = cms.double(${HBHE_MINHITGEV})
 process.hbtimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
@@ -211,6 +212,7 @@ process.hetimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hetimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hetimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hetimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hetimeanal.acceptedPkTSnumbers  = cms.vint32(${HBHETSNUMS})
 process.hetimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hetimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hetimeanal.minHitGeV            = cms.double(${HBHE_MINHITGEV})
@@ -220,6 +222,7 @@ EOF100
     then
 	cat >>${CFGFILE}<<EOF101
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hbhe_cfi")
+process.hbhetimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbhereco","","${PROCESSNAME}")
 EOF101
     fi
     if (( ${#HBHE_FIRSTSAMPLE} >0 ))
@@ -245,6 +248,7 @@ process.hftimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.hftimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.hftimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.hftimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.hftimeanal.acceptedPkTSnumbers  = cms.vint32(${HFTSNUMS})
 process.hftimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.hftimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.hftimeanal.minHitGeV            = cms.double(${HF_MINHITGEV})
@@ -254,28 +258,54 @@ EOF110
     if (( ${#ANALS} > 0 ))
     then
 	ANALS="${ANALS}+process.hftimeanal"
-	MYRECO="${MYRECO}+process.hfreco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="${MYRECO}+process.hfreco"
+	fi
     else
 	ANALS="process.hftimeanal"
-	MYRECO="process.hfreco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="process.hfreco"
+	fi
     fi
     if (( ${DOHCALRECO} ))
     then
 	cat >>${CFGFILE}<<EOF111
+process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfreco","","${PROCESSNAME}")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hf_cfi")
 EOF111
-    if (( ${#HF_FIRSTSAMPLE} >0 ))
-    then
-	cat >>${CFGFILE} <<EOF112
+	if (( ${#HF_FIRSTSAMPLE} >0 ))
+	then
+	    cat >>${CFGFILE} <<EOF112
 process.hfreco.firstSample=cms.int32(${HF_FIRSTSAMPLE})
 EOF112
-    fi
-    if (( ${#HF_SAMPLESTOADD} >0 ))
-    then
+	fi
+	if (( ${#HF_SAMPLESTOADD} >0 ))
+	then
 	cat >>${CFGFILE} <<EOF113
 process.hfreco.samplesToAdd=cms.int32(${HF_SAMPLESTOADD})
 EOF113
+	fi
     fi
+    if (( ${DOHFREFLAG} ))
+    then
+	cat >>${CFGFILE} <<EOF114
+from RecoLocalCalo.HcalRecAlgos.hcalrechitreflagger_cfi import *
+process.hfrecoReflagged = hcalrechitReflagger.clone()
+process.hfrecoReflagged.hf_Algo3test = False  # S9/S1 algorithm (current default)
+process.hfrecoReflagged.hf_Algo2test = True # PET algorithm
+# Turns thresholding of PMT hits way down, makes PMT reflagger more aggressive about ID-ing PMT hits
+#process.hfrecoReflagged.hf_PET_params.PET_EnergyThreshLong=cms.untracked.vdouble([5.])
+#process.hfrecoReflagged.hf_PET_params.PET_EnergyThreshShort=cms.untracked.vdouble([5.])
+process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfrecoReflagged")
+EOF114
+	if (( ${DOHCALRECO} ))
+	then
+	    cat >>${CFGFILE} <<EOF115
+process.hfrecoReflagged.hfInputLabel = cms.untracked.InputTag("hfreco","","${PROCESSNAME}")
+EOF115
+	fi
     fi
 fi
 
@@ -294,14 +324,21 @@ EOF120
     if (( ${#ANALS} > 0 ))
     then
 	ANALS="${ANALS}+process.hotimeanal"
-	MYRECO="${MYRECO}+process.horeco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="${MYRECO}+process.horeco"
+	fi
     else
 	ANALS="process.hotimeanal"
-	MYRECO="process.horeco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="process.horeco"
+	fi
     fi
     if (( ${DOHCALRECO} ))
     then
 	cat >>${CFGFILE}<<EOF121
+process.hotimeanal.eventDataPset.hoRechitLabel = cms.untracked.InputTag("horeco","","${PROCESSNAME}")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_ho_cfi")
 EOF121
     fi
@@ -314,6 +351,7 @@ process.zdctimeanal.runDescription       = cms.untracked.string("${RUNDESCR}")
 process.zdctimeanal.globalRecHitFlagMask = cms.int32(${GLOBAL_FLAG_MASK})
 process.zdctimeanal.badEventList         = cms.vint32(${BAD_EVENT_LIST})
 process.zdctimeanal.acceptedBxNums       = cms.vint32(${BXNUMS})
+process.zdctimeanal.acceptedPkTSnumbers  = cms.vint32(${HFTSNUMS})
 process.zdctimeanal.maxEventNum2plot     = cms.int32(${MAXEVENTNUM})
 process.zdctimeanal.globalTimeOffset     = cms.double(${GLOBALTOFFSET})
 process.zdctimeanal.minHitGeV            = cms.double(${ZDC_MINHITGEV})
@@ -322,14 +360,21 @@ EOF130
     if (( ${#ANALS} > 0 ))
     then
 	ANALS="${ANALS}+process.zdctimeanal"
-	MYRECO="${MYRECO}+process.zdcreco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="${MYRECO}+process.zdcreco"
+	fi
     else
 	ANALS="process.zdctimeanal"
-	MYRECO="process.zdcreco"
+	if (( ${DOHCALRECO} ))
+	then
+	    MYRECO="process.zdcreco"
+	fi
     fi
     if (( ${DOHCALRECO} ))
     then
 	cat >>${CFGFILE}<<EOF131
+process.zdctimeanal.eventDataPset.zdcRechitLabel = cms.untracked.InputTag("zdcreco","","${PROCESSNAME}")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_zdc_cfi")
 EOF131
     fi
@@ -373,7 +418,21 @@ fi
 
 #==================================================
 
-cat >>${CFGFILE} <<EOF999_999
+if (( ${DOHFREFLAG} ))
+then
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.hfrecoReflagged"
+    else
+	MYPATH="process.hfrecoReflagged"
+    fi
+fi
+
+#==================================================
+
+if (( ${DOCLEANING} ))
+then
+    cat >>${CFGFILE} <<EOF999_999
 process.oneGoodVertexFilter = cms.EDFilter("VertexSelector",
    src = cms.InputTag("offlinePrimaryVertices"),
 #   cut = cms.string("!isFake && tracksSize > 3 && abs(z) <= 15 && position.Rho <= 2"),
@@ -383,30 +442,31 @@ process.oneGoodVertexFilter = cms.EDFilter("VertexSelector",
 
 process.noscraping = cms.EDFilter("FilterOutScraping",
                                 applyfilter = cms.untracked.bool(True),
-                                debugOn = cms.untracked.bool(True),
+                                debugOn = cms.untracked.bool(False),
                                 numtrack = cms.untracked.uint32(10),
                                 thresh = cms.untracked.double(0.25)
                                 )
 EOF999_999
-if (( ${#MYPATH} > 0 ))
-then
-    MYPATH="${MYPATH}*process.noscraping*process.oneGoodVertexFilter"
-else
-    MYPATH="process.noscraping*process.oneGoodVertexFilter"
+    if (( ${#MYPATH} > 0 ))
+    then
+	MYPATH="${MYPATH}*process.noscraping*process.oneGoodVertexFilter"
+    else
+	MYPATH="process.noscraping*process.oneGoodVertexFilter"
+    fi
 fi
 
 #==================================================
 
 if (( ${#DOUNPACKALL} || ${#DOUNPACKHCAL} || ${#HASDIGIS} ))
     then
-cat >> ${CFGFILE}<<EOF142
+cat >> ${CFGFILE}<<EOF143
 # Need conditions to convert digi ADC to fC in the analyzer
 process.hbtimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hetimeanal.eventDataPset.hbheDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hftimeanal.eventDataPset.hfDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.hotimeanal.eventDataPset.hoDigiLabel=cms.untracked.InputTag("hcalDigis")
 process.zdctimeanal.eventDataPset.zdcDigiLabel=cms.untracked.InputTag("hcalDigis")
-EOF142
+EOF143
     else
 echo Assume no digis in input.
 fi    
