@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.16 2010/04/06 10:46:38 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.17 2010/04/12 10:30:11 dudero Exp $
 //
 //
 
@@ -76,29 +76,28 @@ protected:
 
   // ---------- private methods ---------------------------
 
-  virtual void   bookHistos4allCuts  (void);
-  virtual void   bookHistos4lastCut  (void);
+  virtual void  bookHistos4allCuts   (void);
+  virtual void  bookDetailHistos4cut (myAnalCut& cut);
 
-  virtual bool   buildMaskSet        (const std::vector<int>& v_idnumbers);
+  virtual bool  buildMaskSet       (const std::vector<int>& v_idnumbers);
 
-  virtual myAnalHistos *getHistos4cut(const std::string& cutstr);
-  virtual void         fillHistos4cut(const std::string& cutstr,bool filldetail=false);
+  virtual myAnalCut *getCut        (const std::string& cutstr);
+  virtual void     fillHistos4cut  (myAnalCut& cut);
 
-  virtual void   compileCorrections(const std::vector<edm::ParameterSet>& corList);
+  virtual void  compileCorrections (const std::vector<edm::ParameterSet>& corList);
 #if 0
   template<class Digi,class RecHit>
-  void    processDigisAndRecHits (const edm::SortedCollection<Digi>&   digis,
-				  const edm::SortedCollection<RecHit>& rechits);
+  void    processDigisAndRecHits   (const edm::SortedCollection<Digi>&   digis,
+				    const edm::SortedCollection<RecHit>& rechits);
 
   template<class Digi,class RecHit>
-  void    processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
-				  const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
+  void    processDigisAndRecHits   (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
+				    const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 #endif
   void    fillDigiPulseHistos    (TProfile   *hpulse,
 				  TProfile2D *hpulsePerE=NULL,
 				  TProfile   *hpulseE=NULL,
-				  TProfile2D *hpulseEPerE=NULL,
-				  TH2F       *hts43ratio=NULL);
+				  TProfile2D *hpulseEPerE=NULL);
 
   virtual void add1dHisto        (const std::string& name, const std::string& title,
 				  int nbinsx, double minx, double maxx,
@@ -158,6 +157,7 @@ protected:
 
   std::string       rundescr_;
   double            minHitGeV_;       // minimum hit energy threshold
+  double            maxHitGeV_;       // maximum hit energy threshold
   double            timeWindowMinNS_;
   double            timeWindowMaxNS_;
   uint32_t          recHitTscaleNbins_;
@@ -170,7 +170,6 @@ protected:
   uint32_t          minEvents4avgT_;
   bool              selfSynchronize_; // versus synchronize to the system reference
   bool              normalizeDigis_;
-  bool              splitByEventRange_;
   bool              doPerChannel_;
   bool              doTree_;
 
@@ -215,11 +214,15 @@ protected:
 
   CaloSamples        digifC_;
   std::vector<float> digiGeV_;
-  float              ts43ratio_; // for HF.
+  float              twoTSratio_; // for HF.
 
   edm::ESHandle<HcalDbService>  conditions_;
 
   std::string     runnumstr_;
+
+  // names of common cut flags
+  static const std::string st_fillDetail_;
+  static const std::string st_doPerChannel_;
 
   // keep histo names if they have to be individually referred to
   // for any reason (non-autofilled, post-processing corrections, etc.)
@@ -261,9 +264,9 @@ protected:
   std::string st_avgTimePerRMd1_;
 
   std::string st_rhTavgCorProfHFPd1_,st_rhTavgCorProfHFPd2_,st_rhTavgCorProfHFMd1_,st_rhTavgCorProfHFMd2_;
-  std::string st_TS43ratioProfHFPd1_,st_TS43ratioProfHFPd2_,st_TS43ratioProfHFMd1_,st_TS43ratioProfHFMd2_;
-  std::string st_TS43ratioPolarProfHFPd1_,st_TS43ratioPolarProfHFPd2_;
-  std::string st_TS43ratioPolarProfHFMd1_,st_TS43ratioPolarProfHFMd2_;
+  std::string st_ts43ratioProfHFPd1_,st_ts43ratioProfHFPd2_,st_ts43ratioProfHFMd1_,st_ts43ratioProfHFMd2_;
+  std::string st_ts43ratioPolarProfHFPd1_,st_ts43ratioPolarProfHFPd2_;
+  std::string st_ts43ratioPolarProfHFMd1_,st_ts43ratioPolarProfHFMd2_;
   std::string st_rhTavgCorPlus_,st_rhTavgCorMinus_;
   std::string st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
   std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;
@@ -273,11 +276,7 @@ protected:
   std::map<uint32_t,TH1F *> m_perChHistos_;
 
   bool firstEvent_;
-  std::vector<std::string> v_cuts_;             // vector of cut strings
   std::map<std::string, myAnalCut *> m_cuts_;
-  std::map<std::string, myAnalCut *> m_ercuts_; // event range/lumi range cuts
-  std::map<std::string, edm::EventRange> m_evRanges_;
-  std::map<std::string, edm::LuminosityBlockRange> m_lsRanges_;
   std::set<int>  badEventSet_;
   std::set<int>  acceptedBxNums_;
   std::set<int>  acceptedPkTSnums_;

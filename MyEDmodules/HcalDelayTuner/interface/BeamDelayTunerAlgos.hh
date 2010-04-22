@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.8 2010/04/06 10:46:38 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.9 2010/04/12 10:31:02 dudero Exp $
 //
 //
 
@@ -53,20 +53,20 @@ private:
 
   // ---------- private methods ---------------------------
 
-  bool   isHFPMThit             (const HFRecHit& queried,
-				 float partnerEnergy);
+  std::string addCut            (const std::string& descr,
+				 bool doInverted=false);
+  std::string addHitCategory    (const std::string& descr);
 
-  void   fillHFD1D2histos       (const std::string& cutstr,
+  void   fillHFD1D2histos       (myAnalHistos *myAH,
 				 const HFRecHit& rhd1, float corTime1,
 				 const HFRecHit& rhd2, float corTime2);
 
   void   bookHistos4allCuts     (void);
-  void   bookHistos4lastCut     (void);
+  void   bookDetailHistos4cut   (myAnalCut& cut);
 
   void   fillPerEvent           (void);
 
-  void   fillHistos4cut         (const std::string& cutstr,
-				 bool filldetail=false);
+  void   fillHistos4cut         (myAnalCut& cut);
 
   void   logLSBX                (const std::string& cutstr);
 
@@ -74,17 +74,22 @@ private:
   void   processZDCDigi         (const Digi& df);
 
   template<class Digi>
-  int    processDigi            (const Digi& df);
+  int    processDigi            (const Digi& df,
+				 CaloSamples& digifC,
+				 std::vector<float>& digiGeV,
+				 float& twoTSratio,
+				 float& fCamplitude);
 
   template<class Digi,class RecHit>
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
   void   findConfirmedHits      (const edm::Handle<HFRecHitCollection>& rechithandle);
 
-  void   processHFconfirmedHits (const HFRecHitIt& hitit1,
-				 const HFRecHitIt& hitit2);
+  void   processHFconfirmedHits (const HFRecHit& hitit1,
+				 const HFRecHit& hitit2);
 
-  void   processHFunconfirmedHit(void);
+  void   processHFunconfirmedHit(const HFRecHit& hfrh);
+
 
   // ----------member data ---------------------------
 
@@ -93,13 +98,19 @@ private:
   float avgTminus_,  avgTplus_;
   int   nhitsminus_, nhitsplus_;
   float totalEminus_, totalEplus_;
+  float fCamplitude_;
 
   // for HF, map of confirmed hits:
-  std::map<uint32_t,std::pair<HFRecHitIt,HFRecHitIt> > m_confirmedHits_;
+  std::map<uint32_t,HFRecHitIt> m_confirmedHits_;
 
-  // names of cuts
-  std::string st_cutNone_, st_cutMinGeV_, st_cutFlags_, st_cutBx_, st_cutEv_, st_cutPMT_;
-  std::string st_cutOutOfTime_;
+  // cuts and names of cuts
+  std::vector<std::string> v_nestedCuts_;      // vector of nested cut strings
+  std::vector<std::string> v_hitCategories_;   // vector of parallel cut strings
+
+  std::string st_cutNone_, st_cutHitEwindow_, st_cutBadFlags_, st_cutBadBx_, st_cutBadEv_, st_cutOutOfTime_;
+
+  // names of hit categories
+  std::string st_goodHits_, st_PMThits_,st_dubiousHits_, st_PMTpartners_;
 
   // The collection of names of histos per subdetector
   std::string st_rhCorTimesPlusVsMinus_;
@@ -108,10 +119,8 @@ private:
   std::string st_totalEplus_;
   std::string st_totalEminus_;
 
-  std::string st_rhCorTimesD1vsD2plusVerified_;
-  std::string st_rhCorTimesD1vsD2minusVerified_;
-  std::string st_rhCorTimesD1vsD2plusPMT_;
-  std::string st_rhCorTimesD1vsD2minusPMT_;
+  std::string st_rhCorTimesD1vsD2plus_;
+  std::string st_rhCorTimesD1vsD2minus_;
 
   std::string st_OccVsEtaEnergyBothOverThresh_;
 
@@ -122,11 +131,16 @@ private:
 
   std::string st_TcorVsThit_;
   std::string st_LvsSHF_;
-  std::string st_LvsSpmtHitsHF_;
-  std::string st_LvsSucAndPMThitsHF_;
-  std::string st_ts43ratioVsEallHFucAndPMT_;
-  std::string st_ts43ratioVsEallHFverified_;
-  std::string st_ts43ratioVsEallHFPMT_;
+  std::string st_RvsTHFd1_;
+  std::string st_RvsTHFd2_;
+  std::string st_2TSratioVsEallHF_;
+  std::string st_2TSratioVsEallHFD1_;
+  std::string st_2TSratioVsEallHFD2_;
+  std::string st_TcorVs2TSratioAllHF_;
+  std::string st_TcorVs2TSratioAndEallHF_;
+  std::string st_rhDeltaTdepthsVsEtaEnergy_;
+  std::string st_lowEtimingMapD1_, st_lowEtimingMapD2_;
+  std::string st_lateHitsTimeMapD1_, st_lateHitsTimeMapD2_;
 };
 
 #endif // _MYEDMODULESBEAMDELAYTUNERALGOS
