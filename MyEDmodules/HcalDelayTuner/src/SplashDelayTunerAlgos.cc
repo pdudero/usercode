@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.13 2010/03/14 16:07:18 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.14 2010/04/06 10:46:27 dudero Exp $
 //
 //
 
@@ -81,14 +81,17 @@ SplashDelayTunerAlgos::SplashDelayTunerAlgos(const edm::ParameterSet& iConfig,
   v_cuts_.push_back("cut6bOutOfTimeWindow");
 #endif
   st_lastCut_ = "cut4badEvents";
+
+  getCut(st_lastCut_)->setFlag(st_fillDetail_);
+
 }                    // SplashDelayTunerAlgos::SplashDelayTunerAlgos
 
 //==================================================================
 
 void
-SplashDelayTunerAlgos::bookHistos4lastCut(void)
+SplashDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
 {
-  HcalDelayTunerAlgos::bookHistos4lastCut();
+  HcalDelayTunerAlgos::bookDetailHistos4cut(cut);
 
   /********** SPLASH-SPECIFIC HISTOS: ************/
 
@@ -149,19 +152,19 @@ SplashDelayTunerAlgos::bookHistos4lastCut(void)
       } // loop over depth
     } // loop over ieta
 
-    getHistos4cut(st_lastCut_)->book1d<TProfile>(v_hpars1dprof);
+    cut.cuthistos()->book1d<TProfile>(v_hpars1dprof);
 
   } // if HB
-}                       // SplashDelayTunerAlgos::bookHistos4lastCut
+}                     // SplashDelayTunerAlgos::bookDetailHistos4cut
 
 //==================================================================
 
 void
-SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
+SplashDelayTunerAlgos::fillHistos4cut(myAnalCut& cut)
 {
-  HcalDelayTunerAlgos::fillHistos4cut(cutstr);
+  HcalDelayTunerAlgos::fillHistos4cut(cut);
 
-  myAnalHistos *myAH = getHistos4cut(cutstr);
+  myAnalHistos *myAH = cut.cuthistos();
   int        absieta = detID_.ietaAbs();
   int           iphi = detID_.iphi();
   int          depth = detID_.depth();
@@ -172,7 +175,7 @@ SplashDelayTunerAlgos::fillHistos4cut(const std::string& cutstr)
   int    signed_iphi = zside*iphi;
 
   // Splash-specific histos
-  if (cutstr == st_lastCut_) {
+  if (cut.flagSet(st_fillDetail_)) {
     if (mysubdet_ == HcalBarrel) {
       if (absieta >= unravelHBatIeta_) {
 	int key = (absieta*10) + depth;
@@ -220,7 +223,7 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
 {
   const edm::SortedCollection<RecHit>& rechits = *rechithandle;
 
-  myAnalHistos *myAH = getHistos4cut("cut0none");
+  myAnalHistos *myAH = getCut("cut0none")->cuthistos();
   myAH->fill1d<TH1F>(st_rhColSize_,rechits.size());
 
   if (digihandle.isValid())
@@ -267,21 +270,21 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
     }
     digifC_ = dfC;
 
-    fillHistos4cut("cut0none");
+    fillHistos4cut(*(m_cuts_["cut0none"]));
 
-    if (rh.energy() > minHitGeV_)            { fillHistos4cut("cut1minHitGeV");
+    if (rh.energy() > minHitGeV_)            { fillHistos4cut(*(m_cuts_["cut1minHitGeV"]));
       if (acceptedBxNums_.empty() ||
-	  inSet<int>(acceptedBxNums_,bxnum_))  { fillHistos4cut("cut2bxnum");
-	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut("cut3badFlags");
+	  inSet<int>(acceptedBxNums_,bxnum_))  { fillHistos4cut(*(m_cuts_["cut2bxnum"]));
+	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut(*(m_cuts_["cut3badFlags"]));
 //	  if (evtnum_<1061000) {                      // for run 120042
-	  if (notInSet<int>(badEventSet_,evtnum_)){ fillHistos4cut("cut4badEvents");
+	  if (notInSet<int>(badEventSet_,evtnum_)){ fillHistos4cut(*(m_cuts_["cut4badEvents"]));
 #if 0
-	    if (abs(detID_.ieta()) != 16) {	      fillHistos4cut("cut5tower16");
+	    if (abs(detID_.ieta()) != 16) {	      fillHistos4cut(*(m_cuts_["cut5tower16"]));
 	      if ((corTime_ >= timeWindowMinNS_) &&
-		  (corTime_ <= timeWindowMaxNS_)   ) { fillHistos4cut("cut6aInTimeWindow");
+		  (corTime_ <= timeWindowMaxNS_)   ) { fillHistos4cut(*(m_cuts_["cut6aInTimeWindow"]));
 	      }
 	      if ((corTime_ < timeWindowMinNS_) ||
-		  (corTime_ > timeWindowMaxNS_)   ) {  fillHistos4cut("cut6bOutOfTimeWindow");
+		  (corTime_ > timeWindowMaxNS_)   ) {  fillHistos4cut(*(m_cuts_["cut6bOutOfTimeWindow"]));
 	      }
 	    }
 #endif

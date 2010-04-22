@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.hh,v 1.7 2010/03/26 15:41:14 dudero Exp $
+// $Id: LaserDelayTunerAlgos.hh,v 1.8 2010/04/06 10:46:27 dudero Exp $
 //
 //
 
@@ -67,6 +67,7 @@ private:
   // ----------member data ---------------------------
   // Parameters:
   int                nlaserEv_;
+  std::vector<std::string> v_cuts_;             // vector of cut strings
 
   // The collection of names of histos per subdetector
   std::string TDCLaserFireTime_;

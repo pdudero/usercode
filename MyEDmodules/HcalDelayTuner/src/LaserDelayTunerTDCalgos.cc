@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerTDCalgos.cc,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: LaserDelayTunerTDCalgos.cc,v 1.1 2009/11/09 00:57:58 dudero Exp $
 //
 //
 
@@ -94,7 +94,7 @@ void LaserDelayTunerTDCalgos::bookHistos(void)
   std::map<string, myAnalCut *>::const_iterator it;
   for (it = m_cuts_.begin(); it != m_cuts_.end(); it++) {
     edm::LogInfo("Booking for cut ") << it->first << std::endl;
-    myAnalHistos  *myAH = it->second->histos();
+    myAnalHistos  *myAH = it->second->cuthistos();
     myAH->book1d<TH1D> (v_hpars1d);
   }
 }                                                          // bookHistos
@@ -104,7 +104,7 @@ void LaserDelayTunerTDCalgos::bookHistos(void)
 void
 LaserDelayTunerTDCalgos::fillHistos4cut(const std::string& cutstr)
 {
-  myAnalHistos *myAH = m_cuts_[cutstr]->histos();
+  myAnalHistos *myAH = m_cuts_[cutstr]->cuthistos();
   myAH->fill1d<TH1D>(st_TDCLaserFireTime_,laserFireTime_);
 }
 				     

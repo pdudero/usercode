@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.8 2010/03/26 15:41:14 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.9 2010/04/06 10:46:27 dudero Exp $
 //
 //
 
@@ -64,6 +64,9 @@ LaserDelayTunerAlgos::LaserDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   v_cuts_.push_back("cutMinHitGeV");
   v_cuts_.push_back("cutAll");
   st_lastCut_ = "cutAll";
+
+  for (unsigned i=0; i<v_cuts_.size(); i++)
+    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],mysubdetstr_);
 
   TDCalgo_   = new
     LaserDelayTunerTDCalgos(iConfig.getUntrackedParameter<edm::ParameterSet>("TDCpars"));
@@ -149,7 +152,7 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
 {
   const edm::SortedCollection<RecHit>& rechits = *rechithandle;
 
-  myAnalHistos *myAH = m_cuts_["cutNone"]->histos();
+  myAnalHistos *myAH = m_cuts_["cutNone"]->cuthistos();
 
   myAH->fill1d<TH1D>(st_rhColSize_,rechits.size());
   if (digihandle.isValid())
@@ -199,13 +202,13 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
 	processDigi<Digi>(df);
     }
 
-    fillHistos4cut("cutNone");
+    fillHistos4cut(*(m_cuts_["cutNone"]));
 
     bool isOverThresh = (hitenergy_ > minHitGeV_);
 
-    if (isOverThresh)                 fillHistos4cut("cutMinHitGeV");
-    if (TDCalgo_->isWithinWindow()) { fillHistos4cut("cutTDCwindow");
-      if (isOverThresh)               fillHistos4cut("cutAll");
+    if (isOverThresh)                 fillHistos4cut(*(m_cuts_["cutMinHitGeV"]));
+    if (TDCalgo_->isWithinWindow()) { fillHistos4cut(*(m_cuts_["cutTDCwindow"]));
+      if (isOverThresh)               fillHistos4cut(*(m_cuts_["cutAll"]));
     }
   } // loop over rechits
 
@@ -235,10 +238,10 @@ LaserDelayTunerAlgos::processHFrechits
 
     double minHitGeV = lookupThresh(detId);
 
-    m_cuts_["cutNone"]->histos()->fill2d<TH2D>(hfTimingVsE_,rh.energy(),rh.time());
+    m_cuts_["cutNone"]->cuthistos()->fill2d<TH2D>(hfTimingVsE_,rh.energy(),rh.time());
 
     if (rh.energy() > minHitGeV) {
-      myAnalHistos *myAH = m_cuts_["cutMinHitGeV"]->histos();
+      myAnalHistos *myAH = m_cuts_["cutMinHitGeV"]->cuthistos();
       myAH->fill2d<TH2D>(rhEmap_,
 			 detId.ieta(), detId.iphi()+detId.depth()-1,
 			 rh.energy());
@@ -259,7 +262,7 @@ inline int    sign   (double x) { return (x>=0) ? 1 : -1; }
 void
 LaserDelayTunerAlgos::detChannelTimes(TimesPerDetId& chtimes)
 {
-  myAnalHistos *myAH = m_cuts_["cutAll"]->histos();
+  myAnalHistos *myAH = m_cuts_["cutAll"]->cuthistos();
   TProfile *tp = myAH->get<TProfile>(st_avgTimePerRMd1_.c_str());
 
   float minRMtime = 1e99;

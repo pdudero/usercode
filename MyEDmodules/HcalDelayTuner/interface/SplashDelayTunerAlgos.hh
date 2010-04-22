@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.hh,v 1.10 2010/03/01 06:52:17 dudero Exp $
+// $Id: SplashDelayTunerAlgos.hh,v 1.11 2010/04/06 10:46:38 dudero Exp $
 //
 //
 
@@ -64,10 +64,12 @@ private:
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 
-  void bookHistos4lastCut(void);
-  void fillHistos4cut(const std::string& cutstr);
+  void bookDetailHistos4cut(myAnalCut& cut);
+  void fillHistos4cut(myAnalCut& cut);
 
   // ----------member data ---------------------------
+
+  std::vector<std::string> v_cuts_;             // vector of cut strings
 
   int unravelHBatIeta_;
 
