@@ -11,11 +11,21 @@ fi
 
 #export OLD=../data/hbhetable_08tuneInEta.csv
 #export OLD=../data/hbhetable_091108tune.csv
-#export NEW=../data/hbhetable_091118tune.csv
+#export OLD=jittertrial1_hf.csv
+#export OLD=jittertrial2_hf.csv
+export OLD=depthfixsettings.csv
+#export OLD=removebadflagcutfix.csv
 
-#export NEW=../data/SettingsHBHE_091118tune_patchfix15chan.csv
-export NEW=hfdelpatgen_0.csv
+export OLDFMT='%*s %*d %*d %*d %s %d %d %d %d'
 export NEWFMT='%*s %*d %*d %*d %s %d %d %d %d'
+
+#export NEW=../data/hbhetable_091118tune.csv
+#export NEW=../data/SettingsHBHE_091118tune_patchfix15chan.csv
+#export NEW=../data/dirHFscanVEoptSettings-5/vetable_offset=-5.csv
+export NEW=../data/dirHFscanVEoptSettingsTrial1jitter/vetable_offset=0.csv
+#export NEW=../data/dirHFscanOptSettings-10ns/h2d_optDelaysHFall_offset=-10.csv
+#export NEW=depthfixsettings.csv
+export NEW=removebadflagcutfix.csv
 
 CFGFILE=${0%.sh}_cfg.py
 cat > ${CFGFILE} << EOF
