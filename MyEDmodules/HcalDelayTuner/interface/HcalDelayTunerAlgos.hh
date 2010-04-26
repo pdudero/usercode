@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.17 2010/04/12 10:30:11 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.18 2010/04/22 03:29:44 dudero Exp $
 //
 //
 
@@ -156,8 +156,9 @@ protected:
   uint32_t          globalFlagMask_;  // hit quality flag mask
 
   std::string       rundescr_;
-  double            minHitGeV_;       // minimum hit energy threshold
-  double            maxHitGeV_;       // maximum hit energy threshold
+  bool              ampCutsInfC_;
+  double            minHitAmplitude_;       // minimum hit threshold (GeV or fC)
+  double            maxHitAmplitude_;       // maximum hit threshold (GeV or fC)
   double            timeWindowMinNS_;
   double            timeWindowMaxNS_;
   uint32_t          recHitTscaleNbins_;
@@ -166,6 +167,8 @@ protected:
   uint32_t          recHitEscaleNbins_;
   double            recHitEscaleMinGeV_;
   double            recHitEscaleMaxGeV_;
+  double            recHitEscaleMinfC_;
+  double            recHitEscaleMaxfC_;
   uint32_t          maxEventNum2plot_;
   uint32_t          minEvents4avgT_;
   bool              selfSynchronize_; // versus synchronize to the system reference

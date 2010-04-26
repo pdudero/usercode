@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.9 2010/04/12 10:31:02 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.10 2010/04/22 03:29:44 dudero Exp $
 //
 //
 
@@ -50,6 +50,7 @@ public:
 
 private:
   typedef HFRecHitCollection::const_iterator HFRecHitIt;
+  typedef   HFDigiCollection::const_iterator HFDigiIt;
 
   // ---------- private methods ---------------------------
 
@@ -83,10 +84,11 @@ private:
   template<class Digi,class RecHit>
   void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
-  void   findConfirmedHits      (const edm::Handle<HFRecHitCollection>& rechithandle);
+  void   findConfirmedHits      (const edm::Handle<HFRecHitCollection>& rechithandle,
+				 const edm::Handle<HFDigiCollection>&   digihandle);
 
-  void   processHFconfirmedHits (const HFRecHit& hitit1,
-				 const HFRecHit& hitit2);
+  void   processHFconfirmedHits (const HFRecHit& targethit,
+				 const pair<HFRecHitIt,HFDigiIt>& partner);
 
   void   processHFunconfirmedHit(const HFRecHit& hfrh);
 
@@ -98,10 +100,13 @@ private:
   float avgTminus_,  avgTplus_;
   int   nhitsminus_, nhitsplus_;
   float totalEminus_, totalEplus_;
-  float fCamplitude_;
+  float fCamplitude_, partnerfCamplitude_;
+
+  CaloSamples        partnerdigifC_;
+  std::vector<float> partnerdigiGeV_;
 
   // for HF, map of confirmed hits:
-  std::map<uint32_t,HFRecHitIt> m_confirmedHits_;
+  std::map<uint32_t,std::pair<HFRecHitIt,HFDigiIt> > m_confirmedHits_;
 
   // cuts and names of cuts
   std::vector<std::string> v_nestedCuts_;      // vector of nested cut strings
@@ -129,16 +134,15 @@ private:
   std::string st_RvsIeta_;
   std::string st_R2vsIeta_;
 
-  std::string st_TcorVsThit_;
   std::string st_LvsSHF_;
   std::string st_RvsTHFd1_;
   std::string st_RvsTHFd2_;
-  std::string st_2TSratioVsEallHF_;
-  std::string st_2TSratioVsEallHFD1_;
-  std::string st_2TSratioVsEallHFD2_;
-  std::string st_TcorVs2TSratioAllHF_;
-  std::string st_TcorVs2TSratioAndEallHF_;
-  std::string st_rhDeltaTdepthsVsEtaEnergy_;
+  std::string st_rhDeltaTdepthsVsEtaEnHad_;
+  std::string st_rhDeltaTdepthsVsEtaChHad_;
+  std::string st_rhDeltaTdepthsVsEtaEnEM_;
+  std::string st_rhDeltaTdepthsVsEtaChEM_;
+  std::string st_deltaTvsLandSenHF_;
+  std::string st_deltaTvsLandSchHF_;
   std::string st_lowEtimingMapD1_, st_lowEtimingMapD2_;
   std::string st_lateHitsTimeMapD1_, st_lateHitsTimeMapD2_;
 };
