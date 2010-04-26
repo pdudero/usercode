@@ -2,9 +2,9 @@
 
 # BASENAMEFMT="bta_run%s_hfscan_delay=%d"
 
-# #########################################
-# #RUN 132442
-# #
+# # #########################################
+# # #RUN 132442
+# # #
 # cp anal_setup_hfscan.rc anal_setup.rc
 # BASENAME=`printf "$BASENAMEFMT" 132442 0`
 # echo "ANALOUTPUT=$BASENAME.root" >> anal_setup.rc
@@ -195,7 +195,7 @@ echo "LSRANGES=\'132961:237-132961:MAX\',\'132963:1-132963:8\',\'132964:1-132964
 echo "DO_ZDC=0" >> anal_setup.rc
 echo "DOCLEANING=1" >> anal_setup.rc
 echo "# for HF we want to let PMT hits in, in order to study them!" >> anal_setup.rc
-echo "GLOBAL_FLAG_MASK=0xC0002" >> anal_setup.rc
+echo "GLOBAL_FLAG_MASK=0xC0000" >> anal_setup.rc
 ./genbtapy.sh s132961-8goodcoll
 
 #
@@ -208,9 +208,8 @@ echo "CFGFILE=${BASENAME}_cfg.py" >> anal_setup.rc
 echo "LSRANGES=\'132993:365-132993:384\',\'132994:1-132994:131\',\'132995:1-132995:19\'" >> anal_setup.rc
 echo "DO_ZDC=0" >> anal_setup.rc
 echo "DOCLEANING=1" >> anal_setup.rc
-echo "HFTSNUMS=2,3,4,5" >> anal_setup.rc
 echo "# for HF we want to let PMT hits in, in order to study them!" >> anal_setup.rc
-echo "GLOBAL_FLAG_MASK=0xC0002" >> anal_setup.rc
+echo "GLOBAL_FLAG_MASK=0xC0000" >> anal_setup.rc
 ./genbtapy.sh s132993-5goodcoll
 
 #
@@ -223,9 +222,8 @@ echo "CFGFILE=${BASENAME}_cfg.py" >> anal_setup.rc
 echo "LSRANGES=\'133030:1-133030:19\',\'133031:1-133031:12\',\'133034:35-133034:285\',\'133035:1-133035:301\'" >> anal_setup.rc
 echo "DO_ZDC=0" >> anal_setup.rc
 echo "DOCLEANING=1" >> anal_setup.rc
-echo "HFTSNUMS=2,3,4,5" >> anal_setup.rc
 echo "# for HF we want to let PMT hits in, in order to study them!" >> anal_setup.rc
-echo "GLOBAL_FLAG_MASK=0xC0002" >> anal_setup.rc
+echo "GLOBAL_FLAG_MASK=0xC0000" >> anal_setup.rc
 ./genbtapy.sh s133030-5goodcoll
 
 #
@@ -237,7 +235,6 @@ echo "ANALOUTPUT=$BASENAME.root" >> anal_setup.rc
 echo "CFGFILE=${BASENAME}_cfg.py" >> anal_setup.rc
 echo "DO_ZDC=0" >> anal_setup.rc
 echo "DOCLEANING=1" >> anal_setup.rc
-echo "HFTSNUMS=2,3,4,5" >> anal_setup.rc
 echo "# for HF we want to let PMT hits in, in order to study them!" >> anal_setup.rc
-echo "GLOBAL_FLAG_MASK=0xC0002" >> anal_setup.rc
+echo "GLOBAL_FLAG_MASK=0xC0000" >> anal_setup.rc
 ./genbtapy.sh 133036goodcoll
