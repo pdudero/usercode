@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HFscanPostAnal.cc,v 1.1 2010/04/06 09:31:58 dudero Exp $
+// $Id: HFscanPostAnal.cc,v 1.2 2010/04/07 00:15:44 dudero Exp $
 //
 //
 
@@ -70,12 +70,16 @@ private:
   DelaySettings      optsettings_;
   HcalLogicalMap    *lmap_;
   bool               writeBricks_;
+  int                globalOffsetns_;
+  std::string        lastCutDir_;
 
   std::map<int,TFile *> m_filesPerSetting_;
   TProfile2D *tphfpd1opt_;
   TProfile2D *tphfpd2opt_;
   TProfile2D *tphfmd1opt_;
   TProfile2D *tphfmd2opt_;
+
+  TH2F       *hts43ratioAllHF_;
 
   TH2I       *optdel_hfpd1_;
   TH2I       *optdel_hfpd2_;
@@ -170,7 +174,7 @@ void genAdditionalProfiles(TH2 *tp, int depth)
   TH1D *h1d;
   double max = tp->GetMaximum();
   if (max < 1.5) {
-    title = string(tp->GetTitle())+"; TS3/(TS3+TS4)";
+    title = string(tp->GetTitle())+"; 2TS ratio";
     h1d= fs->make<TH1D>(name.c_str(),title.c_str(),25,0.0,1.0); // ratio plot
   }
   else {
@@ -200,26 +204,40 @@ void genAdditionalProfiles(TH2 *tp, int depth)
 void refineTimesAndDelays(TProfile2D *p2opt,
 			  TProfile2D *p2new,
 			  TH2I       *optdelays,
-			  int         delay)
+			  int         delay,
+			  int         depth)
 {
+  cout << "refineTimesAndDelays depth=" << depth << ", delay=" << delay << endl;
+
+  //printf ("%s\n",p2new->GetName());
+  //printf ("delay\tiphi\tcurrent\tnew\n");
   for (int ibinx=1; ibinx<=p2opt->GetNbinsX(); ibinx++) {
     for (int ibiny=1; ibiny<=p2opt->GetNbinsY(); ibiny++) {
       if (!p2new->GetBinEntries(p2opt->GetBin(ibinx,ibiny))) continue;
 
       double newratio = p2new->GetBinContent(ibinx,ibiny);
-      double curratio = p2opt->GetBinContent(ibinx,ibiny);
+      double curratio;
 
       if (p2opt->GetBinEntries(p2opt->GetBin(ibinx,ibiny)))
 	curratio = p2opt->GetBinContent(ibinx,ibiny);
       else
 	curratio = -9e99;
+
+      //double dieta = p2new->GetXaxis()->GetBinCenter(ibinx);
+      //double diphi = p2new->GetYaxis()->GetBinCenter(ibiny);
+      //if ((dieta==-30.0) && (depth==2))
+      //printf ("%2d\t%2d\t%4.2f\t%4.2f",delay,(int)diphi,curratio,newratio);
+
       if (fabs(newratio-0.5) < fabs(curratio-0.5)) {
 	p2opt->SetBinContent(ibinx,ibiny,newratio);
+	p2opt->SetBinEntries(p2opt->GetBin(ibinx,ibiny),1);
 	optdelays->SetBinContent(ibinx,ibiny,delay);
+	//if ((dieta==-30.0) && (depth==2)) printf ("*\n");
       }
+      //else if ((dieta==-30.0) && (depth==2)) printf ("\n");
     }
   } // histo bin loop
-}
+}                                                // refineTimesAndDelays
 
 //======================================================================
 
@@ -259,10 +277,13 @@ HFscanPostAnal::HFscanPostAnal(const edm::ParameterSet& iConfig)
 
   std::cerr << "-=-=-=-=-=HFscanPostAnal Constructor=-=-=-=-=-" << std::endl;
 
-  writeBricks_ = iConfig.getUntrackedParameter<bool>("writeBricks",false);
+  writeBricks_    = iConfig.getUntrackedParameter<bool>("writeBricks",false);
+  globalOffsetns_ = iConfig.getParameter<int>("globalOffsetns");
 
   std::vector<std::string> fnamesPerSetting =
     iConfig.getParameter<std::vector<std::string> >("fileVectorOnePerSetting");
+
+  lastCutDir_ = iConfig.getUntrackedParameter<std::string>("lastCutDir");
 
   for (uint32_t i=0; i<fnamesPerSetting.size(); i++) {
     int delay=-1;
@@ -274,14 +295,13 @@ HFscanPostAnal::HFscanPostAnal(const edm::ParameterSet& iConfig)
 	delay = str2int(fname.substr(pos1+1,pos2-pos1-1));
     }
     if (delay==-1) {
-      cerr << "Wrong format filename " << fname;
-      cerr << ", need delay setting to be embedded in the name between '=' and '.'";
-      exit(-1);
+      throw cms::Exception("Wrong format filename") << fname <<
+	", need delay setting to be embedded in the name between '=' and '.'" << endl;
     }
     TFile *rootfile = new TFile(fnamesPerSetting[i].c_str());
     if (rootfile->IsZombie()) {
       cerr << "File failed to open, " << fnamesPerSetting[i] << endl;
-      exit(-1);
+      continue;
     }
     
     m_filesPerSetting_.insert(std::pair<int,TFile *>(delay,rootfile));
@@ -321,8 +341,12 @@ TProfile2D *getProfile(TFile *rootfile,const std::string& name, int delay)
 void
 HFscanPostAnal::collectOptimizedDigis(TH2I *hoptset,int depth)
 {
+  cout << "collectOptimizedDigis depth=" << depth << endl;
+
   edm::Service<TFileService> fs;
-  TFileDirectory outdigidir = fs->mkdir("OptDigisGeVperID");
+  TFileDirectory outdigidir = fs->mkdir("_OptDigisGeVperID");
+  TFileDirectory outts43dir = fs->mkdir("_ts43ratioVsEperID");
+  bool firstHisto=true;
 
   for (int ibinx=1; ibinx<=hoptset->GetNbinsX(); ibinx++) {
     for (int ibiny=1; ibiny<=hoptset->GetNbinsY(); ibiny++) {
@@ -335,18 +359,36 @@ HFscanPostAnal::collectOptimizedDigis(TH2I *hoptset,int depth)
       int    optset  = (int)hoptset->GetBinContent(ibinx,ibiny);
 
       TProfile *hdigi=0;
+      TH2F     *hts43ratio=0;
       std::map<int,TFile *>::const_iterator it = m_filesPerSetting_.find(optset);
 
       if (it != m_filesPerSetting_.end()) {
-	std::string hdigipath = "hftimeanal/HF/cut4ncHits/DigisGeVperID/"+detIDstr.str();
+	std::string hdigipath = lastCutDir_ + "/_DigisGeVperID/"+detIDstr.str();
 	hdigi = (TProfile *)it->second->Get(hdigipath.c_str());
+
+	std::string hts43path = lastCutDir_ + "/_2TSratioVsEperID/"+detIDstr.str();
+	hts43ratio = (TH2F *)it->second->Get(hts43path.c_str());
       }
 
       if (!hdigi) {
-	cerr << "Couldn't get DetID " << detIDstr.str() << " for " << hoptset->GetName() << endl;
+	cerr<<"Couldn't get digi profile, DetID="<<detIDstr.str()<<" for "<<hoptset->GetName()<<endl;
+	continue;
+      }
+
+      if (!hts43ratio) {
+	cerr<<"Couldn't get ts43ratio histo, DetID="<<detIDstr.str()<<" for "<<hoptset->GetName()<<endl;
 	continue;
       }
       outdigidir.make<TProfile>(*hdigi);
+      outts43dir.make<TH2F>(*hts43ratio);
+
+      if (firstHisto) {
+	hts43ratioAllHF_ = fs->make<TH2F>(*hts43ratio);
+	hts43ratioAllHF_->SetNameTitle("hts43ratioVsEallHF",
+      "2TS ratio vs Energy, All HF, (optimal jitter settings); E (GeV); 2TS ratio");
+	firstHisto = false;
+      } else
+	hts43ratioAllHF_->Add(hts43ratio);
     }
   }
 }                               // HFscanPostAnal::collectOptimizedDigis
@@ -355,6 +397,8 @@ HFscanPostAnal::collectOptimizedDigis(TH2I *hoptset,int depth)
 
 void HFscanPostAnal::graphSettingsPerID(TProfile2D *tp,int depth,int delay)
 {
+  cout << "graphSettingsPerID depth=" << depth << ", delay=" << delay << endl;
+
   for (int ibinx=1; ibinx<=tp->GetNbinsX(); ibinx++) {
     for (int ibiny=1; ibiny<=tp->GetNbinsY(); ibiny++) {
       if (!tp->GetBinEntries(tp->GetBin(ibinx,ibiny))) continue;
@@ -386,15 +430,18 @@ void HFscanPostAnal::graphSettingsPerID(TProfile2D *tp,int depth,int delay)
 void
 HFscanPostAnal::genSettingTable(TH2I *optdelays,int depth)
 {
-  string fname = string(optdelays->GetName())+".csv";
-  FILE *fp=fopen(fname.c_str(),"w");
+  cout << "genSettingTable depth=" << depth << endl;
+
+  stringstream fname;
+  fname << string(optdelays->GetName()) << "_offset=" << globalOffsetns_ << ".csv";
+  FILE *fp=fopen(fname.str().c_str(),"w");
 
   if (!fp) {
-    cerr << "Failed to open " << fname.c_str() <<" for writing" << endl;
+    cerr << "Failed to open " << fname.str() <<" for writing" << endl;
     return;
   }
 
-  fprintf(fp,"SD\tieta\tiphi\tdpth\tRBX\tRM\tcard\tadc\tAvgT(ns)\n");
+  fprintf(fp,"#SD\tieta\tiphi\tdpth\tRBX\tRM\tcard\tadc\tSetting(ns)\n");
  
   for (int ibinx=1; ibinx<=optdelays->GetNbinsX(); ibinx++) {
     for (int ibiny=1; ibiny<=optdelays->GetNbinsY(); ibiny++) {
@@ -402,6 +449,10 @@ HFscanPostAnal::genSettingTable(TH2I *optdelays,int depth)
       int iphi  = (int)optdelays->GetYaxis()->GetBinCenter(ibiny);
       int delay = (int)optdelays->GetBinContent(ibinx,ibiny);
       if (!HcalDetId::validDetId(HcalForward,ieta,iphi,depth)) continue;
+
+      delay += globalOffsetns_;
+      delay = std::max(delay,0);
+      delay = std::min(delay,24);
 
       HcalDetId detID(HcalForward,ieta,iphi,depth);
       HcalFrontEndId feID = lmap_->getHcalFrontEndId(detID);
@@ -446,10 +497,10 @@ HFscanPostAnal::endJob()
 
     cout << "Processing delay=" << delay << endl;
 
-    std::string st_hfpd1("hftimeanal/HF/cut4ncHits/p2d_TS34ratioProfHFPd1");
-    std::string st_hfpd2("hftimeanal/HF/cut4ncHits/p2d_TS34ratioProfHFPd2");
-    std::string st_hfmd1("hftimeanal/HF/cut4ncHits/p2d_TS34ratioProfHFMd1");
-    std::string st_hfmd2("hftimeanal/HF/cut4ncHits/p2d_TS34ratioProfHFMd2");
+    std::string st_hfpd1(lastCutDir_+"/p2d_ts43ratioProfHFPd1");
+    std::string st_hfpd2(lastCutDir_+"/p2d_ts43ratioProfHFPd2");
+    std::string st_hfmd1(lastCutDir_+"/p2d_ts43ratioProfHFMd1");
+    std::string st_hfmd2(lastCutDir_+"/p2d_ts43ratioProfHFMd2");
 
     TProfile2D *tphfpd1 = getProfile(rootfile,st_hfpd1, it->first);
     TProfile2D *tphfpd2 = getProfile(rootfile,st_hfpd2, it->first);
@@ -466,13 +517,12 @@ HFscanPostAnal::endJob()
       tphfpd2opt_->SetTitle("HFP depth 2 Optimized Ratios");
       tphfmd1opt_->SetTitle("HFM depth 1 Optimized Ratios");
       tphfmd2opt_->SetTitle("HFM depth 2 Optimized Ratios");
-      continue;
+    } else {
+      refineTimesAndDelays(tphfpd1opt_,tphfpd1,optdel_hfpd1_,delay,1);
+      refineTimesAndDelays(tphfpd2opt_,tphfpd2,optdel_hfpd2_,delay,2);
+      refineTimesAndDelays(tphfmd1opt_,tphfmd1,optdel_hfmd1_,delay,1);
+      refineTimesAndDelays(tphfmd2opt_,tphfmd2,optdel_hfmd2_,delay,2);
     }
-    refineTimesAndDelays(tphfpd1opt_,tphfpd1,optdel_hfpd1_,delay);
-    refineTimesAndDelays(tphfpd2opt_,tphfpd2,optdel_hfpd2_,delay);
-    refineTimesAndDelays(tphfmd1opt_,tphfmd1,optdel_hfmd1_,delay);
-    refineTimesAndDelays(tphfmd2opt_,tphfmd2,optdel_hfmd2_,delay);
-
     graphSettingsPerID(tphfpd1,1,delay);
     graphSettingsPerID(tphfpd2,2,delay);
     graphSettingsPerID(tphfmd1,1,delay);
@@ -495,12 +545,12 @@ HFscanPostAnal::endJob()
   genAdditionalProfiles(optdel_hfpd2_,2);
   genAdditionalProfiles(optdel_hfmd1_,1);
   genAdditionalProfiles(optdel_hfmd2_,2);
-
+#if 0
   collectOptimizedDigis(optdel_hfpd1_,1);
   collectOptimizedDigis(optdel_hfpd2_,2);
   collectOptimizedDigis(optdel_hfmd1_,1);
   collectOptimizedDigis(optdel_hfmd2_,2);
-
+#endif
   // generate settings per feID.
   //
   optsettings_.clear();
