@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.20 2010/04/12 10:25:25 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.21 2010/04/22 03:26:27 dudero Exp $
 //
 //
 
@@ -229,45 +229,45 @@ static const double digEbins[] = {
 //======================================================================
 // functions to facilitate auto-fill
 //
-bool isPlus   (const DetId& id) {
+static bool isPlus   (const DetId& id) {
   return ((id.det() == DetId::Hcal) ? (HcalDetId(id)).zside()>0:(HcalZDCDetId(id).zside()>0));
 }
-bool isMinus  (const DetId& id) {
+static bool isMinus  (const DetId& id) {
   return ((id.det() == DetId::Hcal) ? (HcalDetId(id)).zside()<0:(HcalZDCDetId(id).zside()<0));
 }
-bool isDepth1 (const DetId& id) {
+static bool isDepth1 (const DetId& id) {
   return ((id.det() == DetId::Hcal) ? (HcalDetId(id)).depth()==1:(HcalZDCDetId(id).depth()==1));
 }
 
-bool isDepth2 (const DetId& id) { return ((HcalDetId(id)).depth()==2); }
-bool isDepth3 (const DetId& id) { return ((HcalDetId(id)).depth()==3); }
-bool isDepth4 (const DetId& id) { return ((HcalDetId(id)).depth()==4); }
-bool isHBHE   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalBarrel) ||
-					  ((HcalDetId(id)).subdet()==HcalEndcap)); }
-bool isHBHEd1 (const DetId& id) { return (((HcalDetId(id)).depth()==1) &&
-					  (((HcalDetId(id)).subdet()==HcalBarrel) ||
-					   ((HcalDetId(id)).subdet()==HcalEndcap))); }
-bool isHBHEd2 (const DetId& id) { return (((HcalDetId(id)).depth()==2) &&
-					  (((HcalDetId(id)).subdet()==HcalBarrel) ||
-					   ((HcalDetId(id)).subdet()==HcalEndcap))); }
-bool isHO2M   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
-					  ((HcalDetId(id)).ieta()>=-15)&&((HcalDetId(id)).ieta()<=-11)); }
-bool isHO1M   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
-					  ((HcalDetId(id)).ieta()>=-10)&&((HcalDetId(id)).ieta()<=-5));  }
-bool isHO0    (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
-					  ((HcalDetId(id)).ieta()>=-4)&&((HcalDetId(id)).ieta()<=4));    }
-bool isHO1P   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
-					  ((HcalDetId(id)).ieta()>=5)&&((HcalDetId(id)).ieta()<=10));    }
-bool isHO2P   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
-					  ((HcalDetId(id)).ieta()>=11)&&((HcalDetId(id)).ieta()<=15));   }
-bool isHFPd1  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
-					  ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==1)); }
-bool isHFPd2  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
-					  ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==2)); }
-bool isHFMd1  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
-					  ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==-1)); }
-bool isHFMd2  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
-					  ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==-2)); }
+static bool isDepth2 (const DetId& id) { return ((HcalDetId(id)).depth()==2); }
+static bool isDepth3 (const DetId& id) { return ((HcalDetId(id)).depth()==3); }
+static bool isDepth4 (const DetId& id) { return ((HcalDetId(id)).depth()==4); }
+static bool isHBHE   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalBarrel) ||
+						 ((HcalDetId(id)).subdet()==HcalEndcap)); }
+static bool isHBHEd1 (const DetId& id) { return (((HcalDetId(id)).depth()==1) &&
+						 (((HcalDetId(id)).subdet()==HcalBarrel) ||
+						  ((HcalDetId(id)).subdet()==HcalEndcap))); }
+static bool isHBHEd2 (const DetId& id) { return (((HcalDetId(id)).depth()==2) &&
+						 (((HcalDetId(id)).subdet()==HcalBarrel) ||
+						  ((HcalDetId(id)).subdet()==HcalEndcap))); }
+static bool isHO2M   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
+						 ((HcalDetId(id)).ieta()>=-15)&&((HcalDetId(id)).ieta()<=-11)); }
+static bool isHO1M   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
+						 ((HcalDetId(id)).ieta()>=-10)&&((HcalDetId(id)).ieta()<=-5));  }
+static bool isHO0    (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
+						 ((HcalDetId(id)).ieta()>=-4)&&((HcalDetId(id)).ieta()<=4));    }
+static bool isHO1P   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
+						 ((HcalDetId(id)).ieta()>=5)&&((HcalDetId(id)).ieta()<=10));    }
+static bool isHO2P   (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalOuter) &&
+						 ((HcalDetId(id)).ieta()>=11)&&((HcalDetId(id)).ieta()<=15));   }
+static bool isHFPd1  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
+						 ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==1)); }
+static bool isHFPd2  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
+						 ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==2)); }
+static bool isHFMd1  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
+						 ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==-1)); }
+static bool isHFMd2  (const DetId& id) { return (((HcalDetId(id)).subdet()==HcalForward) &&
+						 ((HcalDetId(id)).zside()*(HcalDetId(id)).depth()==-2)); }
 
 //======================================================================
 
@@ -361,17 +361,18 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig) :
 {
   compileCorrections(iConfig.getParameter<vector<edm::ParameterSet> >("CorrectionsList"));
 
-  minHitGeV_          = iConfig.getParameter<double>("minHitGeV");
-  maxHitGeV_          = iConfig.getParameter<double>("maxHitGeV");
+  ampCutsInfC_        = iConfig.getParameter<bool>  ("ampCutsInfC");
+  minHitAmplitude_    = iConfig.getParameter<double>("minHit_GeVorfC");
+  maxHitAmplitude_    = iConfig.getParameter<double>("maxHit_GeVorfC");
+  recHitEscaleMinGeV_ = iConfig.getParameter<double>("recHitEscaleMinGeV");
+  recHitEscaleMaxGeV_ = iConfig.getParameter<double>("recHitEscaleMaxGeV");
+  recHitTscaleNbins_  = iConfig.getParameter<int>   ("recHitTscaleNbins");
+  recHitTscaleMinNs_  = iConfig.getParameter<double>("recHitTscaleMinNs");
+  recHitTscaleMaxNs_  = iConfig.getParameter<double>("recHitTscaleMaxNs");
 #if 0
   timeWindowMinNS_    = iConfig.getParameter<double>("timeWindowMinNS");
   timeWindowMaxNS_    = iConfig.getParameter<double>("timeWindowMaxNS");
 #endif
-  recHitTscaleNbins_  = iConfig.getParameter<int>   ("recHitTscaleNbins");
-  recHitTscaleMinNs_  = iConfig.getParameter<double>("recHitTscaleMinNs");
-  recHitTscaleMaxNs_  = iConfig.getParameter<double>("recHitTscaleMaxNs");
-  recHitEscaleMinGeV_ = iConfig.getParameter<double>("recHitEscaleMinGeV");
-  recHitEscaleMaxGeV_ = iConfig.getParameter<double>("recHitEscaleMaxGeV");
   maxEventNum2plot_   = iConfig.getParameter<int>   ("maxEventNum2plot");
   normalizeDigis_     = iConfig.getParameter<bool>  ("normalizeDigis");
   doPerChannel_       = iConfig.getParameter<bool>  ("doPerChannel");
@@ -379,6 +380,9 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   doTree_             = iConfig.getUntrackedParameter<bool>("doTree",false);
 
   recHitEscaleNbins_ = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+
+  recHitEscaleMinfC_ = 5*recHitEscaleMinGeV_;
+  recHitEscaleMaxfC_ = 5*recHitEscaleMaxGeV_;
 
   edm::ParameterSet TrecoParams =
     iConfig.getParameter<edm::ParameterSet>("TrecoParams");
@@ -402,7 +406,7 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   if (!mysubdetstr_.compare("HF"))  mysubdet_ = HcalForward; else
   if (!mysubdetstr_.compare("ZDC")) mysubdet_ = HcalOther;   else {
     throw cms::Exception("Unknown subdet string: ") << mysubdetstr_ << endl;
-  } 	 
+  }
 
   firstEvent_ = true;
 }                            // HcalDelayTunerAlgos::HcalDelayTunerAlgos
@@ -640,11 +644,6 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	       (void *)&corTime_,NULL,(detIDfun_t)&isMinus,v_hpars1d_af);
 
-  add1dAFhisto("h1d_rhCorTimesD1" + mysubdetstr_,
-	       "Depth 1 RecHit Times, "+mysubdetstr_+", Run "+runnumstr_+"; Rechit Time (ns)",
-	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
-	       (void *)&corTime_,NULL,(detIDfun_t)&isDepth1,v_hpars1d_af);
-
   add1dAFhisto("h1d_RHEnergies" + mysubdetstr_,
 	       "RecHit Energies, "+mysubdetstr_+", Run "+runnumstr_+"; Rechit Energy (GeV)",
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
@@ -676,14 +675,19 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
    * 1-D PROFILES:                         *
    *****************************************/
 
+  string yaxist = normalizeDigis_ ? "Normalized fC" : "fC";
+
   st_avgPulse_   = "h1d_pulse" + mysubdetstr_;
-  add1dHisto(st_avgPulse_,"Average Pulse Shape, " + mysubdetstr_,10,-0.5,9.5,v_hpars1dprof);
+  add1dHisto(st_avgPulse_,"Average Pulse Shape, "+mysubdetstr_+"; TS;"+yaxist,
+	     10,-0.5,9.5,v_hpars1dprof);
 
   st_avgPulsePlus_   = "h1d_pulse" + mysubdetstr_ + "P";
-  add1dHisto(st_avgPulsePlus_,"Average Pulse Shape, " + mysubdetstr_+"P",10,-0.5,9.5,v_hpars1dprof);
+  add1dHisto(st_avgPulsePlus_,"Average Pulse Shape, "+mysubdetstr_+"P; TS;"+yaxist,
+	     10,-0.5,9.5,v_hpars1dprof);
 
   st_avgPulseMinus_   = "h1d_pulse" + mysubdetstr_ + "M";
-  add1dHisto(st_avgPulseMinus_,"Average Pulse Shape, " + mysubdetstr_+"M",10,-0.5,9.5,v_hpars1dprof);
+  add1dHisto(st_avgPulseMinus_,"Average Pulse Shape, "+mysubdetstr_+"M; TS;"+yaxist,
+	     10,-0.5,9.5,v_hpars1dprof);
 
   add1dAFhisto( "h1d_avgTperEvIn" + mysubdetstr_,
 		"Depth 1 Averaged Time Per Event in "+mysubdetstr_+", Run "+runnumstr_+"; Event Number; Average Time (ns)",
@@ -770,6 +774,20 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
       if(h1f)labelHitFlagAxis(*h1f,mysubdet_);
     }
 
+    // Digi pulses binned by energy, by hemisphere
+    st_pulsePerEbinPlus_  = "p2d_pulsePerEbin" + mysubdetstr_ + "P";
+    st_pulsePerEbinMinus_ = "p2d_pulsePerEbin" + mysubdetstr_ + "M";
+
+    string titlestr;
+    titlestr =
+      "Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
+    cutAH->book2d<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
+			      10,-0.5,9.5, nEbins, digEbins);
+    titlestr =
+      "Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
+    cutAH->book2d<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
+			      10,-0.5,9.5, nEbins, digEbins);
+
     if (cutit->second->doInverted()) {
       myAnalHistos *invAH = cutit->second->invhistos();
       invAH->book1d<TH1F>      (v_hpars1d);
@@ -787,6 +805,15 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 	if(tp) labelSubdetAxis(*tp);
 	if(h1f)labelHitFlagAxis(*h1f,mysubdet_);
       }
+
+      titlestr =
+	"Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
+      invAH->book2d<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
+				10,-0.5,9.5, nEbins, digEbins);
+      titlestr =
+	"Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
+      invAH->book2d<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
+				10,-0.5,9.5, nEbins, digEbins);
     }
 
     if (cutit->second->flagSet(st_fillDetail_))
@@ -893,6 +920,7 @@ HcalDelayTunerAlgos::bookHFbasicProfiles(myAnalHistos *myAH)
 void
 HcalDelayTunerAlgos::bookD1D2detail(myAnalHistos *myAH)
 {
+  std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1d_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1dprof_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars2dprof_af;
 
@@ -911,6 +939,20 @@ HcalDelayTunerAlgos::bookD1D2detail(myAnalHistos *myAH)
   std::string st_avgTimePerRMd2_   = "p1d_avgTimePerRMd2"      + mysubdetstr_;
   std::string st_rhTuncProfd1_     = "p2d_rhTuncPerIetaIphiD1" + mysubdetstr_;
   std::string st_rhTuncProfd2_     = "p2d_rhTuncPerIetaIphiD2" + mysubdetstr_;
+
+  /*****************************************
+   * 1-D HISTOGRAMS:                       *
+   *****************************************/
+
+  add1dAFhisto("h1d_rhCorTimesD1" + mysubdetstr_,
+	       "Depth 1 RecHit Times, "+mysubdetstr_+", Run "+runnumstr_+"; Rechit Time (ns)",
+	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+	       (void *)&corTime_,NULL,(detIDfun_t)&isDepth1,v_hpars1d_af);
+
+  add1dAFhisto("h1d_rhCorTimesD2" + mysubdetstr_,
+	       "Depth 2 RecHit Times, "+mysubdetstr_+", Run "+runnumstr_+"; Rechit Time (ns)",
+	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+	       (void *)&corTime_,NULL,(detIDfun_t)&isDepth2,v_hpars1d_af);
 
   /*****************************************
    * 1-D PROFILES:                         *
@@ -974,6 +1016,7 @@ HcalDelayTunerAlgos::bookD1D2detail(myAnalHistos *myAH)
 	       (void *)&fieta_,(void *)&fiphi_,(void *)&corTime_,
 	       (detIDfun_t)&isDepth2,v_hpars2dprof_af);
 
+  myAH->book1d<TH1F>      (v_hpars1d_af);
   myAH->book1d<TProfile>  (v_hpars1dprof_af);
   myAH->book2d<TProfile2D>(v_hpars2dprof_af);
 
@@ -1232,22 +1275,6 @@ HcalDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
   default:break;
   }
 
-  // Digi pulses binned by energy, by hemisphere
-  st_pulsePerEbinPlus_  = "p2d_pulsePerEbin" + mysubdetstr_ + "P";
-  st_pulsePerEbinMinus_ = "p2d_pulsePerEbin" + mysubdetstr_ + "M";
-
-  string titlestr;
-
-  titlestr =
-    "Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
-  cutAH->book2d<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
-			   10,-0.5,9.5, nEbins, digEbins);
-
-  titlestr =
-    "Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
-  cutAH->book2d<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
-			   10,-0.5,9.5, nEbins, digEbins);
-
   if (cut.flagSet(st_doPerChannel_))
     bookPerChanDetail(cutAH); // but not for the inverted!!
 
@@ -1351,16 +1378,16 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
   } // if HB/HE/HF
 
 
+  fillDigiPulseHistos(myAH->get<TProfile>(st_avgPulse_.c_str()));
+
+  // segregate +side/-side digis for timing comparison
+  fillDigiPulseHistos
+    (myAH->get<TProfile>  (((zside>0)?st_avgPulsePlus_.c_str():st_avgPulseMinus_.c_str())),
+     myAH->get<TProfile2D>(((zside>0)?st_pulsePerEbinPlus_.c_str():st_pulsePerEbinMinus_.c_str())));
+
   if (thisCut.flagSet(st_fillDetail_)) {
     //cout << detId << "\t" << feID.rbx() << "\t" << feID.rbx().substr(3,2) << "\t";
     //cout << feID.rm() << " maps to RBX/RM# " << iRBX << "/" << iRM << endl;
-
-    fillDigiPulseHistos(myAH->get<TProfile>(st_avgPulse_.c_str()));
-
-    // segregate +side/-side digis for timing comparison
-    fillDigiPulseHistos
-      (myAH->get<TProfile>  (((zside>0)?st_avgPulsePlus_.c_str():st_avgPulseMinus_.c_str())),
-       myAH->get<TProfile2D>(((zside>0)?st_pulsePerEbinPlus_.c_str():st_pulsePerEbinMinus_.c_str())));
 
 #if 0
     // per-channel histograms
@@ -1383,12 +1410,10 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
       }
 
       perChanHistos *digifChistos       = myAH->getAttachedHisto<uint32_t>("_DigisfCperID");
-#if 0
       perChanHistos *digifCvsEhistos    = myAH->getAttachedHisto<uint32_t>("_DigisfCvsEperID");
       perChanHistos *digiGeVhistos      = myAH->getAttachedHisto<uint32_t>("_DigisGeVperID");
       perChanHistos *digiGeVvsEhistos   = myAH->getAttachedHisto<uint32_t>("_DigisGeVvsEperID");
       perChanHistos *rhperidHistos      = myAH->getAttachedHisto<uint32_t>("_corTimesPerID");
-#endif
 
       perChanHistos::HistoParams_t hpars(title.str(),title.str(),10,-0.5,9.5);
 
@@ -1398,7 +1423,7 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
       tp1 = digifChistos->exists(dix)      ?         // Digis in fC, all energies
 	digifChistos->get<TProfile>(dix) :
 	digifChistos->book1d<TProfile>(dix,hpars,false);
-#if 0
+
       tp2 = digiGeVhistos->exists(dix) ?            // Digis in GeV, all energies
 	digiGeVhistos->get<TProfile>(dix) :
 	digiGeVhistos->book1d<TProfile>(dix,hpars,false);
@@ -1423,10 +1448,11 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 	digiGeVvsEhistos->get<TProfile2D>(dix) :
 	digiGeVvsEhistos->book2d<TProfile2D>
 	(dix,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
-#endif
-      fillDigiPulseHistos(tp1); // ,tp3,tp2,tp4);
 
-      //htcor->Fill(corTime_);
+      fillDigiPulseHistos(tp1,tp3,tp2,tp4);
+
+      if (hitenergy_ > 30.0)
+	htcor->Fill(corTime_);
 
     } // if doPerChannel_
   } // if filldetail
@@ -1455,15 +1481,16 @@ HcalDelayTunerAlgos::fillDigiPulseHistos(TProfile   *hpulse,
   }
 
   // pulses in fC
-  if (hpulse)
+  if (hpulse) {
     for (int its=0; its<digisize; ++its)
       hpulse->Fill(its,filldigifC[its]);
+  }
 
   // ...binned by energy...
-  if (hpulsePerE)
+  if (hpulsePerE) {
     for (int its=0; its<digisize; ++its)
       hpulsePerE->Fill(its, hitenergy_, filldigifC[its] );
-
+  }
   // pulses in Energy
   if (hpulseE)
     for (unsigned its=0; its<digiGeV_.size(); ++its)
@@ -1534,8 +1561,9 @@ HcalDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup,
     "subdet_            = "      << mysubdetstr_       << "\n" << 
     "globalToffset_     = "      << globalToffset_     << "\n" << 
     "globalFlagMask_    = "<<hex << globalFlagMask_    << "\n" << 
-    "minHitGeV_         = "<<dec << minHitGeV_         << "\n" << 
-    "maxHitGeV_         = "      << maxHitGeV_         << "\n" << 
+    "ampCutsInfC_       = "      << ampCutsInfC_       << "\n" << 
+    "minHitAmplitude_   = "<<dec << minHitAmplitude_   << "\n" << 
+    "maxHitAmplitude_   = "      << maxHitAmplitude_   << "\n" << 
     "normalizeDigis_    = "      << normalizeDigis_    << "\n" <<
     "doPerChannel_      = "      << doPerChannel_      << "\n" <<
     "doTree_            = "      << doTree_            << "\n" <<
