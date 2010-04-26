@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.9 2010/04/06 10:46:27 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.10 2010/04/22 03:22:59 dudero Exp $
 //
 //
 
@@ -204,7 +204,7 @@ void LaserDelayTunerAlgos::processRecHitsAndDigis
 
     fillHistos4cut(*(m_cuts_["cutNone"]));
 
-    bool isOverThresh = (hitenergy_ > minHitGeV_);
+    bool isOverThresh = (hitenergy_ > minHitAmplitude_);
 
     if (isOverThresh)                 fillHistos4cut(*(m_cuts_["cutMinHitGeV"]));
     if (TDCalgo_->isWithinWindow()) { fillHistos4cut(*(m_cuts_["cutTDCwindow"]));

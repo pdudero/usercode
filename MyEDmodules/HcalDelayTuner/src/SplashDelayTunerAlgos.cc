@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashDelayTunerAlgos.cc,v 1.14 2010/04/06 10:46:27 dudero Exp $
+// $Id: SplashDelayTunerAlgos.cc,v 1.15 2010/04/22 03:22:59 dudero Exp $
 //
 //
 
@@ -272,7 +272,7 @@ void SplashDelayTunerAlgos::processDigisAndRecHits
 
     fillHistos4cut(*(m_cuts_["cut0none"]));
 
-    if (rh.energy() > minHitGeV_)            { fillHistos4cut(*(m_cuts_["cut1minHitGeV"]));
+    if (rh.energy() > minHitAmplitude_)        { fillHistos4cut(*(m_cuts_["cut1minHitGeV"]));
       if (acceptedBxNums_.empty() ||
 	  inSet<int>(acceptedBxNums_,bxnum_))  { fillHistos4cut(*(m_cuts_["cut2bxnum"]));
 	if (!(hitflags_ & globalFlagMask_))    { fillHistos4cut(*(m_cuts_["cut3badFlags"]));
