@@ -6,7 +6,10 @@ then
     exit
 fi
 
-export NEWFMT='%*s %*d %*d %*d %s %d %d %d %d'
+export WRITEBRICKS=False
+export GLOBALOFFSET=0
+export LASTCUTDIR="hftimeanal/HF/cut8keepGoodHits"
+#export LASTCUTDIR="hftimeanal/HF/cut4outOfTime"
 
 CFGFILE=${0%.sh}_cfg.py
 cat > ${CFGFILE} << EOF
@@ -34,7 +37,11 @@ process.TFileService = cms.Service("TFileService",
     closeFileFast = cms.untracked.bool(False)
 )
 
-process.load("MyEDmodules.HcalDelayTuner.hfscanpostanal_cfi")
+process.load("MyEDmodules.HcalDelayTuner.hfscanruns_cfi")
+process.hfscananal.writeBricks = cms.untracked.bool(${WRITEBRICKS})
+process.hfscananal.globalOffsetns = cms.int32(${GLOBALOFFSET})
+process.hfscananal.lastCutDir = cms.untracked.string("${LASTCUTDIR}")
+
 process.p = cms.Path(process.hfscananal)
 
 EOF
@@ -46,4 +53,4 @@ echo "   All done with run ${RUNNUMBER}! Deleting temp .cfg"
 echo " -----------------------------------------------------------------  " 
 echo "                                                                    "
 
-rm ${CFGFILE}
+#rm ${CFGFILE}
