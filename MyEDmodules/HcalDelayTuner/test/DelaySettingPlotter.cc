@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.6 2010/02/18 21:06:12 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.7 2010/03/05 13:20:16 dudero Exp $
 //
 //
 
@@ -26,6 +26,9 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include "DataFormats/HcalDetId/interface/HcalFrontEndId.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
@@ -56,9 +59,12 @@ private:
   void plotHB(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TH1D*dist);
   void plotHE(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TProfile2D*mapd3,TH1D*dist);
   void plotHO(const DelaySettings& settings,TProfile2D*mapd4,TH1D*dist);
-  void plotHF(const DelaySettings& settings,
-	      TProfile2D*mapHFPd1,TProfile2D*mapHFPd2,
-	      TProfile2D*mapHFMd1,TProfile2D*mapHFMd2,TH1D*dist);
+  void plotHF(const DelaySettings& settings,TProfile2D*mapd1,TProfile2D*mapd2,TH1D*dist);
+  void plotHFpol(const DelaySettings& settings,
+		 TProfile2D*mapHFPd1,TProfile2D*mapHFPd2,
+		 TProfile2D*mapHFMd1,TProfile2D*mapHFMd2);
+  void plotDiffMap(TProfile2D *oldmap, TProfile2D *newmap, int depth);
+
   void printStatsPerRBX(const DelaySettings& settings);
 
   // ----------member data ---------------------------
@@ -327,11 +333,37 @@ DelaySettingPlotter::printStatsPerRBX(const DelaySettings& settings)
 
 void
 DelaySettingPlotter::plotHF(const DelaySettings& settings,
-			    TProfile2D *mapHFPd1, TProfile2D *mapHFPd2,
-			    TProfile2D *mapHFMd1, TProfile2D *mapHFMd2,
+			    TProfile2D *mapd1, TProfile2D *mapd2,
 			    TH1D *dist)
 {
   cout <<"plotHF" << endl;
+  int settingd1, settingd2;
+  DelaySettings::const_iterator it;
+  for (int iphi=1; iphi <= 71; iphi+=2) {
+    for (int ieta=29; ieta<=41; ieta++) {
+      // Plus side
+      settingd1 = getSetting4(settings,HcalForward,ieta,iphi,1);
+      settingd2 = getSetting4(settings,HcalForward,ieta,iphi,2);
+      if (settingd1 != BADVAL) { mapd1->Fill(ieta,iphi,settingd1); dist->Fill(settingd1); }
+      if (settingd2 != BADVAL) { mapd2->Fill(ieta,iphi,settingd2); dist->Fill(settingd2); }
+
+      // Minus side
+      settingd1 = getSetting4(settings,HcalForward,-ieta,iphi,1);
+      settingd2 = getSetting4(settings,HcalForward,-ieta,iphi,2);
+      if (settingd1 != BADVAL) { mapd1->Fill(-ieta,iphi,settingd1); dist->Fill(settingd1); }
+      if (settingd2 != BADVAL) { mapd2->Fill(-ieta,iphi,settingd2); dist->Fill(settingd2); }
+    }
+  }
+}                                         // DelaySettingPlotter::plotHF
+
+//======================================================================
+
+void
+DelaySettingPlotter::plotHFpol(const DelaySettings& settings,
+			       TProfile2D *mapHFPd1, TProfile2D *mapHFPd2,
+			       TProfile2D *mapHFMd1, TProfile2D *mapHFMd2)
+{
+  cout <<"plotHFpol" << endl;
   int settingd1, settingd2;
   DelaySettings::const_iterator it;
   for (int iphi=1; iphi <= 71; iphi+=2) {
@@ -341,17 +373,60 @@ DelaySettingPlotter::plotHF(const DelaySettings& settings,
       // Plus side
       settingd1 = getSetting4(settings,HcalForward,ieta,iphi,1);
       settingd2 = getSetting4(settings,HcalForward,ieta,iphi,2);
-      if (settingd1 != BADVAL) { mapHFPd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
-      if (settingd2 != BADVAL) { mapHFPd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
+      if (settingd1 != BADVAL) mapHFPd1->Fill(radius,angle,settingd1);
+      if (settingd2 != BADVAL) mapHFPd2->Fill(radius,angle,settingd2);
 
       // Minus side
       settingd1 = getSetting4(settings,HcalForward,-ieta,iphi,1);
       settingd2 = getSetting4(settings,HcalForward,-ieta,iphi,2);
-      if (settingd1 != BADVAL) { mapHFMd1->Fill(radius,angle,settingd1); dist->Fill(settingd1); }
-      if (settingd2 != BADVAL) { mapHFMd2->Fill(radius,angle,settingd2); dist->Fill(settingd2); }
+      if (settingd1 != BADVAL) mapHFMd1->Fill(radius,angle,settingd1);
+      if (settingd2 != BADVAL) mapHFMd2->Fill(radius,angle,settingd2);
     }
   }
-}                                         // DelaySettingPlotter::plotHF
+}                                      // DelaySettingPlotter::plotHFpol
+
+//======================================================================
+
+void
+DelaySettingPlotter::plotDiffMap(TProfile2D *oldmap, TProfile2D *newmap, int depth)
+{
+  assert ((oldmap->GetNbinsX() == newmap->GetNbinsX()) &&
+	  (oldmap->GetNbinsY() == newmap->GetNbinsY())    );
+
+  edm::Service<TFileService> fs;
+  stringstream name,title;
+  name  << "diffmapd" << depth;
+  title << "Map of new-old settings, Depth " << depth;
+  TProfile2D *diffMap  = fs->make<TProfile2D>(*newmap);
+  diffMap->SetNameTitle(name.str().c_str(),title.str().c_str());
+
+  name.str(""); name  << "diffdistd" << depth;
+  title.str(""); title <<  "Distribution of new-old settings, Depth " << depth;
+  TH1I *diffDist = fs->make<TH1I>(name.str().c_str(), title.str().c_str(),
+				  21,-10.5,10.5);
+
+  for (int ibinx=1; ibinx<=diffMap->GetNbinsX(); ibinx++) {
+    for (int ibiny=1; ibiny<=diffMap->GetNbinsY(); ibiny++) {
+      int   ieta = (int)diffMap->GetXaxis()->GetBinCenter(ibinx);
+      int   iphi = (int)diffMap->GetYaxis()->GetBinCenter(ibiny);
+      HcalSubdetector subdet;
+      if (depth==4) subdet=HcalOuter;
+      else if (depth==3) subdet=HcalEndcap;
+      else if (abs(ieta) >= 29) subdet=HcalForward;
+      else if (abs(ieta) <= 16) subdet=HcalForward;
+      else subdet=HcalEndcap;
+      if (!HcalDetId::validDetId(subdet,ieta,iphi,depth)) continue;
+
+      int   ibin = diffMap->GetBin(ibinx,ibiny);
+      if (newmap->GetBinEntries(ibin) || oldmap->GetBinEntries(ibin)) {
+	if (subdet != HcalForward) cout << "What the H*&&??" << subdet << endl;
+	float diff = newmap->GetBinContent(ibin)- oldmap->GetBinContent(ibin);
+	diffMap->SetBinContent(ibin,diff);
+	diffDist->Fill(diff);
+      }
+    }
+  }
+}                                    // DelaySettingPlotter::plotDiffMap
 
 //======================================================================
 
@@ -388,7 +463,8 @@ DelaySettingPlotter::endJob()
   plotHB(oldsettings,oldmapd1,oldmapd2,olddist);
   plotHE(oldsettings,oldmapd1,oldmapd2,oldmapd3,olddist);
   plotHO(oldsettings,oldmapd4,olddist);
-  plotHF(oldsettings,oldmapHFPd1,oldmapHFPd2,oldmapHFMd1,oldmapHFMd2,olddist);
+  plotHF(oldsettings,oldmapd1,oldmapd2,olddist);
+  plotHFpol(oldsettings,oldmapHFPd1,oldmapHFPd2,oldmapHFMd1,oldmapHFMd2);
 
   TProfile2D*newmapd1=fs->make<TProfile2D>("newmapd1","New Delay Settings, Depth 1;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
   TProfile2D*newmapd2=fs->make<TProfile2D>("newmapd2","New Delay Settings, Depth 2;i#eta;i#phi", 83,-41.5,41.5, 72,0.5,72.5);
@@ -405,7 +481,13 @@ DelaySettingPlotter::endJob()
   plotHB(newsettings,newmapd1,newmapd2,newdist);
   plotHE(newsettings,newmapd1,newmapd2,newmapd3,newdist);
   plotHO(newsettings,newmapd4,newdist);
-  plotHF(newsettings,newmapHFPd1,newmapHFPd2,newmapHFMd1,newmapHFMd2,newdist);
+  plotHF(newsettings,newmapd1,newmapd2,newdist);
+  plotHFpol(newsettings,newmapHFPd1,newmapHFPd2,newmapHFMd1,newmapHFMd2);
+
+  if (oldmapd1->GetEntries() && newmapd1->GetEntries()) plotDiffMap(oldmapd1,newmapd1,1);
+  if (oldmapd2->GetEntries() && newmapd2->GetEntries()) plotDiffMap(oldmapd2,newmapd2,2);
+  if (oldmapd3->GetEntries() && newmapd3->GetEntries()) plotDiffMap(oldmapd3,newmapd3,3);
+  if (oldmapd4->GetEntries() && newmapd4->GetEntries()) plotDiffMap(oldmapd4,newmapd4,4);
 
   printStatsPerRBX(newsettings);
 }
