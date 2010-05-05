@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.18 2010/04/22 03:29:44 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.19 2010/04/26 12:58:44 dudero Exp $
 //
 //
 
@@ -120,6 +120,12 @@ protected:
 				  void *filladdrx, void *filladdry, void *filladdrw,
 				  detIDfun_t detIDfun,
 				  std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2d);
+
+  virtual void add3dHisto        (const std::string& name, const std::string& title,
+				  int nbinsx, double minx, double maxx,
+				  int nbinsy, double miny, double maxy,
+				  int nbinsz, double minz, double maxz,
+				  std::vector<myAnalHistos::HistoParams_t>& v_hpars3d);
   
   virtual void detChanCorsByPhiDepth   (const std::vector<TProfile *>& profsByPhi,
 					const tCorrection& tcor,

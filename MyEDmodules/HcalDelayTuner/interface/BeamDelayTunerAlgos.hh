@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.10 2010/04/22 03:29:44 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.11 2010/04/26 12:58:44 dudero Exp $
 //
 //
 
@@ -102,6 +102,9 @@ private:
   float totalEminus_, totalEplus_;
   float fCamplitude_, partnerfCamplitude_;
 
+  float treco3ts_;                    // time reconstructed with 3TS charge weighted algo
+  float tLUTminust3TS_;
+
   CaloSamples        partnerdigifC_;
   std::vector<float> partnerdigiGeV_;
 
@@ -135,8 +138,8 @@ private:
   std::string st_R2vsIeta_;
 
   std::string st_LvsSHF_;
-  std::string st_RvsTHFd1_;
-  std::string st_RvsTHFd2_;
+  std::string st_RvsTandfCHFd1_;
+  std::string st_RvsTandfCHFd2_;
   std::string st_rhDeltaTdepthsVsEtaEnHad_;
   std::string st_rhDeltaTdepthsVsEtaChHad_;
   std::string st_rhDeltaTdepthsVsEtaEnEM_;

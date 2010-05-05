@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.15 2010/04/22 03:26:25 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.16 2010/04/26 12:55:08 dudero Exp $
 //
 //
 
@@ -326,6 +326,7 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
   std::vector<myAnalHistos::HistoParams_t>   v_hpars2d;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars2d_af;
   std::vector<myAnalHistos::HistoParams_t>   v_hpars2dprof;
+  std::vector<myAnalHistos::HistoParams_t>   v_hpars3d;
 
   HcalDelayTunerAlgos::bookDetailHistos4cut(cut);
 
@@ -357,12 +358,44 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
 
     // study 2TS algo performance
     //
-    titlestr  = "T_{2ts} vs. 2TS Ratio, all HF, Run "+runnumstr_;
+    titlestr  = "T_{2TS} vs. 2TS Ratio, all HF, Run "+runnumstr_;
     titlestr += "; 2TS Ratio of E samples (0.5 = TS3/4 boundary); T_{2ts}";
     add2dAFhisto("h2d_TcorVs2TSratioAllHF",titlestr,200,-1.0,3.0,
 		 recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 		 (void *)&twoTSratio_,(void *)&corTime_,NULL,NULL,v_hpars2d_af);
 
+    // study 3TS algo performance
+    //
+    titlestr  = "T_{LUT}-T_{3TS} vs.Charge, all HF, Run "+runnumstr_;
+    titlestr += ";#Sigma_{i=2maxTS} fC_{i}; T_{LUT}-T_{3TS} (ns)";
+    add2dAFhisto("h2d_Tlut-T3TSvsChargeAllHF",titlestr,
+		 recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_,
+		 recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+		 (void *)&fCamplitude_,(void *)&tLUTminust3TS_,NULL,NULL,v_hpars2d_af);
+
+    titlestr  = "T_{LUT}-T_{3TS} vs.Energy, all HF, Run "+runnumstr_;
+    titlestr += ";#Sigma_{i=2maxTS} fC_{i}; T_{LUT}-T_{3TS} (ns)";
+    add2dAFhisto("h2d_Tlut-T3TSvsEnergyAllHF",titlestr,
+		 recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+		 recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+		 (void *)&hitenergy_,(void *)&tLUTminust3TS_,NULL,NULL,v_hpars2d_af);
+
+    titlestr  = "T(3TS) vs. Energy, HF; Rechit Energy (GeV); T(3TS) (ns)";
+    titlestr += "; Rechit Energy (GeV); T_{3TS} (ns)";
+    add2dAFhisto("h2d_t3tsVsEHF",titlestr,
+		 recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+		 recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+		 (void *)&hitenergy_,(void *)&treco3ts_,NULL,NULL, v_hpars2d_af);
+
+    titlestr  = "T(3TS) vs. #Sigma_{i=2maxTS} fC_{i}, HF";
+    titlestr += "; #Sigma_{i=2maxTS} fC_{i}; T(3TS) (ns)";
+    add2dAFhisto("h2d_t3tsVsChHF",titlestr,
+		 recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
+		 recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
+		 (void *)&hitenergy_,(void *)&treco3ts_,NULL,NULL, v_hpars2d_af);
+    
+    // Study occupancy  of good hits
+    //
     st_OccVsEtaEnergyBothOverThresh_ = "h2d_OccVsEtaEnergyBothOverThreshHF";
     titlestr  = "Nhits/tower Vs i#eta & E_{hit,min}, L,S>E_{hit,min}, HF";
     titlestr += ", Run "+runnumstr_+"; |i#eta|; E_{hit,min} (GeV)";
@@ -377,8 +410,10 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	       v_hpars2d);
               
+    // Study depth timing differences
+    //
     st_deltaTvsLandSenHF_ = "p2d_deltaTvsLandSenHF";
-    titlestr  = "T_{d2}-T_{d1} Vs. Long and Short Energies, "+mysubdetstr_;
+    titlestr  = "T_{d2}-T_{d1} Vs. Long and Short Energies, HF";
     titlestr += "; E_{LONG} (GeV); E_{SHORT} (GeV)";
     add2dHisto(st_deltaTvsLandSenHF_, titlestr,
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
@@ -386,7 +421,7 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
 	       v_hpars2dprof);
               
     st_deltaTvsLandSchHF_ = "p2d_deltaTvsLandSchHF";
-    titlestr  = "T_{d2}-T_{d1} Vs. Long and Short Charge Sums, "+mysubdetstr_;
+    titlestr  = "T_{d2}-T_{d1} Vs. Long and Short Charge Sums, HF";
     titlestr += "; fC_{LONG}; fC_{SHORT}";
     add2dHisto(st_deltaTvsLandSchHF_, titlestr,
 	       recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_,
@@ -407,7 +442,7 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
     add2dHisto(st_rhCorTimesD1vsD2minus_, titlestr,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_, v_hpars2d);
-
+#if 0
     st_lowEtimingMapD1_     = "p2d_lowEtimingMapD1";
     titlestr = "Hit Time Map (5GeV< E_{hit}< 10GeV) for Depth 1, Run "+runnumstr_+"; i#eta; i#phi";
     add2dHisto(st_lowEtimingMapD1_,titlestr,83,-41.5,41.5,72,0.5,72.5,v_hpars2dprof);
@@ -423,16 +458,18 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
     st_lateHitsTimeMapD2_ = "p2d_lateHitsTimeMapD2";
     titlestr = "Hit Time Map (T_{hit} > 12ns) for Depth 2, Run "+runnumstr_+"; i#eta; i#phi";
     add2dHisto(st_lateHitsTimeMapD2_,titlestr,83,-41.5,41.5,72,0.5,72.5,v_hpars2dprof);
+#endif
+    st_RvsTandfCHFd1_ = "h3d_RvsTandfCHFd1";
+    titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 1, Run "+runnumstr_+"; T_{2TS} (ns); R; Hit Energy (GeV)";
+    add3dHisto(st_RvsTandfCHFd1_, titlestr,
+	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,200,-1.0,1.0,
+ 	       recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_, v_hpars3d);
 
-    st_RvsTHFd1_ = "h2d_RvsTHFd1";
-    titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 1, Run "+runnumstr_+"; T_{2TS} (ns); R";
-    add2dHisto(st_RvsTHFd1_, titlestr, recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
-	       200,-1.0,1.0, v_hpars2d);
-
-    st_RvsTHFd2_ = "h2d_RvsTHFd2";
+    st_RvsTandfCHFd2_ = "h3d_RvsTandfCHFd2";
     titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 2, Run "+runnumstr_+"; T_{2TS} (ns); R";
-    add2dHisto(st_RvsTHFd2_, titlestr, recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
-	       200,-1.0,1.0, v_hpars2d);
+    add3dHisto(st_RvsTandfCHFd2_, titlestr,
+	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,200,-1.0,1.0,
+ 	       recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_,v_hpars3d);
 
     // per-channel beam-specific histos
     if (cut.flagSet(st_doPerChannel_)) {
@@ -473,6 +510,7 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
   myAH->book2d<TH2F>       (v_hpars2d);
   myAH->book2d<TH2F>       (v_hpars2d_af);
   myAH->book2d<TProfile2D> (v_hpars2dprof);
+  myAH->book3d<TH3F>       (v_hpars3d);
 
   if (mysubdet_==HcalForward) {
     st_rhDeltaTdepthsVsEtaEnHad_ = "p2d_rhDeltaTdepthsVsEtaEnHad" + mysubdetstr_;
@@ -507,6 +545,7 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
     myAH->book2d<TH2F>       (v_hpars2d);
     myAH->book2d<TH2F>       (v_hpars2d_af);
     myAH->book2d<TProfile2D> (v_hpars2dprof);
+    myAH->book3d<TH3F>       (v_hpars3d);
 
     if (mysubdet_==HcalForward) {
       titlestr  = "T_{d2}-T_{d1} Vs. #eta, Energy, E_{L}/2<E_{S}<2E_{L}";
@@ -548,7 +587,7 @@ BeamDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 
   if ((mysubdet_ == HcalForward) &&
       thisCut.flagSet(st_fillDetail_)) {
-
+#if 0
     if (hitenergy_ <= 10.0) {
       myAH->fill2d<TProfile2D>((detID_.depth()==1)?
 			       st_lowEtimingMapD1_:
@@ -565,7 +604,7 @@ BeamDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 			       detID_.iphi(),
 			       corTime_);
     }
-
+#endif
     // per-channel beam-specific histos
     if (thisCut.flagSet(st_doPerChannel_)) {
       uint32_t dix;
@@ -620,6 +659,8 @@ BeamDelayTunerAlgos::fillHFD1D2histos(myAnalHistos *myAH,
 
   float L=rhd1.energy();
   float S=rhd2.energy();
+  float LfC=(tgtisd1) ? fCamplitude_ : partnerfCamplitude_;
+  float SfC=(tgtisd1) ? partnerfCamplitude_ : fCamplitude_;
 
   int ntwr = 18*2;  // = 18 iphi towers in ieta=40,41 * 2 sides
   if (absieta < 40)  { ntwr *= 2; }
@@ -628,15 +669,13 @@ BeamDelayTunerAlgos::fillHFD1D2histos(myAnalHistos *myAH,
   float R =calcR (L,S);
   float R2=calcR2(L,S);
 
-  myAH->fill2d<TH2F>((tgtisd1 ? st_RvsTHFd1_: st_RvsTHFd2_),tgtTime,R);
+  if (tgtisd1)  myAH->fill3d<TH3F>(st_RvsTandfCHFd1_,tgtTime,R,LfC);
+  else          myAH->fill3d<TH3F>(st_RvsTandfCHFd2_,tgtTime,R,SfC);
 
   // However, histos that require both hits simultaneously get filled when
   // depth 1 hit is "the target"; don't double-count when depth 2 comes around!
   //
   if (tgtisd1) {
-    float LfC=fCamplitude_;
-    float SfC=partnerfCamplitude_;
-
     myAH->fill2d<TH2F>(st_RvsEtwr_,  R, (L+S),weight/13.);
     myAH->fill2d<TH2F>(st_R2vsEtwr_, R2,(L+S),weight/13.);
     myAH->fill2d<TH2F>(st_RvsIeta_,  R, absieta,weight);
@@ -791,7 +830,7 @@ int
 BeamDelayTunerAlgos::processDigi(const Digi& df,
 				 CaloSamples& digifC,
 				 std::vector<float>& digiGeV,
-				 float& twoTSratio,
+				 float& ratio2ts,
 				 float& fCamplitude)
 {
   int   maxts = -1;
@@ -824,6 +863,7 @@ BeamDelayTunerAlgos::processDigi(const Digi& df,
   float t0   = (maxts>0)                      ? digiGeV[maxts-1] : 0.0;
   float t2   = (maxts<(int)digiGeV_.size()-2) ? digiGeV[maxts+1] : 0.0;
   float t0fC = (maxts>0)                      ? digifC [maxts-1] : 0.0;
+  float t1fC =                                  digifC [maxts];
   float t2fC = (maxts<(int)digiGeV_.size()-2) ? digifC [maxts+1] : 0.0;
   float zerocorr=std::min(t0,t2);
   if (zerocorr<0.f) {
@@ -837,22 +877,28 @@ BeamDelayTunerAlgos::processDigi(const Digi& df,
   if (t0>t2) {
     wpksamp = t0+maxta;
     if (wpksamp != 0.f) wpksamp = maxta/wpksamp;
-    fCamplitude = t0fC+digifC[maxts];
+    fCamplitude = t0fC+t1fC;
   } else {
     // this would represent an *earlier* phase in the LUT than above,
     // so must increment the peak sample by one to get the time right
     wpksamp = maxta+t2;
     if (wpksamp != 0.f) wpksamp = 1.+(t2/wpksamp);
-    fCamplitude = t2fC+digifC[maxts];
+    fCamplitude = t2fC+t1fC;
   }
 
-  twoTSratio   = maxts - dfC.presamples() + wpksamp;
-  //twoTSratio   = (fCamplitude > 0.0f) ? ts4/fCamplitude : -1.0;
+  // for comparison
+  float                wpksamp3ts =  t0fC+t1fC+t2fC;
+  if (wpksamp3ts != 0) wpksamp3ts = (t1fC+2*t2fC)/wpksamp3ts;
+
+  ratio2ts   = maxts - dfC.presamples() + wpksamp;
+  //ratio2ts   = (fCamplitude > 0.0f) ? ts4/fCamplitude : -1.0;
+
+  treco3ts_  = -15.0 + (maxts - dfC.presamples() + wpksamp3ts-0.5)*25.0f;
 
 #if 0
   for (int its=0; its<digisize; ++its)
     printf("%5.1f\t",digiGeV_[its]);
-  printf ("twoTSratio=%5.3f\n",twoTSratio_);
+  printf ("ratio2ts=%5.3f\n",ratio2ts_);
 #endif
 
   return maxts;
@@ -874,8 +920,9 @@ BeamDelayTunerAlgos::fillPerEvent(void)
     if (acceptedBxNums_.empty() ||
 	inSet<int>(acceptedBxNums_,bxnum_)) { 
       if (!acceptedBxNums_.empty())          logLSBX(st_cutBadBx_);
-    }
-  }
+    } else return;
+  } else return;
+
 
   firstAH->fill1d<TH1F>(st_totalEperEv_,fevtnum_,totalE_);
 
@@ -909,11 +956,19 @@ void BeamDelayTunerAlgos::logLSBX(const std::string& cutstr)
   if (!lsH) {
     string title = "Lumi Section Occupancy, LS="+range.str();
     title += ", "+mysubdetstr_+", Run "+runnumstr_+"; LS Number";
-    lsH = myAH->dir()->make<TH1F>(hlsnumname.c_str(),title.c_str(),
-				  501,(float)lsnum500,lsnum500+500.f);
+    myAnalHistos::HistoParams_t hpars1d;
+    hpars1d.name   = hlsnumname;
+    hpars1d.title  = title;
+    hpars1d.nbinsx = 501;
+    hpars1d.minx   = (float)lsnum500;
+    hpars1d.maxx   = lsnum500+500.f;
+    hpars1d.nbinsy = 0;
+    hpars1d.nbinsz = 0;
+    myAH->book1d<TH1F>(hpars1d);
+    lsH = myAH->get<TH1F>(hlsnumname);
   }
 
-  lsH->Fill(lsnum_);
+  if (lsH) lsH->Fill(lsnum_);
   myAH->fill1d<TH1F>(st_bxnum_,bxnum_);
 }                                    // BeamDelayTunerAlgos::logLSBX
 
@@ -1076,6 +1131,7 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
 	} else {
 	  maxts_ = processDigi<Digi>(df,digifC_,digiGeV_,
 				     twoTSratio_,fCamplitude_);
+	  tLUTminust3TS_ = corTime_-treco3ts_;
 	}
 	break;
       }
@@ -1139,9 +1195,7 @@ void BeamDelayTunerAlgos::processDigisAndRecHits
       }
     }
 
-    if (!badEventSet_.empty()    && !getCut(st_cutBadEv_)->isActive() &&
-	!acceptedBxNums_.empty() && !getCut(st_cutBadBx_)->isActive() &&
-	!getCut(st_cutBadFlags_)->isActive() ) {
+    if ( !getCut(st_cutBadFlags_)->isActive() ) {
       // for comparison of +/- timing
       if (zside > 0) {
 	totalEplus_  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus_++;

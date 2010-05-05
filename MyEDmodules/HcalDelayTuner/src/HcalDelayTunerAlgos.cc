@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.21 2010/04/22 03:26:27 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.22 2010/04/26 12:55:11 dudero Exp $
 //
 //
 
@@ -497,6 +497,7 @@ HcalDelayTunerAlgos::add1dHisto(const std::string& name, const std::string& titl
   hpars1d.minx   = minx;
   hpars1d.maxx   = maxx;
   hpars1d.nbinsy = 0;
+  hpars1d.nbinsz = 0;
   v_hpars1d.push_back(hpars1d);
 }                                     // HcalDelayTunerAlgos::add1dHisto
 
@@ -517,8 +518,33 @@ HcalDelayTunerAlgos::add2dHisto(const std::string& name, const std::string& titl
   hpars2d.nbinsy = nbinsy;
   hpars2d.miny   = miny;
   hpars2d.maxy   = maxy;
+  hpars2d.nbinsz = 0;
   v_hpars2d.push_back(hpars2d);
 }                                     // HcalDelayTunerAlgos::add2dHisto
+
+//======================================================================
+
+void
+HcalDelayTunerAlgos::add3dHisto(const std::string& name, const std::string& title,
+				int nbinsx, double minx, double maxx,
+				int nbinsy, double miny, double maxy,
+				int nbinsz, double minz, double maxz,
+				std::vector<myAnalHistos::HistoParams_t>& v_hpars3d)
+{
+  myAnalHistos::HistoParams_t hpars3d;
+  hpars3d.name   = name;
+  hpars3d.title  = title;
+  hpars3d.nbinsx = nbinsx;
+  hpars3d.minx   = minx;
+  hpars3d.maxx   = maxx;
+  hpars3d.nbinsy = nbinsy;
+  hpars3d.miny   = miny;
+  hpars3d.maxy   = maxy;
+  hpars3d.nbinsz = nbinsz;
+  hpars3d.minz   = minz;
+  hpars3d.maxz   = maxz;
+  v_hpars3d.push_back(hpars3d);
+}                                     // HcalDelayTunerAlgos::add3dHisto
 
 //======================================================================
 
@@ -535,6 +561,7 @@ HcalDelayTunerAlgos::add1dAFhisto(const std::string& name, const std::string& ti
   haf1d.hpars.minx       = minx;
   haf1d.hpars.maxx       = maxx;
   haf1d.hpars.nbinsy     = 0;
+  haf1d.hpars.nbinsz     = 0;
   haf1d.afpars.filladdrx = filladdrx;
   haf1d.afpars.filladdry = NULL;
   haf1d.afpars.filladdrw = filladdrw;
@@ -559,6 +586,7 @@ HcalDelayTunerAlgos::add2dAFhisto(const std::string& name, const std::string& ti
   haf2d.hpars.minx       = minx;
   haf2d.hpars.maxx       = maxx;
   haf2d.hpars.nbinsy     = nbinsy;
+  haf2d.hpars.nbinsz     = 0;
   haf2d.hpars.miny       = miny;
   haf2d.hpars.maxy       = maxy;
   haf2d.afpars.filladdrx = filladdrx;
