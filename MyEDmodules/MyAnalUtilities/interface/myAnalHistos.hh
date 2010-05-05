@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.11 2010/04/06 11:29:20 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.12 2010/04/22 03:38:24 dudero Exp $
 //
 //
 
@@ -31,9 +31,10 @@
 
 // user include files
 
-#include "TH1D.h"
+#include "TH1.h"
 #include "TProfile.h"
-#include "TH2D.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "TProfile2D.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -60,14 +61,17 @@ template <class Tkey>
 class myAnalHistosTC {
 public:
 
-  // set nbinsy to 0 for 1-D
+  // set nbinsy,nbinsz to 0 for 1-D, nbinz=0 for 2-D
   struct HistoParams_t {
     HistoParams_t() {}
     HistoParams_t(const std::string& inname, const std::string& intit,
 		  uint32_t innbinsx,double inminx, double inmaxx,
-		  uint32_t innbinsy=0,double inminy=0.0, double inmaxy=0.0) :
-      name(inname), title(intit), nbinsx(innbinsx), minx(inminx), maxx(inmaxx),
-      nbinsy(innbinsy), miny(inminy), maxy(inmaxy) {}
+		  uint32_t innbinsy=0,double inminy=0.0, double inmaxy=0.0,
+		  uint32_t innbinsz=0,double inminz=0.0, double inmaxz=0.0) :
+      name(inname), title(intit),
+      nbinsx(innbinsx), minx(inminx), maxx(inmaxx),
+      nbinsy(innbinsy), miny(inminy), maxy(inmaxy),
+      nbinsz(innbinsz),minz(inminz),maxz(inmaxz) {}
     std::string name;
     std::string title;
     uint32_t    nbinsx;
@@ -76,12 +80,16 @@ public:
     uint32_t    nbinsy;
     double      miny;
     double      maxy;
+    uint32_t    nbinsz;
+    double      minz;
+    double      maxz;
   };
 
   struct AutoFillPars_t {
-    AutoFillPars_t() : filladdrx(0),filladdry(0),filladdrw(0),detIDfun(0) {}
+    AutoFillPars_t() : filladdrx(0),filladdry(0),filladdrz(0),filladdrw(0),detIDfun(0) {}
     void         *filladdrx;
     void         *filladdry;
+    void         *filladdrz;
     void         *filladdrw; // weight
     detIDfun_t    detIDfun;
   };
@@ -132,9 +140,11 @@ public:
 
   template<class T> T *book1d(const HistoParams_t& pars, bool verbose=true);
   template<class T> T *book2d(const HistoParams_t& pars, bool verbose=true);
+  template<class T> T *book3d(const HistoParams_t& pars, bool verbose=true);
 
   template<class T> T *book1d(Tkey key, const HistoParams_t& pars, bool verbose=true);
   template<class T> T *book2d(Tkey key, const HistoParams_t& pars, bool verbose=true);
+  template<class T> T *book3d(Tkey key, const HistoParams_t& pars, bool verbose=true);
 
   template<class T> T *book2d(const std::string& name,
 			      const char *title,
@@ -162,12 +172,15 @@ public:
 
   template<class T> void book1d(const std::vector<HistoParams_t>& v_pars);
   template<class T> void book2d(const std::vector<HistoParams_t>& v_pars);
+  template<class T> void book3d(const std::vector<HistoParams_t>& v_pars);
 
   // Auto-fill booking routines:
   template<class T> T   *book1d(const HistoAutoFill_t& haf,bool verbose=true);
   template<class T> T   *book2d(const HistoAutoFill_t& haf,bool verbose=true);
+  template<class T> T   *book3d(const HistoAutoFill_t& haf,bool verbose=true);
   template<class T> void book1d(const std::vector<HistoAutoFill_t>& v_haf);
   template<class T> void book2d(const std::vector<HistoAutoFill_t>& v_haf);
+  template<class T> void book3d(const std::vector<HistoAutoFill_t>& v_haf);
 
   template<class T> T *bookClone(const std::string& cloneName,const T& h,
 				 bool verbose=true);
@@ -178,6 +191,8 @@ public:
   template<class T> void fill1d(const std::string& hname,double val,double weight=1.0);
   template<class T> void fill2d(const std::map<std::string,std::pair<double,double> >& vals);
   template<class T> void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
+  template<class T> void fill3d(const std::string& hname,
+				double valx,double valy,double valz,double weight=1.0);
 
   void mkSubdir(const std::string& dirdescr);
 
@@ -557,6 +572,70 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 
 template <class Tkey>
 template<class T>
+T *myAnalHistosTC<Tkey>::book3d(const HistoParams_t& pars,bool verbose)
+{
+  Histo_t histo;
+  histo.hpars = pars;
+
+  //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
+  if (verbose)
+    std::cout << myname_ << ": booking standard histogram " << histo.hpars.name << std::endl;
+  histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
+			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
+			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy,
+			      histo.hpars.nbinsz, histo.hpars.minz, histo.hpars.maxz);
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << pars.name << std::endl;
+  }
+
+  return (T *)histo.ptr;
+}
+
+//======================================================================
+
+template <class Tkey>
+template<class T>
+T *myAnalHistosTC<Tkey>::book3d(Tkey key, const HistoParams_t& pars,bool verbose)
+{
+  Histo_t histo;
+  histo.hpars = pars;
+
+  //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
+  if (verbose)
+    std::cout << myname_ << ": booking standard histogram " << histo.hpars.name << std::endl;
+  histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
+			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
+			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy,
+			      histo.hpars.nbinsz, histo.hpars.minz, histo.hpars.maxz);
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
+
+  return (T *)histo.ptr;
+}
+
+//======================================================================
+
+template <class Tkey>
+template<class T>
+void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoParams_t>& v_pars)
+{
+  for (uint32_t i=0; i<v_pars.size(); i++)
+    book3d<T>(v_pars[i]);
+}
+
+//======================================================================
+
+template <class Tkey>
+template<class T>
 T *myAnalHistosTC<Tkey>::book1d(const HistoAutoFill_t& haf,bool verbose)
 {
   Histo_t histo;
@@ -626,6 +705,48 @@ T *myAnalHistosTC<Tkey>::book2d(const HistoAutoFill_t& haf,bool verbose)
 
 template <class Tkey>
 template<class T>
+T *myAnalHistosTC<Tkey>::book3d(const HistoAutoFill_t& haf,bool verbose)
+{
+  Histo_t histo;
+  histo.hpars  = haf.hpars;
+  histo.afpars = haf.afpars;
+
+  if (!histo.afpars.filladdrx) {
+    throw cms::Exception("Can't book auto-fill histo with null filladdrx "+haf.hpars.name+"! ")
+      << std::endl;
+  }
+
+  if (!histo.afpars.filladdry) {
+    throw cms::Exception("Can't book 2d auto-fill histo with null filladdry "+haf.hpars.name+"! ")
+      << std::endl;
+  }
+
+  if (!histo.afpars.filladdrz) {
+    throw cms::Exception("Can't book 2d auto-fill histo with null filladdrz "+haf.hpars.name+"! ")
+      << std::endl;
+  }
+
+  //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
+  if (verbose)
+    std::cout << myname_ << ": booking autofill histogram " << histo.hpars.name << std::endl;
+  histo.ptr = dir_->make <T> (histo.hpars.name.c_str(), histo.hpars.title.c_str(),
+			      histo.hpars.nbinsx, histo.hpars.minx, histo.hpars.maxx,
+			      histo.hpars.nbinsy, histo.hpars.miny, histo.hpars.maxy,
+			      histo.hpars.nbinsz, histo.hpars.minz, histo.hpars.maxz);
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_af_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << haf.hpars.name << std::endl;
+  }
+  return (T *)histo.ptr;
+}
+
+//======================================================================
+
+template <class Tkey>
+template<class T>
 void myAnalHistosTC<Tkey>::book1d(const std::vector<HistoAutoFill_t>& v_haf)
 {
   for (uint32_t i=0; i<v_haf.size(); i++)
@@ -638,6 +759,14 @@ void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoAutoFill_t>& v_haf)
 {
   for (uint32_t i=0; i<v_haf.size(); i++)
     book2d<T>(v_haf[i]);
+}
+
+template <class Tkey>
+template<class T>
+void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoAutoFill_t>& v_haf)
+{
+  for (uint32_t i=0; i<v_haf.size(); i++)
+    book3d<T>(v_haf[i]);
 }
 
 //======================================================================
@@ -755,6 +884,28 @@ myAnalHistosTC<Tkey>::fill2d(const std::map<std::string,std::pair<double,double>
 //======================================================================
 
 template <class Tkey>
+template<class T>
+void
+myAnalHistosTC<Tkey>::fill3d(const std::string& hname,
+			     double valx,double valy,double valz,double weight)
+{
+  typename myHashmap_t::const_iterator ith;
+
+  ith = hm_histos_->find(hname);
+  if (ith != hm_histos_->end()) {
+    T *p = (T *)ith->second.ptr;
+    if (!p) std::cout << myname_ << ": NULL POINTER for histo " << hname << "!!!" << std::endl;
+    p->Fill(valx,valy,valz,weight);
+  } else {
+    std::cout << myname_ << ": couldn't find hash for "+hname << "! valx="
+      << valx << "\tvaly=" << valy << "\tvalz=" << valz << "\tweight=" << weight << std::endl;
+    //dump();
+  }
+}
+
+//======================================================================
+
+template <class Tkey>
 template <class T>
 T *
 myAnalHistosTC<Tkey>::get(Tkey key)
@@ -849,13 +1000,23 @@ myAnalHistosTC<Tkey>::autofill(void)
        ith != hm_histos_af_->end();
        ith++) {
     const Histo_t& h = ith->second;
-    if (h.hpars.nbinsy) {              // 2d histos
-      TH2 *h2 = (TH2 *)h.ptr;
+    if (h.hpars.nbinsz) {                   // 3d histos
+      TH3 *h3 = (TH3 *)h.ptr;
       if (!h.afpars.detIDfun || (*h.afpars.detIDfun)(curDetID_)) {
-	h2->Fill(*(Tdata *)h.afpars.filladdrx, *(Tdata *)h.afpars.filladdry,
+	h3->Fill(*(Tdata *)h.afpars.filladdrx,
+		 *(Tdata *)h.afpars.filladdry,
+		 *(Tdata *)h.afpars.filladdrz,
 		 (h.afpars.filladdrw ? (*(Tdata *)h.afpars.filladdrw) : 1));
       }
-    } else {                          // 1d histos
+    }
+    else if (h.hpars.nbinsy) {              // 2d histos
+      TH2 *h2 = (TH2 *)h.ptr;
+      if (!h.afpars.detIDfun || (*h.afpars.detIDfun)(curDetID_)) {
+	h2->Fill(*(Tdata *)h.afpars.filladdrx,
+		 *(Tdata *)h.afpars.filladdry,
+		 (h.afpars.filladdrw ? (*(Tdata *)h.afpars.filladdrw) : 1));
+      }
+    } else {                               // 1d histos
       TH1 *h1 = (TH1 *)h.ptr;
       if (!h.afpars.detIDfun || (*h.afpars.detIDfun)(curDetID_))
 	h1->Fill(*(Tdata *)h.afpars.filladdrx,
