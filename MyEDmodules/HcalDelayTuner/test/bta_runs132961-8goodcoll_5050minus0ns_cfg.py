@@ -18,11 +18,11 @@ process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("bta_runs133030-5goodcoll_5050minus4ns.root"),
+    fileName = cms.string("bta_runs132961-8goodcoll_5050minus0ns.root"),
     closeFileFast = cms.untracked.bool(False)
 )
-process.load("MyEDmodules.HcalDelayTuner.runs133030-5goodcollfiles_cfi")
-process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange('133030:1-133030:19','133031:1-133031:12','133034:35-133034:285','133035:1-133035:301')
+process.load("MyEDmodules.HcalDelayTuner.runs132961-8goodcollfiles_cfi")
+process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange('132961:237-132961:MAX','132963:1-132963:8','132964:1-132964:4','132965:1-132965:96','132966:1-132966:21','132966:1-132966:21','132968:1-132968:66')
 process.load("L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff")
 process.load("HLTrigger.HLTfilters.hltLevel1GTSeed_cfi")
 process.hltLevel1GTSeed.L1TechTriggerSeeding = cms.bool(True)
@@ -33,15 +33,16 @@ process.hftimeanal.runDescription       = cms.untracked.string("2010 HF scan, BS
 process.hftimeanal.globalRecHitFlagMask = cms.int32(0xC0000)
 process.hftimeanal.badEventList         = cms.vint32()
 process.hftimeanal.acceptedBxNums       = cms.vint32(1)
-process.hftimeanal.acceptedPkTSnumbers  = cms.vint32(2,3,4,5)
+#process.hftimeanal.acceptedPkTSnumbers  = cms.vint32(2,3,4,5)
 process.hftimeanal.maxEventNum2plot     = cms.int32(30000000)
 process.hftimeanal.globalTimeOffset     = cms.double(0.0)
 process.hftimeanal.ampCutsInfC          = cms.bool(True)
+process.hftimeanal.doPerChannel         = cms.bool(False)
 process.hftimeanal.minHit_GeVorfC       = cms.double(20.)
-process.hftimeanal.recHitEscaleMaxGeV   = cms.double(500.5)
+process.hftimeanal.recHitEscaleMaxGeV   = cms.double(1000.5)
 process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfreco","","BTAHFSCAN")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hf_cfi")
-process.hfreco.firstSample=cms.int32(2)
+process.hfreco.firstSample=cms.int32(3)
 process.hfreco.samplesToAdd=cms.int32(4)
 from RecoLocalCalo.HcalRecAlgos.hcalrechitreflagger_cfi import *
 process.hfrecoReflagged = hcalrechitReflagger.clone()

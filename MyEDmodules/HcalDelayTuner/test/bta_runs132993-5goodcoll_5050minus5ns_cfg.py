@@ -1,7 +1,7 @@
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BTAHFJIT")
+process = cms.Process("BTAHFSCAN")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( -1 )
 # test it!
@@ -30,16 +30,16 @@ process.hltLevel1GTSeed.L1SeedsLogicalExpression = cms.string("0 AND (40 OR 41) 
 process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
 process.load("MyEDmodules.HcalDelayTuner.beamtiminganal_cfi")
 process.hftimeanal.runDescription       = cms.untracked.string("2010 HF scan, BSC trigger")
-process.hftimeanal.globalRecHitFlagMask = cms.int32(0xC0002)
+process.hftimeanal.globalRecHitFlagMask = cms.int32(0xC0000)
 process.hftimeanal.badEventList         = cms.vint32()
 process.hftimeanal.acceptedBxNums       = cms.vint32(1)
 process.hftimeanal.acceptedPkTSnumbers  = cms.vint32(2,3,4,5)
 process.hftimeanal.maxEventNum2plot     = cms.int32(30000000)
 process.hftimeanal.globalTimeOffset     = cms.double(0.0)
-process.hftimeanal.minHitGeV            = cms.double(5.)
+process.hftimeanal.ampCutsInfC          = cms.bool(True)
+process.hftimeanal.minHit_GeVorfC       = cms.double(20.)
 process.hftimeanal.recHitEscaleMaxGeV   = cms.double(500.5)
-process.hftimeanal.splitByEventRange    = cms.untracked.bool(True)
-process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfreco","","BTAHFJIT")
+process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfreco","","BTAHFSCAN")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hf_cfi")
 process.hfreco.firstSample=cms.int32(2)
 process.hfreco.samplesToAdd=cms.int32(4)
@@ -51,7 +51,7 @@ process.hfrecoReflagged.hf_Algo2test = True # PET algorithm
 #process.hfrecoReflagged.hf_PET_params.PET_EnergyThreshLong=cms.untracked.vdouble([5.])
 #process.hfrecoReflagged.hf_PET_params.PET_EnergyThreshShort=cms.untracked.vdouble([5.])
 process.hftimeanal.eventDataPset.hfRechitLabel = cms.untracked.InputTag("hfrecoReflagged")
-process.hfrecoReflagged.hfInputLabel = cms.untracked.InputTag("hfreco","","BTAHFJIT")
+process.hfrecoReflagged.hfInputLabel = cms.untracked.InputTag("hfreco","","BTAHFSCAN")
 process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
 process.load("CalibCalorimetry.HcalPlugins.Hcal_Conditions_forGlobalTag_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cfi")
