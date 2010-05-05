@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalCut.hh,v 1.4 2010/03/26 16:31:30 dudero Exp $
+// $Id: myAnalCut.hh,v 1.5 2010/04/22 03:39:28 dudero Exp $
 //
 //
 
@@ -37,20 +37,13 @@ class myAnalCut {
 public:
   myAnalCut(const int cutnum,
 	    const std::string& descr, 
-	    const std::string& rootdirname=std::string(""),
+	    TFileDirectory& rootDir,
 	    bool  doInverted = false ) :
     active_(false), cutnum_(cutnum), evtCount_(0), cutdescr_(descr), pInverted_(0)
   {
     std::string invd="~"+descr;
-    if (rootdirname.size()) {
-      edm::Service<TFileService> fs;
-      TFileDirectory rootDir = fs->mkdir(rootdirname);
-      pHistos_ = new myAnalHistos(descr,rootDir);
-      if (doInverted) pInverted_ = new myAnalHistos(invd,rootDir);
-    } else {
-      pHistos_ = new myAnalHistos(descr);
-      if (doInverted) pInverted_ = new myAnalHistos(invd);
-    }
+    pHistos_ = new myAnalHistos(descr,rootDir);
+    if (doInverted) pInverted_ = new myAnalHistos(invd,rootDir);
     userFlags_.clear();
   }
 

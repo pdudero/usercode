@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.12 2010/04/22 03:38:24 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.13 2010/05/05 00:44:12 dudero Exp $
 //
 //
 
@@ -265,6 +265,7 @@ template <class Tkey>
 myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr)
 {
   edm::Service<TFileService> fs;
+  std::cout << "Making histo folder " << dirdescr << std::endl;
   dir_ = new TFileDirectory(fs->mkdir(dirdescr));
   myname_ = dirdescr;
 
@@ -291,6 +292,8 @@ template <class Tkey>
 myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr,
 				     TFileDirectory& subdir)
 {
+  std::cout << "Making histo folder " << dirdescr << " in subdir" << std::endl;
+
   dir_ = new TFileDirectory(subdir.mkdir(dirdescr));
   myname_ = dirdescr;
 
