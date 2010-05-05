@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerTDCalgos.cc,v 1.1 2009/11/09 00:57:58 dudero Exp $
+// $Id: LaserDelayTunerTDCalgos.cc,v 1.2 2010/04/22 03:22:59 dudero Exp $
 //
 //
 
@@ -68,8 +68,11 @@ void LaserDelayTunerTDCalgos::bookHistos(void)
 
   m_cuts_.clear();
 
+  edm::Service<TFileService> fs;
+  rootDir_ = new TFileDirectory(fs->mkdir("TDC"));
+
   for (unsigned i=0; i<v_cuts_.size(); i++) {
-    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],"TDC");
+    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],*rootDir_);
   }
 
   std::vector<myAnalHistos::HistoParams_t> v_hpars1d; 

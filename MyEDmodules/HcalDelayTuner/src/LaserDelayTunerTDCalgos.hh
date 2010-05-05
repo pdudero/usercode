@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerTDCalgos.hh,v 1.1 2009/07/27 15:56:53 dudero Exp $
+// $Id: LaserDelayTunerTDCalgos.hh,v 1.1 2009/11/09 00:57:59 dudero Exp $
 //
 //
 
@@ -64,6 +64,8 @@ private:
   std::string TDCLaserFireTime;
 
   // ----------member data ---------------------------
+
+  TFileDirectory *rootDir_;
 
   std::vector<std::string> v_cuts_; // vector of cut strings
   std::map<std::string, myAnalCut *> m_cuts_;

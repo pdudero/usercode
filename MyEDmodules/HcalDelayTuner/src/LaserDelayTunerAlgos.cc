@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.10 2010/04/22 03:22:59 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.11 2010/04/26 12:57:31 dudero Exp $
 //
 //
 
@@ -65,8 +65,11 @@ LaserDelayTunerAlgos::LaserDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   v_cuts_.push_back("cutAll");
   st_lastCut_ = "cutAll";
 
+  edm::Service<TFileService> fs;
+  mysubdetRootDir_ = new TFileDirectory(fs->mkdir(mysubdetstr_));
+
   for (unsigned i=0; i<v_cuts_.size(); i++)
-    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],mysubdetstr_);
+    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],*mysubdetRootDir_);
 
   TDCalgo_   = new
     LaserDelayTunerTDCalgos(iConfig.getUntrackedParameter<edm::ParameterSet>("TDCpars"));
