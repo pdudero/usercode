@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.11 2010/04/26 12:58:44 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.12 2010/05/05 00:25:36 dudero Exp $
 //
 //
 
@@ -94,6 +94,8 @@ private:
 
 
   // ----------member data ---------------------------
+
+  TFileDirectory *mysubdetRootDir_;
 
   BeamHitTimeCorrector *timecor_; // beam hit time (vertex displacement) corrector
 
