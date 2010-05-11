@@ -1,0 +1,14 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=CalibFormats/HcalObjects>
+<use name=CalibFormats/CaloObjects>
+<use name=MyEDmodules/MyAnalUtilities>
+<use name=CommonTools/UtilAlgos>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=MyEDmodulesHFsignal2noiseAnalyzer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>
