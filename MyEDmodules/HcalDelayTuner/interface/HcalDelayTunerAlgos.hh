@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.19 2010/04/26 12:58:44 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.20 2010/05/05 00:25:36 dudero Exp $
 //
 //
 
@@ -152,7 +152,9 @@ protected:
   void bookD1D2detail     (myAnalHistos *myAH);
   void bookHFbasicProfiles(myAnalHistos *myAH);
   void bookPerChanDetail  (myAnalHistos *myAH);
-  void computeAverages    (myAnalHistos *myAH);
+
+  void computeChannelTimingFromAvgDigis (myAnalHistos *myAH);
+  void compilePerTimeSampleStatistics   (myAnalHistos *myAH);
 
   // ----------member data ---------------------------
 
