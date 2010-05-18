@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.cc,v 1.16 2010/04/26 12:55:08 dudero Exp $
+// $Id: BeamDelayTunerAlgos.cc,v 1.17 2010/05/05 00:24:57 dudero Exp $
 //
 //
 
@@ -62,7 +62,7 @@ BeamDelayTunerAlgos::addCut(const std::string& descr,
   size_t N = v_nestedCuts_.size();
   string cutstr = "cut" + int2str(N) + descr;
   v_nestedCuts_.push_back(cutstr);
-  m_cuts_[cutstr] = new myAnalCut(N,cutstr,mysubdetstr_,doInverted);
+  m_cuts_[cutstr] = new myAnalCut(N,cutstr,*mysubdetRootDir_,doInverted);
   return cutstr;
 }
 
@@ -72,7 +72,7 @@ BeamDelayTunerAlgos::addHitCategory(const std::string& descr)
   size_t N = v_nestedCuts_.size()+v_hitCategories_.size();
   string cutstr = "cut" + int2str(N) + descr;
   v_hitCategories_.push_back(cutstr);
-  m_cuts_[cutstr] = new myAnalCut(N,cutstr,mysubdetstr_);
+  m_cuts_[cutstr] = new myAnalCut(N,cutstr,*mysubdetRootDir_);
   return cutstr;
 }
 
@@ -110,9 +110,18 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
 
   const bool doInverted = true;
 
+  cout << "My subdet is " << mysubdetstr_ << endl;
+
+  edm::Service<TFileService> fs;
+  mysubdetRootDir_ = new TFileDirectory(fs->mkdir(mysubdetstr_));
+
+  cout << 2 << endl;
+
   // all cuts applied on top of the previous one
   //
   st_cutNone_ = addCut("none");
+
+  cout << 3 << endl;
 
   if (badEventVec.size())   st_cutBadEv_ = addCut("badEv",doInverted);
   if (acceptedBxVec.size()) st_cutBadBx_ = addCut("bxnum",doInverted);
@@ -463,13 +472,13 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
     titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 1, Run "+runnumstr_+"; T_{2TS} (ns); R; Hit Energy (GeV)";
     add3dHisto(st_RvsTandfCHFd1_, titlestr,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,200,-1.0,1.0,
- 	       recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_, v_hpars3d);
+ 	       50,recHitEscaleMinfC_,recHitEscaleMaxfC_, v_hpars3d);
 
     st_RvsTandfCHFd2_ = "h3d_RvsTandfCHFd2";
     titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 2, Run "+runnumstr_+"; T_{2TS} (ns); R";
     add3dHisto(st_RvsTandfCHFd2_, titlestr,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,200,-1.0,1.0,
- 	       recHitEscaleNbins_,recHitEscaleMinfC_,recHitEscaleMaxfC_,v_hpars3d);
+ 	       50,recHitEscaleMinfC_,recHitEscaleMaxfC_,v_hpars3d);
 
     // per-channel beam-specific histos
     if (cut.flagSet(st_doPerChannel_)) {
@@ -956,14 +965,9 @@ void BeamDelayTunerAlgos::logLSBX(const std::string& cutstr)
   if (!lsH) {
     string title = "Lumi Section Occupancy, LS="+range.str();
     title += ", "+mysubdetstr_+", Run "+runnumstr_+"; LS Number";
-    myAnalHistos::HistoParams_t hpars1d;
-    hpars1d.name   = hlsnumname;
-    hpars1d.title  = title;
-    hpars1d.nbinsx = 501;
-    hpars1d.minx   = (float)lsnum500;
-    hpars1d.maxx   = lsnum500+500.f;
-    hpars1d.nbinsy = 0;
-    hpars1d.nbinsz = 0;
+    myAnalHistos::HistoParams_t hpars1d(hlsnumname,title,
+					501,(float)lsnum500,lsnum500+500f.,
+					0,0.,0.,0,0.,0.);
     myAH->book1d<TH1F>(hpars1d);
     lsH = myAH->get<TH1F>(hlsnumname);
   }
