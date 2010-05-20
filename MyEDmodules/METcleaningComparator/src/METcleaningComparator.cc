@@ -13,7 +13,7 @@
 //
 // Original Author:  Phil Dudero
 //         Created:  Tue May 11 16:17:42 CDT 2010
-// $Id$
+// $Id: METcleaningComparator.cc,v 1.1 2010/05/20 10:56:47 dudero Exp $
 //
 //
 
@@ -40,7 +40,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#include "TH3D.h"
+#include "TH3F.h"
 
 //
 // class declaration
@@ -69,8 +69,10 @@ private:
   bool firstEvent_;
   std::string evfiltpath_;
   int  evfiltpathindex_;
+  int  hbheFlagBit_;
 
-  TH3D *h3d_correlations;
+  TH3F *h3f_correlations_;
+  TH1F *h1f_tcmetdiffs_;
 
   typedef HBHERecHitCollection::const_iterator HBHERecHitIt;
 
@@ -116,10 +118,16 @@ METcleaningComparator::METcleaningComparator(const edm::ParameterSet& iConfig) :
   evfiltpath_ =
     iConfig.getUntrackedParameter<std::string>("evfiltPathName");
 
+  hbheFlagBit_ = iConfig.getUntrackedParameter<int>
+    ("hbheFlagBit", HcalCaloFlagLabels::HBHEHpdHitMultiplicity); 
+
   edm::Service<TFileService> fs;
-  h3d_correlations = fs->make<TH3F>("h3d_correlations",
+  h3f_correlations_ = fs->make<TH3F>("h3f_correlations",
     "3 Methods of MET Cleaning; Event Filter; Reflagger; JetID vars",
 				    2,0.,2.,2,0.,2.,2,0.,2.);
+  h1f_tcmetdiffs_ = fs->make<TH1F>("h1f_tcmetdiffs",
+    "Dirty MET - Clean MET (TC algo); #Delta MET",
+				   1000,-500.,500.);
 }
 
 METcleaningComparator::~METcleaningComparator()
@@ -173,7 +181,7 @@ bool
 METcleaningComparator::reflaggerTouchedThisEvent(const HBHERecHitCollection& rechits)
 {
   for (size_t i=0; i<rechits.size(); i++)
-    if (rechits[i].flagField(HcalCaloFlagLabels::HBHEHpdHitMultiplicity))
+    if (rechits[i].flagField(hbheFlagBit_))
       return true;
 
   return false;
@@ -185,7 +193,9 @@ bool
 METcleaningComparator::tcmetcleanerTouchedThisEvent(const CaloMETCollection& dirtyMET,
 						    const METCollection&     cleanMET)
 {
-  return (dirtyMET.front().sumEt() != cleanMET.front().sumEt());
+  double tcmetdiff =  dirtyMET.front().sumEt() - cleanMET.front().sumEt();
+  h1f_tcmetdiffs_->Fill(tcmetdiff);
+  return (tcmetdiff != 0.0);
 
 }                 // METcleaningComparator::tcmetcleanerTouchedThisEvent
 
@@ -233,10 +243,10 @@ METcleaningComparator::analyze(const edm::Event& iEvent,
    compare(*tcmetData_, *reflagData_);
 #endif
 
-   h3d_correlations->Fill(HCALfilterTouchedThisEvent(*(evfiltOutput_->trgResults())),
-			  reflaggerTouchedThisEvent(*(reflagOutput_->hbherechits())),
-			  tcmetcleanerTouchedThisEvent(*(dirtyInput_->calomet()),
-						       *(tcmetOutput_->recomet()))    );
+   h3f_correlations_->Fill(HCALfilterTouchedThisEvent(*(evfiltOutput_->trgResults())),
+			   reflaggerTouchedThisEvent(*(reflagOutput_->hbherechits())),
+			   tcmetcleanerTouchedThisEvent(*(dirtyInput_->calomet()),
+							*(tcmetOutput_->recomet()))    );
 }
 
 
@@ -249,6 +259,16 @@ METcleaningComparator::beginJob()
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 METcleaningComparator::endJob() {
+  cout << "evfilt\treflag\tJetID\t#events\t%" << endl;
+  int nevents = h3f_correlations_->GetEntries();
+  for (int i=1; i<=2; i++)
+    for (int j=1; j<=2; j++)
+      for (int k=1; k<=2; k++) {
+	int thisbin=h3f_correlations_->GetBinContent(i,j,k);
+	cout << i-1 << "\t" << j-1 << "\t" << k-1 << "\t";
+	cout << thisbin << "\t" << 100.*(double)thisbin/nevents;
+	cout << endl;
+      }
 }
 
 //define this as a plug-in
