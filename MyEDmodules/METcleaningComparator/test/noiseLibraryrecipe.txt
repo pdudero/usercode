@@ -1,0 +1,22 @@
+How do I reject events with anomalous HCAL noise?
+
+The simplest way to reject noise is to check out the HBHENoiseFilter found in the CommonTools/RecoAlgos/ package:
+
+addpkg CommonTools/RecoAlgos
+cvs update -r V00-02-12 CommonTools/RecoAlgos/src/HBHENoiseFilter.cc
+cvs update -r V00-02-12 CommonTools/RecoAlgos/interface/HBHENoiseFilter.h
+cvs update -r V00-02-12 CommonTools/RecoAlgos/python/HBHENoiseFilter_cfi.py
+cvs update -r V00-02-12 CommonTools/RecoAlgos/BuildFile
+
+Within your python script, add something along the following lines:
+
+process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+process.p = cms.Path(process.HBHENoiseFilter)
+process.output = cms.OutputModule(
+    SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('p') )
+    )
+process.e = cms.EndPath(process.output)
+
+If you would like to also add a filter which cuts on the EMF of an RBX, we recommend that you add the line:
+
+process.HBHENoiseFilter.maxRBXEMF = cms.double(0.01)

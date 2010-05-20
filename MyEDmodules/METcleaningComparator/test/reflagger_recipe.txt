@@ -1,0 +1,2 @@
+cvs co -r V00-00-07 JetMETAnalysis/HcalReflagging
+scram b -j4
