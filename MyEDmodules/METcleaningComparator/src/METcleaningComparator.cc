@@ -13,7 +13,7 @@
 //
 // Original Author:  Phil Dudero
 //         Created:  Tue May 11 16:17:42 CDT 2010
-// $Id: METcleaningComparator.cc,v 1.1 2010/05/20 10:56:47 dudero Exp $
+// $Id: METcleaningComparator.cc,v 1.2 2010/05/20 15:23:10 dudero Exp $
 //
 //
 
@@ -37,6 +37,7 @@
 #include "RecoLocalCalo/HcalRecAlgos/interface/HcalCaloFlagLabels.h"
 
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
+#include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -57,27 +58,44 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
 
-  bool reflaggerTouchedThisEvent   (const HBHERecHitCollection& rechits);
-  bool tcmetcleanerTouchedThisEvent(const CaloMETCollection& dirtyMET,
-				    const METCollection&     cleanMET);
+  bool reflaggerTouchedThisEvent   (const HBHERecHitCollection& rechits,
+				    const HFRecHitCollection& hfrechits,
+				    double& deltamethbhe,
+				    double& deltamethf);
+  bool jetidCleanerTouchedThisEvent(const CaloMETCollection& dirtyMET,
+				    const METCollection&     cleanMET,
+				    double& deltamet);
+  
   bool HCALfilterTouchedThisEvent  (const edm::TriggerResults& trgresults);
+  bool HCALfilterTouchedThisEvent  (const bool hbheNoiseResult);
 
   void compare(const myEventData& d1,
 	       const myEventData& d2);
 
   // ----------member data ---------------------------
+  int  ntrigreject_;
   bool firstEvent_;
+  int  hbheFlagBit_;
+  int  hfFlagBit_;
   std::string evfiltpath_;
   int  evfiltpathindex_;
-  int  hbheFlagBit_;
+  double minMET4plotGeV_;
+  double maxMET4plotGeV_;
 
   TH3F *h3f_correlations_;
-  TH1F *h1f_tcmetdiffs_;
+
+  TH1F *h1f_dirtyMET_;
+  TH1F *h1f_clnMETevfilt_;
+  TH1F *h1f_clnMETreflag_;
+  TH1F *h1f_clnMETjetID_;
+
+  myAnalHistos *histosPerCategory[2][2][2];
 
   typedef HBHERecHitCollection::const_iterator HBHERecHitIt;
 
+  myEventData *trgEvData_;
   myEventData *dirtyInput_;
-  myEventData *tcmetOutput_;
+  myEventData *jetidOutput_;
   myEventData *reflagOutput_;
   myEventData *evfiltOutput_;
 };
@@ -94,18 +112,19 @@ private:
 // constructors and destructor
 //
 METcleaningComparator::METcleaningComparator(const edm::ParameterSet& iConfig) :
-  firstEvent_(true)
+  ntrigreject_(0), firstEvent_(true)
 {
-
-   //now do what ever initialization is needed
+  edm::ParameterSet trigResultsPset =
+    iConfig.getUntrackedParameter<edm::ParameterSet>("triggerResults");
+  trgEvData_ = new myEventData(trigResultsPset);
 
   edm::ParameterSet dirtyDataPset =
     iConfig.getUntrackedParameter<edm::ParameterSet>("dirtyInput");
   dirtyInput_ = new myEventData(dirtyDataPset);
 
-  edm::ParameterSet tcmetDataPset =
-    iConfig.getUntrackedParameter<edm::ParameterSet>("tcmetCleanOutput");
-  tcmetOutput_ = new myEventData(tcmetDataPset);
+  edm::ParameterSet jetidDataPset =
+    iConfig.getUntrackedParameter<edm::ParameterSet>("jetidCleanOutput");
+  jetidOutput_ = new myEventData(jetidDataPset);
 
   edm::ParameterSet reflagDataPset =
     iConfig.getUntrackedParameter<edm::ParameterSet>("reflagCleanOutput");
@@ -121,13 +140,16 @@ METcleaningComparator::METcleaningComparator(const edm::ParameterSet& iConfig) :
   hbheFlagBit_ = iConfig.getUntrackedParameter<int>
     ("hbheFlagBit", HcalCaloFlagLabels::HBHEHpdHitMultiplicity); 
 
+  hfFlagBit_ = iConfig.getUntrackedParameter<int>
+    ("hfFlagBit", HcalCaloFlagLabels::HFLongShort); 
+
+  minMET4plotGeV_ = iConfig.getUntrackedParameter<double>("minMET4plotGeV"); 
+  maxMET4plotGeV_ = iConfig.getUntrackedParameter<double>("maxMET4plotGeV"); 
+
   edm::Service<TFileService> fs;
   h3f_correlations_ = fs->make<TH3F>("h3f_correlations",
     "3 Methods of MET Cleaning; Event Filter; Reflagger; JetID vars",
-				    2,0.,2.,2,0.,2.,2,0.,2.);
-  h1f_tcmetdiffs_ = fs->make<TH1F>("h1f_tcmetdiffs",
-    "Dirty MET - Clean MET (TC algo); #Delta MET",
-				   1000,-500.,500.);
+				     2,0.,2.,2,0.,2.,2,0.,2.);
 }
 
 METcleaningComparator::~METcleaningComparator()
@@ -178,26 +200,35 @@ METcleaningComparator::compare(const myEventData& d1,
 // ----------------------------------------------------------
 
 bool
-METcleaningComparator::reflaggerTouchedThisEvent(const HBHERecHitCollection& rechits)
+METcleaningComparator::reflaggerTouchedThisEvent(const HBHERecHitCollection& hbherechits,
+						 const HFRecHitCollection& hfrechits,
+						 double& deltamethbhe,
+						 double& deltamethf)
 {
-  for (size_t i=0; i<rechits.size(); i++)
-    if (rechits[i].flagField(hbheFlagBit_))
-      return true;
+  deltamethbhe=deltamethf=0;
+  for (size_t i=0; i<hbherechits.size(); i++)
+    if (hbherechits[i].flagField(hbheFlagBit_))
+      deltamethbhe += hbherechits[i].energy();
 
-  return false;
+  for (size_t i=0; i<hfrechits.size(); i++)
+    if (hfrechits[i].flagField(hfFlagBit_))
+      deltamethf += hfrechits[i].energy();
+
+  return ((deltamethbhe+deltamethf) != 0.0);
+
 }                    // METcleaningComparator::reflaggerTouchedThisEvent
 
 // ---------------------------------------------------------------------
 
 bool
-METcleaningComparator::tcmetcleanerTouchedThisEvent(const CaloMETCollection& dirtyMET,
-						    const METCollection&     cleanMET)
+METcleaningComparator::jetidCleanerTouchedThisEvent(const CaloMETCollection& dirtyMET,
+						    const METCollection&     cleanMET,
+						    double& deltamet)
 {
-  double tcmetdiff =  dirtyMET.front().sumEt() - cleanMET.front().sumEt();
-  h1f_tcmetdiffs_->Fill(tcmetdiff);
-  return (tcmetdiff != 0.0);
+  deltamet =  dirtyMET.front().sumEt() - cleanMET.front().sumEt();
+  return (deltamet != 0.0);
 
-}                 // METcleaningComparator::tcmetcleanerTouchedThisEvent
+}                 // METcleaningComparator::jetidCleanerTouchedThisEvent
 
 // ---------------------------------------------------------------------
 
@@ -225,6 +256,14 @@ METcleaningComparator::HCALfilterTouchedThisEvent(const edm::TriggerResults& trg
 
 }                   // METcleaningComparator::HCALfilterTouchedThisEvent
 
+// ---------------------------------------------------------------------
+
+bool
+METcleaningComparator::HCALfilterTouchedThisEvent(const bool hbheNoiseResult)
+{
+  return (!hbheNoiseResult);
+}                   // METcleaningComparator::HCALfilterTouchedThisEvent
+
 // ------------ method called to for each event  -----------------------
 void
 METcleaningComparator::analyze(const edm::Event& iEvent,
@@ -232,33 +271,96 @@ METcleaningComparator::analyze(const edm::Event& iEvent,
 {
    using namespace edm;
 
+   // contains the trigger record
+   //
+   trgEvData_->get(iEvent,iSetup);
+
+   const edm::TriggerResults& trgresults = *(trgEvData_->trgResults());
+   unsigned i;
+   for (i=0; i!=trgresults.size(); i++) {
+     if (!trgresults.accept(i)) {
+       ntrigreject_++;
+       return;
+     }
+   }
+
    dirtyInput_->get(iEvent,iSetup);
-   tcmetOutput_->get(iEvent,iSetup);
+   jetidOutput_->get(iEvent,iSetup);
    reflagOutput_->get(iEvent,iSetup);
    evfiltOutput_->get(iEvent,iSetup);
 
-#if 0
-   compare(*dirtyData_, *tcmetData_);
-   compare(*dirtyData_, *reflagData_);
-   compare(*tcmetData_, *reflagData_);
-#endif
+   double deltaMETHBHEreflagger,deltaMETHFreflagger,deltaMETjetid;
+   //bool evfilt = HCALfilterTouchedThisEvent(*(evfiltOutput_->trgResults()));
+   bool evfilt = HCALfilterTouchedThisEvent(*(evfiltOutput_->hbheNoiseResult()));
+   bool reflag = reflaggerTouchedThisEvent (*(reflagOutput_->hbherechits()),
+					    *(reflagOutput_->hfrechits()),
+					    deltaMETHBHEreflagger,
+					    deltaMETHFreflagger);
+   bool jetid  = jetidCleanerTouchedThisEvent(*(dirtyInput_->calomet()),
+					      *(jetidOutput_->recomet()),
+					      deltaMETjetid);
 
-   h3f_correlations_->Fill(HCALfilterTouchedThisEvent(*(evfiltOutput_->trgResults())),
-			   reflaggerTouchedThisEvent(*(reflagOutput_->hbherechits())),
-			   tcmetcleanerTouchedThisEvent(*(dirtyInput_->calomet()),
-							*(tcmetOutput_->recomet()))    );
+   h1f_dirtyMET_->Fill(dirtyInput_->calomet()->front().sumEt());
+
+   if (!evfilt)
+     h1f_clnMETevfilt_->Fill(dirtyInput_->calomet()->front().sumEt());
+
+   h1f_clnMETreflag_->Fill(reflagOutput_->calomet()->front().sumEt());
+   h1f_clnMETjetID_->Fill(jetidOutput_->recomet()->front().sumEt());
+
+   h3f_correlations_->Fill(evfilt,reflag,jetid);
+
+   if (jetid || reflag) {
+     myAnalHistos *myAH = histosPerCategory[evfilt][reflag][jetid];
+     myAH->fill1d<TH1F>("h1f_deltaMETHBHEreflagger",  deltaMETHBHEreflagger);
+     myAH->fill1d<TH1F>("h1f_deltaMETHFreflagger",    deltaMETHFreflagger);
+     myAH->fill1d<TH1F>("h1f_deltaMETjetid",          deltaMETjetid);
+     myAH->fill1d<TH1F>("h1f_deltaMETjetid-reflagger",
+			deltaMETjetid-(deltaMETHBHEreflagger+deltaMETHFreflagger));
+   }
 }
-
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
 METcleaningComparator::beginJob()
 {
+  int nbinsMET = (int)(maxMET4plotGeV_-minMET4plotGeV_);
+
+  myAnalHistos::HistoParams_t hpars("","",nbinsMET,minMET4plotGeV_,maxMET4plotGeV_);
+
+  edm::Service<TFileService> fs;
+  h1f_dirtyMET_     = fs->make<TH1F>("h1f_dirtyMET",
+				     "Uncleaned MET; MET (GeV); dN/GeV",
+				     nbinsMET,minMET4plotGeV_,maxMET4plotGeV_);
+  h1f_clnMETevfilt_ = fs->make<TH1F>("h1f_clnMETevfilt",
+				     "Cleaned MET (Event Filter); MET (GeV); dN/GeV",
+				     nbinsMET,minMET4plotGeV_,maxMET4plotGeV_);
+  h1f_clnMETreflag_ = fs->make<TH1F>("h1f_clnMETreflag",
+				     "Cleaned MET (Reflagger algo); MET (GeV); dN/GeV",
+				     nbinsMET,minMET4plotGeV_,maxMET4plotGeV_);
+  h1f_clnMETjetID_  = fs->make<TH1F>("h1f_clnMETjetID",
+				     "Cleaned MET (Jet ID); MET (GeV); dN/GeV",
+				     nbinsMET,minMET4plotGeV_,maxMET4plotGeV_);
+
+  for (int i=0; i<2; i++)
+    for (int j=0; j<2; j++)
+      for (int k=0; k<2; k++) {
+	char s[80];
+	sprintf (s,"evflt%dreflg%djetid%d",i,j,k);
+	if (!(j+k)) continue;
+	myAnalHistos *myAH = new myAnalHistos(s);
+	hpars.name=hpars.title="h1f_deltaMETHFreflagger";     myAH->book1d<TH1F>(hpars);
+	hpars.name=hpars.title="h1f_deltaMETHBHEreflagger";   myAH->book1d<TH1F>(hpars);
+	hpars.name=hpars.title="h1f_deltaMETjetid";           myAH->book1d<TH1F>(hpars);
+	hpars.name=hpars.title="h1f_deltaMETjetid-reflagger"; myAH->book1d<TH1F>(hpars);
+	histosPerCategory[i][j][k] = myAH;
+      }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 METcleaningComparator::endJob() {
+  cout << "ntrigreject = " << ntrigreject_ << endl;
   cout << "evfilt\treflag\tJetID\t#events\t%" << endl;
   int nevents = h3f_correlations_->GetEntries();
   for (int i=1; i<=2; i++)
