@@ -51,6 +51,7 @@ struct wPad_t {
   vector<string> altyh_ids;
   vector<string> graph_ids;
   vector<string> label_ids;
+  vector<string> line_ids;
   TVirtualPad *vp;
 };
 
@@ -84,12 +85,13 @@ struct wLegend_t {
 	    unsigned infillclr=10) :
     header(inhdr),
     x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc),
-    fillcolor(infillclr),bordersize(1),linewidth(1) {}
+    fillcolor(infillclr),bordersize(1),ncolumns(1),linewidth(1) {}
   string   header;
   float    x1ndc, y1ndc;
   float    x2ndc, y2ndc;
   unsigned fillcolor;
   int      bordersize;
+  int      ncolumns;
   unsigned linewidth;
   unsigned textfont;
   float    textsize;
@@ -114,12 +116,14 @@ struct wLabel_t {
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
 static map<string, string>      glmap_objpaths2id;  // keep track of objects read in
-static map<string, string>      glmap_aliii; // better than aliases
+static map<string, string>      glmap_aliii;        // better than aliases
 static map<string, wTH1 *>      glmap_id2histo;
 static map<string, TGraph *>    glmap_id2graph;
-static map<string, wLegend_t *> glmap_id2legend; // the map...of legends
+static map<string, TLine *>     glmap_id2line;
+static map<string, wLegend_t *> glmap_id2legend;    // the map...of legends
 static map<string, wLabel_t *>  glmap_id2label;
 static map<string, TFile *>     glmap_id2rootfile;
+static map<string, TF1 *>       glmap_id2tf1;
 
 static string nullstr;
 
@@ -249,7 +253,7 @@ TH1 *findHisto(const string& hid, const std::string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
-    cerr << "Histo ID " << hid << " " << errmsg << endl;
+    cerr << errmsg << " Histo ID " << hid << endl;
     return NULL;
   }
   return it->second->histo();
@@ -257,9 +261,23 @@ TH1 *findHisto(const string& hid, const std::string& errmsg="")
 
 //======================================================================
 
+TF1 *findTF1(const string& fid)
+{
+  cout << "looking for " << fid << endl;
+  map<string,TF1 *>::const_iterator it = glmap_id2tf1.find(fid);
+  if (it == glmap_id2tf1.end()) {
+    cerr << "TF1 ID " << fid << " not found" << endl;
+    return NULL;
+  }
+  return it->second;
+}
+
+//======================================================================
+
 TH1 *IntegrateLeft(TH1 *h)
 {
-  TH1 *hcum = (TH1 *)h->Clone();
+  string newname = string(h->GetName())+"_integleft";
+  TH1 *hcum = (TH1 *)h->Clone(newname.c_str());
   hcum->Reset();
 
   int nbins = hcum->GetNbinsX();
@@ -276,9 +294,10 @@ TH1 *IntegrateLeft(TH1 *h)
 
 //======================================================================
 
-TH1 *IntegrateRight(TH1 *h,float skipbinatx=-9e99)
+TH1 *IntegrateRight(TH1 *h,double skipbinatx=-9e99)
 {
-  TH1 *hcum = (TH1 *)h->Clone();
+  string newname = string(h->GetName())+"_integright";
+  TH1 *hcum = (TH1 *)h->Clone(newname.c_str());
   hcum->Reset();
 
   int nbins = hcum->GetNbinsX();
@@ -603,6 +622,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       Tokenize(value,wpad->graph_ids,","); 
       if (!wpad->graph_ids.size()) wpad->graph_ids.push_back(value);
     }
+    else if (key == "lines") {
+      Tokenize(value,wpad->line_ids,","); 
+      if (!wpad->line_ids.size()) wpad->line_ids.push_back(value);
+    }
     else if (key == "labels") {
       Tokenize(value,wpad->label_ids," ,"); 
       if (!wpad->label_ids.size())  wpad->label_ids.push_back(value);
@@ -794,6 +817,17 @@ void processCommonHistoParams(const string& key,
     else
       cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
+  else if (key == "fits") {
+    vector<string> v_tokens;
+    Tokenize(value,v_tokens,","); 
+    for (size_t i=0; i<v_tokens.size(); i++) {
+      TF1 *tf1 = findTF1(v_tokens[i]);
+      if (!tf1) {
+	cerr << "TF1 " << v_tokens[i] << "must be defined first" << endl;
+      }
+      wh.loadFitFunction(tf1);
+    }
+  }
   else {
     cerr << "unknown key " << key << endl;
   }
@@ -835,7 +869,7 @@ wTH1 *getHistoFromSpec(const string& hid,
     if (!hspec.size()) return NULL;
   }
 
-  fullspec = rootfn + hspec;
+  fullspec = rootfn + ":" + hspec;
 
   map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
   if (it != glmap_objpaths2id.end()) {
@@ -864,6 +898,7 @@ wTH1 *getHistoFromSpec(const string& hid,
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
       } else {
 	// success, record that you read it in.
+	cerr << "Found " << fullspec << endl;
 	glmap_objpaths2id.insert(pair<string,string>(fullspec,hid));
 	wth1 = new wTH1(h1);
 	glmap_id2histo.insert(pair<string,wTH1 *>(hid,wth1));
@@ -1082,6 +1117,97 @@ processHistoSection(FILE *fp,
 //======================================================================
 
 bool                              // returns true if success
+processTF1Section(FILE *fp,
+		  string& theline,
+		  bool& new_section)
+{
+  string *fid  = NULL;
+  string *form = NULL;
+  TF1    *f1   = NULL;
+  double xmin=0.0, xmax=0.0;
+  vector<string> parstrs;
+
+  cout << "Processing TF1 section" << endl;
+
+  new_section=false;
+
+  while (getLine(fp,theline,"TF1")) {
+    if (!theline.size()) continue;
+    if (theline[0] == '#') continue; // comments are welcome
+
+    if (theline[0] == '[') {
+      new_section=true;
+      break;
+    }
+
+    vector<string> v_tokens;
+    Tokenize(theline,v_tokens,"=");
+
+    if ((v_tokens.size() != 2) ||
+	(!v_tokens[0].size())  ||
+	(!v_tokens[1].size())    ) {
+      cerr << "malformed key=value line " << theline << endl; continue;
+    }
+
+    string key   = v_tokens[0];
+    string value = v_tokens[1];
+
+    //--------------------
+    if (key == "id") {
+    //--------------------
+      if (fid != NULL) {
+	cerr << "no more than one id per F1 section allowed " << value << endl;
+	break;
+      }
+      fid = new string(value);
+      
+      map<string, TF1 *>::const_iterator fit = glmap_id2tf1.find(*fid);
+      if (fit != glmap_id2tf1.end()) {
+	cerr << "Function id " << *fid << " already defined" << endl;
+	break;
+      }
+
+    //------------------------------
+    } else if (key == "formula") {
+    //------------------------------
+      if (!fid) {
+	cerr << "id key must be defined before formula key" << endl; continue;
+      }
+      if (form) {
+	cerr << "Formula for " << *fid << " already defined" << endl; continue;
+      }
+      form = new string (value);
+
+    //------------------------------
+    }
+    else if (key == "initpars") {
+      if (!fid) {
+	cerr << "id key must be defined before formula key" << endl; continue;
+      }
+      Tokenize(value,parstrs,",");
+    }
+
+    else if (key == "xmin") xmin = str2flt(value);
+    else if (key == "xmax") xmax = str2flt(value);
+  }
+
+  if (fid && form && (xmax > xmin)) {
+    f1 = new TF1(fid->c_str(),form->c_str(),xmin,xmax);
+    for (size_t i=0; i<parstrs.size(); i++) {
+      f1->SetParameter(i,str2flt(parstrs[i]));
+    }
+    glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
+    //delete fid;
+    //delete form;
+  }
+
+  if (fid) delete fid;
+  return (f1 != NULL);
+}                                                   // processTF1section
+
+//======================================================================
+
+bool                              // returns true if success
 processGraphSection(FILE *fp,
 		    string& theline,
 		    bool& new_section)
@@ -1222,6 +1348,98 @@ processGraphSection(FILE *fp,
 //======================================================================
 
 bool                              // returns true if success
+processLineSection(FILE *fp,
+		   string& theline, // the text line, that is
+		   bool& new_section)
+{
+  vector<string> v_tokens;
+
+  string *lid = NULL;
+  TLine *line = NULL;
+
+  cout << "Processing line section" << endl;
+
+  new_section=false;
+
+  while (getLine(fp,theline,"graph")) {
+    if (!theline.size()) continue;
+    if (theline[0] == '#') continue; // comments are welcome
+
+    if (theline[0] == '[') {
+      new_section=true;
+      break;
+    }
+
+    Tokenize(theline,v_tokens,"=");
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
+	(!v_tokens[1].size())    ) {
+      cerr << "malformed key=value line " << theline << endl; continue;
+    }
+
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
+
+    //--------------------
+    if (key == "id") {
+    //--------------------
+      if (lid != NULL) {
+	cerr << "no more than one id per line section allowed " << value << endl;
+	break;
+      }
+
+      lid = new string(value);
+
+    //------------------------------
+    } else if (key == "x1x2y1y2") {
+    //------------------------------
+      if (!lid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (line) {
+	cerr << "line already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,",");
+
+      if (v_tokens.size() != 4) {
+	cerr << "expecting four coordinates x1,x2,y1,y2: " << theline << endl; continue;
+      }
+
+      float x1=str2flt(v_tokens[0]);
+      float x2=str2flt(v_tokens[1]);
+      float y1=str2flt(v_tokens[2]);
+      float y2=str2flt(v_tokens[3]);
+
+      line = new TLine(x1,y1,x2,y2);
+
+    } else if (!line) {
+      cerr << "key x1x2y1y2 must appear before this key: " << key << endl; continue;
+    } else {
+      if      (key == "linecolor")   line->SetLineColor(str2int(value));
+      else if (key == "linestyle")   line->SetLineStyle(str2int(value));
+      else if (key == "linewidth")   line->SetLineWidth(str2int(value));
+      else {
+	cerr << "unknown key " << key << endl;
+      }
+    }
+  }
+
+  if (line)
+    glmap_id2line.insert(pair<string,TLine *>(*lid,line));
+
+  return (line != NULL);
+}                                                  // processLineSection
+
+//======================================================================
+
+bool                              // returns true if success
 processHmathSection(FILE *fp,
 		    string& theline,
 		    bool& new_section)
@@ -1285,12 +1503,13 @@ processHmathSection(FILE *fp,
 
       Tokenize(hmathexpr,v_tokens,"-+*/");
       if (v_tokens.size() != 2) {
-	cerr << "only simple math ops -+*/ supported between two operands, sorry!" << theline << endl;
+	cerr << "only simple math ops -+*/ supported between two operands, sorry!";
+	cerr << theline << endl;
 	continue;
       }
 
       TH1 *histop = 0;
-      double constant=0.0;
+      double dummynum=0.0;
       TF1 *f1 = 0;
 
       string& arg1=v_tokens[0];
@@ -1303,20 +1522,42 @@ processHmathSection(FILE *fp,
 	arg2= extractAlias(arg2.substr(1));
 	if (!arg2.size()) continue;
       }
-      histop = findHisto(arg1);
+
+      TH1 *hres;
+
+      histop = findHisto(arg1,"Checking:is this a histo?");
       if (!histop) {	// trying scanning a double
-	if(!sscanf(arg1.c_str(),"%lg",&constant)) {
+	if(!sscanf(arg1.c_str(),"%lg",&dummynum)) {
 	  cerr << arg1 << ": it's not a known histo, and it's not a number.";
 	  cerr << "I'm outta here." << endl;
 	  continue;
 	} else {
+	  // arg1 is a constant, so
 	  // arg2 must be a histogram
-	  histop = findHisto(arg2);
+	  histop = findHisto(arg2,"Checking:is this a histo?");
 	  if (!histop) continue;
+	  if (theline.find('-') != string::npos) {
+	    // the histo operand is being negated
+	    //
+	    // WARNING: not handling negative constants
+	    //
+	    f1 = new TF1("minus1","-1",
+			 histop->GetXaxis()->GetXmin(),
+			 histop->GetXaxis()->GetXmax());
+	    histop->Multiply(f1);
+	    string newname=string(histop->GetName())+"_"+arg1+"-this";
+	    hres = (TH1 *)histop->Clone(newname.c_str());
+	    f1 = new TF1("someconst",arg1.c_str(),
+			 histop->GetXaxis()->GetXmin(),
+			 histop->GetXaxis()->GetXmax());
+	    hres->Add(f1);
+	  }
 	}
       } else {
+	// arg1 is a histo, so
 	// arg2 must be a number
-	if(!sscanf(arg2.c_str(),"%lg",&constant)) {
+	cout << "made it here..." << endl;
+	if(!sscanf(arg2.c_str(),"%lg",&dummynum)) {
 	  cerr << arg2 << " must be a number, since " << arg1 << " is a histogram. ";
 	  cerr << "Use 'binaryop' otherwise." << endl;
 	  continue;
@@ -1324,17 +1565,20 @@ processHmathSection(FILE *fp,
 	f1 = new TF1("myfunc",arg2.c_str(),
 		     histop->GetXaxis()->GetXmin(),
 		     histop->GetXaxis()->GetXmax());
+	if (theline.find('-') != string::npos) {
+	  string newname=string(histop->GetName())+"_-"+arg1;
+	  hres = (TH1 *)histop->Clone(newname.c_str());
+	  hres->Add(f1,-1.0);
+	} else {
+	  string newname=string(histop->GetName())+"_?"+arg1;
+	  hres = (TH1 *)histop->Clone(newname.c_str());
+	}
       }
 
-      TH1 *hres = (TH1 *)histop->Clone();
-
-      //hres->Reset();
-
-      if      (theline.find('-') != string::npos) hres->Add(f1,-1.0);
-      else if (theline.find('+') != string::npos) hres->Add(f1);
-      else if (theline.find('*') != string::npos) hres->Multiply(f1);
+      if      (theline.find('*') != string::npos) hres->Multiply(f1);
       //else if (theline.find('/') != string::npos) hres->Divide(h1,h2,1.0,1.0,"C");
       else if (theline.find('/') != string::npos) hres->Divide(f1);
+      else if (theline.find('+') != string::npos) hres->Add(f1);
 
       h1 = hres;
       wh = new wTH1(h1);
@@ -1455,7 +1699,7 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      string newname = string(tmph2->GetName())+"_Xbins"+binspec;
+      string newname = string(tmph2->GetName())+"_Ybins"+binspec;
       int lobin=str2int(v_tokens[0]);
       int hibin=str2int(v_tokens[1]);
       if (lobin > hibin) {
@@ -1495,7 +1739,7 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      string newname = string(tmph2->GetName())+"_Ybins"+binspec;
+      string newname = string(tmph2->GetName())+"_Xbins"+binspec;
       int lobin=str2int(v_tokens[0]);
       int hibin=str2int(v_tokens[1]);
       if (lobin > hibin) {
@@ -1674,7 +1918,7 @@ processLegendSection(FILE *fp,
     else if (key == "y1ndc")      wleg->y1ndc  = str2flt(value);
     else if (key == "x2ndc")      wleg->x2ndc  = str2flt(value);
     else if (key == "y2ndc")      wleg->y2ndc  = str2flt(value);
-
+    else if (key == "ncol")       wleg->ncolumns   = str2int(value);
     else if (key == "textsize")   wleg->textsize   = str2flt(value);
     else if (key == "textfont")   wleg->textfont   = str2int(value);
     else if (key == "linewidth")  wleg->linewidth  = str2int(value);
@@ -1868,8 +2112,14 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "LABEL") {
       processLabelSection(fp,theline,new_section);
     }
+    else if (section == "LINE") {
+      processLineSection(fp,theline,new_section);
+    }
     else if (section == "ALIAS") {
       processAliasSection(fp,theline,new_section);
+    }
+    else if (section == "TF1") {
+      processTF1Section(fp,theline,new_section);
     }
     else {
       cerr << "Unknown section " << section << " in " << layoutFile << endl;
@@ -1971,6 +2221,21 @@ void drawInPad(wPad_t *wp, TGraph *gr, const string& drawopt)
   cout<<"Drawing "<<gr->GetName()<<" with option(s) "<<drawopt<<endl;
 
   gr->Draw(drawopt.c_str());
+
+  wp->vp->Update();
+}                                                           // drawInPad
+
+//======================================================================
+
+void drawInPad(wPad_t *wp, TLine *line, const string& drawopt)
+{
+  wp->vp->SetLogx(wp->logx);
+  wp->vp->SetLogy(wp->logy);
+  wp->vp->SetLogz(wp->logz);
+
+  cout<<"Drawing line with option(s) "<<drawopt<<endl;
+
+  line->Draw(drawopt.c_str());
 
   wp->vp->Update();
 }                                                           // drawInPad
@@ -2106,6 +2371,7 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 	    wp->vp->Update();
 	  }
 	}
+	myHisto->DrawFits();
 	if (drawlegend && myHisto->GetLegendEntry().size()) {
 	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
 	  myHisto->Add2Legend(wl->leg);
@@ -2178,6 +2444,37 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
       }
     }
 
+    /***************************************************
+     * LOOP OVER LINES DEFINED FOR PAD...
+     ***************************************************/
+
+    for (unsigned j = 0; j < wp->line_ids.size(); j++) {
+      string drawopt("L");
+      string& lid = wp->line_ids[j];
+      map<string,TLine *>::const_iterator it = glmap_id2line.find(lid);
+      if (it == glmap_id2line.end()) {
+	cerr << "ERROR: line id " << lid << " never defined in layout" << endl;
+	exit (-1);
+      }
+
+      TLine *line = it->second;
+
+      if (!j && !wp->histo_ids.size())
+	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+
+      if (line) {
+	drawInPad(wp,line,drawopt.c_str());
+	wp->vp->Update();
+
+	if (drawlegend)
+	  wl->leg->AddEntry(line,lid.c_str(),"L");
+      }
+    }
+
+    /***************************************************
+     * Draw the legend
+     ***************************************************/
+
     if (drawlegend) {
       if (wl->header != "FillMe") wl->leg->SetHeader(wl->header.c_str());
       wl->leg->SetTextSize(wl->textsize);
@@ -2185,6 +2482,7 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
       wl->leg->SetBorderSize(wl->bordersize);
       wl->leg->SetFillColor(wl->fillcolor);
       wl->leg->SetLineWidth(wl->linewidth);
+      wl->leg->SetNColumns(wl->ncolumns);
       wl->leg->Draw("same");
       wp->vp->Update();
     }
@@ -2242,6 +2540,8 @@ void superPlot(const string& canvasLayout="canvas.txt",
   glmap_id2graph.clear();
   glmap_id2legend.clear();
   glmap_id2label.clear();
+  glmap_id2line.clear();
+  glmap_id2tf1.clear();
 
   setPRDStyle();
   //gROOT->ForceStyle();
