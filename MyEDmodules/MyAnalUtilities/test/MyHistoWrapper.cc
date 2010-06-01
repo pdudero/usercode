@@ -5,6 +5,7 @@
 #include "TLegend.h"
 #include "TAxis.h"
 #include "TStyle.h"
+#include "TF1.h"
 #include "TPaveStats.h"
 
 template <class T>
@@ -90,6 +91,10 @@ public:
 
   const std::string& GetLegendEntry(void)   { return legentry_;  }
 
+  void loadFitFunction(TF1 *fitfn) {if (fitfn) v_fits_.push_back(fitfn);}
+
+  void DrawFits(const std::string& drawopt="");
+
   MyHistoWrapper<T> *Clone(const std::string& newname,
 			   const std::string& newtitle);
 private:
@@ -109,6 +114,8 @@ private:
   std::string drawoption_;
   bool        statsAreOn_;
   TPaveStats  stats_; // placeholder for storing stats options.
+
+  std::vector<TF1 *> v_fits_;
 };
 
 template<typename T>
@@ -121,6 +128,20 @@ MyHistoWrapper<T>::Draw(const std::string& drawopt)
   cout << "Drawing " << h_->GetName() << " with " << drawopt << endl;
 
   h_->Draw(drawopt.c_str());
+}
+
+template<typename T>
+void
+MyHistoWrapper<T>::DrawFits(const std::string& drawopt)
+{
+  for (size_t i=0; i<v_fits_.size(); i++)  {
+    TF1 *f1 = v_fits_[i];
+    cout << "Drawing fit " << f1->GetName() << " with " << drawopt << endl;
+    double xmin,xmax;
+    f1->GetRange(xmin,xmax);
+    h_->Fit(f1,"",drawopt.c_str(),xmin,xmax);
+    //f1->Draw(drawopt.c_str());
+  }
 }
 
 template<typename T>
