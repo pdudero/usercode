@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Dudero
 //         Created:  Mon Mar  2 02:37:12 CST 2009
-// $Id: HcalTimeFilteredRecHitProducer.cc,v 1.7 2009/10/27 02:36:32 dudero Exp $
+// $Id: HcalTimeFilteredRecHitProducer.cc,v 1.1 2010/06/09 15:56:17 dudero Exp $
 //
 //
 
@@ -35,10 +35,9 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
-#include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#include "TRandom3.h"
+#include "TH1F.h"
 
 //
 // class declaration
@@ -59,7 +58,6 @@ private:
 
   bool maskedId          (const HcalDetId& id);
 
-  double smearTime   (const double energy, const double time) const;
   bool   inTime      (const CaloRecHit& rh) const;
   void   dumpEnvelope(const std::vector<std::pair<double,double> >& env,
 		      const std::string& descr) const;
@@ -87,20 +85,15 @@ private:
   int                      subdetOther_;
   std::string              subdetstr_;
   std::vector<HcalDetId>   detIds2mask_;
-  double                   timeShiftNs_; /* time to shift rechit times by
-					    before applying filter window */
 
   std::vector<double>      v_profileThresholds_;
   std::vector<TH1F *>      v_allhistos_;
   std::vector<TH1F *>      v_inthistos_;
   std::vector<TH1F *>      v_outhistos_;
-  //myAnalHistos            *pfHistos_;
-  TRandom3                *rand_;
 
   int                      flagFilterMask_; // filter by rechit flag bits
 
 
-  std::vector<std::pair<double,double> >  tsmearEnvelope_;
   std::vector<std::pair<double,double> >  tfilterEnvelope_;
 };
 
@@ -132,7 +125,6 @@ HcalTimeFilteredRecHitProducer::HcalTimeFilteredRecHitProducer(const edm::Parame
   horecotag_(iConfig.getUntrackedParameter<edm::InputTag>("hoLabel",(edm::InputTag)"")),
   timeWindowCenterNs_(iConfig.getParameter<double>("timeWindowCenterNs")),
   timeWindowGain_(iConfig.getParameter<double>("timeWindowGain")),
-  timeShiftNs_(iConfig.getParameter<double>("timeShiftNs")),
   flagFilterMask_(iConfig.getParameter<int>("flagFilterMask"))
 {
   //register your products
@@ -161,33 +153,6 @@ HcalTimeFilteredRecHitProducer::HcalTimeFilteredRecHitProducer(const edm::Parame
   v_maskidnumbers  = iConfig.getParameter<std::vector<int> > ("detIds2Mask");
   if (!convertIdNumbers(v_maskidnumbers, detIds2mask_))
     throw cms::Exception("Invalid detID vector");
-
-  /***************************************************
-   * PROCESS SMEARING ENVELOPE
-   **************************************************/
-
-  std::vector<double> v_tsmearEnv;
-  v_tsmearEnv  = iConfig.getParameter<std::vector<double> > ("tsmearEnvelope");
-  if (v_tsmearEnv.size()) {
-    if (v_tsmearEnv.size() & 1)
-      throw cms::Exception("Invalid tsmearEnvelope vector");
-  
-    rand_ = new TRandom3();
-
-    for (uint32_t i = 0; i<v_tsmearEnv.size(); i+=2) {
-      double energy     = v_tsmearEnv[i];
-      double tsmearsigma = v_tsmearEnv[i+1];
-      if (tsmearsigma <= 0.0)
-	throw cms::Exception("nonpositive tsmearEnvelope sigma encountered");
-    
-      tsmearEnvelope_.push_back(std::pair<double,double>(energy,tsmearsigma));
-    }
-
-    //sort in order of increasing energy
-    std::sort(tsmearEnvelope_.begin(),
-	      tsmearEnvelope_.end(),
-	      comparePair1<std::pair<double,double> >());
-  }
 
   /***************************************************
    * PROCESS FILTERING ENVELOPE
@@ -222,7 +187,6 @@ HcalTimeFilteredRecHitProducer::HcalTimeFilteredRecHitProducer(const edm::Parame
     v_profileThresholds_ =
       rhProfilingPset_.getUntrackedParameter<std::vector<double> >("thresholds");
     std::sort(v_profileThresholds_.begin(),v_profileThresholds_.end());
-    //    pfHistos_ = new myAnalHistos("recHitProfilingHistos");
   }
 }                                  // HcalTimeFilteredRecHitProducer::HcalTimeFilteredRecHitProducer
 
@@ -289,43 +253,6 @@ HcalTimeFilteredRecHitProducer::convertIdNumbers(std::vector<int>& v_maskidnumbe
 
 //======================================================================
 
-double
-HcalTimeFilteredRecHitProducer::smearTime(const double energy, const double unsmearedTime) const
-{
-  double tsmearsigma;
-  uint32_t i=0;
-
-  for (i=0; i<tsmearEnvelope_.size(); i++)
-    if (tsmearEnvelope_[i].first > energy)
-	break;
-
-  // Smearing starts at the first energy listed in the envelope.
-  if (!i) return unsmearedTime;
-  // No interpolation after the last energy in the envelope!
-  else if (i == tsmearEnvelope_.size())
-    tsmearsigma    = tsmearEnvelope_[i-1].second;
-  else {
-    double energy1 = tsmearEnvelope_[i-1].first;
-    double sigma1  = tsmearEnvelope_[i-1].second;
-    double energy2 = tsmearEnvelope_[i].first;
-    double sigma2  = tsmearEnvelope_[i].second;
-
-    tsmearsigma = sigma1 + ((sigma2-sigma1)*(energy-energy1)/(energy2-energy1));
-
-    //char s[80];
-    //sprintf (s,"(%6.1f,%6.3f) (%6.1f,%6.3f) %6.1f %6.3f\n",energy1,sigma1,energy2,sigma2,energy,tsmearsigma);
-    //std::cout << s;
-  }
-
-  double smearedTime = unsmearedTime + rand_->Gaus(0.0,tsmearsigma);
-
-  //std::cout << "Before: " << unsmearedTime << "; After: " << smearedTime << std::endl;
-
-  return (smearedTime);
-}                                       // HcalTimeFilteredRecHitProducer::smearedTime
-
-//======================================================================
-
 bool
 HcalTimeFilteredRecHitProducer::inTime(const CaloRecHit& rh) const
 {
@@ -381,10 +308,10 @@ HcalTimeFilteredRecHitProducer::histname(int i,bool senseGreaterThan)
 
 std::string HcalTimeFilteredRecHitProducer::histtitle(int i,bool senseGreaterThan)
 {
-  std::ostringstream titss;
+  std::ostringstream titless;
   double thresh = v_profileThresholds_[i];
-  titss << subdetstr_<<" # RecHits " << (senseGreaterThan?"> ":"< ") << thresh << " GeV";
-  return titss.str();
+  titless << subdetstr_<<" # RecHits " << (senseGreaterThan?"> ":"< ") << thresh << " GeV";
+  return titless.str();
 }
 
 //======================================================================
@@ -414,10 +341,6 @@ HcalTimeFilteredRecHitProducer::filterHits(edm::Event& iEvent,
 {
   using namespace edm;
 
-  bool doSmear = ((tsmearEnvelope_.size() > 0) &&
-		  ((subdet_ == HcalBarrel) || 
-		   (subdet_ == HcalEndcap))       );
-
   std::vector<int> allcounters(v_profileThresholds_.size()+1,0);
   std::vector<int> intimecounters(v_profileThresholds_.size()+1,0);
   std::vector<int> outoftimecounters(v_profileThresholds_.size()+1,0);
@@ -432,23 +355,13 @@ HcalTimeFilteredRecHitProducer::filterHits(edm::Event& iEvent,
 
       if (maskedId(inhit.id())) continue;   // masked cells just plain don't count
 
-#ifdef CMSSW3XX
       if (inhit.flags() & flagFilterMask_) continue; // filtering by flag bits
-#endif
 
       Hit outhit(inhit.id(),
 		 inhit.energy(),
-		 inhit.time()-timeShiftNs_); // time-shifted hit (if shift != 0)
+		 inhit.time());
 
-      if (doSmear)
-	outhit = Hit(inhit.id(),
-		     inhit.energy(),
-		     smearTime(outhit.energy(),
-			       outhit.time()));  // smeared hit
-
-#ifdef CMSSW3XX
       outhit.setFlags(inhit.flags());
-#endif
 
       if (inTime(outhit))
 	outCol->push_back(outhit);               // in-time hit
@@ -506,15 +419,12 @@ HcalTimeFilteredRecHitProducer::beginJob(const edm::EventSetup&)
     "subdet_              : " << subdet_             << "\n" <<
     "timeWindowCenterNs_  = " << timeWindowCenterNs_ << "\n" <<
     "timeWindowGain_      = " << timeWindowGain_     << "\n" <<
-    "timeShiftNs_         = " << timeShiftNs_        << "\n" <<
     "flagFilterMask_      = " << flagFilterMask_     << std::endl;
   
   for (uint32_t i=0; i<detIds2mask_.size(); i++)
     //edm::LogInfo("Masking ") << detIds2mask_[i] << std::endl;
     std::cout << "Masking " << detIds2mask_[i] << std::endl;
 
-
-  dumpEnvelope(tsmearEnvelope_,  "Smear Sigma Envelope");
   dumpEnvelope(tfilterEnvelope_, "Time Filter Envelope Limits");
 
   /******************************
@@ -545,7 +455,6 @@ HcalTimeFilteredRecHitProducer::beginJob(const edm::EventSetup&)
 					    (histtitle(i)+ " (Out Of Time)").c_str(),
 					    101, -0.5, 100.5));
     }
-    //pfHistos_->book1d<TH1D>(v_hpars1d);
   }
 }
 

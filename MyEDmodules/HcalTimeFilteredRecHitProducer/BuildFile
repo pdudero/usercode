@@ -3,7 +3,7 @@
 <use name=FWCore/ParameterSet>
 <use name=DataFormats/HcalDetId>
 <use name=DataFormats/HcalRecHit>
-<use name=PhysicsTools/UtilAlgos>
+<use name=CommonTools/UtilAlgos>
 <use name=MyEDmodules/MyAnalUtilities>
 <flags EDM_PLUGIN=1>
 <export>
