@@ -1,0 +1,14 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=DataFormats/HcalDetId>
+<use name=DataFormats/HcalRecHit>
+<use name=PhysicsTools/UtilAlgos>
+<use name=MyEDmodules/MyAnalUtilities>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=MyEDmodulesHcalTimeFilteredRecHitProducer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>
