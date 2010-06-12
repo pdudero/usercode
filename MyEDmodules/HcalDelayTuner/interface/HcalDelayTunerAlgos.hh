@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.hh,v 1.20 2010/05/05 00:25:36 dudero Exp $
+// $Id: HcalDelayTunerAlgos.hh,v 1.21 2010/05/18 21:19:26 dudero Exp $
 //
 //
 
@@ -94,10 +94,13 @@ protected:
   void    processDigisAndRecHits   (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				    const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 #endif
-  void    fillDigiPulseHistos    (TProfile   *hpulse,
-				  TProfile2D *hpulsePerE=NULL,
-				  TProfile   *hpulseE=NULL,
-				  TProfile2D *hpulseEPerE=NULL);
+  void    fillDigiPulseHistos    (myAnalHistos *myAH,
+				  uint32_t      hkey,
+				  const std::string& name,
+				  const CaloSamples& filldigifC);
+  void    fillTSdistros          (myAnalHistos *myAH,
+				  uint32_t      hkey,
+				  const std::string& name);
 
   virtual void add1dHisto        (const std::string& name, const std::string& title,
 				  int nbinsx, double minx, double maxx,
@@ -282,7 +285,7 @@ protected:
   std::string st_rhEmapHFPd1_,st_rhEmapHFPd2_,st_rhEmapHFMd1_,st_rhEmapHFMd2_;
   std::string st_rhOccMapHFPd1_,st_rhOccMapHFPd2_,st_rhOccMapHFMd1_,st_rhOccMapHFMd2_;
   std::string st_rhTprofHFPd1_, st_rhTprofHFPd2_, st_rhTprofHFMd2_, st_rhTprofHFMd1_;
-  std::string st_pulsePerEbinPlus_, st_pulsePerEbinMinus_;
+  std::string st_pulsePerEbin_;
 
   std::map<uint32_t,TH1F *> m_perChHistos_;
 

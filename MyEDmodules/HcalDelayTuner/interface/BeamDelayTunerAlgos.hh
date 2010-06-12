@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamDelayTunerAlgos.hh,v 1.12 2010/05/05 00:25:36 dudero Exp $
+// $Id: BeamDelayTunerAlgos.hh,v 1.13 2010/05/05 23:43:05 dudero Exp $
 //
 //
 
@@ -123,7 +123,7 @@ private:
   std::string st_goodHits_, st_PMThits_,st_dubiousHits_, st_PMTpartners_;
 
   // The collection of names of histos per subdetector
-  std::string st_rhCorTimesPlusVsMinus_;
+  std::string st_rhCorTimesPlusVsMinus_,st_rhDeltaTvsVertexCor_;
   std::string st_nHitsPlus_;
   std::string st_nHitsMinus_;
   std::string st_totalEplus_;

@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.23 2010/05/05 00:24:57 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.24 2010/05/18 21:18:34 dudero Exp $
 //
 //
 
@@ -359,8 +359,6 @@ HcalDelayTunerAlgos::HcalDelayTunerAlgos(const edm::ParameterSet& iConfig) :
   globalFlagMask_(iConfig.getParameter<int>("globalRecHitFlagMask")),
   rundescr_(iConfig.getUntrackedParameter<std::string>("runDescription",""))
 {
-  cout << "Checking it right away: " << mysubdetstr_ << endl;
-
   compileCorrections(iConfig.getParameter<vector<edm::ParameterSet> >("CorrectionsList"));
 
   ampCutsInfC_        = iConfig.getParameter<bool>  ("ampCutsInfC");
@@ -780,18 +778,13 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
       if(h1f)labelHitFlagAxis(*h1f,mysubdet_);
     }
 
-    // Digi pulses binned by energy, by hemisphere
-    st_pulsePerEbinPlus_  = "p2d_pulsePerEbin" + mysubdetstr_ + "P";
-    st_pulsePerEbinMinus_ = "p2d_pulsePerEbin" + mysubdetstr_ + "M";
+    // Digi pulses binned by energy
+    st_pulsePerEbin_  = "p2d_pulsePerEbin" + mysubdetstr_;
 
     string titlestr;
     titlestr =
-      "Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
-    cutAH->book2d<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
-			      10,-0.5,9.5, nEbins, digEbins);
-    titlestr =
-      "Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
-    cutAH->book2d<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
+      "Average Pulse Shape vs E, "+mysubdetstr_+"; Sample Number; E_{hit} (GeV); fC";
+    cutAH->book2d<TProfile2D>(st_pulsePerEbin_, titlestr.c_str(),
 			      10,-0.5,9.5, nEbins, digEbins);
 
     if (cutit->second->doInverted()) {
@@ -813,12 +806,8 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
       }
 
       titlestr =
-	"Average Pulse Shape vs E, "+mysubdetstr_+"P"+"; Sample Number; E_{hit} (GeV); fC";
-      invAH->book2d<TProfile2D>(st_pulsePerEbinPlus_, titlestr.c_str(),
-				10,-0.5,9.5, nEbins, digEbins);
-      titlestr =
-	"Average Pulse Shape vs E, "+mysubdetstr_+"M"+"; Sample Number; E_{hit} (GeV); fC";
-      invAH->book2d<TProfile2D>(st_pulsePerEbinMinus_, titlestr.c_str(),
+	"Average Pulse Shape vs E, "+mysubdetstr_+"; Sample Number; E_{hit} (GeV); fC";
+      invAH->book2d<TProfile2D>(st_pulsePerEbin_, titlestr.c_str(),
 				10,-0.5,9.5, nEbins, digEbins);
     }
 
@@ -1177,10 +1166,16 @@ HcalDelayTunerAlgos::bookPerChanDetail(myAnalHistos *myAH)
 
   // make digi subfolders in the final cut folder
   myAH->mkSubdir<uint32_t>("_DigisfCperID");
-  myAH->mkSubdir<uint32_t>("_DigisfCvsEperID");
+  //myAH->mkSubdir<uint32_t>("_DigisfCvsEperID");
   myAH->mkSubdir<uint32_t>("_DigisGeVperID");
-  myAH->mkSubdir<uint32_t>("_DigisGeVvsEperID");
+  //myAH->mkSubdir<uint32_t>("_DigisGeVvsEperID");
   myAH->mkSubdir<uint32_t>("_corTimesPerID");
+
+  myAnalHistos *postAH = myAH->mkSubdir("_postAnal");
+
+  myAH->mkSubdir<uint32_t>("_ts012perTS4charge");
+  myAH->mkSubdir<uint32_t>("_ts3perTS4charge");
+  myAH->mkSubdir<uint32_t>("_ts5perTS4charge");
 
   // Time reco histos from average pulse shapes
   //
@@ -1194,7 +1189,7 @@ HcalDelayTunerAlgos::bookPerChanDetail(myAnalHistos *myAH)
 "T_{reco} Distro from Avg. Pulse/Channel, "+mysubdetstr_+"M, Run "+runnumstr_+"; Rechit Time (ns)",
 	      recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,v_hpars1d);
 
-  myAH->book1d<TH1F>(v_hpars1d);
+  postAH->book1d<TH1F>(v_hpars1d);
 
   if (mysubdet_==HcalForward) {
     // times from average pulse shapes (booked above) determined in endJob
@@ -1220,44 +1215,44 @@ HcalDelayTunerAlgos::bookPerChanDetail(myAnalHistos *myAH)
     basestr  = " T_{reco} Map from Avg. Pulse/Channel, Run "+runnumstr_+"("+myAH->name()+"); radius; #phi";
 
     title = "HFP Depth 1"+basestr;
-    myAH->book2d<TProfile2D>(st_rhTavgCorProfHFPd1_, title.c_str(),
-			     28, hftwrEdges,36, 0.0, 6.28);
+    postAH->book2d<TProfile2D>(st_rhTavgCorProfHFPd1_, title.c_str(),
+			       28, hftwrEdges,36, 0.0, 6.28);
 
     title = "HFP Depth 2"+basestr;
-    myAH->book2d<TProfile2D>(st_rhTavgCorProfHFPd2_, title.c_str(),
-			     28, hftwrEdges,36, 0.0, 6.28);
+    postAH->book2d<TProfile2D>(st_rhTavgCorProfHFPd2_, title.c_str(),
+			       28, hftwrEdges,36, 0.0, 6.28);
 
     title = "HFM Depth 1"+basestr;
-    myAH->book2d<TProfile2D>(st_rhTavgCorProfHFMd1_, title.c_str(),
-			     28, hftwrEdges,36, 0.0, 6.28);
+    postAH->book2d<TProfile2D>(st_rhTavgCorProfHFMd1_, title.c_str(),
+			       28, hftwrEdges,36, 0.0, 6.28);
 
     title = "HFM Depth 2"+basestr;
-    myAH->book2d<TProfile2D>(st_rhTavgCorProfHFMd2_, title.c_str(),
-			     28, hftwrEdges,36, 0.0, 6.28);
-
+    postAH->book2d<TProfile2D>(st_rhTavgCorProfHFMd2_, title.c_str(),
+			       28, hftwrEdges,36, 0.0, 6.28);
+    
     basestr = " TS4/(TS3+TS4) Map from Average Pulse Shapes, Run "+runnumstr_+"("+myAH->name()+");";
 
     title = "HFP Depth 1"+basestr+"i#eta; i#phi";
     add2dHisto(st_ts43ratioProfHFPd1_,title,13,28.5,41.5,72,0.5,72.5,v_hpars2dprof);
     title = "HFP Depth 1"+basestr+"meters; meters";
-    myAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFPd1_,title.c_str(),28,hftwrEdges,36,0.0,6.28);
+    postAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFPd1_,title.c_str(),28,hftwrEdges,36,0.0,6.28);
 
     title = "HFP Depth 2"+basestr+"i#eta; i#phi";
     add2dHisto(st_ts43ratioProfHFPd2_,title,13,28.5,41.5,72,0.5,72.5,v_hpars2dprof);
     title = "HFP Depth 2"+basestr+"meters; meters";
-    myAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFPd2_,title.c_str(),28,hftwrEdges,36,0.0,6.28);
+    postAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFPd2_,title.c_str(),28,hftwrEdges,36,0.0,6.28);
 
     title = "HFM Depth 1"+basestr+"i#eta; i#phi";
     add2dHisto(st_ts43ratioProfHFMd1_,title,13,-41.5,-28.5,72,0.5,72.5,v_hpars2dprof);
     title = "HFM Depth 1"+basestr+"meters; meters";
-    myAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFMd1_, title.c_str(),28,hftwrEdges,36,0.0,6.28);
+    postAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFMd1_, title.c_str(),28,hftwrEdges,36,0.0,6.28);
 
     title = "HFM Depth 2"+basestr+"i#eta; i#phi";
     add2dHisto(st_ts43ratioProfHFMd2_,title,13,-41.5,-28.5,72,0.5,72.5,v_hpars2dprof);
     title = "HFM Depth 2"+basestr+"meters; meters";
-    myAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFMd2_, title.c_str(),28,hftwrEdges,36,0.0,6.28);
+    postAH->book2d<TProfile2D>(st_ts43ratioPolarProfHFMd2_, title.c_str(),28,hftwrEdges,36,0.0,6.28);
 
-    myAH->book2d<TProfile2D>(v_hpars2dprof);
+    postAH->book2d<TProfile2D>(v_hpars2dprof);
   }
 }                              // HcalDelayTunerAlgos::bookPerChanDetail
 
@@ -1384,6 +1379,19 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
   } // if HB/HE/HF
 
 
+  CaloSamples filldigifC = digifC_;
+  int digisize = std::min(10,digifC_.size());
+
+  if (normalizeDigis_) {
+    double sum = 0.0;
+    for (int its=0; its<digisize; ++its) sum += digifC_[its];
+    if (sum > 0.0)  filldigifC *= 1.0/sum;
+
+    // normalize the digi in GeV to the hitenergy that was reconstructed
+    if (hitenergy_ != 0.0) 
+      for (unsigned its=0; its<digiGeV_.size(); its++) digiGeV_[its] /= hitenergy_;
+  }
+
   TProfile *avgPulse = myAH->get<TProfile>(st_avgPulse_.c_str());
   for (int its=0; its<digisize; ++its)
     avgPulse->Fill(its,filldigifC[its]);
@@ -1392,11 +1400,12 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
   TProfile *avgPulsePerZside =
     myAH->get<TProfile>(((zside>0)?
 			 st_avgPulsePlus_.c_str():
-			 st_avgPulseMinus_.c_str())),
+			 st_avgPulseMinus_.c_str()));
+
   for (int its=0; its<digisize; ++its)
     avgPulsePerZside->Fill(its,filldigifC[its]);
 
-  TProfile2D *avgPulsePerE = myAH->get<TProfile>(st_pulsePerEbin_.c_str());
+  TProfile2D *avgPulsePerE = myAH->get<TProfile2D>(st_pulsePerEbin_.c_str());
   for (int its=0; its<digisize; ++its)
     avgPulsePerE->Fill(its,hitenergy_,filldigifC[its]);
 
@@ -1414,7 +1423,8 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 #endif
 
     // Now per channel...
-    if (thisCut.flagSet(st_doPerChannel_)) {
+    if ((myAH != thisCut.invhistos()) &&
+	thisCut.flagSet(st_doPerChannel_)) {
       uint32_t     dix;
       stringstream name;
 
@@ -1424,7 +1434,7 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 	dix = detID_.denseIndex(); name << detID_;
       }
 
-      fillDigiPulseHistos(myAH,dix,name.str());
+      fillDigiPulseHistos(myAH,dix,name.str(),filldigifC);
 
       if  (mysubdet_==HcalForward)
 	fillTSdistros (myAH,dix,name.str());
@@ -1452,30 +1462,21 @@ HcalDelayTunerAlgos::fillHistos4cut(myAnalCut& thisCut)
 void
 HcalDelayTunerAlgos::fillDigiPulseHistos(myAnalHistos *myAH,
 					 uint32_t      hkey,
-					 const std::string& name)
+					 const std::string& name,
+					 const CaloSamples& filldigifC)
 {
-  perChanHistos::HistoParams_t hpars(name.str(),name.str(),10,-0.5,9.5);
+  perChanHistos::HistoParams_t hpars(name,name,10,-0.5,9.5);
 
   int digisize = std::min(10,digifC_.size());
-
-  CaloSamples filldigifC = digifC_;
-
-  if (normalizeDigis_) {
-    double sum = 0.0;
-    for (int its=0; its<digisize; ++its) sum += digifC_[its];
-    if (sum > 0.0)  filldigifC *= 1.0/sum;
-
-    // normalize the digi in GeV to the hitenergy that was reconstructed
-    if (hitenergy_ != 0.0) 
-      for (unsigned its=0; its<digiGeV_.size(); its++) digiGeV_[its] /= hitenergy_;
-  }
   
   // pulses in fC
   perChanHistos *digifChistos = myAH->getAttachedHisto<uint32_t>("_DigisfCperID");
 
-  TProfile *hpulsefC = digifChistos->exists(dix)   ?   // Digis in fC, all energies
-    digifChistos->get<TProfile>(dix) :
-    digifChistos->book1d<TProfile>(dix,hpars,false);
+  if (!digifChistos) return;
+
+  TProfile *hpulsefC = digifChistos->exists(hkey)   ?   // Digis in fC, all energies
+    digifChistos->get<TProfile>(hkey) :
+    digifChistos->book1d<TProfile>(hkey,hpars,false);
 
   if (hpulsefC) {
     for (int its=0; its<digisize; ++its)
@@ -1485,9 +1486,11 @@ HcalDelayTunerAlgos::fillDigiPulseHistos(myAnalHistos *myAH,
   // pulses in Energy
   perChanHistos *digiGeVhistos = myAH->getAttachedHisto<uint32_t>("_DigisGeVperID");
 
-  TProfile *hpulseGeV = digiGeVhistos->exists(dix) ?   // Digis in GeV, all energies
-    digiGeVhistos->get<TProfile>(dix) :
-    digiGeVhistos->book1d<TProfile>(dix,hpars,false);
+  if (!digiGeVhistos) return;
+
+  TProfile *hpulseGeV = digiGeVhistos->exists(hkey) ?   // Digis in GeV, all energies
+    digiGeVhistos->get<TProfile>(hkey) :
+    digiGeVhistos->book1d<TProfile>(hkey,hpars,false);
 
   if (hpulseGeV)
     for (unsigned its=0; its<digiGeV_.size(); ++its)
@@ -1500,10 +1503,10 @@ HcalDelayTunerAlgos::fillDigiPulseHistos(myAnalHistos *myAH,
 
   perChanHistos *digifCvsEhistos = myAH->getAttachedHisto<uint32_t>("_DigisfCvsEperID");
 
-  TProfile2D *hpulsefCperE=digifCvsEhistos->exists(dix)? // Digis in fC, binned energies
-    digifCvsEhistos->get<TProfile2D>(dix) :
+  TProfile2D *hpulsefCperE=digifCvsEhistos->exists(hkey)? // Digis in fC, binned energies
+    digifCvsEhistos->get<TProfile2D>(hkey) :
     digifCvsEhistos->book2d<TProfile2D>
-    (dix,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
+    (hkey,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
 
   if (hpulsefCPerE) {
     for (int its=0; its<digisize; ++its)
@@ -1512,10 +1515,10 @@ HcalDelayTunerAlgos::fillDigiPulseHistos(myAnalHistos *myAH,
 
   perChanHistos *digiGeVvsEhistos = myAH->getAttachedHisto<uint32_t>("_DigisGeVvsEperID");
 
-  TProfile2D *hpulseGeVperE=digiGeVvsEhistos->exists(dix)? // Digis in GeV, binned energies
-    digiGeVvsEhistos->get<TProfile2D>(dix) :
+  TProfile2D *hpulseGeVperE=digiGeVvsEhistos->exists(hkey)? // Digis in GeV, binned energies
+    digiGeVvsEhistos->get<TProfile2D>(hkey) :
     digiGeVvsEhistos->book2d<TProfile2D>
-    (dix,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
+    (hkey,hpars.name,hpars.title.c_str(),10,-0.5,9.5,nEbins,digEbins,false);
 
   if (hpulseGeVPerE)
     for (unsigned its=0; its<digiGeV_.size(); ++its)
@@ -1530,28 +1533,32 @@ HcalDelayTunerAlgos::fillTSdistros(myAnalHistos *myAH,
 				   uint32_t      hkey,
 				   const std::string& name)
 {
-  perChanHistos *ts012perTS4charge = myAH->getAttachedHisto<uint32_t("_ts012perTS4charge");
-  perChanHistos *ts3perTS4charge   = myAH->getAttachedHisto<uint32_t("_ts3perTS4charge");
-  perChanHistos *ts5perTS4charge   = myAH->getAttachedHisto<uint32_t("_ts5perTS4charge");
+  perChanHistos *ts012perTS4charge = myAH->getAttachedHisto<uint32_t>("_ts012perTS4charge");
+  perChanHistos *ts3perTS4charge   = myAH->getAttachedHisto<uint32_t>("_ts3perTS4charge");
+  perChanHistos *ts5perTS4charge   = myAH->getAttachedHisto<uint32_t>("_ts5perTS4charge");
 
-  TH2F *ts012 = ts012perTS4charge->exists(dix) ?
-    ts012perTS4charge->get<TH2F>(dix) :
-    ts012perTS4charge->book2d<TH2F>(dix,hpars,false);
+  perChanHistos::HistoParams_t hpars(name,name, 41,-25.,2025.,151,-50.5,100.5);
 
-  TH2F *ts3 = ts3perTS4charge->exists(dix) ?
-    ts3perTS4charge->get<TH2F>(dix) :
-    ts3perTS4charge->book2d<TH2F>(dix,hpars,false);
+  assert (ts012perTS4charge && ts3perTS4charge && ts5perTS4charge);
 
-  TH2F *ts5 = ts5perTS4charge->exists(dix) ?
-    ts5perTS4charge->get<TH2F>(dix) :
-    ts5perTS4charge->book2d<TH2F>(dix,hpars,false);
+  TH2F *ts012 = ts012perTS4charge->exists(hkey) ?
+    ts012perTS4charge->get<TH2F>(hkey) :
+    ts012perTS4charge->book2d<TH2F>(hkey,hpars,false);
 
-  ts012->Fill(digifC[0],digifC[4],0.3333);
-  ts012->Fill(digifC[1],digifC[4],0.3333);
-  ts012->Fill(digifC[2],digifC[4],0.3333);
+  TH2F *ts3 = ts3perTS4charge->exists(hkey) ?
+    ts3perTS4charge->get<TH2F>(hkey) :
+    ts3perTS4charge->book2d<TH2F>(hkey,hpars,false);
 
-  ts3->Fill(digifC[3],digifC[4]);
-  ts5->Fill(digifC[5],digifC[4]);
+  TH2F *ts5 = ts5perTS4charge->exists(hkey) ?
+    ts5perTS4charge->get<TH2F>(hkey) :
+    ts5perTS4charge->book2d<TH2F>(hkey,hpars,false);
+
+  ts012->Fill(digifC_[0],digifC_[4],0.3333);
+  ts012->Fill(digifC_[1],digifC_[4],0.3333);
+  ts012->Fill(digifC_[2],digifC_[4],0.3333);
+
+  ts3->Fill(digifC_[3],digifC_[4]);
+  ts5->Fill(digifC_[5],digifC_[4]);
 }                                  // HcalDelayTunerAlgos::fillTSdistros
 
 //======================================================================
@@ -1764,8 +1771,10 @@ HcalDelayTunerAlgos::projectResults(const TimesPerDetId& chtimes, int itnum)
 void
 HcalDelayTunerAlgos::computeChannelTimingFromAvgDigis(myAnalHistos *myAH)
 {
-  TH1F *h1plus =myAH->get<TH1F>(st_rhTavgCorPlus_.c_str());
-  TH1F *h1minus=myAH->get<TH1F>(st_rhTavgCorMinus_.c_str());
+  myAnalHistos *postAH = myAH->getAttachedHisto("_postAnal");
+
+  TH1F *h1plus =postAH->get<TH1F>(st_rhTavgCorPlus_.c_str());
+  TH1F *h1minus=postAH->get<TH1F>(st_rhTavgCorMinus_.c_str());
 
   //perChanHistos *digiGeVHistos = myAH->getAttachedHisto<uint32_t>("_DigisGeVperID");
   perChanHistos *digifCHistos  = myAH->getAttachedHisto<uint32_t>("_DigisfCperID");
@@ -1833,7 +1842,7 @@ HcalDelayTunerAlgos::computeChannelTimingFromAvgDigis(myAnalHistos *myAH)
       fangle   = TMath::Pi()*(fiphi-1.)/36.;
       fradius  = hftwrRadii[41-absieta];
 
-      myAH->fill2d<TProfile2D>(st_rhTavgCorProf,fradius,fangle,tRecoFromAvgPulse);
+      postAH->fill2d<TProfile2D>(st_rhTavgCorProf,fradius,fangle,tRecoFromAvgPulse);
 
       float ratio43= 0.0f;
       float ts3 = tp->GetBinContent(4);
@@ -1844,8 +1853,8 @@ HcalDelayTunerAlgos::computeChannelTimingFromAvgDigis(myAnalHistos *myAH)
       else
 	ratio43 = -1.0; 
 
-      myAH->fill2d<TProfile2D>(st_ts43ratioProf,fieta,fiphi,ratio43);
-      myAH->fill2d<TProfile2D>(st_ts43ratioPolarProf,fradius,fangle,ratio43);
+      postAH->fill2d<TProfile2D>(st_ts43ratioProf,fieta,fiphi,ratio43);
+      postAH->fill2d<TProfile2D>(st_ts43ratioPolarProf,fradius,fangle,ratio43);
 
     } // if HF
   } // digi histo loop
@@ -1857,12 +1866,14 @@ HcalDelayTunerAlgos::computeChannelTimingFromAvgDigis(myAnalHistos *myAH)
 void
 HcalDelayTunerAlgos::compilePerTimeSampleStatistics(myAnalHistos *myAH)
 {
-
+#if 0
   perChanHistos *ts012perTS4charge = myAH->getAttachedHisto<uint32_t("_ts012perTS4charge");
   perChanHistos *ts3perTS4charge   = myAH->getAttachedHisto<uint32_t("_ts3perTS4charge");
   perChanHistos *ts5perTS4charge   = myAH->getAttachedHisto<uint32_t("_ts5perTS4charge");
 
   perChanHistos::iterator it = ts012perTS4charge->begin();
+
+  myAnalHistos *postAH = myAH->getAttachedHisto("_postAnal");
 
   TH2F *h2f = (TH2F *)it->second;
 
@@ -1871,16 +1882,17 @@ HcalDelayTunerAlgos::compilePerTimeSampleStatistics(myAnalHistos *myAH)
   myAnalHistos::HistoParams_t
     hpars("ts012meanVsE",
 	  "TS0,1,or 2 fC per-channel means vs TS4 fC; TS4 (fC); TS0,1, or 2 (fC)",
-	  200, recHitEscaleMinfC_, recHitEscaleMaxfC_
+	  200, recHitEscaleMinfC_, recHitEscaleMaxfC_);
 				    
-  TProfile *ts012meanVsE = myAH->book1d<TProfile>(
+  TProfile *ts012meanVsE = postAH->book1d<TProfile>(hpars);
   
 
-  for (++it;; it != ts012perTS4charge->end(); it++) {
+  for (++it; it != ts012perTS4charge->end(); it++) {
     TH2F *h2f = (TH2F *)it->second;
 
     ts012vsts4avg->Add(*h2f);
   }
+#endif
 }                 // HcalDelayTunerAlgos::compilePerTimeSampleStatistics
 
 //======================================================================
@@ -1891,8 +1903,9 @@ HcalDelayTunerAlgos::endJob()
   cout << neventsProcessed_ << " events processed for subdet " << mysubdetstr_ << endl;
   if (!neventsProcessed_) return;
 
+  myAnalHistos *lastAH = getCut(st_lastCut_)->cuthistos();
+
   if (mysubdet_ == HcalBarrel) {
-    myAnalHistos *lastAH = getCut(st_lastCut_)->cuthistos();
     TProfile  *tp=lastAH->get<TProfile>(st_avgTcorPerIetad1_.c_str());
     float TetaMinus1 = tp->GetBinContent(tp->GetXaxis()->FindBin(-1));
     float TetaPlus1  = tp->GetBinContent(tp->GetXaxis()->FindBin( 1));
@@ -1902,11 +1915,9 @@ HcalDelayTunerAlgos::endJob()
   }
 
   if (doPerChannel_) {
-    myAnalHistos postAH = myAH->mkSubdir("_postAnal");
-    
-    computeChannelTimingFromAvgDigis(postAH);
+    computeChannelTimingFromAvgDigis(lastAH);
     if (mysubdet_ == HcalForward)
-      compilePerTimeSampleStatistics(postAH);
+      compilePerTimeSampleStatistics(lastAH);
   }
 
   if (corList_.size()) {

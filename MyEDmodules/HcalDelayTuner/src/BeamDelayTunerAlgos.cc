@@ -115,13 +115,9 @@ BeamDelayTunerAlgos::BeamDelayTunerAlgos(const edm::ParameterSet& iConfig,
   edm::Service<TFileService> fs;
   mysubdetRootDir_ = new TFileDirectory(fs->mkdir(mysubdetstr_));
 
-  cout << 2 << endl;
-
   // all cuts applied on top of the previous one
   //
   st_cutNone_ = addCut("none");
-
-  cout << 3 << endl;
 
   if (badEventVec.size())   st_cutBadEv_ = addCut("badEv",doInverted);
   if (acceptedBxVec.size()) st_cutBadBx_ = addCut("bxnum",doInverted);
@@ -494,6 +490,12 @@ BeamDelayTunerAlgos::bookDetailHistos4cut(myAnalCut& cut)
   add2dHisto(st_rhCorTimesPlusVsMinus_,titlestr,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	     recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_, v_hpars2d);
+
+  st_rhDeltaTvsVertexCor_ = "h2d_rhDeltaTvsVertexCor" + mysubdetstr_;
+  titlestr = "T_{"+mysubdetstr_+"P-"+mysubdetstr_+"M}/Event vs. Vertez z correction, "+mysubdetstr_;
+  titlestr += ", E_{tot,+},E_{tot,-}>10GeV, Run "+runnumstr_;
+  titlestr += "; T_{avg,+}-T_{avg,-} (ns); Vertex Z Correction (ns)";
+  add2dHisto(st_rhDeltaTvsVertexCor_,titlestr,100,-10.,10.,100,-20.,20.,v_hpars2d);
 
   st_nHitsPlus_ = "h1d_nHits"+mysubdetstr_+"P";
   sprintf (title, "# Hits, %sP, Run %d; # Hits", mysubdetstr_.c_str(), runnum_);
@@ -941,6 +943,7 @@ BeamDelayTunerAlgos::fillPerEvent(void)
     lastAH->fill1d<TH1F>(st_nHitsMinus_,nhitsminus_);
     lastAH->fill1d<TH1F>(st_totalEplus_, totalEplus_);
     lastAH->fill1d<TH1F>(st_totalEminus_,totalEminus_);
+    lastAH->fill2d<TProfile2D>(st_rhDeltaTvsVertexCor_,correction_ns_,avgTplus_-avgTminus_);
 
     if (avgTminus_>50)
 cerr<<"avgTminus="<<avgTminus_<<", nhitsminus="<<nhitsminus_<<", totalEminus="<<totalEminus_<<endl;
@@ -965,9 +968,14 @@ void BeamDelayTunerAlgos::logLSBX(const std::string& cutstr)
   if (!lsH) {
     string title = "Lumi Section Occupancy, LS="+range.str();
     title += ", "+mysubdetstr_+", Run "+runnumstr_+"; LS Number";
-    myAnalHistos::HistoParams_t hpars1d(hlsnumname,title,
-					501,(float)lsnum500,lsnum500+500f.,
-					0,0.,0.,0,0.,0.);
+    myAnalHistos::HistoParams_t hpars1d;
+    hpars1d.name   = hlsnumname;
+    hpars1d.title  = title;
+    hpars1d.nbinsx = 501;
+    hpars1d.minx   = (float)lsnum500;
+    hpars1d.maxx   = lsnum500+500.f;
+    hpars1d.nbinsy = 0;
+    hpars1d.nbinsz = 0;
     myAH->book1d<TH1F>(hpars1d);
     lsH = myAH->get<TH1F>(hlsnumname);
   }
@@ -1249,9 +1257,6 @@ BeamDelayTunerAlgos::process(const myEventData& ed)
 void
 BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup,const myEventData& ed)
 {
-  if (!ed.hfdigis().isValid())
-    throw cms::Exception("Must supply HF digis!!");
-
   HcalDelayTunerAlgos::beginJob(iSetup,ed);
 
   std::cout << "----------------------------------------"  << "\n";
@@ -1261,5 +1266,8 @@ BeamDelayTunerAlgos::beginJob(const edm::EventSetup& iSetup,const myEventData& e
   for (unsigned i=0; i<v_hitCategories_.size(); i++)
     std::cout << v_hitCategories_[i] << "\t";
   std::cout << std::endl;
+
+  if ((mysubdet_ == HcalForward) && !ed.hfdigis().isValid())
+    throw cms::Exception("Must supply HF digis!!");
 }
 
