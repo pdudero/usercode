@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.8 2010/03/26 16:27:12 dudero Exp $
+// $Id: myEventData.cc,v 1.9 2010/03/27 18:39:09 dudero Exp $
 //
 //
 
@@ -53,9 +53,12 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   zdcRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcRechitLabel",edm::InputTag(""))),
   zdcDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcDigiLabel",edm::InputTag(""))),
   simHitTag_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
-  metTag_(edPset.getUntrackedParameter<edm::InputTag>("metLabel",edm::InputTag(""))),
+  caloMETtag_(edPset.getUntrackedParameter<edm::InputTag>("caloMETlabel",edm::InputTag(""))),
+  recoMETtag_(edPset.getUntrackedParameter<edm::InputTag>("recoMETlabel",edm::InputTag(""))),
   twrTag_(edPset.getUntrackedParameter<edm::InputTag>("twrLabel",edm::InputTag(""))),
   vertexTag_(edPset.getUntrackedParameter<edm::InputTag>("vertexLabel",edm::InputTag(""))),
+  trgResultsTag_(edPset.getUntrackedParameter<edm::InputTag>("trgResultsLabel",edm::InputTag(""))),
+  hbheNoiseResultTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheNoiseResultLabel",edm::InputTag(""))),
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
   if (verbose_) {
@@ -71,9 +74,12 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
     cout << "zdcRechitTag_  = " << zdcRechitTag_  << endl;
     cout << "zdcDigiTag_    = " << zdcDigiTag_    << endl;
     cout << "simHitTag_     = " << simHitTag_     << endl;
-    cout << "metTag_        = " << metTag_        << endl;
+    cout << "caloMETtag_    = " << caloMETtag_    << endl;
+    cout << "recoMETtag_    = " << recoMETtag_    << endl;
     cout << "twrTag_        = " << twrTag_        << endl;
     cout << "vertexTag_     = " << vertexTag_     << endl;
+    cout << "trgResultsTag_ = " << trgResultsTag_ << endl;
+    cout << "hbheNoiseResultTag_ = " << hbheNoiseResultTag_ << endl;
   }
 }
 
@@ -132,7 +138,6 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   lsn_     = iEvent.luminosityBlock();
   bxn_     = iEvent.bunchCrossing();
 
-  // Always try to get the HcalTBtrigger data regardless
   if (tbTrigDataTag_.label().size())
     if(!iEvent.getByType(hcaltbtrigdata_)) {
       if (verbose_)
@@ -231,13 +236,20 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       cout << "myEventData::get: " << "Got Calo Towers " << twrTag_ << std::endl;
   
   // MET
-  if (metTag_.label().size())
-    if (!iEvent.getByLabel(metTag_, recmet_)) {
+  if (caloMETtag_.label().size())
+    if (!iEvent.getByLabel(caloMETtag_, calomet_)) {
       cerr << "myEventData::get: " <<
-	"Calo MET not found, " << metTag_ << std::endl;
+	"Calo MET not found, " << caloMETtag_ << std::endl;
     } else if (verbose_) 
-      cout << "myEventData::get: " << "Got Calo MET " << metTag_ << std::endl;
-  
+      cout << "myEventData::get: " << "Got Calo MET " << caloMETtag_ << std::endl;
+
+  if (recoMETtag_.label().size())
+    if (!iEvent.getByLabel(recoMETtag_, recomet_)) {
+      cerr << "myEventData::get: " <<
+	"Reco MET not found, " << recoMETtag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got Reco MET " << recoMETtag_ << std::endl;
+
   // Reco Vertices
   if (vertexTag_.label().size())
     if (!iEvent.getByLabel(vertexTag_, vertices_)) {
@@ -245,4 +257,20 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	"Reco::Vertex collection not found, " << vertexTag_ << std::endl;
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got Vertices " << vertexTag_ << std::endl;
+
+  // Trigger Results
+  if (trgResultsTag_.label().size())
+    if (!iEvent.getByLabel(trgResultsTag_, trgResults_)) {
+      cerr << "myEventData::get: " <<
+	"Trigger Results not found, " << trgResultsTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got Trigger Results " << trgResultsTag_ << std::endl;
+
+  // HBHE Noise Results
+  if (hbheNoiseResultTag_.label().size())
+    if (!iEvent.getByLabel(hbheNoiseResultTag_, hbheNoiseResult_)) {
+      cerr << "myEventData::get: " <<
+	"HBHE Noise Results not found, " << hbheNoiseResultTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got HBHE Noise Results " << hbheNoiseResultTag_ << std::endl;
 }

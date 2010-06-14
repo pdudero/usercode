@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.9 2010/03/26 16:27:11 dudero Exp $
+// $Id: myEventData.hh,v 1.10 2010/03/27 18:39:09 dudero Exp $
 //
 //
 
@@ -37,9 +37,11 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "DataFormats/METReco/interface/CaloMET.h"
 #include "DataFormats/METReco/interface/CaloMETCollection.h"
+#include "DataFormats/METReco/interface/METCollection.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBTriggerData.h"
 
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
@@ -59,21 +61,24 @@ public:
   static const std::vector<edm::EventRange>          getEvents2Process(void);
   static const std::vector<edm::LuminosityBlockRange> getLumis2Process(void);
 
-  inline edm::Handle<HcalTBTriggerData>      hcaltbtrigdata(void) const { return hcaltbtrigdata_; }
-  inline edm::Handle<FEDRawDataCollection>   fedrawdata(void)    const { return fedrawdata_;  }
-  inline edm::Handle<HcalLaserDigi>          laserdigi(void)     const { return laserdigi_;   }
-  inline edm::Handle<HBHEDigiCollection>     hbhedigis(void)     const { return hbhedigis_;   }
-  inline edm::Handle<HBHERecHitCollection>   hbherechits(void)   const { return hbherechits_; }
-  inline edm::Handle<HFRecHitCollection>     hfrechits(void)     const { return hfrechits_;   }
-  inline edm::Handle<HFDigiCollection>       hfdigis(void)       const { return hfdigis_;     }
-  inline edm::Handle<HORecHitCollection>     horechits(void)     const { return horechits_;   }
-  inline edm::Handle<HODigiCollection>       hodigis(void)       const { return hodigis_;     }
-  inline edm::Handle<ZDCRecHitCollection>    zdcrechits(void)    const { return zdcrechits_;  }
-  inline edm::Handle<ZDCDigiCollection>      zdcdigis(void)      const { return zdcdigis_;    }
-  inline edm::Handle<CaloTowerCollection>    towers(void)        const { return towers_;      }
-  inline edm::Handle<CaloMETCollection>      recmet(void)        const { return recmet_;      }
-  inline edm::Handle<edm::PCaloHitContainer> simhits(void)       const { return hsimhits_;    }
-  inline edm::Handle<reco::VertexCollection> vertices(void)      const { return vertices_;    }
+  inline edm::Handle<HcalTBTriggerData>      hcaltbtrigdata(void)  const { return hcaltbtrigdata_; }
+  inline edm::Handle<FEDRawDataCollection>   fedrawdata(void)      const { return fedrawdata_;  }
+  inline edm::Handle<HcalLaserDigi>          laserdigi(void)       const { return laserdigi_;   }
+  inline edm::Handle<HBHEDigiCollection>     hbhedigis(void)       const { return hbhedigis_;   }
+  inline edm::Handle<HBHERecHitCollection>   hbherechits(void)     const { return hbherechits_; }
+  inline edm::Handle<HFRecHitCollection>     hfrechits(void)       const { return hfrechits_;   }
+  inline edm::Handle<HFDigiCollection>       hfdigis(void)         const { return hfdigis_;     }
+  inline edm::Handle<HORecHitCollection>     horechits(void)       const { return horechits_;   }
+  inline edm::Handle<HODigiCollection>       hodigis(void)         const { return hodigis_;     }
+  inline edm::Handle<ZDCRecHitCollection>    zdcrechits(void)      const { return zdcrechits_;  }
+  inline edm::Handle<ZDCDigiCollection>      zdcdigis(void)        const { return zdcdigis_;    }
+  inline edm::Handle<CaloTowerCollection>    towers(void)          const { return towers_;      }
+  inline edm::Handle<CaloMETCollection>      calomet(void)         const { return calomet_;     }
+  inline edm::Handle<METCollection>          recomet(void)         const { return recomet_;     }
+  inline edm::Handle<edm::PCaloHitContainer> simhits(void)         const { return hsimhits_;    }
+  inline edm::Handle<edm::TriggerResults>    trgResults(void)      const { return trgResults_;  }
+  inline edm::Handle<reco::VertexCollection> vertices(void)        const { return vertices_;    }
+  inline edm::Handle<bool>                   hbheNoiseResult(void) const { return hbheNoiseResult_; }
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
@@ -98,9 +103,12 @@ private:
   edm::InputTag      zdcRechitTag_;
   edm::InputTag      zdcDigiTag_;
   edm::InputTag      simHitTag_;
-  edm::InputTag      metTag_;
+  edm::InputTag      caloMETtag_;
+  edm::InputTag      recoMETtag_;
   edm::InputTag      twrTag_;
   edm::InputTag      vertexTag_;
+  edm::InputTag      trgResultsTag_;
+  edm::InputTag      hbheNoiseResultTag_;
   bool               verbose_;
 
   edm::EventID eventId_;
@@ -109,21 +117,24 @@ private:
   uint32_t bxn_;
   uint32_t lsn_;
 
-  edm::Handle<HcalTBTriggerData>      hcaltbtrigdata_;
-  edm::Handle<FEDRawDataCollection>   fedrawdata_;
-  edm::Handle<edm::PCaloHitContainer> hsimhits_;
-  edm::Handle<HcalLaserDigi>          laserdigi_;
-  edm::Handle<HBHERecHitCollection>   hbherechits_;
-  edm::Handle<HBHEDigiCollection>     hbhedigis_;
-  edm::Handle<HFRecHitCollection>     hfrechits_;
-  edm::Handle<HFDigiCollection>       hfdigis_;
-  edm::Handle<HORecHitCollection>     horechits_;
-  edm::Handle<HODigiCollection>       hodigis_;
-  edm::Handle<ZDCRecHitCollection>    zdcrechits_;
-  edm::Handle<ZDCDigiCollection>      zdcdigis_;
-  edm::Handle<CaloTowerCollection>    towers_;
-  edm::Handle<CaloMETCollection>      recmet_;
-  edm::Handle<reco::VertexCollection> vertices_;
+  edm::Handle<HcalTBTriggerData>       hcaltbtrigdata_;
+  edm::Handle<FEDRawDataCollection>    fedrawdata_;
+  edm::Handle<edm::PCaloHitContainer>  hsimhits_;
+  edm::Handle<HcalLaserDigi>           laserdigi_;
+  edm::Handle<HBHERecHitCollection>    hbherechits_;
+  edm::Handle<HBHEDigiCollection>      hbhedigis_;
+  edm::Handle<HFRecHitCollection>      hfrechits_;
+  edm::Handle<HFDigiCollection>        hfdigis_;
+  edm::Handle<HORecHitCollection>      horechits_;
+  edm::Handle<HODigiCollection>        hodigis_;
+  edm::Handle<ZDCRecHitCollection>     zdcrechits_;
+  edm::Handle<ZDCDigiCollection>       zdcdigis_;
+  edm::Handle<CaloTowerCollection>     towers_;
+  edm::Handle<reco::CaloMETCollection> calomet_;
+  edm::Handle<reco::METCollection>     recomet_;
+  edm::Handle<reco::VertexCollection>  vertices_;
+  edm::Handle<edm::TriggerResults>     trgResults_;
+  edm::Handle<bool>                    hbheNoiseResult_;
 };
 
 #endif // _MYEDMODULESMYANALUTILITIES
