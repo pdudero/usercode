@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.13 2010/05/05 00:44:12 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.14 2010/05/05 23:37:07 dudero Exp $
 //
 //
 
@@ -194,13 +194,17 @@ public:
   template<class T> void fill3d(const std::string& hname,
 				double valx,double valy,double valz,double weight=1.0);
 
-  void mkSubdir(const std::string& dirdescr);
+  myAnalHistosTC *
+  mkSubdir(const std::string& dirdescr);
 
   // Can attach another myAnalHistosTC object to this one that manages the histos in a subdir
   // The histos can be mapped with a different key type.
   //
   template<class Tsubkey>
-  void mkSubdir(const std::string& dirdescr);
+  myAnalHistosTC<Tsubkey> *
+  mkSubdir(const std::string& dirdescr);
+
+  myAnalHistosTC *getAttachedHisto(const std::string& name);
 
   template<class Tsubkey>
   myAnalHistosTC<Tsubkey> *getAttachedHisto(const std::string& name);
@@ -932,26 +936,43 @@ myAnalHistosTC<Tkey>::get(Tkey key)
 //======================================================================
 
 template<class Tkey>
-void
+myAnalHistosTC<Tkey> *
 myAnalHistosTC<Tkey>::mkSubdir(const std::string& dirdescr)
 {
   myAnalHistosTC<Tkey> *subdir = new myAnalHistosTC<Tkey>(dirdescr,*dir_);
   std::pair<std::string,void *> pair(dirdescr,(void *)subdir);
 
   m_attachedHistos_.insert(pair);
+
+  return subdir;
 }
 
 //======================================================================
 
 template<class Tkey>
 template<class Tsubkey>
-void
+myAnalHistosTC<Tsubkey> *
 myAnalHistosTC<Tkey>::mkSubdir(const std::string& dirdescr)
 {
   myAnalHistosTC<Tsubkey> *subdir = new myAnalHistosTC<Tsubkey>(dirdescr,*dir_);
   std::pair<std::string,void *> subpair(dirdescr,(void *)subdir);
 
   m_attachedHistos_.insert(subpair);
+
+  return subdir;
+}
+
+//======================================================================
+
+template <class Tkey>
+myAnalHistosTC<Tkey> *
+myAnalHistosTC<Tkey>::getAttachedHisto(const std::string& name)
+{
+  typename std::map<std::string,void *>::const_iterator it;
+  it = m_attachedHistos_.find(name);
+  if (it != m_attachedHistos_.end())
+    return (myAnalHistosTC<Tkey> *)it->second;
+  return NULL;
 }
 
 //======================================================================
