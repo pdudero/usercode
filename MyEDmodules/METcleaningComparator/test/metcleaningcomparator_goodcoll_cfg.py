@@ -212,16 +212,22 @@ process.compare = cms.EDAnalyzer('METcleaningComparator',
 #    verbose         = cms.untracked.bool(True)
     ),
                                  evfiltCleanOutput = cms.untracked.PSet(
-    hbheNoiseResultLabel = cms.untracked.InputTag("HBHENoiseFilterResultProducer","","METCLEAN"),
+    hbheNoiseResultLabel = cms.untracked.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult","METCLEAN"),
 #    caloMETlabel    = cms.untracked.InputTag("HBHENoiseFilter","","METCLEAN"),
 #    verbose         = cms.untracked.bool(True)
     ),
-                                 evfiltPathName = cms.untracked.string("evfiltpath"),
-                                 hbheFlagBit    = cms.untracked.int32(31),
-                                 hfFlagBit      = cms.untracked.int32(31),
-                                 minMET4plotGeV = cms.untracked.double(-100),
-                                 maxMET4plotGeV = cms.untracked.double(5000)
+                                 evfiltPathName   = cms.untracked.string("evfiltpath"),
+                                 hbheFlagBit      = cms.untracked.int32(31),
+                                 hfFlagBit        = cms.untracked.int32(31),
 # bit 31 is UserDefinedBit0; this duplicates the setting inside hbherechitreflaggerJETMET_cfi.py
+                                 minMET4plotGeV    = cms.untracked.double(-100),
+                                 maxMET4plotGeV    = cms.untracked.double(1200),
+                                 mindMET4plotGeV   = cms.untracked.double(-1200),
+                                 maxdMET4plotGeV   = cms.untracked.double(100),
+                                 minSumET4plotGeV  = cms.untracked.double(-100),
+                                 maxSumET4plotGeV  = cms.untracked.double(8000),
+                                 mindSumET4plotGeV = cms.untracked.double(-500),
+                                 maxdSumET4plotGeV = cms.untracked.double(500)
 )
 
 #######################################################################

@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
-version = 2   # version 1 = default (loose), version 2 = (medium), version 3 = (tight)
+isMC = True
+version = 4   # version 1 = default (loose), version 2 = (medium), version 3 = (tight)
 # VERSION 2 is the currently recommended version, as of 22 April 2010.
 
 process = cms.Process("METCLEAN")
@@ -23,7 +24,8 @@ process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 #       'file:myfile.root'
-'/store/mc/Spring10/TTbar/GEN-SIM-RECO/START3X_V26_S09-v1/0094/FEA115B1-AF4E-DF11-ACA5-0017A4770418.root'
+#'/store/mc/Spring10/TTbar/GEN-SIM-RECO/START3X_V26_S09-v1/0094/FEA115B1-AF4E-DF11-ACA5-0017A4770418.root'
+'/store/mc/Spring10/QCDDiJet_Pt3000to3500/GEN-SIM-RECO/START3X_V26_S09-v1/0044/1C6E8669-5149-DF11-9B14-0017A4770C14.root'
     )
 )
 
@@ -85,7 +87,10 @@ elif version==2:
 elif version==3:
     process.hfrecoReflagged = process.HFrechitreflaggerJETMETv3.clone()
 elif version==4:
-    process.hfrecoReflagged = process.HFrechitreflaggerJETMETv4.clone()
+    if (isMC==False):
+        process.hfrecoReflagged = process.HFrechitreflaggerJETMETv4.clone()
+    else:
+        process.hfrecoReflagged = process.HFrechitreflaggerJETMETv2.clone()
 
 # Path and EndPath definitions
 process.reflaggerPath = cms.Path(process.hbherecoReflagged*
@@ -176,16 +181,22 @@ process.compare = cms.EDAnalyzer('METcleaningComparator',
 #    verbose         = cms.untracked.bool(True)
     ),
                                  evfiltCleanOutput = cms.untracked.PSet(
-    hbheNoiseResultLabel = cms.untracked.InputTag("HBHENoiseFilterResultProducer","","METCLEAN"),
+    hbheNoiseResultLabel = cms.untracked.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult","METCLEAN"),
 #    caloMETlabel    = cms.untracked.InputTag("HBHENoiseFilter","","METCLEAN"),
 #    verbose         = cms.untracked.bool(True)
     ),
-                                 evfiltPathName = cms.untracked.string("evfiltpath"),
-                                 hbheFlagBit    = cms.untracked.int32(31),
-                                 hfFlagBit      = cms.untracked.int32(31),
-                                 minMET4plotGeV = cms.untracked.double(-100),
-                                 maxMET4plotGeV = cms.untracked.double(5000)
+                                 evfiltPathName    = cms.untracked.string("evfiltpath"),
+                                 hbheFlagBit       = cms.untracked.int32(31),
+                                 hfFlagBit         = cms.untracked.int32(31),
 # bit 31 is UserDefinedBit0; this duplicates the setting inside hbherechitreflaggerJETMET_cfi.py
+                                 minMET4plotGeV    = cms.untracked.double(-100),
+                                 maxMET4plotGeV    = cms.untracked.double(1000),
+                                 mindMET4plotGeV   = cms.untracked.double(-200),
+                                 maxdMET4plotGeV   = cms.untracked.double(200),
+                                 minSumET4plotGeV  = cms.untracked.double(-100),
+                                 maxSumET4plotGeV  = cms.untracked.double(5000),
+                                 mindSumET4plotGeV = cms.untracked.double(-500),
+                                 maxdSumET4plotGeV = cms.untracked.double(500)
 )
 
 #######################################################################
