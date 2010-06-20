@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.14 2010/05/05 23:37:07 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.15 2010/06/14 13:08:57 dudero Exp $
 //
 //
 
@@ -36,6 +36,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TProfile2D.h"
+#include "DataFormats/DetId/interface/DetId.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -1048,5 +1049,36 @@ myAnalHistosTC<Tkey>::autofill(void)
     }
   } // histo loop
 }
+
+// Commonly used utility functions, loads vectors with histogram parameters
+// for repeated booking of similar histograms.
+
+void add1dHisto        (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			std::vector<myAnalHistos::HistoParams_t>& v_hpars1d);
+
+void add2dHisto        (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			int nbinsy, double miny, double maxy,
+			std::vector<myAnalHistos::HistoParams_t>& v_hpars2d);
+
+void add1dAFhisto      (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			void *filladdrx, void *filladdrw,
+			detIDfun_t detIDfun,
+			std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars1d);
+
+void add2dAFhisto      (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			int nbinsy, double miny, double maxy,
+			void *filladdrx, void *filladdry, void *filladdrw,
+			detIDfun_t detIDfun,
+			std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars2d);
+
+void add3dHisto        (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			int nbinsy, double miny, double maxy,
+			int nbinsz, double minz, double maxz,
+			std::vector<myAnalHistos::HistoParams_t>& v_hpars3d);
 
 #endif // _MYANALHISTOS
