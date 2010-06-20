@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: SplashTimingAnalyzer.cc,v 1.4 2010/03/02 21:33:27 dudero Exp $
+// $Id: SplashTimingAnalyzer.cc,v 1.5 2010/04/06 11:22:16 dudero Exp $
 //
 //
 
@@ -30,9 +30,9 @@
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 
-#include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/SplashDelayTunerAlgos.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/SplashHitTimeCorrector.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/HcalTimingAnalAlgos.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/SplashTimingAnalAlgos.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/SplashHitTimeCorrector.hh"
 
 //
 // class declaration
@@ -51,7 +51,7 @@ private:
   // ----------member data ---------------------------
 
   myEventData            *eventData_;
-  SplashDelayTunerAlgos  *algo_;
+  SplashTimingAnalAlgos  *algo_;
   std::set<uint32_t>      s_runs_; // set of run numbers run over
   bool                    firstEvent_;
 };
@@ -79,7 +79,7 @@ SplashTimingAnalyzer::SplashTimingAnalyzer(const edm::ParameterSet& iConfig)
   SplashHitTimeCorrector *timecor  = new
     SplashHitTimeCorrector(iConfig.getUntrackedParameter<bool>("splashPlusZside"));
 
-  algo_ = new SplashDelayTunerAlgos(iConfig,timecor);
+  algo_ = new SplashTimingAnalAlgos(iConfig,timecor);
 
   firstEvent_ = true;
 }

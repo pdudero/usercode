@@ -16,6 +16,7 @@
 <use name=PhysicsTools/UtilAlgos>
 <use name=MyEDmodules/MyAnalUtilities>
 <use name=MyEDmodules/HcalDelayTuner>
+<use name=MyEDmodules/HcalTimingAnalAlgos>
 <library file="*.cc" name = HcalDelayTunerPlugins>
 	<flags EDM_PLUGIN=1>
 </library>

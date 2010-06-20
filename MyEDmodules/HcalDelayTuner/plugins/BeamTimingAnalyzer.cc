@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalyzer.cc,v 1.6 2010/04/06 11:22:16 dudero Exp $
+// $Id: BeamTimingAnalyzer.cc,v 1.7 2010/04/12 10:31:30 dudero Exp $
 //
 //
 
@@ -30,9 +30,9 @@
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 
-#include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/BeamDelayTunerAlgos.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/BeamHitTimeCorrector.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/HcalTimingAnalAlgos.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/BeamTimingAnalAlgos.hh"
+#include "MyEDmodules/HcalTimingAnalAlgos/interface/BeamHitTimeCorrector.hh"
 
 //
 // class declaration
@@ -50,7 +50,7 @@ private:
   // ----------member data ---------------------------
 
   myEventData           *eventData_;
-  BeamDelayTunerAlgos   *algo_;
+  BeamTimingAnalAlgos   *algo_;
   std::set<uint32_t>     s_runs_; // set of run numbers run over
   bool                    firstEvent_;
 };
@@ -77,7 +77,7 @@ BeamTimingAnalyzer::BeamTimingAnalyzer(const edm::ParameterSet& iConfig)
   eventData_ = new myEventData(edPset);
   BeamHitTimeCorrector *timecor   = new BeamHitTimeCorrector();
 
-  algo_ = new BeamDelayTunerAlgos(iConfig,timecor);
+  algo_ = new BeamTimingAnalAlgos(iConfig,timecor);
 
   firstEvent_ = true;
 }
