@@ -17,6 +17,7 @@ using namespace std;
 #include "TStyle.h"
 #include "TH1D.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "THStack.h"
 #include "TF1.h"
 #include "TCanvas.h"
@@ -694,8 +695,10 @@ void processCommonHistoParams(const string& key,
   else if (key == "leglabel")    wh.SetLegendEntry(value);
 
   // for 2-d histos
-  //else if (key == "rebinx")      ((TH1 *)wh.histo())->Rebin(str2int(value));
-  else if (key == "rebinx")      ((TH2 *)wh.histo())->RebinX(str2int(value));
+  else if (key == "rebinx") {
+    if (wh.histo()->InheritsFrom("TH2")) ((TH2 *)wh.histo())->RebinX(str2int(value));
+    else                                 ((TH1 *)wh.histo())->Rebin(str2int(value));
+  }
   else if (key == "rebiny")      ((TH2 *)wh.histo())->RebinY(str2int(value));
 
   // axes
@@ -1332,8 +1335,6 @@ processGraphSection(FILE *fp,
     gr->SetLineStyle(lstyle);
     gr->SetLineColor(lcolor);
     gr->SetLineWidth(lwidth);
-    gr->SetLineStyle(mstyle);
-    gr->SetLineWidth(msize);
     gr->SetMarkerColor(mcolor);
     gr->SetMarkerStyle(mstyle);
     gr->SetMarkerSize(msize);
@@ -1750,6 +1751,55 @@ processHmathSection(FILE *fp,
       h1 = (TH1 *)tmph2->ProjectionY(newname.c_str(),lobin,hibin);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+
+    //------------------------------
+    } else if (key == "projectyx") {
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined, " << hid << endl; continue;
+      }
+
+      string binspec = value; // range of bins to project
+
+      // binspec of form
+      //
+      Tokenize(binspec,v_tokens,":");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:zlobin-zhibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      TH1 *tmph = findHisto(v_tokens[0],"histo operand must be defined before math ops");
+      if (!tmph) continue;
+      if (!tmph->InheritsFrom("TH3")) {
+	cerr << "operation projectyx only defined for 3D histograms, " << hid << endl; continue;
+      }
+      TH3 *h3 = (TH3 *)tmph;
+
+      binspec = v_tokens[1];
+      Tokenize(binspec,v_tokens,"-");
+      if (v_tokens.size() != 2) {
+	cerr << "Error, expecting binspec of form 'histo_id:zlobin-zhibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      int lobin=str2int(v_tokens[0]);
+      int hibin=str2int(v_tokens[1]);
+      if (lobin > hibin) {
+	cerr << "Error, expecting binspec of form 'histo_id:zlobin-zhibin'";
+	cerr << theline << endl;
+	continue;
+      }
+      string newname = string(h3->GetName())+"_Zbins"+binspec;
+
+      h3->GetZaxis()->SetRange(lobin,hibin);
+      tmph = (TH1 *)h3->Project3D("yx");
+      h1 = (TH1 *)tmph->Clone(newname.c_str()); // for multiple projections, otherwise root overwrites
+      wh = new wTH1(h1);
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
     }
     //------------------------------
     else if (key.find("slice") != string::npos) {
@@ -2053,7 +2103,15 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
 	cerr << "Error in ALIAS section: key '" << key;
 	cerr << "' already defined." << endl;
       } else {
-	glmap_aliii.insert(pair<string,string>(key,value));
+	// Alias can include other aliii, but must be delimited by '/'
+	string aspec = value;
+	if (aspec.find('@') != string::npos) {
+	  string temp=aspec;
+	  buildStringFromAliii(temp,"/",aspec);
+	  if (!aspec.size()) continue;
+	}
+
+	glmap_aliii.insert(pair<string,string>(key,aspec));
 	cout << "alias '" << key << "' added" << endl;
       }
     }
@@ -2422,7 +2480,8 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
      ***************************************************/
 
     for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
-      string drawopt("CP");
+      //string drawopt("CP");
+      string drawopt("L");
       string& gid = wp->graph_ids[j];
       map<string,TGraph *>::const_iterator it = glmap_id2graph.find(gid);
       if (it == glmap_id2graph.end()) {
@@ -2507,7 +2566,7 @@ void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 
   } // pad loop
 
-  prdFixOverlay();
+  //prdFixOverlay();
 
   if (savePlot2file) {
     wc.c1->cd();
@@ -2544,7 +2603,7 @@ void superPlot(const string& canvasLayout="canvas.txt",
   glmap_id2tf1.clear();
 
   setPRDStyle();
-  //gROOT->ForceStyle();
+  gROOT->ForceStyle();
 
   if (dotdrStyle) {
     setTDRStyle();
