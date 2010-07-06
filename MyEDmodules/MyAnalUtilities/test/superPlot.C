@@ -58,8 +58,8 @@ struct wPad_t {
 
 struct wCanvas_t {
   wCanvas_t(const string& intitle,
-	    unsigned innpadsx=1, unsigned inpadxdim=600,
-	    unsigned innpadsy=1, unsigned inpadydim=600,
+	    unsigned innpadsx=0, unsigned inpadxdim=600,
+	    unsigned innpadsy=0, unsigned inpadydim=600,
 	    float inpadxmarg=0.01, float inpadymarg=0.01) :
     title(intitle), npadsx(innpadsx),npadsy(innpadsy),
     padxdim(inpadxdim),padydim(inpadydim),
@@ -466,7 +466,38 @@ void printHisto2File(TH1 *histo, string filename)
     cout << h1->GetName() << endl;
   }
   fclose(fp);
-}
+}                                                     // printHisto2File
+
+//======================================================================
+
+void saveHisto2File(TH1 *histo, string rootfn)
+{
+  TFile *rootfile;
+
+  //This filename input can be an alias
+  //
+  if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
+    rootfn = extractAlias(rootfn.substr(1));
+    if (!rootfn.size()) return;
+  }
+
+  // Check to see if the file has already been opened
+
+  map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
+  if (it != glmap_id2rootfile.end())
+    rootfile = it->second;
+  else {
+    rootfile = new TFile(rootfn.c_str(),"RECREATE");
+  }
+
+  if (rootfile->IsZombie()) {
+    cerr << "File failed to open, " << rootfn << endl;
+  } else {
+    glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
+    histo->SetDirectory(rootfile);
+    histo->Write();
+  }
+}                                                      // saveHisto2File
 
 //======================================================================
 
@@ -581,11 +612,13 @@ processLayoutSection(FILE      *fp,
 
     if (key == "npadsx") {
       unsigned long npadsx = str2int(value);
-      if (npadsx > 1) wc.npadsx = npadsx;
+      if (npadsx > 0) wc.npadsx = npadsx;
+      else cout << "npadsx="<<npadsx<<"?? You can't be serious." << endl;
     }
     else if (key == "npadsy") {
       unsigned long npadsy = str2int(value);
-      if (npadsy > 1) wc.npadsy = npadsy;
+      if (npadsy > 0) wc.npadsy = npadsy;
+      else cout << "npadsy="<<npadsy<<"?? You can't be serious." << endl;
     }
     else if (key == "padxdim") {
       unsigned long padxdim = str2int(value);
@@ -846,6 +879,9 @@ void processCommonHistoParams(const string& key,
   }
   else if (key == "print2file") {
     printHisto2File(wh.histo(),value);
+  }
+  else if (key == "save2file") {
+    saveHisto2File(wh.histo(),value);
   }
   else if ((key == "normalize") &&
 	   str2int(value)) {
@@ -2237,21 +2273,23 @@ wCanvas_t *initCanvas(const string& cLayoutFile)
   // Set Styles:
   gStyle->SetPalette(1,0); // always!
 
-  wc->c1 = new TCanvas(cLayoutFile.c_str(),cLayoutFile.c_str(),
-		       wc->padxdim*wc->npadsx,
-		       wc->padydim*wc->npadsy);
-
-  wc->c1->SetFillColor(wc->fillcolor);
-
   unsigned npads = wc->npadsx*wc->npadsy;
-  if (npads>1) wc->c1->Divide(wc->npadsx,wc->npadsy);
-			      // , wc->padxmargin,wc->padymargin);
 
-  cout << "Canvas " << cLayoutFile << " dimensions "
-       << wc->npadsx << "x" << wc->npadsy << endl;
-  cout << "Canvas " << cLayoutFile << " margins "
-       << wc->padxmargin << "x" << wc->padymargin << endl;
+  if (npads) {
+    wc->c1 = new TCanvas(cLayoutFile.c_str(),cLayoutFile.c_str(),
+			 wc->padxdim*wc->npadsx,
+			 wc->padydim*wc->npadsy);
 
+    wc->c1->SetFillColor(wc->fillcolor);
+
+    if (npads>1) wc->c1->Divide(wc->npadsx,wc->npadsy);
+			   // , wc->padxmargin,wc->padymargin);
+
+    cout << "Canvas " << cLayoutFile << " dimensions "
+	 << wc->npadsx << "x" << wc->npadsy << endl;
+    cout << "Canvas " << cLayoutFile << " margins "
+	 << wc->padxmargin << "x" << wc->padymargin << endl;
+  }
   return wc;
 }                                                          // initCanvas
 
@@ -2360,6 +2398,11 @@ void drawInPad(wPad_t *wp, THStack *stack)
 void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 {
   unsigned npads = std::min(wc.npadsx*wc.npadsy, wc.pads.size());
+
+  if (!npads) {
+    cout << "Nothing to draw, guess I'm done." << endl;
+    return; // no pads to draw on.
+  }
 
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
