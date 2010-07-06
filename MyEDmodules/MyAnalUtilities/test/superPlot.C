@@ -15,7 +15,7 @@ using namespace std;
 #include "TFile.h"
 #include "TROOT.h"
 #include "TStyle.h"
-#include "TH1D.h"
+#include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "THStack.h"
@@ -254,7 +254,7 @@ TH1 *findHisto(const string& hid, const std::string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
-    cerr << errmsg << " Histo ID " << hid << endl;
+    cerr << "Histo ID " << hid << " not found. " << errmsg << endl;
     return NULL;
   }
   return it->second->histo();
@@ -420,6 +420,53 @@ void loadVectorsFromFile(const char *filename,
     eyh[i] = v[6*i+5];
   }
 }                                                 // loadVectorsFromFile
+
+//======================================================================
+
+void printHisto2File(TH1 *histo, string filename)
+{
+  FILE *fp = fopen(filename.c_str(),"w");
+  if (histo->InheritsFrom("TH3")) {
+    TH3 *h3 = (TH3 *)histo;
+    int totaln = h3->GetEntries();
+    fprintf(fp,"#%s\t%s\t%s\tw\t%%\n",
+	    h3->GetXaxis()->GetTitle(),
+	    h3->GetYaxis()->GetTitle(),
+	    h3->GetZaxis()->GetTitle());
+    for (int ix=1; ix<=h3->GetNbinsX(); ix++)
+      for (int iy=1; iy<=h3->GetNbinsY(); iy++)
+	for (int iz=1; iz<=h3->GetNbinsZ(); iz++)
+	  fprintf(fp,"%d\t%d\t%d\t%d\t%f\n",
+		  (int)h3->GetXaxis()->GetBinCenter(ix),
+		  (int)h3->GetYaxis()->GetBinCenter(iy),
+		  (int)h3->GetZaxis()->GetBinCenter(iz),
+		  (int)h3->GetBinContent(ix,iy,iz),
+		  100.*h3->GetBinContent(ix,iy,iz)/(float)totaln);
+    cout << "File " << filename << " written with contents of ";
+    cout << h3->GetName() << endl;
+  } else if (histo->InheritsFrom("TH2")) {
+    TH2 *h2 = (TH2 *)histo;
+    fprintf(fp,"#x\ty\tz\n");
+    for (int ix=1; ix<=h2->GetNbinsX(); ix++)
+      for (int iy=1; iy<=h2->GetNbinsY(); iy++)
+	fprintf(fp,"%d\t%d\t%d\n",
+		(int)h2->GetXaxis()->GetBinCenter(ix),
+		(int)h2->GetYaxis()->GetBinCenter(iy),
+		(int)h2->GetBinContent(ix,iy));
+    cout << "File " << filename << " written with contents of ";
+    cout << h2->GetName() << endl;
+  } else {
+    TH1 *h1 = (TH1 *)histo;
+    fprintf(fp,"#x\ty\n");
+    for (int ix=1; ix<=h1->GetNbinsX(); ix++)
+      fprintf(fp,"%d\t%d\n",
+	      (int)h1->GetBinCenter(ix),
+	      (int)h1->GetBinContent(ix));
+    cout << "File " << filename << " written with contents of ";
+    cout << h1->GetName() << endl;
+  }
+  fclose(fp);
+}
 
 //======================================================================
 
@@ -634,6 +681,7 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "title")        wpad->hframe->histo()->SetTitle(value.c_str());
     else if (key == "xtitle")       wpad->hframe->histo()->SetXTitle(value.c_str());
     else if (key == "ytitle")       wpad->hframe->histo()->SetYTitle(value.c_str());
+    else if (key == "ztitle")       wpad->hframe->histo()->SetZTitle(value.c_str());
     else if (key == "rightmargin")  wpad->rightmargin  = str2flt(value);
     else if (key == "leftmargin")   wpad->leftmargin   = str2flt(value);
     else if (key == "topmargin")    wpad->topmargin    = str2flt(value);
@@ -694,22 +742,32 @@ void processCommonHistoParams(const string& key,
   else if (key == "fillcolor")   wh.histo()->SetFillColor(str2int(value));
   else if (key == "leglabel")    wh.SetLegendEntry(value);
 
-  // for 2-d histos
+  else if (key == "rebin")       ((TH1 *)wh.histo())->Rebin(str2int(value));
+
   else if (key == "rebinx") {
     if (wh.histo()->InheritsFrom("TH2")) ((TH2 *)wh.histo())->RebinX(str2int(value));
     else                                 ((TH1 *)wh.histo())->Rebin(str2int(value));
   }
-  else if (key == "rebiny")      ((TH2 *)wh.histo())->RebinY(str2int(value));
+  else if (key == "rebiny") {
+    if (wh.histo()->InheritsFrom("TH2")) ((TH2 *)wh.histo())->RebinY(str2int(value));
+    else {
+      cerr << "\trebiny: not defined for 1-d histograms" << endl;
+    }
+  } 
 
   // axes
   else if (key == "xtitle")       wh.SetXaxis(value);
   else if (key == "ytitle")       wh.SetYaxis(value);
+  else if (key == "ztitle")       wh.SetZaxis(value);
   else if (key == "xtitlesize")   wh.SetXaxis("",false,str2flt(value));
   else if (key == "ytitlesize")   wh.SetYaxis("",false,str2flt(value));
+  else if (key == "ztitlesize")   wh.SetZaxis("",false,str2flt(value));
   else if (key == "xtitleoffset") wh.SetXaxis("",false,0,str2flt(value));
   else if (key == "ytitleoffset") wh.SetYaxis("",false,0,str2flt(value));
+  else if (key == "ztitleoffset") wh.SetZaxis("",false,0,str2flt(value));
   else if (key == "xtitlefont")   wh.SetXaxis("",false,0,0,str2int(value));
   else if (key == "ytitlefont")   wh.SetYaxis("",false,0,0,str2int(value));
+  else if (key == "ztitlefont")   wh.SetZaxis("",false,0,0,str2int(value));
   else if (key == "xlabelsize")   wh.SetXaxis("",false,0,0,0,str2flt(value));
   else if (key == "ylabelsize")   wh.SetYaxis("",false,0,0,0,str2flt(value));
   else if (key == "zlabelsize")   wh.SetZaxis("",false,0,0,0,str2flt(value));
@@ -787,30 +845,7 @@ void processCommonHistoParams(const string& key,
     }
   }
   else if (key == "print2file") {
-    string filename = value;
-    FILE *fp = fopen(filename.c_str(),"w");
-    if (wh.histo()->InheritsFrom("TH2")) {
-      TH2 *h2 = (TH2 *)wh.histo();
-      fprintf(fp,"#x\ty\tz\n");
-      for (int ix=1; ix<=h2->GetNbinsX(); ix++)
-	for (int iy=1; iy<=h2->GetNbinsY(); iy++)
-	  fprintf(fp,"%d\t%d\t%d\n",
-		  (int)h2->GetXaxis()->GetBinCenter(ix),
-		  (int)h2->GetYaxis()->GetBinCenter(iy),
-		  (int)h2->GetBinContent(ix,iy));
-      cout << "File " << filename << " written with contents of ";
-      cout << h2->GetName() << endl;
-    } else {
-      TH1 *h1 = (TH1 *)wh.histo();
-      fprintf(fp,"#x\ty\n");
-      for (int ix=1; ix<=h1->GetNbinsX(); ix++)
-	fprintf(fp,"%d\t%d\n",
-		(int)h1->GetBinCenter(ix),
-		(int)h1->GetBinContent(ix));
-      cout << "File " << filename << " written with contents of ";
-      cout << h1->GetName() << endl;
-    }
-    fclose(fp);
+    printHisto2File(wh.histo(),value);
   }
   else if ((key == "normalize") &&
 	   str2int(value)) {
@@ -1627,13 +1662,13 @@ processHmathSection(FILE *fp,
 	continue;
       }
       TH1 *firstone = (TH1 *)findHisto(v_tokens[0]);
-      if (!firstone) continue;
+      if (!firstone) exit(-1);
       h1 = (TH1 *)firstone->Clone();
       if (key == "weightsum")
 	h1->SetBit(TH1::kIsAverage);  // <========== Addends also have to have this set.
       for (unsigned i=1; i<v_tokens.size(); i++) {
 	TH1 *addend = (TH1 *)findHisto(v_tokens[i]);
-	if (!addend) continue;
+	if (!addend) exit(-1);
 	h1->Add(addend,1.0);
       }
       wh = new wTH1(h1);
@@ -1649,7 +1684,7 @@ processHmathSection(FILE *fp,
 	cerr << "histo already defined" << endl; continue;
       }
       TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
-      if (!tmph1) continue;
+      if (!tmph1) exit(-1);
       h1 = (TH1 *)IntegrateRight(tmph1,skipbinatx);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
@@ -1664,7 +1699,7 @@ processHmathSection(FILE *fp,
 	cerr << "histo already defined" << endl; continue;
       }
       TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
-      if (!tmph1) continue;
+      if (!tmph1) exit(-1);
       h1 = (TH1 *)IntegrateLeft(tmph1);
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
@@ -1692,7 +1727,7 @@ processHmathSection(FILE *fp,
 	continue;
       }
       TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
-      if (!tmph2) continue;
+      if (!tmph2) exit(-1);
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1732,7 +1767,7 @@ processHmathSection(FILE *fp,
 	continue;
       }
       TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
-      if (!tmph2) continue;
+      if (!tmph2) exit(-1);
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1821,7 +1856,7 @@ processHmathSection(FILE *fp,
 	continue;
       }
       TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
-      if (!tmph2) continue;
+      if (!tmph2) exit(-1);
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1877,7 +1912,7 @@ processHmathSection(FILE *fp,
 
       for (unsigned i=0; i<v_tokens.size(); i++) {
 	TH1 *tmph1 = findHisto(v_tokens[i],"histo operand must be defined before math ops");
-	if (!tmph1) continue;
+	if (!tmph1) exit(-1);
 	v_histos2dize.push_back(tmph1);
       }
       cout << "x-2d-izing " << v_histos2dize.size() << " histos" << endl;
