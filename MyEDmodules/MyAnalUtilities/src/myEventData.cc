@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.9 2010/03/27 18:39:09 dudero Exp $
+// $Id: myEventData.cc,v 1.10 2010/06/14 13:11:21 dudero Exp $
 //
 //
 
@@ -61,26 +61,24 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   hbheNoiseResultTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheNoiseResultLabel",edm::InputTag(""))),
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
-  if (verbose_) {
-    cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
-    cout << "tbTrigDataTag_ = " << tbTrigDataTag_ << endl;
-    cout << "laserDigiTag_  = " << laserDigiTag_  << endl;
-    cout << "hbheRechitTag_ = " << hbheRechitTag_ << endl;
-    cout << "hbheDigiTag_   = " << hbheDigiTag_   << endl;
-    cout << "hfRechitTag_   = " << hfRechitTag_   << endl;
-    cout << "hfDigiTag_     = " << hfDigiTag_     << endl;
-    cout << "hoRechitTag_   = " << hoRechitTag_   << endl;
-    cout << "hoDigiTag_     = " << hoDigiTag_     << endl;
-    cout << "zdcRechitTag_  = " << zdcRechitTag_  << endl;
-    cout << "zdcDigiTag_    = " << zdcDigiTag_    << endl;
-    cout << "simHitTag_     = " << simHitTag_     << endl;
-    cout << "caloMETtag_    = " << caloMETtag_    << endl;
-    cout << "recoMETtag_    = " << recoMETtag_    << endl;
-    cout << "twrTag_        = " << twrTag_        << endl;
-    cout << "vertexTag_     = " << vertexTag_     << endl;
-    cout << "trgResultsTag_ = " << trgResultsTag_ << endl;
-    cout << "hbheNoiseResultTag_ = " << hbheNoiseResultTag_ << endl;
-  }
+  if (fedRawDataTag_.label().size()) cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
+  if (tbTrigDataTag_.label().size()) cout << "tbTrigDataTag_ = " << tbTrigDataTag_ << endl;
+  if (laserDigiTag_ .label().size()) cout << "laserDigiTag_  = " << laserDigiTag_  << endl;
+  if (hbheRechitTag_.label().size()) cout << "hbheRechitTag_ = " << hbheRechitTag_ << endl;
+  if (hbheDigiTag_  .label().size()) cout << "hbheDigiTag_   = " << hbheDigiTag_   << endl;
+  if (hfRechitTag_  .label().size()) cout << "hfRechitTag_   = " << hfRechitTag_   << endl;
+  if (hfDigiTag_    .label().size()) cout << "hfDigiTag_     = " << hfDigiTag_     << endl;
+  if (hoRechitTag_  .label().size()) cout << "hoRechitTag_   = " << hoRechitTag_   << endl;
+  if (hoDigiTag_    .label().size()) cout << "hoDigiTag_     = " << hoDigiTag_     << endl;
+  if (zdcRechitTag_ .label().size()) cout << "zdcRechitTag_  = " << zdcRechitTag_  << endl;
+  if (zdcDigiTag_   .label().size()) cout << "zdcDigiTag_    = " << zdcDigiTag_    << endl;
+  if (simHitTag_    .label().size()) cout << "simHitTag_     = " << simHitTag_     << endl;
+  if (caloMETtag_   .label().size()) cout << "caloMETtag_    = " << caloMETtag_    << endl;
+  if (recoMETtag_   .label().size()) cout << "recoMETtag_    = " << recoMETtag_    << endl;
+  if (twrTag_       .label().size()) cout << "twrTag_        = " << twrTag_        << endl;
+  if (vertexTag_    .label().size()) cout << "vertexTag_     = " << vertexTag_     << endl;
+  if (trgResultsTag_.label().size()) cout << "trgResultsTag_ = " << trgResultsTag_ << endl;
+  if (hbheNoiseResultTag_.label().size()) cout << "hbheNoiseResultTag_ = " << hbheNoiseResultTag_ << endl;
 }
 
 
@@ -250,6 +248,7 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got Reco MET " << recoMETtag_ << std::endl;
 
+#if 1
   // Reco Vertices
   if (vertexTag_.label().size())
     if (!iEvent.getByLabel(vertexTag_, vertices_)) {
@@ -257,7 +256,7 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	"Reco::Vertex collection not found, " << vertexTag_ << std::endl;
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got Vertices " << vertexTag_ << std::endl;
-
+#endif
   // Trigger Results
   if (trgResultsTag_.label().size())
     if (!iEvent.getByLabel(trgResultsTag_, trgResults_)) {

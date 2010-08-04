@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.10 2010/03/27 18:39:09 dudero Exp $
+// $Id: myEventData.hh,v 1.11 2010/06/14 13:11:21 dudero Exp $
 //
 //
 
@@ -84,6 +84,26 @@ public:
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
   inline uint32_t                            bxNumber(void)      const { return bxn_;  }
   inline uint32_t                            lumiSection(void)   const { return lsn_;  }
+
+  inline const edm::InputTag&                fedRawDataTag(void) const { return fedRawDataTag_; }
+  inline const edm::InputTag&                tbTrigDataTag(void) const { return tbTrigDataTag_; }
+  inline const edm::InputTag&                laserDigiTag (void) const { return laserDigiTag_;  }
+  inline const edm::InputTag&                hbheRechitTag(void) const { return hbheRechitTag_; }
+  inline const edm::InputTag&                hbheDigiTag  (void) const { return hbheDigiTag_;   }
+  inline const edm::InputTag&                hfRechitTag  (void) const { return hfRechitTag_;   }
+  inline const edm::InputTag&                hfDigiTag    (void) const { return hfDigiTag_;     }
+  inline const edm::InputTag&                hoRechitTag  (void) const { return hoRechitTag_;   }
+  inline const edm::InputTag&                hoDigiTag    (void) const { return hoDigiTag_;     }
+  inline const edm::InputTag&                zdcRechitTag (void) const { return zdcRechitTag_;  }
+  inline const edm::InputTag&                zdcDigiTag   (void) const { return zdcDigiTag_;    }
+  inline const edm::InputTag&                simHitTag    (void) const { return simHitTag_;     }
+  inline const edm::InputTag&                caloMETtag   (void) const { return caloMETtag_;    }
+  inline const edm::InputTag&                recoMETtag   (void) const { return recoMETtag_;    }
+  inline const edm::InputTag&                twrTag       (void) const { return twrTag_;        }
+  inline const edm::InputTag&                vertexTag    (void) const { return vertexTag_;     }
+  inline const edm::InputTag&                trgResultsTag(void) const { return trgResultsTag_; }
+
+  inline const edm::InputTag&                hbheNoiseResultTag(void) const { return hbheNoiseResultTag_; }
 
 private:
 
