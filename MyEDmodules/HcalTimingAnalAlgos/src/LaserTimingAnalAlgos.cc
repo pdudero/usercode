@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserTimingAnalAlgos.cc,v 1.12 2010/05/05 23:38:39 dudero Exp $
+// $Id: LaserTimingAnalAlgos.cc,v 1.1 2010/06/20 12:48:45 dudero Exp $
 //
 //
 
@@ -87,13 +87,12 @@ LaserTimingAnalAlgos::processZDCDigi(const Digi& df)
 {
   CaloSamples dfC; // dfC is the linearized (fC) digi
 
-  digiGeV_.clear();
   const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
   const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
   const HcalQIEShape *qieShape   = conditions_->getHcalShape();
   HcalCoderDb coder( *qieCoder, *qieShape );
   coder.adc2fC( df, dfC );
-  digiGeV_.resize(dfC.size());
+  digiGeV_ = dfC;
 
   double prenoise = 0; double postnoise = 0; 
   int noiseslices = 0;
@@ -131,13 +130,12 @@ LaserTimingAnalAlgos::processDigi(const Digi& df)
 {
   CaloSamples dfC; // dfC is the linearized (fC) digi
 
-  digiGeV_.clear();
   const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
   const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
   const HcalQIEShape *qieShape   = conditions_->getHcalShape();
   HcalCoderDb coder( *qieCoder, *qieShape );
   coder.adc2fC( df, dfC );
-  digiGeV_.resize(dfC.size());
+  digiGeV_ = dfC;
   for (int i=0; i<dfC.size(); i++) {
     int capid=df[i].capid();
     digiGeV_[i] = (dfC[i]-calibs.pedestal(capid)); // pedestal subtraction
@@ -276,7 +274,7 @@ LaserTimingAnalAlgos::process(const myEventData& ed)
       ed.fedrawdata().isValid())
   {
     //checking FEDs for calibration information
-    for (int i=FEDNumbering::getHcalFEDIds().first;i<=FEDNumbering::getHcalFEDIds().second; i++) {
+    for (int i=FEDNumbering::MINHCALFEDID;i<=FEDNumbering::MAXHCALFEDID; i++) {
       const FEDRawData& fedData = ed.fedrawdata()->FEDData(i) ;
       if ( fedData.size() < 24 ) continue ;
       int value = ((const HcalDCCHeader*)(fedData.data()))->getCalibType() ;

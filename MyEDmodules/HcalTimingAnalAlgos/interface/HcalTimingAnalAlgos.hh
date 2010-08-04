@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.22 2010/06/12 09:34:48 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.1 2010/06/20 12:48:44 dudero Exp $
 //
 //
 
@@ -53,6 +53,7 @@ public:
 
   // names of common cut flags
   static const std::string st_fillDetail_;
+  static const std::string st_perEvtDigi_;
   static const std::string st_doPerChannel_;
 
   virtual void  bookHistos4allCuts   (void);
@@ -77,8 +78,8 @@ protected:
   void    processDigisAndRecHits   (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
 				    const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
 #endif
-  void    fillDigiPulseHistos    (myAnalHistos *myAH,
-				  uint32_t      hkey,
+  void    fillDigiPulseHistos    (perChanHistos     *digiFolder,
+				  uint32_t           hkey,
 				  const std::string& name,
 				  const CaloSamples& filldigifC);
   void    fillTSdistros          (myAnalHistos *myAH,
@@ -120,6 +121,7 @@ protected:
   uint32_t          maxEventNum2plot_;
   uint32_t          minEvents4avgT_;
   bool              selfSynchronize_; // versus synchronize to the system reference
+  bool              doDigis_;
   bool              normalizeDigis_;
   bool              doPerChannel_;
   bool              doTree_;
@@ -158,13 +160,13 @@ protected:
   uint32_t        maxts_;
   uint32_t        hitflags_;
   float           hitenergy_;
-
+  float           fCamplitude_;
   float           totalE_;
   int             neventsProcessed_;
 
-  CaloSamples        digifC_;
-  std::vector<float> digiGeV_;
-  float              twoTSratio_; // for HF.
+  CaloSamples     digifC_;
+  CaloSamples     digiGeV_;
+  float           twoTSratio_; // for HF.
 
   edm::ESHandle<HcalDbService>  conditions_;
 
@@ -185,6 +187,7 @@ protected:
   std::string st_rhColSize_;
   std::string st_rhFlagBits_;
   std::string st_rhHBHEtimingShapedCuts_;
+  std::string st_rhFraction2TSvsE_;
 
   std::string st_avgPulseTerr_;
   std::string st_avgPulseHPDmult_;

@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalAlgos.hh,v 1.14 2010/06/12 09:34:48 dudero Exp $
+// $Id: BeamTimingAnalAlgos.hh,v 1.1 2010/06/20 12:48:44 dudero Exp $
 //
 //
 
@@ -76,7 +76,7 @@ private:
   template<class Digi>
   int    processDigi            (const Digi& df,
 				 CaloSamples& digifC,
-				 std::vector<float>& digiGeV,
+				 CaloSamples& digiGeV,
 				 float& twoTSratio,
 				 float& fCamplitude);
 
@@ -91,6 +91,7 @@ private:
 
   void   processHFunconfirmedHit(const HFRecHit& hfrh);
 
+  void   processHFtimeRegions   (const HFRecHit& hfrh);
 
   // ----------member data ---------------------------
 
@@ -101,13 +102,13 @@ private:
   float avgTminus_,  avgTplus_;
   int   nhitsminus_, nhitsplus_;
   float totalEminus_, totalEplus_;
-  float fCamplitude_, partnerfCamplitude_;
+  float partnerfCamplitude_;
 
   float treco3ts_;                    // time reconstructed with 3TS charge weighted algo
   float tLUTminust3TS_;
 
-  CaloSamples        partnerdigifC_;
-  std::vector<float> partnerdigiGeV_;
+  CaloSamples   partnerdigifC_;
+  CaloSamples   partnerdigiGeV_;
 
   // for HF, map of confirmed hits:
   std::map<uint32_t,std::pair<HFRecHitIt,HFDigiIt> > m_confirmedHits_;
@@ -117,6 +118,7 @@ private:
   std::vector<std::string> v_hitCategories_;   // vector of parallel cut strings
 
   std::string st_cutNone_, st_cutHitEwindow_, st_cutBadFlags_, st_cutBadBx_, st_cutBadEv_, st_cutOutOfTime_;
+  std::string st_fraction2ts_, st_region1_,st_region2_,st_region3_,st_region4_,st_region5_;
 
   // names of hit categories
   std::string st_goodHits_, st_PMThits_,st_dubiousHits_, st_PMTpartners_;
