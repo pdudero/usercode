@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.15 2010/06/14 13:08:57 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.16 2010/06/20 12:57:21 dudero Exp $
 //
 //
 
@@ -87,7 +87,9 @@ public:
   };
 
   struct AutoFillPars_t {
-    AutoFillPars_t() : filladdrx(0),filladdry(0),filladdrz(0),filladdrw(0),detIDfun(0) {}
+    AutoFillPars_t() {}
+    AutoFillPars_t(void *infillx, void *infilly, void *infillz, void *infillw, detIDfun_t& infun) :
+      filladdrx(infillx), filladdry(infilly), filladdrz(infillz), filladdrw(infillw), detIDfun(infun) {}
     void         *filladdrx;
     void         *filladdry;
     void         *filladdrz;
@@ -96,6 +98,9 @@ public:
   };
 
   struct HistoAutoFill_t {
+    HistoAutoFill_t() {}
+    HistoAutoFill_t(HistoParams_t& inhpars, AutoFillPars_t& inafpars) :
+      hpars(inhpars), afpars(inafpars) {}
     HistoParams_t   hpars;
     AutoFillPars_t afpars;
   };
@@ -124,6 +129,9 @@ public:
   typedef boost::transform_iterator<
     histoFromIterator, typename myHashmap_t::iterator> iterator;
 
+  typedef boost::transform_iterator<
+    histoFromIterator, typename myHashmap_t::reverse_iterator> reverse_iterator;
+
   iterator begin()  {
     return boost::make_transform_iterator(hm_histos_->begin(),
 					  histoFromIterator());
@@ -131,6 +139,16 @@ public:
 
   iterator end()  {
     return boost::make_transform_iterator(hm_histos_->end(),
+					  histoFromIterator());
+  }
+
+  reverse_iterator last()  {
+    return boost::make_transform_iterator(hm_histos_->rbegin(),
+					  histoFromIterator());
+  }
+
+  reverse_iterator rend()  {
+    return boost::make_transform_iterator(hm_histos_->rend(),
 					  histoFromIterator());
   }
 
@@ -365,7 +383,7 @@ T *myAnalHistosTC<Tkey>::book1d(Tkey key, const HistoParams_t& pars,bool verbose
 // member functions
 //
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book1d(const std::vector<HistoParams_t>& v_pars)
 {
   for (uint32_t i=0; i<v_pars.size(); i++)
@@ -375,7 +393,7 @@ void myAnalHistosTC<Tkey>::book1d(const std::vector<HistoParams_t>& v_pars)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const HistoParams_t& pars,bool verbose)
 {
   Histo_t histo;
@@ -401,7 +419,7 @@ T *myAnalHistosTC<Tkey>::book2d(const HistoParams_t& pars,bool verbose)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(Tkey key, const HistoParams_t& pars,bool verbose)
 {
   Histo_t histo;
@@ -427,7 +445,7 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key, const HistoParams_t& pars,bool verbose
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoParams_t>& v_pars)
 {
   for (uint32_t i=0; i<v_pars.size(); i++)
@@ -437,7 +455,7 @@ void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoParams_t>& v_pars)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 				const char *title,
 				int nbinsx, const double xbins[],
@@ -472,7 +490,7 @@ T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 				const char *title,
 				int nbinsx, double xmin, double xmax,
@@ -507,7 +525,7 @@ T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 				const std::string& name,
 				const char *title,
@@ -543,7 +561,7 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 				const std::string& name,
 				const char *title,
@@ -579,7 +597,7 @@ T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book3d(const HistoParams_t& pars,bool verbose)
 {
   Histo_t histo;
@@ -606,7 +624,7 @@ T *myAnalHistosTC<Tkey>::book3d(const HistoParams_t& pars,bool verbose)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book3d(Tkey key, const HistoParams_t& pars,bool verbose)
 {
   Histo_t histo;
@@ -633,7 +651,7 @@ T *myAnalHistosTC<Tkey>::book3d(Tkey key, const HistoParams_t& pars,bool verbose
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoParams_t>& v_pars)
 {
   for (uint32_t i=0; i<v_pars.size(); i++)
@@ -643,7 +661,7 @@ void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoParams_t>& v_pars)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book1d(const HistoAutoFill_t& haf,bool verbose)
 {
   Histo_t histo;
@@ -676,7 +694,7 @@ T *myAnalHistosTC<Tkey>::book1d(const HistoAutoFill_t& haf,bool verbose)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const HistoAutoFill_t& haf,bool verbose)
 {
   Histo_t histo;
@@ -712,7 +730,7 @@ T *myAnalHistosTC<Tkey>::book2d(const HistoAutoFill_t& haf,bool verbose)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *myAnalHistosTC<Tkey>::book3d(const HistoAutoFill_t& haf,bool verbose)
 {
   Histo_t histo;
@@ -754,7 +772,7 @@ T *myAnalHistosTC<Tkey>::book3d(const HistoAutoFill_t& haf,bool verbose)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book1d(const std::vector<HistoAutoFill_t>& v_haf)
 {
   for (uint32_t i=0; i<v_haf.size(); i++)
@@ -762,7 +780,7 @@ void myAnalHistosTC<Tkey>::book1d(const std::vector<HistoAutoFill_t>& v_haf)
 }
 
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoAutoFill_t>& v_haf)
 {
   for (uint32_t i=0; i<v_haf.size(); i++)
@@ -770,7 +788,7 @@ void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoAutoFill_t>& v_haf)
 }
 
 template <class Tkey>
-template<class T>
+template <class T>
 void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoAutoFill_t>& v_haf)
 {
   for (uint32_t i=0; i<v_haf.size(); i++)
@@ -780,7 +798,7 @@ void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoAutoFill_t>& v_haf)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 T *
 myAnalHistosTC<Tkey>::bookClone(const std::string& cloneName,const T& h,
 				bool verbose)
@@ -804,7 +822,7 @@ myAnalHistosTC<Tkey>::bookClone(const std::string& cloneName,const T& h,
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void
 myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
 {
@@ -827,7 +845,7 @@ myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void
 myAnalHistosTC<Tkey>::fill1d(const std::map<std::string,double>& vals)
 {
@@ -849,7 +867,7 @@ myAnalHistosTC<Tkey>::fill1d(const std::map<std::string,double>& vals)
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void
 myAnalHistosTC<Tkey>::fill2d(const std::string& hname,double valx,double valy,double weight)
 {
@@ -870,7 +888,7 @@ myAnalHistosTC<Tkey>::fill2d(const std::string& hname,double valx,double valy,do
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void
 myAnalHistosTC<Tkey>::fill2d(const std::map<std::string,std::pair<double,double> >& vals)
 {
@@ -892,7 +910,7 @@ myAnalHistosTC<Tkey>::fill2d(const std::map<std::string,std::pair<double,double>
 //======================================================================
 
 template <class Tkey>
-template<class T>
+template <class T>
 void
 myAnalHistosTC<Tkey>::fill3d(const std::string& hname,
 			     double valx,double valy,double valz,double weight)
@@ -959,7 +977,6 @@ myAnalHistosTC<Tkey>::mkSubdir(const std::string& dirdescr)
   std::pair<std::string,void *> subpair(dirdescr,(void *)subdir);
 
   m_attachedHistos_.insert(subpair);
-
   return subdir;
 }
 
@@ -979,7 +996,7 @@ myAnalHistosTC<Tkey>::getAttachedHisto(const std::string& name)
 //======================================================================
 
 template <class Tkey>
-template<class Tsubkey>
+template <class Tsubkey>
 myAnalHistosTC<Tsubkey> *
 myAnalHistosTC<Tkey>::getAttachedHisto(const std::string& name)
 {
@@ -1080,5 +1097,13 @@ void add3dHisto        (const std::string& name, const std::string& title,
 			int nbinsy, double miny, double maxy,
 			int nbinsz, double minz, double maxz,
 			std::vector<myAnalHistos::HistoParams_t>& v_hpars3d);
+
+void add3dAFhisto      (const std::string& name, const std::string& title,
+			int nbinsx, double minx, double maxx,
+			int nbinsy, double miny, double maxy,
+			int nbinsz, double minz, double maxz,
+			void *filladdrx, void *filladdry, void *filladdrz,
+			void *filladdrw, detIDfun_t detIDfun,
+			std::vector<myAnalHistos::HistoAutoFill_t>& v_hpars3d);
 
 #endif // _MYANALHISTOS
