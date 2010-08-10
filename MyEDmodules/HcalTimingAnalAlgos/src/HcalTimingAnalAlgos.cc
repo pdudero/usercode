@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.1 2010/06/20 12:48:45 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.2 2010/08/04 13:30:52 dudero Exp $
 //
 //
 
@@ -302,9 +302,9 @@ static void labelHitFlagAxis(const TH1F& h1f, HcalSubdetector subdet)
   TAxis *xax = h1f.GetXaxis();
   xax->SetBinLabel(1,(subdet==HcalForward)?"HFLongShort":"HBHEHpdHitMultiplicity");
   xax->SetBinLabel(2,(subdet==HcalForward)?"HFDigiTime":"HBHEPulseShape");
-  xax->SetBinLabel(3,"HSCP_R1R2");
-  xax->SetBinLabel(4,"HSCP_FracLeader");
-  xax->SetBinLabel(5,"HSCP_OuterEnergy");
+  xax->SetBinLabel(3,(subdet==HcalForward)?"HFInTimeWindow":"HSCP_R1R2");
+  xax->SetBinLabel(4,(subdet==HcalForward)?"HFS8S1Ratio":"HSCP_FracLeader");
+  xax->SetBinLabel(5,(subdet==HcalForward)?"HFPET":"HSCP_OuterEnergy");
   xax->SetBinLabel(6,"HSCP_ExpFit");
   if (subdet==HcalForward) {
     xax->SetBinLabel(7,"HFTimingTrust0");
@@ -391,6 +391,7 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   doTree_             = iConfig.getUntrackedParameter<bool>("doTree",false);
 
   recHitEscaleNbins_ = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
+  if (recHitEscaleNbins_ > 1000) recHitEscaleNbins_ = 1000;
 
   recHitEscaleMinfC_ = 5*recHitEscaleMinGeV_;
   recHitEscaleMaxfC_ = 5*recHitEscaleMaxGeV_;
@@ -418,6 +419,9 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   if (!mysubdetstr_.compare("ZDC")) mysubdet_ = HcalOther;   else {
     throw cms::Exception("Unknown subdet string: ") << mysubdetstr_ << endl;
   }
+
+
+  cout << "My subdet is " << mysubdetstr_ << endl;
 
   firstEvent_ = true;
 }                            // HcalTimingAnalAlgos::HcalTimingAnalAlgos
@@ -507,11 +511,13 @@ HcalTimingAnalAlgos::bookHistos4allCuts(void)
 	      v_hpars1d);
 
   //==================== Total time/energy/flags distros ====================
-	     
+
+#if 0	     
   add1dAFhisto("h1d_rhUncorTimes" + mysubdetstr_,
 	       "RecHit Times (uncorrected), "+mysubdetstr_+" "+rundescr_+"; Rechit Time (ns)",
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	       (void *)&hittime_,NULL,NULL,v_hpars1d_af);
+#endif
 
   add1dAFhisto(st_rhCorTimes_,
 	       "RecHit Times, "+mysubdetstr_+" "+rundescr_+"; Rechit Time (ns)",
@@ -634,11 +640,13 @@ HcalTimingAnalAlgos::bookHistos4allCuts(void)
     }
   }
 
+#if 0
   add2dAFhisto("h2d_uncorTimingVsE" + mysubdetstr_,
  "RecHit Timing (uncorrected) vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
 	       recHitEscaleNbins_,recHitEscaleMinGeV_,recHitEscaleMaxGeV_,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,
 	       (void *)&hitenergy_,(void *)&hittime_,NULL,NULL, v_hpars2d_af);
+#endif
 
   add2dAFhisto("h2d_corTimingVsE" + mysubdetstr_,
 "RecHit Timing vs. Energy, "+mysubdetstr_+"; Rechit Energy (GeV); Rechit Time (ns)",
@@ -732,6 +740,8 @@ HcalTimingAnalAlgos::bookHistos4allCuts(void)
 void
 HcalTimingAnalAlgos::bookHFbasicProfiles(myAnalHistos *myAH)
 {
+  assert(myAH);
+
   /*****************************************
    * HF 2-D POLAR PROFILES:                *
    *****************************************/
@@ -823,6 +833,8 @@ HcalTimingAnalAlgos::bookHFbasicProfiles(myAnalHistos *myAH)
 void
 HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
 {
+  assert(myAH);
+
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1d_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1dprof_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars2dprof_af;
@@ -837,11 +849,11 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
   st_avgTcorPerIetad2_ = "p1d_avgTcorPerIetad2"    + mysubdetstr_;
   st_avgTimePerRMd1_   = "p1d_avgTimePerRMd1"      + mysubdetstr_;
 
-  std::string st_avgTuncPerIetad1_ = "p1d_avgTuncPerIetad1"    + mysubdetstr_;
-  std::string st_avgTuncPerIetad2_ = "p1d_avgTuncPerIetad2"    + mysubdetstr_;
+  //std::string st_avgTuncPerIetad1_ = "p1d_avgTuncPerIetad1"    + mysubdetstr_;
+  //std::string st_avgTuncPerIetad2_ = "p1d_avgTuncPerIetad2"    + mysubdetstr_;
+  //std::string st_rhTuncProfd1_     = "p2d_rhTuncPerIetaIphiD1" + mysubdetstr_;
+  //std::string st_rhTuncProfd2_     = "p2d_rhTuncPerIetaIphiD2" + mysubdetstr_;
   std::string st_avgTimePerRMd2_   = "p1d_avgTimePerRMd2"      + mysubdetstr_;
-  std::string st_rhTuncProfd1_     = "p2d_rhTuncPerIetaIphiD1" + mysubdetstr_;
-  std::string st_rhTuncProfd2_     = "p2d_rhTuncPerIetaIphiD2" + mysubdetstr_;
 
   /*****************************************
    * 1-D HISTOGRAMS:                       *
@@ -868,6 +880,7 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
   titlestr =  "Avg. Time, "+mysubdetstr_+" Depth 2 ( "+rundescr_+"); i#phi; Time (ns)";
   add1dAFhisto( st_avgTimePerPhid2_, titlestr, 145,-72.5, 72.5,
 		(void *)&fiphisigned_,(void *)&corTime_,(detIDfun_t)&isDepth2,v_hpars1dprof_af);
+#if 0
   titlestr = 
     "Avg. Time (Uncorrected), "+mysubdetstr_+" Depth 1 ( "+rundescr_+"); i#eta; Time (ns)";
   add1dAFhisto( st_avgTuncPerIetad1_, titlestr, 83,-41.5, 41.5,
@@ -876,7 +889,7 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
     "Avg. Time (Uncorrected), "+mysubdetstr_+" Depth 2 ( "+rundescr_+"); i#eta; Time (ns)";
   add1dAFhisto( st_avgTuncPerIetad2_, titlestr, 83,-41.5, 41.5,
 		(void *)&fieta_,(void *)&hittime_,(detIDfun_t)&isDepth2,v_hpars1dprof_af);
-
+#endif
   titlestr =  "Avg. Time, "+mysubdetstr_+" Depth 1 ( "+rundescr_+"); i#eta; Time (ns)";
   add1dAFhisto( st_avgTcorPerIetad1_, titlestr, 83,-41.5, 41.5,
 		(void *)&fieta_,(void *)&corTime_,(detIDfun_t)&isDepth1,v_hpars1dprof_af);
@@ -896,7 +909,7 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
   /*****************************************
    * 2-D PROFILES:                         *
    *****************************************/
-
+#if 0
   titlestr =
     "Depth 1 RecHit Time Map (uncorrected), "+mysubdetstr_+" "+rundescr_+"; i#eta; i#phi";
   add2dAFhisto(st_rhTuncProfd1_, titlestr, 83, -41.5,  41.5, 72, 0.5, 72.5, 
@@ -908,7 +921,7 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
   add2dAFhisto(st_rhTuncProfd2_, titlestr, 83, -41.5,  41.5, 72,   0.5,  72.5,
 	       (void *)&fieta_,(void *)&fiphi_,(void *)&hittime_,
 	       (detIDfun_t)&isDepth2,v_hpars2dprof_af);
-
+#endif
   titlestr = "Depth 1 RecHit Time Map, "+mysubdetstr_+" "+rundescr_+"; i#eta; i#phi";
   add2dAFhisto(st_rhTcorProfd1_, titlestr,  83, -41.5,  41.5, 72, 0.5, 72.5,
 	       (void *)&fieta_,(void *)&fiphi_,(void *)&corTime_,
@@ -940,6 +953,8 @@ HcalTimingAnalAlgos::bookD1D2detail(myAnalHistos *myAH)
 void
 HcalTimingAnalAlgos::bookHEdetail(myAnalHistos *myAH)
 {
+  assert(myAH);
+
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1dprof_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars2dprof_af;
 
@@ -959,23 +974,23 @@ HcalTimingAnalAlgos::bookHEdetail(myAnalHistos *myAH)
 		"Avg. Time (Depth 3), HE, "+rundescr_+"; i#phi; Time (ns)",
 		145,-72.5, 72.5,
 		(void *)&fiphisigned_,(void *)&corTime_,(detIDfun_t)&isDepth3,v_hpars1dprof_af);
-
+#if 0
   add1dAFhisto( "p1d_avgTuncPerIetad3HE",
 		"Avg. Time (Depth 3), HE, "+rundescr_+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,
 		(void *)&fieta_,(void *)&hittime_,(detIDfun_t)&isDepth3,v_hpars1dprof_af);
-
+#endif
   add1dAFhisto( st_avgTcorPerIetad3_,
 		"Avg. Time (Depth 3), HE, "+rundescr_+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,
 		(void *)&fieta_,(void *)&corTime_,(detIDfun_t)&isDepth3,v_hpars1dprof_af);
-
+#if 0
   add2dAFhisto("p2d_rhTuncPerIetaIphiD3HE",
 	       "Depth 3 RecHit Time Map (uncorrected), HE, "+rundescr_+"; i#eta; i#phi",
 	       83, -41.5,  41.5, 72,   0.5,  72.5,
 	       (void *)&fieta_,(void *)&fiphi_,(void *)&hittime_,
 	       (detIDfun_t)&isDepth3,v_hpars2dprof_af);
-
+#endif
   add2dAFhisto(st_rhTcorProfd3_,
 	       "Depth 3 RecHit Time Map, HE, "+rundescr_+"; i#eta; i#phi",
 	       83, -41.5,  41.5, 72,   0.5,  72.5,
@@ -992,6 +1007,8 @@ HcalTimingAnalAlgos::bookHEdetail(myAnalHistos *myAH)
 void
 HcalTimingAnalAlgos::bookHOdetail(myAnalHistos *myAH)
 {
+  assert(myAH);
+
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars1dprof_af;
   std::vector<myAnalHistos::HistoAutoFill_t> v_hpars2dprof_af;
 
@@ -1033,23 +1050,23 @@ HcalTimingAnalAlgos::bookHOdetail(myAnalHistos *myAH)
 		"Avg. Time/i#phi (YB+2), HO, "+rundescr_+"; i#phi; Time (ns)",
 		72, 0.5, 72.5,
 		(void *)&fiphi_,(void *)&corTime_,(detIDfun_t)&isHO2P,v_hpars1dprof_af);
-
+#if 0
   add1dAFhisto( "p1d_avgTuncPerIetad4HO",
 		"Avg. Time/i#eta (Uncorrected), HO, "+rundescr_+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,
 		(void *)&fieta_,(void *)&hittime_,(detIDfun_t)&isDepth4,v_hpars1dprof_af);
-
+#endif
   add1dAFhisto( "p1d_avgTcorPerIetad4HO",
 		"Avg. Time/i#eta, HO, "+rundescr_+"; i#eta; Time (ns)",
 		61,-30.5, 30.5,
 		(void *)&fieta_,(void *)&corTime_,(detIDfun_t)&isDepth4,v_hpars1dprof_af);
-
+#if 0
   add2dAFhisto("p2d_rhTuncPerIetaIphiD4HO",
 	       "Depth 4 RecHit Time Map (uncorrected), HO, "+rundescr_+"; i#eta; i#phi",
 	       83, -41.5,  41.5, 72,   0.5,  72.5,
 	       (void *)&fieta_,(void *)&fiphi_,(void *)&hittime_,
 	       (detIDfun_t)&isDepth4,v_hpars2dprof_af);
-
+#endif
   add2dAFhisto(st_rhTcorProfd4_,
 	       "Depth 4 RecHit Time Map, HO, "+rundescr_+"; i#eta; i#phi",
 	       83, -41.5,  41.5, 72,   0.5,  72.5,
@@ -1082,15 +1099,16 @@ HcalTimingAnalAlgos::bookPerChanDetail(myAnalHistos *myAH)
 {
   std::vector<myAnalHistos::HistoParams_t> v_hpars1d;
 
+  assert(myAH);
+
   // make digi subfolders in the final cut folder
-  myAH->mkSubdir<uint32_t>("_DigisfCperID");
-  //myAH->mkSubdir<uint32_t>("_DigisfCvsEperID");
-  myAH->mkSubdir<uint32_t>("_DigisGeVperID");
-  //myAH->mkSubdir<uint32_t>("_DigisGeVvsEperID");
+  myAH->mkSubdir<uint32_t>("_digisfCperID");
+  //myAH->mkSubdir<uint32_t>("_digisfCvsEperID");
+  myAH->mkSubdir<uint32_t>("_digisGeVperID");
+  //myAH->mkSubdir<uint32_t>("_digisGeVvsEperID");
   myAH->mkSubdir<uint32_t>("_corTimesPerID");
 
   myAH->mkSubdir<uint32_t>("_frac2TSperID");
-  myAH->mkSubdir<uint32_t>("_digisGeVperEvID");
 
   myAnalHistos *postAH = myAH->mkSubdir("_postAnal");
 
@@ -1198,8 +1216,14 @@ HcalTimingAnalAlgos::bookDetailHistos4cut(myAnalCut& cut)
   default:break;
   }
 
-  if (cut.flagSet(st_doPerChannel_))
-    bookPerChanDetail(cutAH); // but not for the inverted!!
+  if (cut.flagSet(st_doPerChannel_)) {
+    bookPerChanDetail(cutAH);
+    if (doinv)
+      bookPerChanDetail(invAH);
+  }
+
+  if (       cut.flagSet   (st_perEvtDigi_)) cutAH->mkSubdir<uint32_t>("_digisGeVperEvID");
+  if (doinv&&cut.flagSetInv(st_perEvtDigi_)) invAH->mkSubdir<uint32_t>("_digisGeVperEvID");
 
   cout<<"Done."<<std::endl;
 }                           // HcalTimingAnalAlgos::bookDetailHistos4cut
@@ -1225,8 +1249,6 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 
   fieta_    = (float)detID_.ieta();
   fiphi_    = (float)detID_.iphi();
-
-  float frac2ts = 0.;
 
   if (mysubdet_ == HcalOther) {
     zside = zdcDetID_.zside();
@@ -1273,8 +1295,6 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
       }
     }
 
-    frac2ts = (float)((hitflags_>>((int)HcalCaloFlagLabels::Fraction2TS))&0x3f);
-
     if  (mysubdet_==HcalForward) {
       fangle_   = TMath::Pi()*(fiphi_-1.)/36.;
       fradius_  = hftwrRadii[41-absieta];
@@ -1302,18 +1322,9 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 	myAH->fill2d<TProfile2D>(st_rhOccMapHFPd2_, fradius_,fangle_);
 	break;
       }
-
-      // Fraction2TS:
-      frac2ts = (frac2ts-1.f)/50.f;
-
     } // is HF
-    else { // is HBHE
 
-      // Fraction2TS:
-      frac2ts = 0.5f + ((frac2ts-1.f)/100.f);
-    }
-
-    myAH->fill2d<TH2F>(st_rhFraction2TSvsE_,hitenergy_,frac2ts);
+    myAH->fill2d<TH2F>(st_rhFraction2TSvsE_,hitenergy_,fraction2ts_);
 
   } // if HB/HE/HF
 
@@ -1349,7 +1360,6 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
     TProfile2D *avgPulsePerE = myAH->get<TProfile2D>(st_pulsePerEbin_.c_str());
     for (int its=0; its<digisize; ++its)
       avgPulsePerE->Fill(its,hitenergy_,filldigifC[its]);
-
   }
 
   if (thisCut.flagSet(st_fillDetail_)) {
@@ -1366,48 +1376,50 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 #endif
 
     // Now per channel...
+
+    bool perchOverThresh = ampCutsInfC_ ?
+      (fCamplitude_ > std::max(25.0,minHitAmplitude_)) :
+      (hitenergy_   > std::max(5.0,minHitAmplitude_));
+
+    stringstream chname;
+    uint32_t     dix;
+
+    if (mysubdet_ == HcalOther) {
+      dix = zdcDetID_.denseIndex(); chname << zdcDetID_;
+    } else {
+      dix = detID_.denseIndex(); chname << detID_;
+    }
+
     if (   // (myAH != thisCut.invhistos()) &&
 	thisCut.flagSet(st_doPerChannel_)) {
-      uint32_t     dix;
-      stringstream name;
-
-      if (mysubdet_ == HcalOther) {
-	dix = zdcDetID_.denseIndex(); name << zdcDetID_;
-      } else {
-	dix = detID_.denseIndex(); name << detID_;
-      }
 
       //========== Pulse shape per channel ==========
 
-      bool perchOverThresh = ampCutsInfC_ ?
-	(fCamplitude_ > std::max(25.0,minHitAmplitude_)) :
-	(hitenergy_   > std::max(5.0,minHitAmplitude_));
-
       if (doDigis_ && perchOverThresh) {
-	fillDigiPulseHistos(myAH->getAttachedHisto<uint32_t>("_digisfCperID"),
-			    dix,name.str(),filldigifC);
-	fillDigiPulseHistos(myAH->getAttachedHisto<uint32_t>("_digisGeVperID"),
-			    dix,name.str(),digiGeV_);
+	perChanHistos *digiFolder = myAH->getAttachedHisto<uint32_t>("_digisfCperID");
+	if (!digiFolder)
+	  throw cms::Exception("Folder _digisfCperID not found for histos "+myAH->name());
+	fillDigiPulseHistos(digiFolder,dix,chname.str(),filldigifC);
+
+	digiFolder = myAH->getAttachedHisto<uint32_t>("_digisGeVperID");
+	if (!digiFolder)
+	  throw cms::Exception("Folder _digisGeVperID not found for histos "+myAH->name());
+	fillDigiPulseHistos(digiFolder,dix,chname.str(),digiGeV_);
+#if 0
 	if  (mysubdet_==HcalForward)
-	  fillTSdistros (myAH,dix,name.str());
-
-	if (thisCut.flagSet(st_perEvtDigi_)) {
-	  perChanHistos *digPerEvID = myAH->getAttachedHisto<uint32_t>("_digisGeVperEvID");
-	  uint32_t dix = (digPerEvID->last() == digPerEvID->rend()) ? 0 : digPerEvID->last()->first;
-
-	  stringstream evidname;
-	  evidname << name.str() << " Run" << runnum_ << " Ev" << evtnum_;
-	  fillDigiPulseHistos(digPerEvID,++dix,evidname.str(),digiGeV_);
-	}
+	  fillTSdistros (myAH,dix,chname.str());
+#endif
       }
 
       //========== Timing per channel ==========
 
       perChanHistos *rhperidHistos =
 	myAH->getAttachedHisto<uint32_t>("_corTimesPerID");
+      if (!rhperidHistos)
+	throw cms::Exception("Folder _corTimesPerID not found for histos "+myAH->name());
 
       perChanHistos::HistoParams_t
-	hpars1(name.str(),name.str(),
+	hpars1(chname.str(),chname.str(),
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_);
 
       TH1F *htcor = rhperidHistos->exists(dix) ? // Corrected hit time per channel
@@ -1422,16 +1434,41 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
       perChanHistos *frac2tsHistos =
 	myAH->getAttachedHisto<uint32_t>("_frac2TSperID");
 
-      perChanHistos::HistoParams_t hpars2(name.str(),name.str(),101,0.495,1.505);
+      if (!frac2tsHistos)
+	throw cms::Exception("Folder _frac2TSperID not found for histos "+myAH->name());
+
+      perChanHistos::HistoParams_t hpars2(chname.str(),chname.str(),101,0.495,1.505);
 
       TH1F *hfrac2ts = frac2tsHistos->exists(dix) ? // maxsum(2ts)/sum(10ts)
 	frac2tsHistos->get<TH1F>(dix) :
 	frac2tsHistos->book1d<TH1F>(dix,hpars2,false);
 
       if (hfrac2ts && perchOverThresh)
-	hfrac2ts->Fill(frac2ts);
+	hfrac2ts->Fill(fraction2ts_);
 
     } // if doPerChannel
+
+
+    bool doPerEvDigi = doDigis_ &&
+		       perchOverThresh &&
+	(((myAH != thisCut.invhistos()) && thisCut.flagSet(st_perEvtDigi_)) ||
+	 ((myAH == thisCut.invhistos()) && thisCut.flagSetInv(st_perEvtDigi_)));
+
+    if (doPerEvDigi) {
+      perChanHistos *digiFolder = myAH->getAttachedHisto<uint32_t>("_digisGeVperEvID");
+      if (!digiFolder)
+	throw cms::Exception("Folder _digisGeVperEvID not found for histos "+myAH->name());
+
+      uint32_t dix = 
+	(digiFolder->last()==digiFolder->rend()) ? 0 : digiFolder->last()->first;
+
+      if ((dix < 10) || (hitenergy_ > 100.)) {
+	stringstream evidname;
+	evidname << chname.str() << " Run" << runnum_ << " Ev" << evtnum_;
+	fillDigiPulseHistos(digiFolder,++dix,evidname.str(),digiGeV_);
+      }
+    }
+
   } // if filldetail
 }                                 // HcalTimingAnalAlgos::fillHistos4cut
 
@@ -1448,7 +1485,7 @@ HcalTimingAnalAlgos::fillDigiPulseHistos(perChanHistos *digiFolder,
   int digisize = std::min(10,filldigi.size());
   
   // pulses in fC
-  if (!digiFolder) return;
+  if (!digiFolder) throw cms::Exception("digi folder not found");
 
   TProfile *hpulse = digiFolder->exists(hkey)   ?
     digiFolder->get<TProfile>(hkey) :
@@ -1464,7 +1501,7 @@ HcalTimingAnalAlgos::fillDigiPulseHistos(perChanHistos *digiFolder,
   hpars.name  += "vsE";
   hpars.title += "; ; E_{hit}(GeV)";
 
-  perChanHistos *digifCvsEhistos = myAH->getAttachedHisto<uint32_t>("_DigisfCvsEperID");
+  perChanHistos *digifCvsEhistos = myAH->getAttachedHisto<uint32_t>("_digisfCvsEperID");
 
   TProfile2D *hpulsefCperE=digifCvsEhistos->exists(hkey)? // Digis in fC, binned energies
     digifCvsEhistos->get<TProfile2D>(hkey) :
@@ -1476,7 +1513,7 @@ HcalTimingAnalAlgos::fillDigiPulseHistos(perChanHistos *digiFolder,
       hpulsefCPerE->Fill(its, hitenergy_, filldigifC[its] );
   }
 
-  perChanHistos *digiGeVvsEhistos = myAH->getAttachedHisto<uint32_t>("_DigisGeVvsEperID");
+  perChanHistos *digiGeVvsEhistos = myAH->getAttachedHisto<uint32_t>("_digisGeVvsEperID");
 
   TProfile2D *hpulseGeVperE=digiGeVvsEhistos->exists(hkey)? // Digis in GeV, binned energies
     digiGeVvsEhistos->get<TProfile2D>(hkey) :
@@ -1579,8 +1616,8 @@ HcalTimingAnalAlgos::beginJob(const edm::EventSetup& iSetup,
     tree_->Branch("correction_ns",&correction_ns_);
   }
 
-  std::cout << "----------------------------------------"  << "\n" <<
-  std::cout << "Parameters being used: "               << "\n" <<
+  std::cout << "----------------------------------------"  << "\n"
+	    << "Parameters being used: "               << "\n" <<
     "subdet_            = "      << mysubdetstr_       << "\n" << 
     "globalToffset_     = "      << globalToffset_     << "\n" << 
     "globalFlagMask_    = "<<hex << globalFlagMask_    << "\n" << 
@@ -1593,10 +1630,10 @@ HcalTimingAnalAlgos::beginJob(const edm::EventSetup& iSetup,
     "minEvents4avgT_    = "      << minEvents4avgT_    << "\n" <<
     "firstsamp_         = "      << firstsamp_         << "\n" <<
     "nsamps_            = "      << nsamps_            << "\n" <<
-    "presamples_        = "      << presamples_        << "\n" <<
+    "presamples_        = "      << presamples_        << "\n";
 #if 0
     "timeWindowMinNS_   = "      << timeWindowMinNS_   << "\n" << 
-    "timeWindowMaxNS_   = "      << timeWindowMaxNS_   << "\n" <<
+    "timeWindowMaxNS_   = "      << timeWindowMaxNS_   << "\n";
 #endif
 
   std:: cout << "badEventSet_      = "<<dec;
@@ -1624,8 +1661,8 @@ HcalTimingAnalAlgos::computeChannelTimingFromAvgDigis(myAnalHistos *myAH)
   TH1F *h1plus =postAH->get<TH1F>(st_rhTavgCorPlus_.c_str());
   TH1F *h1minus=postAH->get<TH1F>(st_rhTavgCorMinus_.c_str());
 
-  //perChanHistos *digiGeVHistos = myAH->getAttachedHisto<uint32_t>("_DigisGeVperID");
-  perChanHistos *digifCHistos  = myAH->getAttachedHisto<uint32_t>("_DigisfCperID");
+  //perChanHistos *digiGeVHistos = myAH->getAttachedHisto<uint32_t>("_digisGeVperID");
+  perChanHistos *digifCHistos  = myAH->getAttachedHisto<uint32_t>("_digisfCperID");
 
   perChanHistos::iterator it;
   //for (it = digiGeVHistos->begin(); it != digiGeVHistos->end(); it++) {

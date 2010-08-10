@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.1 2010/06/20 12:48:44 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.2 2010/08/04 13:30:52 dudero Exp $
 //
 //
 
@@ -167,6 +167,7 @@ protected:
   CaloSamples     digifC_;
   CaloSamples     digiGeV_;
   float           twoTSratio_; // for HF.
+  float           fraction2ts_;
 
   edm::ESHandle<HcalDbService>  conditions_;
 
