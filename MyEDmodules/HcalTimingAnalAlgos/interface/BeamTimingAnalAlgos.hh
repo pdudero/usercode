@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalAlgos.hh,v 1.1 2010/06/20 12:48:44 dudero Exp $
+// $Id: BeamTimingAnalAlgos.hh,v 1.2 2010/08/04 13:30:52 dudero Exp $
 //
 //
 
@@ -55,7 +55,8 @@ private:
 
   std::string addCut            (const std::string& descr,
 				 bool doInverted=false);
-  std::string addHitCategory    (const std::string& descr);
+  std::string addHitCategory    (const std::string& descr,
+				 bool doInverted=false);
 
   void   fillHFD1D2histos       (myAnalHistos *myAH,
 				 const HFRecHit& rhd1, float corTime1,

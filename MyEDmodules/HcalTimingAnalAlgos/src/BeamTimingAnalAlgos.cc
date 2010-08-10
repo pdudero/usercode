@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalAlgos.cc,v 1.1 2010/06/20 12:48:45 dudero Exp $
+// $Id: BeamTimingAnalAlgos.cc,v 1.2 2010/08/04 13:30:52 dudero Exp $
 //
 //
 
@@ -66,7 +66,7 @@ static bool isHEP28d2(const DetId& id) { HcalDetId did=HcalDetId(id);
 static bool isHEP28d3(const DetId& id) { HcalDetId did=HcalDetId(id);
                                          return ((did.depth()==3) &&
 						 (did.subdet()==HcalEndcap) &&
-						 (did.ieta()==28)); }
+ 						 (did.ieta()==28)); }
 static bool isHEP29d1(const DetId& id) { HcalDetId did=HcalDetId(id);
                                          return ((did.depth()==1) &&
 						 (did.subdet()==HcalEndcap) &&
@@ -82,7 +82,7 @@ static bool isHEM28d1(const DetId& id) { HcalDetId did=HcalDetId(id);
 static bool isHEM28d2(const DetId& id) { HcalDetId did=HcalDetId(id);
                                          return ((did.depth()==2) &&
 						 (did.subdet()==HcalEndcap) &&
-						 (did.ieta()==-28)); }
+      						 (did.ieta()==-28)); }
 static bool isHEM28d3(const DetId& id) { HcalDetId did=HcalDetId(id);
                                          return ((did.depth()==3) &&
 						 (did.subdet()==HcalEndcap) &&
@@ -108,12 +108,13 @@ BeamTimingAnalAlgos::addCut(const std::string& descr,
 }
 
 std::string
-BeamTimingAnalAlgos::addHitCategory(const std::string& descr)
+BeamTimingAnalAlgos::addHitCategory(const std::string& descr,
+				    bool doInverted)
 {
   size_t N = v_nestedCuts_.size()+v_hitCategories_.size();
   string cutstr = "cut" + int2str(N) + descr;
   v_hitCategories_.push_back(cutstr);
-  m_cuts_[cutstr] = new myAnalCut(N,cutstr,*mysubdetRootDir_);
+  m_cuts_[cutstr] = new myAnalCut(N,cutstr,*mysubdetRootDir_,doInverted);
   return cutstr;
 }
 
@@ -125,6 +126,9 @@ BeamTimingAnalAlgos::BeamTimingAnalAlgos(const edm::ParameterSet& iConfig,
   HcalTimingAnalAlgos(iConfig),
   timecor_(timecor)
 {
+
+  cout << "My subdet is " << mysubdetstr_ << endl;
+
   std::vector<int> badEventVec =
     iConfig.getParameter<vector<int> >("badEventList");
   for (size_t i=0; i<badEventVec.size(); i++)
@@ -153,8 +157,6 @@ BeamTimingAnalAlgos::BeamTimingAnalAlgos(const edm::ParameterSet& iConfig,
 
   const bool doInverted = true;
 
-  cout << "My subdet is " << mysubdetstr_ << endl;
-
   edm::Service<TFileService> fs;
   mysubdetRootDir_ = new TFileDirectory(fs->mkdir(mysubdetstr_));
 
@@ -165,14 +167,18 @@ BeamTimingAnalAlgos::BeamTimingAnalAlgos(const edm::ParameterSet& iConfig,
   if (badEventVec.size())   st_cutBadEv_ = addCut("badEv",doInverted);
   if (acceptedBxVec.size()) st_cutBadBx_ = addCut("bxnum",doInverted);
 
-  st_cutBadFlags_   = addCut("badFlags",doInverted);
-  st_cutHitEwindow_ = addCut("hitEwindow",doInverted);
+  if (globalFlagMask_)   st_cutBadFlags_ = addCut("badFlags",doInverted);
+
+  st_cutHitEwindow_ = addCut("hitEwindow"); // ,doInverted);
 
   //if (!acceptedPkTSnums_.empty())
   if ((mysubdet_ == HcalBarrel) ||
       (mysubdet_ == HcalEndcap) ) {
-    st_fraction2ts_  = addCut("fraction2ts",doInverted); getCut(st_fraction2ts_)->setFlag(st_fillDetail_);
-    st_cutOutOfTime_ = addCut("outOfTime",  doInverted);
+
+    st_fraction2ts_  = addHitCategory("fraction2ts",doInverted); getCut(st_fraction2ts_) ->setFlag(st_fillDetail_);
+                                                                 getCut(st_fraction2ts_) ->setFlagInv(st_perEvtDigi_);
+    st_cutOutOfTime_ = addHitCategory("outOfTime",  doInverted); getCut(st_cutOutOfTime_)->setFlag(st_fillDetail_);
+
   }
   if (mysubdet_ == HcalForward) {
     st_PMThits_  = addHitCategory("keepPMThits");
@@ -279,7 +285,8 @@ isHFPMThit(const HFRecHit& queried, const HFRecHit& partner)
 inline bool
 isHFPMThit(const HFRecHit& queried)
 {
-  return queried.flagField(HcalCaloFlagLabels::UserDefinedBit0);
+  //  return queried.flagField(HcalCaloFlagLabels::UserDefinedBit0);
+  return queried.flagField(HcalCaloFlagLabels::HFLongShort);
 
 }                                                      // isHFPMThit
 
@@ -529,7 +536,7 @@ BeamTimingAnalAlgos::bookDetailHistos4cut(myAnalCut& cut)
     st_lateHitsTimeMapD2_ = "p2d_lateHitsTimeMapD2";
     titlestr = "Hit Time Map (T_{hit} > 12ns) for Depth 2, "+rundescr_+"; i#eta; i#phi";
     add2dHisto(st_lateHitsTimeMapD2_,titlestr,83,-41.5,41.5,72,0.5,72.5,v_hpars2dprof);
-#endif
+
     st_RvsTandfCHFd1_ = "h3d_RvsTandfCHFd1";
     titlestr = "R=(L-S)/(L+S) vs. T_{2TS}, Depth 1, "+rundescr_+"; T_{2TS} (ns); R; Hit Energy (GeV)";
     add3dHisto(st_RvsTandfCHFd1_, titlestr,
@@ -541,7 +548,7 @@ BeamTimingAnalAlgos::bookDetailHistos4cut(myAnalCut& cut)
     add3dHisto(st_RvsTandfCHFd2_, titlestr,
 	       recHitTscaleNbins_,recHitTscaleMinNs_,recHitTscaleMaxNs_,200,-1.0,1.0,
  	       50,recHitEscaleMinfC_,recHitEscaleMaxfC_,v_hpars3d);
-
+#endif
     // per-channel beam-specific histos
     if (cut.flagSet(st_doPerChannel_)) {
       myAH->mkSubdir<uint32_t>("_2TSratioVsEperID");
@@ -781,8 +788,10 @@ BeamTimingAnalAlgos::fillHFD1D2histos(myAnalHistos *myAH,
   float R =calcR (L,S);
   float R2=calcR2(L,S);
 
+#if 0
   if (tgtisd1)  myAH->fill3d<TH3F>(st_RvsTandfCHFd1_,tgtTime,R,LfC);
   else          myAH->fill3d<TH3F>(st_RvsTandfCHFd2_,tgtTime,R,SfC);
+#endif
 
   // However, histos that require both hits simultaneously get filled when
   // depth 1 hit is "the target"; don't double-count when depth 2 comes around!
@@ -862,7 +871,13 @@ void BeamTimingAnalAlgos::findConfirmedHits(
   for (hitit1  = rechits.begin(), digit1  = digis.begin();
        hitit1 != rechits.end() && digit1 != digis.end();
        hitit1++,digit1++) {
-    assert (hitit1->id() == digit1->id());
+    while ((hitit1->id() != digit1->id()) &&
+	   (hitit1 != rechits.end()) &&
+	   (digit1 != digis.end())) {
+      while (hitit1->id() < digit1->id()) hitit1++;
+      while (digit1->id() < hitit1->id()) digit1++;
+    }
+    if ((hitit1 == rechits.end()) || (digit1 == digis.end())) break;
 
     if (inSet<int>(detIds2mask_,hitit1->id().hashed_index())) continue;
     if (hitit1->id().depth()==1) {
@@ -1251,6 +1266,14 @@ void BeamTimingAnalAlgos::processDigisAndRecHits
     }
 
     totalE_ += hitenergy_;
+
+    // Fraction2TS (6 bits):
+    fraction2ts_ = (float)((hitflags_>>((int)HcalCaloFlagLabels::Fraction2TS))&0x3f);
+
+    if ((mysubdet_ == HcalBarrel) || 
+	(mysubdet_ == HcalEndcap)   )   fraction2ts_ = 0.5f + ((fraction2ts_-1.f)/100.f);
+    else if (mysubdet_ == HcalForward)  fraction2ts_ = (fraction2ts_-1.f)/50.f;
+
     fCamplitude_=-9.99e9f;
 
     // If we have digis, do them too.
@@ -1292,6 +1315,7 @@ void BeamTimingAnalAlgos::processDigisAndRecHits
     if (!acceptedBxNums_.empty())
     getCut(st_cutBadBx_)     ->Activate (notInSet<int>(acceptedBxNums_,bxnum_));
 
+    if (globalFlagMask_)
     getCut(st_cutBadFlags_)  ->Activate (hitflags_ & globalFlagMask_);
 
     if (ampCutsInfC_)
@@ -1302,10 +1326,13 @@ void BeamTimingAnalAlgos::processDigisAndRecHits
 					 (hitenergy_ > maxHitAmplitude_)   );
 
     //if (!acceptedPkTSnums_.empty())
-    if ((hbheOutOfTimeFlagBit_>=0) &&
-	((mysubdet_ == HcalBarrel) ||
-	 (mysubdet_ == HcalEndcap)   ) )
-    getCut(st_cutOutOfTime_) ->Activate (hitflags_ & (1<<hbheOutOfTimeFlagBit_));
+    if	((mysubdet_ == HcalBarrel) ||
+	 (mysubdet_ == HcalEndcap)   ) {
+      if (hbheOutOfTimeFlagBit_>=0) 
+	getCut(st_cutOutOfTime_) ->Activate (hitflags_ & (1<<hbheOutOfTimeFlagBit_));
+
+      getCut(st_fraction2ts_) ->Activate (fraction2ts_ == 0.5);
+    }
 
     //==================================================
     // CUTS ARE DETERMINED, NOW FILL THE HISTOGRAMS
@@ -1319,7 +1346,12 @@ void BeamTimingAnalAlgos::processDigisAndRecHits
     }
 
     if (!totalcut) {
-      if (mysubdet_ == HcalForward) {
+      if ((mysubdet_ == HcalBarrel) ||
+	  (mysubdet_ == HcalEndcap)   ) {
+	fillHistos4cut(*getCut(st_cutOutOfTime_));
+	fillHistos4cut(*getCut(st_fraction2ts_));
+
+      } else if (mysubdet_ == HcalForward) {
 	map<uint32_t,pair<HFRecHitIt,HFDigiIt> >::const_iterator it =
 	  m_confirmedHits_.find(detID_.denseIndex());
 
@@ -1337,9 +1369,7 @@ void BeamTimingAnalAlgos::processDigisAndRecHits
 
 	processHFtimeRegions(hfrh);
       }
-    }
 
-    if ( !getCut(st_cutBadFlags_)->isActive() ) {
       // for comparison of +/- timing
       if (zside > 0) {
 	totalEplus_  += hitenergy_; weightedTplus  += hitenergy_*corTime_; nhitsplus_++;
