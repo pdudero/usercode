@@ -7,6 +7,7 @@
 #include <sstream>
 #include <ctype.h>     // isdigit
 #include <stdlib.h>
+#include <glob.h>
 
 using namespace std;
 
@@ -40,6 +41,23 @@ struct wPad_t {
 			fillcolor(10),logx(0),logy(0),logz(0),
 			stackem(false),legid("")
   { hframe = new wTH1(name,name,100,0.0,1.0); }
+  wPad_t(const wPad_t& wp) {
+    topmargin   = wp.topmargin;
+    bottommargin= wp.bottommargin;
+    rightmargin = wp.bottommargin;
+    leftmargin  = wp.leftmargin;
+    fillcolor   = wp.fillcolor;
+    logx        = wp.logx;
+    logy        = wp.logy;
+    logz        = wp.logz;
+    gridx       = wp.gridx;
+    gridy       = wp.gridy;
+    stackem     = wp.stackem;
+    legid       = wp.legid;
+    titlexndc   = wp.titlexndc;
+    titleyndc   = wp.titleyndc;
+    //hframe      = ;           // the frame histo, holds lots of pad info
+  }
   float topmargin, bottommargin, rightmargin, leftmargin;
   unsigned fillcolor;
   unsigned logx, logy,logz;
@@ -64,7 +82,7 @@ struct wCanvas_t {
     title(intitle), npadsx(innpadsx),npadsy(innpadsy),
     padxdim(inpadxdim),padydim(inpadydim),
     padxmargin(inpadxmarg),padymargin(inpadymarg),
-    optstat("nemr"), fillcolor(10) {}
+    optstat("nemr"), fillcolor(10), multipad(NULL) {}
   string   style;
   string   title;
   unsigned npadsx;
@@ -75,6 +93,7 @@ struct wCanvas_t {
   float    padymargin;
   string   optstat;
   unsigned fillcolor;
+  wPad_t  *multipad;
   vector<wPad_t *> pads;
   TCanvas *c1;
 };
@@ -254,6 +273,7 @@ TH1 *findHisto(const string& hid, const std::string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
+    // Try finding the first
     cerr << "Histo ID " << hid << " not found. " << errmsg << endl;
     return NULL;
   }
@@ -428,7 +448,7 @@ void printHisto2File(TH1 *histo, string filename)
   FILE *fp = fopen(filename.c_str(),"w");
   if (histo->InheritsFrom("TH3")) {
     TH3 *h3 = (TH3 *)histo;
-    int totaln = h3->GetEntries();
+    int totaln = (int)h3->GetEntries();
     fprintf(fp,"#%s\t%s\t%s\tw\t%%\n",
 	    h3->GetXaxis()->GetTitle(),
 	    h3->GetYaxis()->GetTitle(),
@@ -768,7 +788,7 @@ void processCommonHistoParams(const string& key,
 
   else if (key == "markercolor") wh.SetMarker(str2int(value));
   else if (key == "markerstyle") wh.SetMarker(0,str2int(value));
-  else if (key == "markersize")  wh.SetMarker(0,0,str2flt(value));
+  else if (key == "markersize")  wh.SetMarker(0,0,str2int(value));
   else if (key == "linecolor")   wh.SetLine(str2int(value));
   else if (key == "linestyle")   wh.SetLine(0,str2int(value));
   else if (key == "linewidth")   wh.SetLine(0,0,str2int(value));
@@ -865,6 +885,9 @@ void processCommonHistoParams(const string& key,
   else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),0.0,str2flt(value));
   else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,str2flt(value));
   else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,0.0,str2flt(value));
+
+  else if ((key == "errorson") &&
+	   str2int(value)     ) wh.histo()->Sumw2();
 
   else if (key == "erroroption") {
     // only for TProfiles.
@@ -1187,6 +1210,117 @@ processHistoSection(FILE *fp,
   }
   return (wth1 != NULL);
 }                                                 // processHistoSection
+
+//======================================================================
+
+bool                              // returns true if success
+processMultiHistSection(FILE *fp,
+			string& theline,
+			bool& new_section)
+{
+  vector<string> v_tokens;
+  vector<wTH1 *> v_wth1;
+  string *hid  = NULL;
+
+  cout << "Processing multihist section" << endl;
+
+  new_section=false;
+
+  while (getLine(fp,theline,"multihist")) {
+    if (!theline.size()) continue;
+    if (theline[0] == '#') continue; // comments are welcome
+
+    if (theline[0] == '[') {
+      new_section=true;
+      return true;
+    }
+
+    Tokenize(theline,v_tokens,"=");
+
+    if ((v_tokens.size() < 2) ||
+	(!v_tokens[0].size()) ||
+	(!v_tokens[1].size())    ) {
+      cerr << "malformed key=value line " << theline << endl; continue;
+    }
+
+    string key = v_tokens[0];
+    string value;
+    for (unsigned i=1; i<v_tokens.size(); i++) {
+      if (value.size()) value += "=";
+      value+=v_tokens[i];
+    }
+
+    //--------------------
+    if (key == "id") {
+    //--------------------
+      if (hid != NULL) {
+	cerr << "no more than one id per histo section allowed " << value << endl;
+	break;
+      }
+
+      hid = new string(value);
+
+    //------------------------------
+    } else if (key == "pathglob") {
+    //------------------------------
+      glob_t globbuf;
+      
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,":");
+      if ((v_tokens.size() != 2) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())    ) {
+	cerr << "malformed root histo path file:folder/subfolder/.../histo " << value << endl;
+	exit(-1);
+      }
+
+      // globbing of histos in a single file not yet implemented.
+      // aliases containing glob pattern not yet implemented.
+      //
+      string fileglob = v_tokens[0];
+      int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
+      if (stat) {
+	switch (stat) {
+	case GLOB_NOMATCH: cerr << "No file matching glob pattern ";
+	case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
+	case GLOB_ABORTED: cerr << "glob read error "; break;
+	default: cerr << "unknown glob error stat=" << stat << " "; break;
+	}
+	cerr << fileglob << endl;
+	exit(-1);
+      }
+
+      for (size_t i=0; i<globbuf.gl_pathc; i++) {
+	char *path = globbuf.gl_pathv[i];
+	if (!strncmp(&path[strlen(path)-6],".root",5)) {
+	  cerr << "non-root file found in glob, skipping: " << path << endl;
+	} else {
+	  string hspec=string(path)+":"+v_tokens[1];
+	  string hidi=(*hid)+"_"+int2str(i);
+	  wTH1 *wth1 = getHistoFromSpec(hidi,hspec);
+	  if (!wth1) continue; // exit(-1);
+	  wth1->histo()->SetNameTitle(hidi.c_str(),path);
+	  v_wth1.push_back(wth1);
+	  glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
+	}
+      }
+      globfree(&globbuf);
+    } else if (!v_wth1.size()) {  // all other keys must have "path" defined
+      cerr << "key 'path' or 'clone' must be defined before key " << key << endl;
+      break;
+    }
+
+    else {
+      for (size_t i=0; i<v_wth1.size(); i++)
+	processCommonHistoParams(key,value,*(v_wth1[i]));
+    }
+  }
+
+  return (v_wth1.size());
+}                                             // processMultiHistSection
 
 //======================================================================
 
@@ -1802,8 +1936,24 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
-      if (!tmph2) exit(-1);
+      TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"single histo operand not found");
+      vector<TH2 *> v_hist;
+      if (tmph2)
+	v_hist.push_back(tmph2);
+      else {
+	string multihist1 = v_tokens[0]+"_0";
+	tmph2 = (TH2 *)findHisto(multihist1,
+	 "multi histo operand not found, histo operand must be defined before math ops");
+	if (tmph2) {
+	  v_hist.push_back(tmph2);
+	  for (int i=1; tmph2; i++) {
+	    string multihist1 = v_tokens[0]+"_"+int2str(i);
+	    tmph2 = (TH2 *)findHisto(multihist1, "hit the end of histo multiset");
+	    if (tmph2) v_hist.push_back(tmph2);
+	  }
+	} else
+	  exit(-1);
+      }
       binspec = v_tokens[1];
       Tokenize(binspec,v_tokens,"-");
       if (v_tokens.size() != 2) {
@@ -1811,17 +1961,21 @@ processHmathSection(FILE *fp,
 	cerr << theline << endl;
 	continue;
       }
-      string newname = string(tmph2->GetName())+"_Xbins"+binspec;
-      int lobin=str2int(v_tokens[0]);
-      int hibin=str2int(v_tokens[1]);
-      if (lobin > hibin) {
-	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
-	cerr << theline << endl;
-	continue;
+      for (size_t i=0; i<v_hist.size(); i++) {
+	string newname = string(v_hist[i]->GetName())+"_Xbins"+binspec;
+	int lobin=str2int(v_tokens[0]);
+	int hibin=str2int(v_tokens[1]);
+	if (lobin > hibin) {
+	  cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	  cerr << theline << endl;
+	  continue;
+	}
+	h1 = (TH1 *)v_hist[i]->ProjectionY(newname.c_str(),lobin,hibin);
+	wh = new wTH1(h1);
+	string hid2 = *hid;
+	if (v_hist.size() > 1) hid2 += "_"+int2str(i);
+	glmap_id2histo.insert(pair<string,wTH1 *>(hid2,wh));
       }
-      h1 = (TH1 *)tmph2->ProjectionY(newname.c_str(),lobin,hibin);
-      wh = new wTH1(h1);
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key == "projectyx") {
@@ -2226,8 +2380,21 @@ void parseCanvasLayout(const string& layoutFile,
       processPadSection(fp,theline,wpad,new_section);
       wc.pads.push_back(wpad);
     }
+    else if (section == "MULTIPAD") {
+      // Store info for all pads in the 'multipad' member
+      if (wc.multipad) {
+	cerr << "Currently only one MULTIPAD section can be defined, sorry." << endl;
+	continue;
+      }
+      wc.multipad = new wPad_t("multipad");
+      processPadSection(fp,theline,wc.multipad,new_section);
+      // Have to read in multihist before assigning histos to pads, so pended to drawPlots
+    }
     else if (section == "HISTO") {
       processHistoSection(fp,theline,new_section);
+    }
+    else if (section == "MULTIHIST") {
+      processMultiHistSection(fp,theline,new_section);
     }
     else if (section == "HMATH") {
       processHmathSection(fp,theline,new_section);
@@ -2397,12 +2564,31 @@ void drawInPad(wPad_t *wp, THStack *stack)
 
 void  drawPlots(wCanvas_t& wc,bool savePlot2file)
 {
-  unsigned npads = std::min(wc.npadsx*wc.npadsy, wc.pads.size());
+  unsigned npads = wc.npadsx*wc.npadsy;
 
   if (!npads) {
     cout << "Nothing to draw, guess I'm done." << endl;
     return; // no pads to draw on.
+  } else if (!wc.pads.size()) {
+    if (wc.multipad) {    // check multipad option.
+      for (int i=0; ; i++) {
+	string multihist1 = wc.multipad->histo_ids[0]+"_"+int2str(i);
+	if (findHisto(multihist1, "hit the end of histo multiset")) {
+	  // now we associate histogram sets with the pad set
+	  wPad_t *wp = new wPad_t(*(wc.multipad));
+	  wp->histo_ids.clear();
+	  wp->histo_ids.push_back(multihist1);
+	  wc.pads.push_back(wp);
+	} else
+	  break;
+      }
+    } else {
+      cout << "npads>0, but no pad specs supplied, exiting." << endl;
+      return; // no pads to draw on.
+    }
   }
+
+  npads = std::min(npads,wc.pads.size());
 
   cout << "Drawing on " << npads << " pad(s)" << endl;
 
