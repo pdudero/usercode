@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalAlgos.cc,v 1.2 2010/08/04 13:30:52 dudero Exp $
+// $Id: BeamTimingAnalAlgos.cc,v 1.3 2010/08/10 23:43:10 dudero Exp $
 //
 //
 
@@ -723,6 +723,7 @@ BeamTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 			       corTime_);
     }
 #endif
+#if 0
     // per-channel beam-specific histos
     if (thisCut.flagSet(st_doPerChannel_)) {
       uint32_t dix;
@@ -751,9 +752,9 @@ BeamTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 	twoTSratVsEperIDhos->book2d<TH2F>(dix,hpars,false);
       
       if (h2tsVsE) h2tsVsE->Fill(hitenergy_,twoTSratio_);
-
     } // if doPerChannel
-  } // if HF
+#endif
+    } // if HF
   }// if Filldetail
 }                             // BeamTimingAnalAlgos::fillHistos4cut
 
