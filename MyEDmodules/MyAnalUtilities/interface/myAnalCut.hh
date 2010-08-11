@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalCut.hh,v 1.5 2010/04/22 03:39:28 dudero Exp $
+// $Id: myAnalCut.hh,v 1.6 2010/05/05 23:37:07 dudero Exp $
 //
 //
 
@@ -45,6 +45,7 @@ public:
     pHistos_ = new myAnalHistos(descr,rootDir);
     if (doInverted) pInverted_ = new myAnalHistos(invd,rootDir);
     userFlags_.clear();
+    userFlagsInv_.clear();
   }
 
   inline void                 Activate  (bool val){ active_ = val;     }
@@ -54,11 +55,20 @@ public:
   inline myAnalHistos        *invhistos()   const { return pInverted_; }
   inline const std::string&   description() const { return cutdescr_;  }
   inline bool                 doInverted()  const { return (bool)pInverted_; }
+
   inline void setFlag(const std::string& flagname){ userFlags_[flagname] = true; }
   inline void clrFlag(const std::string& flagname){ userFlags_[flagname] = false;}
   inline bool flagSet(const std::string& flagname){
     std::map<std::string,bool>::const_iterator it = userFlags_.find(flagname);
     if (it == userFlags_.end()) return false;
+    return it->second;
+  }
+  
+  inline void setFlagInv(const std::string& flagname){ userFlagsInv_[flagname] = true; }
+  inline void clrFlagInv(const std::string& flagname){ userFlagsInv_[flagname] = false;}
+  inline bool flagSetInv(const std::string& flagname){
+    std::map<std::string,bool>::const_iterator it = userFlagsInv_.find(flagname);
+    if (it == userFlagsInv_.end()) return false;
     return it->second;
   }
   
@@ -70,6 +80,7 @@ private:
   myAnalHistos  *pHistos_;
   myAnalHistos  *pInverted_;
   std::map<std::string, bool> userFlags_;
+  std::map<std::string, bool> userFlagsInv_;
 };
 
 #endif // _MYANALCUT
