@@ -13,7 +13,7 @@
 //
 // Original Author:  Phil Dudero
 //         Created:  Thu Jul 29 04:08:26 CDT 2010
-// $Id$
+// $Id: HBHElinearityAnal.cc,v 1.1 2010/08/11 02:39:10 dudero Exp $
 //
 //
 
@@ -64,6 +64,8 @@ class HBHElinearityAnal : public edm::EDAnalyzer {
   TH2F *h2d_fracDeltaVs4E_, *h2d_fracDeltaVs4EHB_;
   TH2F *h2d_rhTvsE_;
   TH3F *h3d_OccMapPerFracDeltaEgt050_;
+  TH3F *h3d_OccMapPerFracDeltaEgt050HBd1_;
+  TH3F *h3d_OccMapPerFracDeltaEgt050HBd2_;
   TH3F *h3d_OccMapPerFracDeltaEgt100_;
   TH3F *h3d_OccMapPerFracDeltaEgt200_;
   TH3F *h3d_OccMapPerFracDeltaEgt400_;
@@ -71,11 +73,15 @@ class HBHElinearityAnal : public edm::EDAnalyzer {
   TProfile2D *p2d_TimeVsFracDelta4E_, *p2d_TimeVsFracDelta4EHB_;
 
   TProfile2D *p2d_FracDeltaProfMapEgt050_;
+  TProfile2D *p2d_FracDeltaProfMapEgt050HBd1_;
+  TProfile2D *p2d_FracDeltaProfMapEgt050HBd2_;
   TProfile2D *p2d_FracDeltaProfMapEgt100_;
   TProfile2D *p2d_FracDeltaProfMapEgt200_;
   TProfile2D *p2d_FracDeltaProfMapEgt400_;
 
   TProfile2D *p2d_TimeProfMapEgt050_;
+  TProfile2D *p2d_TimeProfMapEgt050HBd1_;
+  TProfile2D *p2d_TimeProfMapEgt050HBd2_;
   TProfile2D *p2d_TimeProfMapEgt100_;
   TProfile2D *p2d_TimeProfMapEgt200_;
   TProfile2D *p2d_TimeProfMapEgt400_;
@@ -118,6 +124,12 @@ HBHElinearityAnal::HBHElinearityAnal(const edm::ParameterSet& iConfig)
   h3d_OccMapPerFracDeltaEgt050_ = fs->make<TH3F>("h3d_OccMapperFracDeltaEgt050",
 "Occupancy Map for E_{4ts}>50GeV, HBHE; i#eta; i#phi; (E_{5ts}-E_{4ts}) / E_{4ts}",
 					       83,-41.5,41.5,72,0.5,72.5,40,-1.0,1.0);
+  h3d_OccMapPerFracDeltaEgt050HBd1_ = fs->make<TH3F>("h3d_OccMapperFracDeltaEgt050HBd1",
+"Occupancy Map for E_{4ts}>50GeV, HB Depth 1; i#eta; i#phi; (E_{5ts}-E_{4ts}) / E_{4ts}",
+					       33,-16.5,16.5,72,0.5,72.5,40,-1.0,1.0);
+  h3d_OccMapPerFracDeltaEgt050HBd2_ = fs->make<TH3F>("h3d_OccMapperFracDeltaEgt050HBd2",
+"Occupancy Map for E_{4ts}>50GeV, HB Depth 2; i#eta; i#phi; (E_{5ts}-E_{4ts}) / E_{4ts}",
+					       33,-16.5,16.5,72,0.5,72.5,40,-1.0,1.0);
   h3d_OccMapPerFracDeltaEgt100_ = fs->make<TH3F>("h3d_OccMapperFracDeltaEgt100",
 "Occupancy Map for E_{4ts}>100GeV, HBHE; i#eta; i#phi; (E_{5ts}-E_{4ts}) / E_{4ts}",
 					       83,-41.5,41.5,72,0.5,72.5,40,-1.0,1.0);
@@ -131,6 +143,12 @@ HBHElinearityAnal::HBHElinearityAnal(const edm::ParameterSet& iConfig)
   p2d_FracDeltaProfMapEgt050_ = fs->make<TProfile2D>("p2d_FracDeltaProfMapEgt050",
 		       "#Delta E/E Profile Map for E_{4ts}>50GeV, HBHE; i#eta; i#phi",
 						     83,-41.5,41.5,72,0.5,72.5);
+  p2d_FracDeltaProfMapEgt050HBd1_ = fs->make<TProfile2D>("p2d_FracDeltaProfMapEgt050HBd1",
+		       "#Delta E/E Profile Map for E_{4ts}>50GeV, HB Depth 1; i#eta; i#phi",
+							 33,-16.5,16.5,72,0.5,72.5);
+  p2d_FracDeltaProfMapEgt050HBd2_ = fs->make<TProfile2D>("p2d_FracDeltaProfMapEgt050HBd2",
+		       "#Delta E/E Profile Map for E_{4ts}>50GeV, HB Depth 2; i#eta; i#phi",
+							 33,-16.5,16.5,72,0.5,72.5);
   p2d_FracDeltaProfMapEgt100_ = fs->make<TProfile2D>("p2d_FracDeltaProfMapEgt100",
 		       "#Delta E/E Profile Map for E_{4ts}>100GeV, HBHE; i#eta; i#phi",
 						     83,-41.5,41.5,72,0.5,72.5);
@@ -144,6 +162,12 @@ HBHElinearityAnal::HBHElinearityAnal(const edm::ParameterSet& iConfig)
   p2d_TimeProfMapEgt050_ = fs->make<TProfile2D>("p2d_TimeProfMapEgt050",
 		       "Hit Time Profile Map for E_{4ts}>50GeV, HBHE; i#eta; i#phi",
 						83,-41.5,41.5,72,0.5,72.5);
+  p2d_TimeProfMapEgt050HBd1_ = fs->make<TProfile2D>("p2d_TimeProfMapEgt050HBd1",
+		       "Hit Time Profile Map for E_{4ts}>50GeV, HB Depth 1; i#eta; i#phi",
+						    33,-16.5,16.5,72,0.5,72.5);
+  p2d_TimeProfMapEgt050HBd2_ = fs->make<TProfile2D>("p2d_TimeProfMapEgt050HBd2",
+		       "Hit Time Profile Map for E_{4ts}>50GeV, HB Depth 2; i#eta; i#phi",
+						    33,-16.5,16.5,72,0.5,72.5);
   p2d_TimeProfMapEgt100_ = fs->make<TProfile2D>("p2d_TimeProfMapEgt100",
 		       "Hit Time Profile Map for E_{4ts}>100GeV, HBHE; i#eta; i#phi",
 						83,-41.5,41.5,72,0.5,72.5);
@@ -244,10 +268,22 @@ HBHElinearityAnal::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
      int ieta = p4->id().ieta();
      int iphi = p4->id().iphi();
+     int depth = p4->id().depth();
      if (p4E>50.f) {
        p2d_TimeProfMapEgt050_->Fill(ieta,iphi,p4T);
        p2d_FracDeltaProfMapEgt050_->Fill(ieta,iphi,fracdelta);
        h3d_OccMapPerFracDeltaEgt050_->Fill(ieta,iphi,fracdelta);
+       if (isHB) {
+	 if (depth==1) {
+	   p2d_TimeProfMapEgt050HBd1_->Fill(ieta,iphi,p4T);
+	   p2d_FracDeltaProfMapEgt050HBd1_->Fill(ieta,iphi,fracdelta);
+	   h3d_OccMapPerFracDeltaEgt050HBd1_->Fill(ieta,iphi,fracdelta);
+	 } else {
+	   p2d_TimeProfMapEgt050HBd2_->Fill(ieta,iphi,p4T);
+	   p2d_FracDeltaProfMapEgt050HBd2_->Fill(ieta,iphi,fracdelta);
+	   h3d_OccMapPerFracDeltaEgt050HBd2_->Fill(ieta,iphi,fracdelta);
+	 }
+       }
        if (p4E>100.f) {
 	 p2d_TimeProfMapEgt100_->Fill(ieta,iphi,p4T);
 	 p2d_FracDeltaProfMapEgt100_->Fill(ieta,iphi,fracdelta);
