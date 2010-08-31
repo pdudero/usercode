@@ -161,6 +161,7 @@ static map<string, wLegend_t *> glmap_id2legend;    // the map...of legends
 static map<string, wLabel_t *>  glmap_id2label;
 static map<string, TFile *>     glmap_id2rootfile;
 static map<string, TF1 *>       glmap_id2tf1;
+static map<string, TStyle *>    glmap_id2style;
 
 static string nullstr;
 
@@ -803,6 +804,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
 {
   vector<string> v_tokens;
 
+  string *sid      = NULL;
+  TStyle *thestyle = NULL;
+
   cout << "Processing style section" << endl;
 
   new_section=false;
@@ -830,36 +834,93 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
       value+=v_tokens[i];
     }
 
-    if      (key == "style") {
+
+    if (key == "id") {
+      if (sid != NULL) {
+	cerr << "no more than one id per style section allowed " << value << endl;
+	break;
+      }
+
+      sid = new string(value);
+      thestyle = new TStyle(*gStyle); // Assume current attributes, let user override specifics
+      thestyle->SetNameTitle(sid->c_str(),sid->c_str());
+      glmap_id2style.insert(std::pair<string,TStyle*>(*sid,thestyle));
+      continue;
+    }
+    else if (!sid) {
+      // assume the style is the global style
+      thestyle = gStyle;
+      sid = new string("using global"); // so as to pass this check the next time
+      cerr << "No style ID defined, assuming global style" << endl;
+      continue;
+    }
+
+    if (key == "style") {
       if (value == "TDR")
 	setTDRStyle();
       else if (value == "Plain")
 	gROOT->SetStyle("Plain");
+      else 
+	cerr << "unknown style name " << value << endl;
     }
     else if (key == "optstat")  {
-      cout << "OptStat = " << gStyle->GetOptStat() << endl;
-      gStyle->SetOptStat(value.c_str());
-      cout << "OptStat = " << gStyle->GetOptStat() << endl;
+      cout << "OptStat = " << thestyle->GetOptStat() << endl;
+      thestyle->SetOptStat(value.c_str());
+      cout << "OptStat = " << thestyle->GetOptStat() << endl;
     }
-    else if (key == "opttitle")  gStyle->SetOptTitle(str2int(value));
+    else if (key == "opttitle")  thestyle->SetOptTitle(str2int(value));
 
     // Set the position/size of the title box
 
-    else if (key == "titlexndc") gStyle->SetTitleX(str2flt(value));
-    else if (key == "titleyndc") gStyle->SetTitleY(str2flt(value));
-    else if (key == "titlewndc") gStyle->SetTitleW(str2flt(value));
-    else if (key == "titlehndc") gStyle->SetTitleH(str2flt(value));
-    else if (key == "titlefont") gStyle->SetTitleFont(str2int(value));
-    else if (key == "titlebordersize") gStyle->SetTitleBorderSize(str2int(value));
+    else if (key == "titlexndc")    thestyle->SetTitleX(str2flt(value));
+    else if (key == "titleyndc")    thestyle->SetTitleY(str2flt(value));
+    else if (key == "titlewndc")    thestyle->SetTitleW(str2flt(value));
+    else if (key == "titlehndc")    thestyle->SetTitleH(str2flt(value));
+    else if (key == "titlefont")    thestyle->SetTitleFont(str2int(value));
+    else if (key == "titlebordersize") thestyle->SetTitleBorderSize(str2int(value));
+
+    else if (key == "markercolor")  thestyle->SetMarkerColor(str2int(value));
+    else if (key == "markerstyle")  thestyle->SetMarkerStyle(str2int(value));
+    else if (key == "markersize")   thestyle->SetMarkerSize(str2int(value));
+    else if (key == "linecolor")    thestyle->SetLineColor(str2int(value));
+    else if (key == "linestyle")    thestyle->SetLineStyle(str2int(value));
+    else if (key == "linewidth")    thestyle->SetLineWidth(str2int(value));
+    else if (key == "fillcolor")    thestyle->SetFillColor(str2int(value));
+    else if (key == "fillstyle")    thestyle->SetFillStyle(str2int(value));
+
+    // axes
+    else if (key == "xtitlesize")   thestyle->SetTitleSize(str2flt(value),"X");
+    else if (key == "ytitlesize")   thestyle->SetTitleSize(str2flt(value),"Y");
+    else if (key == "ztitlesize")   thestyle->SetTitleSize(str2flt(value),"Z");
+    else if (key == "xtitleoffset") thestyle->SetTitleOffset(str2flt(value),"X");
+    else if (key == "ytitleoffset") thestyle->SetTitleOffset(str2flt(value),"Y");
+    else if (key == "ztitleoffset") thestyle->SetTitleOffset(str2flt(value),"Z");
+    else if (key == "xtitlefont")   thestyle->SetTitleFont(str2int(value),"X");
+    else if (key == "ytitlefont")   thestyle->SetTitleFont(str2int(value),"Y");
+    else if (key == "ztitlefont")   thestyle->SetTitleFont(str2int(value),"Z");
+    else if (key == "xlabelsize")   thestyle->SetLabelSize(str2flt(value),"X");
+    else if (key == "ylabelsize")   thestyle->SetLabelSize(str2flt(value),"Y");
+    else if (key == "zlabelsize")   thestyle->SetLabelSize(str2flt(value),"Z");
+    else if (key == "xlabelfont")   thestyle->SetLabelFont(str2int(value),"X");
+    else if (key == "ylabelfont")   thestyle->SetLabelFont(str2int(value),"Y");
+    else if (key == "zlabelfont")   thestyle->SetLabelFont(str2int(value),"Z");
+    else if (key == "xndiv")        thestyle->SetNdivisions(str2int(value),"X");
+    else if (key == "yndiv")        thestyle->SetNdivisions(str2int(value),"Y");
+    else if (key == "zndiv")        thestyle->SetNdivisions(str2int(value),"Z");
 
     // Set the position of the statbox
-    else if (key == "statxndc")  gStyle->SetStatX(str2flt(value));
-    else if (key == "statyndc")  gStyle->SetStatY(str2flt(value));
-    else if (key == "statwndc")  gStyle->SetStatW(str2flt(value));
-    else if (key == "stathndc")  gStyle->SetStatH(str2flt(value));
+    else if (key == "statx2ndc")    thestyle->SetStatX(str2flt(value));
+    else if (key == "staty2ndc")    thestyle->SetStatY(str2flt(value));
+    else if (key == "statwndc")     thestyle->SetStatW(str2flt(value));
+    else if (key == "stathndc")     thestyle->SetStatH(str2flt(value));
 
-    else if (key == "painttextfmt") gStyle->SetPaintTextFormat(value.c_str());
-    else if (key == "markersize") gStyle->SetMarkerSize(str2flt(value));
+    else if (key == "statfont")     thestyle->SetStatFont    (str2int(value));
+    else if (key == "statfontsize") thestyle->SetStatFontSize(str2flt(value));
+    else if (key == "statformat")   thestyle->SetStatFormat  (value.c_str());
+    else if (key == "statstyle")    thestyle->SetStatStyle   (str2int(value.c_str()));
+
+    else if (key == "painttextfmt") thestyle->SetPaintTextFormat(value.c_str());
+    else if (key == "markersize")   thestyle->SetMarkerSize(str2flt(value));
     else {
       cerr << "Unknown key " << key << endl;
     }
@@ -1067,7 +1128,20 @@ void processCommonHistoParams(const string& key,
   static float ymin=1e99, ymax=-1e99;
   static float zmin=1e99, zmax=-1e99;
 
-  if      (key == "draw")        wh.SetDrawOption(value);
+
+  // Allow user to define a set of common parameters to be used multiple times
+  //
+  if (key == "applystyle") {
+    map<string,TStyle *>::const_iterator it = glmap_id2style.find(value);
+    if (it == glmap_id2style.end()) {
+      cerr << "Style " << value << " not found, ";
+      cerr << "must be defined first" << endl;
+      return;
+    } else {
+      wh.SaveStyle(it->second);
+    }
+  }
+  else if (key == "draw")        wh.SetDrawOption(value);
   else if (key == "title")       wh.histo()->SetTitle(value.c_str());
 
   else if (key == "markercolor") wh.SetMarker(str2int(value));
@@ -1871,7 +1945,7 @@ processHmathSection(FILE *fp,
 	if (!arg2.size()) continue;
       }
 
-      TH1 *hres;
+      TH1 *hres = NULL;
 
       histop = findHisto(arg1,"Checking:is this a histo?");
       if (!histop) {	// trying scanning a double
@@ -2903,6 +2977,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlot2file)
 	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
 	  myHisto->Add2Legend(wl->leg);
 	}
+	myHisto->ApplySavedStyle();
       }
     } // histos loop
 

@@ -72,6 +72,9 @@ public:
   void SetLegendEntry(const std::string& entry)   { legentry_   = entry;  }
   void SetDrawOption (const std::string& option)  { drawoption_ = option; }
 
+  void SaveStyle       (TStyle *instyle)          { style2apply_ = instyle; }
+  bool ApplySavedStyle (void);
+
   void Add2Legend(TLegend *leg) {
     std::string legdrawopt=drawoption_;
     if (legdrawopt.size()) {
@@ -115,34 +118,12 @@ private:
   bool        statsAreOn_;
   TPaveStats  stats_; // placeholder for storing stats options.
 
+  TStyle     *style2apply_;
+
   std::vector<TF1 *> v_fits_;
 };
 
-template<typename T>
-void
-MyHistoWrapper<T>::Draw(const std::string& drawopt)
-{
-  if (drawopt.find("COL") != std::string::npos)
-    gStyle->SetPalette(1,0); // always!
-
-  cout << "Drawing " << h_->GetName() << " with " << drawopt << endl;
-
-  h_->Draw(drawopt.c_str());
-}
-
-template<typename T>
-void
-MyHistoWrapper<T>::DrawFits(const std::string& drawopt)
-{
-  for (size_t i=0; i<v_fits_.size(); i++)  {
-    TF1 *f1 = v_fits_[i];
-    cout << "Drawing fit " << f1->GetName() << " with " << drawopt << endl;
-    double xmin,xmax;
-    f1->GetRange(xmin,xmax);
-    h_->Fit(f1,"",drawopt.c_str(),xmin,xmax);
-    //f1->Draw(drawopt.c_str());
-  }
-}
+//======================================================================
 
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
@@ -151,7 +132,10 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 {
   h_ = new T(name.c_str(),title.c_str(),nbins,min,max);
   drawoption_=std::string("");
+  style2apply_ = NULL;
 }
+
+//======================================================================
 
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::string& title) : h_(h)
@@ -159,6 +143,8 @@ MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::stri
   if (name.size())  h_->SetName (name.c_str());
   if (title.size()) h_->SetTitle(title.c_str());
 }
+
+//======================================================================
 
 template <typename T>
 MyHistoWrapper<T> *
@@ -170,6 +156,8 @@ MyHistoWrapper<T>::Clone(const std::string& newname,
   return new MyHistoWrapper<T>(newh);
 }
 
+//======================================================================
+
 template<typename T>
 TAxis *
 MyHistoWrapper<T>::SetXaxis(const std::string& t,bool c,
@@ -178,6 +166,8 @@ MyHistoWrapper<T>::SetXaxis(const std::string& t,bool c,
 			    float ruMin, float ruMax,int nd) {
   return (SetAxis(h_->GetXaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
+
+//======================================================================
 
 template<typename T>
 TAxis *
@@ -188,6 +178,8 @@ MyHistoWrapper<T>::SetYaxis(const std::string& t,bool c,
   return (SetAxis(h_->GetYaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
 
+//======================================================================
+
 template<typename T>
 TAxis *
 MyHistoWrapper<T>::SetZaxis(const std::string& t,bool c,
@@ -196,6 +188,8 @@ MyHistoWrapper<T>::SetZaxis(const std::string& t,bool c,
 			    float ruMin, float ruMax,int nd) {
   return (SetAxis(h_->GetZaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
 }
+
+//======================================================================
 
 template<typename T>
 TAxis *
@@ -225,6 +219,8 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
   return ax;
 }
 
+//======================================================================
+
 template<typename T>
 void
 MyHistoWrapper<T>::SetLine(int color, int style, int width)
@@ -234,6 +230,8 @@ MyHistoWrapper<T>::SetLine(int color, int style, int width)
   if (width)      h_->SetLineWidth(width);
 }
 
+//======================================================================
+
 template<typename T>
 void
 MyHistoWrapper<T>::SetMarker(int color, int style, int size)
@@ -242,6 +240,8 @@ MyHistoWrapper<T>::SetMarker(int color, int style, int size)
   if (style)      h_->SetMarkerStyle(style);
   if (size)       h_->SetMarkerSize(size);
 }
+
+//======================================================================
 
 template<typename T>
 void
@@ -263,6 +263,36 @@ MyHistoWrapper<T>::SetStats(bool  on,
 
 template<typename T>
 void
+MyHistoWrapper<T>::Draw(const std::string& drawopt)
+{
+  if (drawopt.find("COL") != std::string::npos)
+    gStyle->SetPalette(1,0); // always!
+
+  cout << "Drawing " << h_->GetName() << " with " << drawopt << endl;
+
+  h_->Draw(drawopt.c_str());
+}
+
+//======================================================================
+
+template<typename T>
+void
+MyHistoWrapper<T>::DrawFits(const std::string& drawopt)
+{
+  for (size_t i=0; i<v_fits_.size(); i++)  {
+    TF1 *f1 = v_fits_[i];
+    cout << "Drawing fit " << f1->GetName() << " with " << drawopt << endl;
+    double xmin,xmax;
+    f1->GetRange(xmin,xmax);
+    h_->Fit(f1,"",drawopt.c_str(),xmin,xmax);
+    //f1->Draw(drawopt.c_str());
+  }
+}
+
+//======================================================================
+
+template<typename T>
+void
 MyHistoWrapper<T>::DrawStats(void)
 {
   TPaveStats *st1 = (TPaveStats*)h_->GetListOfFunctions()->FindObject("stats");
@@ -271,18 +301,24 @@ MyHistoWrapper<T>::DrawStats(void)
     std::cout << h_->GetName() << std::endl;
     return;
   }
+
+  double x1 = stats_.GetX1NDC();
+  double x2 = stats_.GetX2NDC();
+  double y1 = stats_.GetY1NDC();
+  double y2 = stats_.GetY2NDC();
+
+  if ((x1 > 0)  && (x1 < 1.) &&
+      (x2 > x1) && (x2 < 1.) &&
+      (y1 > 0)  && (y1 < 1.) &&
+      (y2 > y1) && (y2 < 1.)) {
+    st1->SetX1NDC(x1); st1->SetX2NDC(x2);
+    st1->SetY1NDC(y1); st1->SetY2NDC(y2);
 #if 1
-  std::cout << "Setting Stats Object for " << h_->GetName() << " to ";
-  std::cout << stats_.GetX1NDC() << ", ";
-  std::cout << stats_.GetX2NDC() << ", ";
-  std::cout << stats_.GetY1NDC() << ", ";
-  std::cout << stats_.GetY2NDC() << std::endl;
+    std::cout << "Setting Stats Object for " << h_->GetName() << " to ";
+    std::cout << x1 << ", " << x2 << ", " << y1 << ", " << y2 << std::endl;
 #endif
 
-  st1->SetX1NDC(stats_.GetX1NDC());
-  st1->SetX2NDC(stats_.GetX2NDC());
-  st1->SetY1NDC(stats_.GetY1NDC());
-  st1->SetY2NDC(stats_.GetY2NDC());
+  }
   if (drawoption_ == "P") {
     st1->SetLineColor(h_->GetMarkerColor());
     st1->SetTextColor(h_->GetMarkerColor());
@@ -290,6 +326,21 @@ MyHistoWrapper<T>::DrawStats(void)
     st1->SetLineColor(h_->GetLineColor());
     st1->SetTextColor(h_->GetLineColor());
   }
+}
+
+//======================================================================
+
+template<typename T>
+bool
+MyHistoWrapper<T>::ApplySavedStyle (void)
+{
+  if (!style2apply_) return false;
+  TStyle *temp = gStyle;
+  style2apply_->cd();
+  std::cout << gStyle->GetStatFormat() << std::endl;
+  h_->UseCurrentStyle();
+  temp->cd();
+  return true;
 }
 
 typedef MyHistoWrapper<TH1> wTH1;
