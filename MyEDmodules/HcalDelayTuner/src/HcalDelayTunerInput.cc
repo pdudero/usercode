@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerInput.cc,v 1.5 2010/02/18 21:08:05 dudero Exp $
+// $Id: HcalDelayTunerInput.cc,v 1.6 2010/04/12 10:27:52 dudero Exp $
 //
 //
 
@@ -39,10 +39,11 @@ HcalDelayTunerInput::HcalDelayTunerInput(const edm::ParameterSet& iConfig)
 {
   std::vector<std::string> empty;
 
-  xmlfileNames_ = iConfig.getUntrackedParameter<vector<string> >("fileNames",empty);
-  timecorrFileNames_ = iConfig.getUntrackedParameter<vector<string> >("timecorrFilenames",empty);
-  timecorrScanFmt_   = iConfig.getUntrackedParameter<string>("timecorrScanFmt","");
-  settingScanFmt_   = iConfig.getUntrackedParameter<string>("settingScanFmt","");
+  xmlfileNames_        = iConfig.getUntrackedParameter<vector<string> >("fileNames",empty);
+  overwriteDuplicates_ = iConfig.getUntrackedParameter<bool>("overwriteDuplicates",false);
+  timecorrFileNames_   = iConfig.getUntrackedParameter<vector<string> >("timecorrFilenames",empty);
+  timecorrScanFmt_     = iConfig.getUntrackedParameter<string>("timecorrScanFmt","");
+  settingScanFmt_      = iConfig.getUntrackedParameter<string>("settingScanFmt","");
 
   cout << "Opening " << xmlfileNames_.size() << " file(s) for reading: " << endl;
   for (size_t i=0; i<xmlfileNames_.size(); i++)
@@ -77,29 +78,51 @@ HcalDelayTunerInput::getSamplingDelays (DelaySettings& delays)
 
   delays.clear();
 
-  // Here the files are really just white-space-separated columns of
-  // RBX RM card qie delay settings
-  //
-  FILE *fp = fopen(xmlfileNames_[0].c_str(),"r");
-  if (!fp) {
-    throw cms::Exception("File doesn't exist") << xmlfileNames_[0];
+  if ((xmlfileNames_.size() > 1) &&
+      overwriteDuplicates_) {
+    cout << "************************************************************************" << endl;
+    cout << "WARNING: overwriteDuplicates flag is set with multiple files to read in." << endl;
+    cout << "************************************************************************" << endl;
   }
 
-  while (!feof(fp) && fgets(line,128,fp)) {
-    if (line[0]=='#') continue;
-    int num = sscanf(line,settingScanFmt_.c_str(),
-		     rbx, &rm, &card, &qie, &setting);
-    if (num != 5) 
-      throw cms::Exception("ScanFmt string doesn't match input")
-	<< line << settingScanFmt_ << endl;
+  for (size_t i=0; i<xmlfileNames_.size(); i++) {
+    // Here the files are really just white-space-separated columns of
+    // RBX RM card qie delay settings
+    //
+    FILE *fp = fopen(xmlfileNames_[i].c_str(),"r");
+    if (!fp) {
+      throw cms::Exception("File doesn't exist, "+xmlfileNames_[i]);
+    }
+    
+    while (!feof(fp) && fgets(line,128,fp)) {
+      if (line[0]=='#') continue;
+      int num = sscanf(line,settingScanFmt_.c_str(),
+		       rbx, &rm, &card, &qie, &setting);
+      if (num != 5) 
+	throw cms::Exception("ScanFmt string doesn't match input")
+	  << line << settingScanFmt_ << endl;
 
-    if (rbx[0] == 'Z') continue; // ZDC
-    HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
-    delays.insert(std::pair<HcalFrontEndId,int>(feID,setting));
-    //cout << "read in " << feID << " old setting = " << setting << endl;
+      if (rbx[0] == 'Z') continue; // ZDC
+      HcalFrontEndId feID(std::string(rbx),rm,0,1,0,card,qie);
+      std::pair<DelaySettings::iterator,bool> ret = 
+	delays.insert(std::pair<HcalFrontEndId,int>(feID,setting));
+
+      if (!ret.second) {
+	if (overwriteDuplicates_) {
+	  ret.first->second = setting;
+	} else {
+	  stringstream str;
+	  str << "Duplicate setting found for feID " << feID;
+	  str << ", current value is " << ret.first->second;
+	  str << ", set 'overwriteDuplicates=True' to overwrite";
+	  throw cms::Exception(str.str());
+	}
+      }
+      cout << "read in " << feID << " old setting = " << setting << endl;
+    }
+
+    cout << "Read in sampling delay settings from " << xmlfileNames_[i] << endl;
   }
-
-  cout << "Read in sampling delay settings from " << xmlfileNames_[0] << endl;
 
 #if 0
   // Dump for test.
