@@ -13,13 +13,14 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTuner.cc,v 1.1 2009/12/04 14:33:02 dudero Exp $
+// $Id: HcalDelayTuner.cc,v 1.2 2010/03/01 06:52:33 dudero Exp $
 //
 //
 
 
 // system include files
 #include <limits.h>
+#include <iostream>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -27,9 +28,6 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
-#include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerXML.hh"
@@ -96,7 +94,7 @@ HcalDelayTuner::HcalDelayTuner(const edm::ParameterSet& iConfig)
   xml_ = new HcalDelayTunerXML();
   if (writeBricks_ && !clipAtLimits_) {
     for (unsigned i=0; i<10; i++) {
-      cout << "BOY, YOU IN A HEAP'A'TROUBLE!" << endl;
+      std::cout << "BOY, YOU IN A HEAP'A'TROUBLE!" << std::endl;
     }
   }
 }
@@ -153,13 +151,13 @@ HcalDelayTuner::shiftBySubdet(const std::string subdet)
     if (setting > maxsetting) maxsetting = setting;
   }
 
-  cout << "For subdet    " << subdet<<":"<< endl;
-  cout << "Max setting = " << maxsetting << endl;
-  cout << "Min setting = " << minsetting << endl;
+  std::cout << "For subdet    " << subdet<<":"<< std::endl;
+  std::cout << "Max setting = " << maxsetting << std::endl;
+  std::cout << "Min setting = " << minsetting << std::endl;
   int glshift = std::min((maxsetting-maxlimit),minsetting);
 
-  cout<< "Shifting by " << glshift << "ns" << endl;
-  cout<< "FrontEnd ID\t\t\tNew (shifted) Setting" << endl;
+  std::cout<< "Shifting by " << glshift << "ns" << std::endl;
+  std::cout<< "FrontEnd ID\t\t\tNew (shifted) Setting" << std::endl;
   for (itnew  = newsettings_.begin();
        itnew != newsettings_.end(); itnew++) {
 
@@ -167,23 +165,23 @@ HcalDelayTuner::shiftBySubdet(const std::string subdet)
     if (feID.rbx().find(subdet) == std::string::npos) continue;
 
     int setting = itnew->second - glshift;
-    cout << itnew->first << '\t' <<setw(2)<<setting;
+    std::cout << itnew->first << '\t' <<std::setw(2)<<setting;
     if (setting > maxlimit) {
       if (clipAtLimits_) {
-	cout << " <-- clipped at " << maxlimit << endl;
+	std::cout << " <-- clipped at " << maxlimit << std::endl;
 	setting = maxlimit;
       } else
-	cout << " <--!!! " << endl;
+	std::cout << " <--!!! " << std::endl;
     }
     else if (setting < 0) {
       if (clipAtLimits_) {
-	cout << " <-- clipped at 0." << endl;
+	std::cout << " <-- clipped at 0." << std::endl;
 	setting = 0;
       } else {
-	cout << " <--!!! " << endl;
+	std::cout << " <--!!! " << std::endl;
       }
     } else
-      cout << endl;
+      std::cout << std::endl;
 
     itnew->second = setting;
   }
@@ -229,8 +227,8 @@ HcalDelayTuner::determineSettings(const TimesPerFEchan& timecors,
    * the range limits
    ******************************************************/
 
-  cout<< "\t\t\t\t\tChannel\tOld\tNew" << endl;
-  cout<< "FrontEnd ID\t\t\t\tTime (ns)\tSetting\tSetting" << endl;
+  std::cout<< "\t\t\t\t\tChannel\tOld\tNew" << std::endl;
+  std::cout<< "FrontEnd ID\t\t\t\tTime (ns)\tSetting\tSetting" << std::endl;
   for (itcor   = timecors.begin(),   itold  = oldsettings.begin();
        (itcor != timecors.end()) || (itold != oldsettings.end());
        ) {
@@ -243,8 +241,8 @@ HcalDelayTuner::determineSettings(const TimesPerFEchan& timecors,
       HcalFrontEndId feID = itcor->first;
       float       timecor = itcor->second;
       if (!fromscratch) {
-	cout << feID << '\t' << fixed << setprecision(1) << timecor<<'\t';
-	cout << setw(2) << "XXX Old setting missing - skip XXX" << endl;
+	std::cout << feID << '\t' << std::fixed << std::setprecision(1) << timecor<<'\t';
+	std::cout << std::setw(2) << "XXX Old setting missing - skip XXX" << std::endl;
 	nchanMissingOldSettings_++;
       } else {
 	int setting = detSetting4Channel(itcor->first,itcor->second, mintime, 0);
@@ -262,14 +260,14 @@ HcalDelayTuner::determineSettings(const TimesPerFEchan& timecors,
 
       lastins = newsettings_.insert(lastins, *itold);
 
-      cout << itold->first << "\t--\t" << setw(2);
-      cout << itold->second << '\t' << itold->second << endl;
+      std::cout << itold->first << "\t--\t" << std::setw(2);
+      std::cout << itold->second << '\t' << itold->second << std::endl;
 
 #endif /* HACK FOR HO (FIXME!): PEND INSERTION OF OLD SETTINGS FOR
 	  CHANNELS WITH NO DATA(HO1M04,HO1M10, SiPM BOXES)
 	  UNTIL AFTER WE'VE SHIFTED AROUND THE NEW ONES */
 
-      cout << itold->first << "\t--\tWAIT FOR IT..." << endl;
+      std::cout << itold->first << "\t--\tWAIT FOR IT..." << std::endl;
 
       itold++;
       nchanMissingData_++;
@@ -282,13 +280,13 @@ HcalDelayTuner::determineSettings(const TimesPerFEchan& timecors,
       int setting = detSetting4Channel(feID,itcor->second,
 				       mintime, itold->second);
 
-      cout << feID << '\t' << fixed << setprecision(1) << itcor->second<<'\t';
-      cout << setw(2) << itold->second << '\t' << setting;
+      std::cout << feID << '\t' << std::fixed << std::setprecision(1) << itcor->second<<'\t';
+      std::cout << std::setw(2) << itold->second << '\t' << setting;
 
       if ((setting < 0) || (setting > maxlimit)) {
-	cout << " <--!!! " << endl;
+	std::cout << " <--!!! " << std::endl;
       } else
-	cout << endl;
+	std::cout << std::endl;
 
       lastins = newsettings_.insert(lastins,std::pair<HcalFrontEndId,int>(itold->first,setting));
 
