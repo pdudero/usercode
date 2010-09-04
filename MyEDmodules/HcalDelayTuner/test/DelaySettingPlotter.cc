@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.8 2010/04/26 13:07:03 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.9 2010/09/04 21:57:00 dudero Exp $
 //
 //
 
@@ -396,6 +396,7 @@ DelaySettingPlotter::plotDiffMap(TProfile2D *oldmap, TProfile2D *newmap, int dep
   title << "Map of new-old settings, Depth " << depth;
   TProfile2D *diffMap  = fs->make<TProfile2D>(*newmap);
   diffMap->SetNameTitle(name.str().c_str(),title.str().c_str());
+  diffMap->Reset();
 
   name.str(""); name  << "diffdistd" << depth;
   title.str(""); title <<  "Distribution of new-old settings, Depth " << depth;
@@ -409,16 +410,19 @@ DelaySettingPlotter::plotDiffMap(TProfile2D *oldmap, TProfile2D *newmap, int dep
       HcalSubdetector subdet;
       if (depth==4) subdet=HcalOuter;
       else if (depth==3) subdet=HcalEndcap;
-      else if (abs(ieta) >= 29) subdet=HcalForward;
-      else if (abs(ieta) <= 16) subdet=HcalForward;
+      else if (abs(ieta) > 29) subdet=HcalForward;
+      else if (abs(ieta) <= 16) subdet=HcalBarrel;
       else subdet=HcalEndcap;
       if (!HcalDetId::validDetId(subdet,ieta,iphi,depth)) continue;
 
       int   ibin = diffMap->GetBin(ibinx,ibiny);
       if (newmap->GetBinEntries(ibin) || oldmap->GetBinEntries(ibin)) {
-	if (subdet != HcalForward) cout << "What the H*&&??" << subdet << endl;
 	float diff = newmap->GetBinContent(ibin)- oldmap->GetBinContent(ibin);
-	diffMap->SetBinContent(ibin,diff);
+#if 0
+	if ((diff != 0.0) && (subdet != HcalEndcap))
+	  cout << "What the H*&&??" << subdet << endl;
+#endif
+	diffMap->Fill(ieta,iphi,diff);
 	diffDist->Fill(diff);
       }
     }
