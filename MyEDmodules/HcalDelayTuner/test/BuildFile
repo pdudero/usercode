@@ -9,7 +9,6 @@
 <use name=CalibFormats/HcalObjects>
 <use name=CalibCalorimetry/HcalAlgos>
 <use name=PhysicsTools/UtilAlgos>
-<use name=MyEDmodules/MyAnalUtilities>
 <use name=MyEDmodules/HcalDelayTuner>
 
 <library file=DelaySettingPlotter.cc name=DelaySettingPlotter>

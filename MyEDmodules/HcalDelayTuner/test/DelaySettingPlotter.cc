@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: DelaySettingPlotter.cc,v 1.7 2010/03/05 13:20:16 dudero Exp $
+// $Id: DelaySettingPlotter.cc,v 1.8 2010/04/26 13:07:03 dudero Exp $
 //
 //
 
@@ -33,12 +33,9 @@
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 #include "CalibCalorimetry/HcalAlgos/interface/HcalLogicalMapGenerator.h"
-#include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
-#include "MyEDmodules/MyAnalUtilities/interface/inSet.hh"
 
 #include "MyEDmodules/HcalDelayTuner/interface/HcalDelayTunerAlgos.hh"
 #include "MyEDmodules/HcalDelayTuner/src/HcalDelayTunerInput.hh"
-#include "MyEDmodules/HcalDelayTuner/interface/SplashDelayTunerAlgos.hh"
 
 //
 // class declaration
