@@ -9,23 +9,38 @@ fi
 #export FMT='%s %d %d %d %f'
 #export NEW=../data/SettingsHO_091118postSplash09tune_floatingRings.csv
 
+#export OLD=../data/hbhetable_08etaTune.csv
+#export OLD=../data/hbhetable_091108tune.csv
 #export OLD=../data/hbhetable_08tuneInEta.csv
 #export OLD=../data/hbhetable_091108tune.csv
 #export OLD=jittertrial1_hf.csv
 #export OLD=jittertrial2_hf.csv
-export OLD=depthfixsettings.csv
+#export OLD=depthfixsettings.csv
 #export OLD=removebadflagcutfix.csv
+export OLD=../data/SettingsHBHE_091118tune_patchfixHBM14rm4.csv
 
-export OLDFMT='%*s %*d %*d %*d %s %d %d %d %d'
-export NEWFMT='%*s %*d %*d %*d %s %d %d %d %d'
+# The following columns must be defined at minimum, and have the following
+# format and appear in the following order (not necessarily consecutively)
+#
+# RBX name => %s
+# rm number (1-5, 5=CM for HBHEHO,4=CM for HF) => %d
+# card number (1-3, HBHEO or 1-4 for HF) => %d
+# qie/adc number (0-5) => %d
+#
+#export OLDFMT='%*s %*d %*d %*d %s %d %d %d %d'
+#export NEWFMT='%*s %*d %*d %*d %s %d %d %d %d'
+export OLDFMT='%s %d %d %d %d'
+export NEWFMT='%s %d %d %d %d'
 
 #export NEW=../data/hbhetable_091118tune.csv
 #export NEW=../data/SettingsHBHE_091118tune_patchfix15chan.csv
 #export NEW=../data/dirHFscanVEoptSettings-5/vetable_offset=-5.csv
-export NEW=../data/dirHFscanVEoptSettingsTrial1jitter/vetable_offset=0.csv
+#export NEW=../data/dirHFscanVEoptSettingsTrial1jitter/vetable_offset=0.csv
 #export NEW=../data/dirHFscanOptSettings-10ns/h2d_optDelaysHFall_offset=-10.csv
 #export NEW=depthfixsettings.csv
-export NEW=removebadflagcutfix.csv
+#export NEW=removebadflagcutfix.csv
+#export NEW=../data/HBHE_delaysTunedFromCollision2010.csv
+export NEW=../data/bricks_Sep4th_collision2010.csv
 
 CFGFILE=${0%.sh}_cfg.py
 cat > ${CFGFILE} << EOF
