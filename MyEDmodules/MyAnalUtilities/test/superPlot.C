@@ -287,7 +287,7 @@ void buildStringFromAliii(const string& input,
 
 //======================================================================
 
-TH1 *findHisto(const string& hid, const std::string& errmsg="")
+TH1 *findHisto(const string& hid, const string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if (it == glmap_id2histo.end()) {
@@ -329,7 +329,7 @@ TH1 *IntegrateLeft(TH1 *h)
   }
 
   return hcum;
-}
+}                                                       // IntegrateLeft
 
 //======================================================================
 
@@ -364,7 +364,88 @@ TH1 *IntegrateRight(TH1 *h,double skipbinatx=-9e99)
   }
 
   return hcum;
-}
+}                                                      // IntegrateRight
+
+//======================================================================
+
+void rebinVariable1D(const vector<string>& inhistids,
+		     float minStatsPerBin,
+		     const string& newsuffix)
+{
+  vector<TH1F *> inhistos;
+  vector<float>  sums(inhistids.size(),0.);
+
+  for (size_t i=0; i<inhistids.size(); i++) {
+    TH1F *tmph1 = (TH1F *)findHisto(inhistids[i],
+		      "histo operand must be defined before math ops");
+    if (!tmph1) exit(-1);
+    inhistos.push_back(tmph1);
+  }
+
+  if (!inhistos.size()) return;
+
+  vector<int>    oldbinnums;
+  vector<double> newbinvals;
+
+  int      nbinsx = inhistos[0]->GetNbinsX();
+  bool   donewbin = true;
+  size_t nnewbins = 0;
+  float    minsum,maxval;
+
+  cout << "New binmap: " << endl;
+  printf("ibin\tnewibin\tx_bin");
+  for (size_t i=0; i<inhistos.size(); i++) 
+    printf("\ty_bin\tCum");
+  printf("\tS_min\n");
+  for (int ibin=1; ibin <= nbinsx; ibin++) {
+    minsum = FLT_MAX;
+    maxval = -FLT_MAX;
+    if (donewbin) {
+      newbinvals.push_back(inhistos[0]->GetXaxis()->GetBinLowEdge(ibin));
+      oldbinnums.push_back(ibin);
+    }
+
+    nnewbins = newbinvals.size();
+
+    stringstream str;
+    str << ibin << "\t" << nnewbins << "\t" << newbinvals[nnewbins-1];
+
+    for (size_t i=0; i<inhistos.size(); i++) {
+      TH1F *inhist = inhistos[i];
+      if (donewbin) {
+	sums[i] = 0.0;
+      }
+      float val = inhist->GetBinContent(ibin);
+      maxval    = std::max(val,maxval);
+      sums[i]  += val;
+      minsum    = std::min(sums[i],minsum);
+
+      str << "\t" << val << "\t" << sums[i];
+    }
+
+    str << "\t" << minsum;
+
+    donewbin = false;
+    if (minsum > minStatsPerBin) donewbin = true;
+    if (donewbin) { str << "\tX"; cout << str.str() << endl; }
+  }
+
+  newbinvals.push_back(inhistos[0]->GetXaxis()->GetXmax());
+
+  // now create new varbin histos
+  //
+  for (size_t i=0; i<inhistos.size(); i++) {
+    TH1F   *inhist = inhistos[i];
+    string newname = string(inhist->GetName())+"_"+newsuffix;
+    TH1   *newhist = inhist->Rebin(nnewbins,
+				   newname.c_str(),
+				   &newbinvals.front());
+    wTH1     *wh = new wTH1(newhist);
+    string newid = inhistids[i]+"_"+newsuffix;
+    glmap_id2histo.insert(pair<string,wTH1 *>(newid,wh));
+  }
+
+}                                                    // rebinVariable1D
 
 //======================================================================
 
@@ -616,31 +697,43 @@ wTH1 *getHistoFromSpec(const string& hid,
 
   cout << "processing " << spec << endl;
 
+  string hspec;
+  string rootfn;
+
   Tokenize(spec,v_tokens,":");
   if ((v_tokens.size() != 2) ||
       (!v_tokens[0].size())  ||
       (!v_tokens[1].size())    ) {
-    cerr << "malformed root histo path file:folder/subfolder/.../histo " << spec << endl;
-    return NULL;
-  }
+    // Check for *path* alias
+    if (spec[0] == '@') {  // reference to an alias defined in ALIAS section
+      fullspec = extractAlias(spec.substr(1));
+      if (!fullspec.size()) return NULL;
+      Tokenize(fullspec,v_tokens,":");
+      rootfn = v_tokens[0];
+      hspec  = v_tokens[1];
+    } else {
+      cerr << "malformed root histo path file:folder/subfolder/.../histo " << spec << endl;
+      return NULL;
+    }
+  } else {
+    // Check for file alias
+    rootfn = v_tokens[0];
+    if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
+      rootfn = extractAlias(rootfn.substr(1));
+      if (!rootfn.size()) return NULL;
+    }
 
-  // Check for file alias
-  string rootfn = v_tokens[0];
-  if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
-    rootfn = extractAlias(rootfn.substr(1));
-    if (!rootfn.size()) return NULL;
-  }
+    // Check for histo alias, which can consist of multiple aliii...
+    //
+    hspec = v_tokens[1];
+    if (hspec.find('@') != string::npos) {
+      string temp=hspec;
+      buildStringFromAliii(temp,"/",hspec);
+      if (!hspec.size()) return NULL;
+    }
 
-  // Check for histo alias, which can consist of multiple aliii...
-  //
-  string hspec = v_tokens[1];
-  if (hspec.find('@') != string::npos) {
-    string temp=hspec;
-    buildStringFromAliii(temp,"/",hspec);
-    if (!hspec.size()) return NULL;
+    fullspec = rootfn + ":" + hspec;
   }
-
-  fullspec = rootfn + ":" + hspec;
 
   map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
   if (it != glmap_objpaths2id.end()) {
@@ -844,7 +937,7 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
       sid = new string(value);
       thestyle = new TStyle(*gStyle); // Assume current attributes, let user override specifics
       thestyle->SetNameTitle(sid->c_str(),sid->c_str());
-      glmap_id2style.insert(std::pair<string,TStyle*>(*sid,thestyle));
+      glmap_id2style.insert(pair<string,TStyle*>(*sid,thestyle));
       continue;
     }
     else if (!sid) {
@@ -1222,7 +1315,7 @@ void processCommonHistoParams(const string& key,
       cerr << value << endl;
     }
     cout << "Loaded " << v_tokens.size() << " x-axis bin labels" << endl;
-    for (int ibin=1; ibin<=std::min((int)v_tokens.size(),wh.histo()->GetNbinsX()); ibin++)
+    for (int ibin=1; ibin<=min((int)v_tokens.size(),wh.histo()->GetNbinsX()); ibin++)
       wh.histo()->GetXaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
   }
 
@@ -1233,7 +1326,7 @@ void processCommonHistoParams(const string& key,
       cerr << "expect comma-separated list of bin labels ";
       cerr << value << endl;
     }
-    for (int ibin=1; ibin<=std::min((int)v_tokens.size(),wh.histo()->GetNbinsY()); ibin++)
+    for (int ibin=1; ibin<=min((int)v_tokens.size(),wh.histo()->GetNbinsY()); ibin++)
       wh.histo()->GetYaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
   }
 
@@ -1873,6 +1966,7 @@ processHmathSection(FILE *fp,
   string *hid = NULL;
   TH1   *h1 = NULL;
   float skipbinatx=-9e99;
+  float statsPerBin=-1.;
 
   cout << "Processing hmath section" << endl;
 
@@ -2020,7 +2114,8 @@ processHmathSection(FILE *fp,
 
       Tokenize(hmathexpr,v_tokens,"-+*/");
       if (v_tokens.size() != 2) {
-	cerr << "only simple math ops -+*/ supported between two operands, sorry!" << theline << endl;
+	cerr << "only simple math ops -+*/ supported between two operands, sorry! ";
+	cerr << theline << endl;
 	continue;
       }
 
@@ -2044,7 +2139,8 @@ processHmathSection(FILE *fp,
     //------------------------------
       Tokenize(value,v_tokens,",");
       if (v_tokens.size() < 2) {
-	cerr << "expect comma-separated list of at least two histo specs to sum!" << theline << endl;
+	cerr << "expect comma-separated list of at least two histo specs to sum! ";
+	cerr << theline << endl;
 	continue;
       }
       TH1 *firstone = (TH1 *)findHisto(v_tokens[0]);
@@ -2216,7 +2312,8 @@ processHmathSection(FILE *fp,
       TH1 *tmph = findHisto(v_tokens[0],"histo operand must be defined before math ops");
       if (!tmph) continue;
       if (!tmph->InheritsFrom("TH3")) {
-	cerr << "operation projectyx only defined for 3D histograms, " << hid << endl; continue;
+	cerr << "operation projectyx only defined for 3D histograms, ";
+	cerr << hid << endl; continue;
       }
       TH3 *h3 = (TH3 *)tmph;
 
@@ -2238,7 +2335,8 @@ processHmathSection(FILE *fp,
 
       h3->GetZaxis()->SetRange(lobin,hibin);
       tmph = (TH1 *)h3->Project3D("yx");
-      h1 = (TH1 *)tmph->Clone(newname.c_str()); // for multiple projections, otherwise root overwrites
+      h1 = (TH1 *)tmph->Clone(newname.c_str()); /* for multiple projections,
+						   otherwise root overwrites */
       wh = new wTH1(h1);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
     }
@@ -2337,6 +2435,32 @@ processHmathSection(FILE *fp,
 	wh = new wTH1(h1);
 	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
       }
+
+    //------------------------------
+    } else if (key == "statsPerBin") {  // for use with rebinVar1d, needs to be defined 1st
+    //------------------------------
+
+      statsPerBin = str2flt(value);
+
+    //------------------------------
+    } else if (key == "rebinVar1d") {  // rebin the input histo with roughly even stats/bin
+    //------------------------------
+
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,",");
+      if (!v_tokens.size()) {
+	cerr << "ERROR: expect comma-separated list of histo ids";
+	cerr << theline << endl;
+	continue;
+      }
+
+      rebinVariable1D(v_tokens, statsPerBin, *hid);
 
     } else if (!h1) {  // all other keys must have one of the above ops defined 1st
       cerr << "an operation key must be defined before key " << key << endl;
@@ -2844,13 +2968,13 @@ void  drawPlots(canvasSet_t& cs,bool savePlot2file)
 	} else
 	  break;
       }
-      npadsall = std::min(npadsall,j);
+      npadsall = min(npadsall,j);
     } else {
       cout << "npads>0, but no pad specs supplied, exiting." << endl;
       return; // no pads to draw on.
     }
   } else {
-    npadsall = std::min(npadsall,wc0->pads.size());
+    npadsall = min(npadsall,wc0->pads.size());
   }
 
   cout << "Drawing on " << npadsall << " pad(s)" << endl;
@@ -2863,6 +2987,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlot2file)
 
   vector<vector<string> >::const_iterator it;
   for (unsigned j = 0; j< npadsall; j++) {
+
+    cout << "Drawing pad# " << j << endl;
 
     unsigned   i  =  j % npads;
     unsigned cnum = (j / npads) + 1;
@@ -3119,7 +3245,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlot2file)
       // Use the first file read in and the config file name to make
       // the filename.
       //
-      std::string datafile,cfgfile;
+      string datafile,cfgfile;
       map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
       if (it != glmap_id2rootfile.end())
 	datafile = it->first.substr(0,it->first.find_last_of('.'));
