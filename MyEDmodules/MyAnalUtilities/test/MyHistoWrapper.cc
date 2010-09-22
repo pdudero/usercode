@@ -15,7 +15,7 @@ public:
 		    const std::string& title,
 		    int nbins, float min, float max);
   MyHistoWrapper<T>(T *h, const std::string& name, const std::string& title);
-  MyHistoWrapper<T>(T *h) : h_(h){}
+  MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; }
   ~MyHistoWrapper() {}
   inline T *histo() const {return h_;}
 
@@ -142,6 +142,7 @@ MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::stri
 {
   if (name.size())  h_->SetName (name.c_str());
   if (title.size()) h_->SetTitle(title.c_str());
+  style2apply_ = NULL;
 }
 
 //======================================================================
