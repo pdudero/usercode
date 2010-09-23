@@ -18,3 +18,7 @@
 <library file=HFscanPostAnal.cc name=HFscanPostAnal>
 	<flags EDM_PLUGIN=1>
  </library>
+
+<library file=TimeCorrDumper.cc name=TimeCorrDumper>
+	<flags EDM_PLUGIN=1>
+ </library>
