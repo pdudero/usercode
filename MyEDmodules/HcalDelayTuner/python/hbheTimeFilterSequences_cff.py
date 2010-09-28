@@ -61,6 +61,15 @@ hbheReflagSquareFilter                  = hbherechitreflaggerJETMET.clone()
 hbheReflagSquareFilter.timingshapedcutsParameters.tfilterEnvelope  = cms.vdouble(0.0, 12.5,
                                                                                  350.50, 12.5)
 hbheReflagSquareFilter.timingshapedcutsParameters.win_offset       = cms.double(2.0)
+                                                                                 
+#--------------------------------------------------
+# Square Filter shape, no energy dependence, one TS wide, stops at 50GeV
+#
+hbheReflagSquareFilterStopAt50          = hbherechitreflaggerJETMET.clone()
+hbheReflagSquareFilterStopAt50.timingshapedcutsParameters.tfilterEnvelope  = cms.vdouble( 50.0,  12.5,
+                                                                                         350.50, 12.5)
+hbheReflagSquareFilterStopAt50.timingshapedcutsParameters.win_offset    = cms.double(2.0)
+hbheReflagSquareFilterStopAt50.timingshapedcutsParameters.ignorelowest  = cms.bool(True)
 
 #--------------------------------------------------
 # RERECO TOWERS
@@ -73,25 +82,41 @@ from RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi import *
 hcalRecAlgos=RemoveAddSevLevel.AddFlag(hcalRecAlgos,"HBHETimingShapedCutsBits",10)
 
 from RecoJets.Configuration.CaloTowersRec_cff import *
-filtTowersStdShape = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagStdShape"))
-filtTowersGained10pctPlus2ns = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagGained10pctPlus2ns"))
-filtTowersGained15pctPlus2ns = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagGained15pctPlus2ns"))
-filtTowers2p5xPlus3nsDownTo0 = towerMaker.clone(hbheInput=cms.InputTag("hbheReflag2p5xPlus3nsDownTo0"))
-filtTowers2p5xPlus3nsStopAt50= towerMaker.clone(hbheInput=cms.InputTag("hbheReflag2p5xPlus3nsStopAt50"))
-filtTowersSquareFilter       = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagSquareFilter"))
+filtTowersStdShape             = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagStdShape"))
+filtTowersGained10pctPlus2ns   = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagGained10pctPlus2ns"))
+filtTowersGained15pctPlus2ns   = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagGained15pctPlus2ns"))
+filtTowers2p5xPlus3nsDownTo0   = towerMaker.clone(hbheInput=cms.InputTag("hbheReflag2p5xPlus3nsDownTo0"))
+filtTowers2p5xPlus3nsStopAt50  = towerMaker.clone(hbheInput=cms.InputTag("hbheReflag2p5xPlus3nsStopAt50"))
+filtTowersSquareFilter         = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagSquareFilter"))
+filtTowersSquareFilterStopAt50 = towerMaker.clone(hbheInput=cms.InputTag("hbheReflagSquareFilterStopAt50"))
+
+#Exclude ECAL energy altogether
+unfiltTowersHcalOnly = towerMaker.clone()
+unfiltTowersHcalOnly.EBWeight       = cms.double(0.0)
+unfiltTowersHcalOnly.EEWeight       = cms.double(0.0)
+unfiltTowersHcalOnly.EBWeights      = cms.vdouble(0.,0.,0.,0.,0.)
+unfiltTowersHcalOnly.EEWeights      = cms.vdouble(0.,0.,0.,0.,0.)
+
+#unfiltTowersHcalOnly.EBSumThreshold = cms.double(999999.9)
+#unfiltTowersHcalOnly.EESumThreshold = cms.double(999999.9)
+#unfiltTowersHcalOnly.EBThreshold    = cms.double(9999.9)
+#unfiltTowersHcalOnly.EEThreshold    = cms.double(9999.9)
 
 #--------------------------------------------------
 # RERECO MET
 
 
 from RecoMET.METProducers.CaloMET_cfi import met
-filtmetStdShape           = met.clone(src = cms.InputTag("filtTowersStdShape"))
-filtmetGained10pctPlus2ns = met.clone(src = cms.InputTag("filtTowersGained10pctPlus2ns"))
-filtmetGained15pctPlus2ns = met.clone(src = cms.InputTag("filtTowersGained15pctPlus2ns"))
-filtmet2p5xPlus3nsDownTo0 = met.clone(src = cms.InputTag("filtTowers2p5xPlus3nsDownTo0"))
-filtmet2p5xPlus3nsStopAt50= met.clone(src = cms.InputTag("filtTowers2p5xPlus3nsStopAt50"))
-filtmetSquareFilter       = met.clone(src = cms.InputTag("filtTowersSquareFilter"))
+filtmetStdShape             = met.clone(src = cms.InputTag("filtTowersStdShape"))
+filtmetGained10pctPlus2ns   = met.clone(src = cms.InputTag("filtTowersGained10pctPlus2ns"))
+filtmetGained15pctPlus2ns   = met.clone(src = cms.InputTag("filtTowersGained15pctPlus2ns"))
+filtmet2p5xPlus3nsDownTo0   = met.clone(src = cms.InputTag("filtTowers2p5xPlus3nsDownTo0"))
+filtmet2p5xPlus3nsStopAt50  = met.clone(src = cms.InputTag("filtTowers2p5xPlus3nsStopAt50"))
+filtmetSquareFilter         = met.clone(src = cms.InputTag("filtTowersSquareFilter"))
+filtmetSquareFilterStopAt50 = met.clone(src = cms.InputTag("filtTowersSquareFilterStopAt50"))
 
+unfiltmetHcalOnly = met.clone(src = cms.InputTag("unfiltTowersHcalOnly"))
+                                      
 #--------------------------------------------------
 # ANALYZERS
 
@@ -159,6 +184,11 @@ heanfiltSquareFilter.eventDataPset.hbheRechitLabel       = cms.untracked.InputTa
 #hbanfiltSquareFilter.eventDataPset.twrLabel              = cms.untracked.InputTag("towerMaker")
 #heanfiltSquareFilter.eventDataPset.twrLabel              = cms.untracked.InputTag("towerMaker")
 
+hbanfiltSquareFilterStopAt50 = hbtimeanal.clone()
+heanfiltSquareFilterStopAt50 = hetimeanal.clone()
+hbanfiltSquareFilterStopAt50.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbheReflagSquareFilterStopAt50")
+heanfiltSquareFilterStopAt50.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbheReflagSquareFilterStopAt50")
+
 #--------------------------------------------------
 # MET binners
 
@@ -188,6 +218,14 @@ metbinfilt2p5xPlus3nsStopAt50 = metbinUnfilt.clone(
 metbinfiltSquareFilter = metbinUnfilt.clone(
     metInput = cms.untracked.PSet(caloMETlabel=cms.untracked.InputTag("filtmetSquareFilter"))
 )
+metbinfiltSquareFilterStopAt50 = metbinUnfilt.clone(
+    metInput = cms.untracked.PSet(caloMETlabel=cms.untracked.InputTag("filtmetSquareFilterStopAt50"))
+)
+
+
+metbinUnfiltHcalOnly = metbinUnfilt.clone(
+    metInput=cms.untracked.PSet(caloMETlabel=cms.untracked.InputTag("unfiltmetHcalOnly"))
+    )
 
 #--------------------------------------------------
 
@@ -212,6 +250,10 @@ hbheanfilt2p5xPlus3nsStopAt50 = cms.Sequence(hbanfilt2p5xPlus3nsStopAt50+
 hbheanfiltSquareFilter        = cms.Sequence(hbanfiltSquareFilter+
                                              heanfiltSquareFilter+
                                              metbinfiltSquareFilter)
+hbheanfiltSquareFilterStopAt50= cms.Sequence(hbanfiltSquareFilterStopAt50+
+                                             heanfiltSquareFilterStopAt50+
+                                             metbinfiltSquareFilterStopAt50)
+hbheanUnfiltHcalOnly          = cms.Sequence(metbinUnfiltHcalOnly)
 
 #--------------------------------------------------
 # SEQUENCES
@@ -247,10 +289,21 @@ seqSquareFilter              = cms.Sequence(hbheReflagSquareFilter*
                                             filtmetSquareFilter*
                                             hbheanfiltSquareFilter)
 
+seqSquareFilterStopAt50      = cms.Sequence(hbheReflagSquareFilterStopAt50*
+                                            filtTowersSquareFilterStopAt50*
+                                            filtmetSquareFilterStopAt50*
+                                            hbheanfiltSquareFilterStopAt50)
+
+seqHcalOnly                  = cms.Sequence(unfiltTowersHcalOnly*
+                                            unfiltmetHcalOnly*
+                                            hbheanUnfiltHcalOnly)
+
 allFilterSeqs                = cms.Sequence(hbheanUnfilt+
+                                            seqHcalOnly+
 #                                            seqStdShape+
 #                                            seqGained10pctPlus2ns+
 #                                            seqGained15pctPlus2ns+
-                                            seq2p5xPlus3nsDownTo0+
+#                                            seq2p5xPlus3nsDownTo0+
                                             seq2p5xPlus3nsStopAt50+
-                                            seqSquareFilter)
+                                            seqSquareFilter+
+                                            seqSquareFilterStopAt50)
