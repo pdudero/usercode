@@ -74,8 +74,9 @@ hbheReflagSquareFilterStopAt50.timingshapedcutsParameters.ignorelowest  = cms.bo
 #--------------------------------------------------
 # RERECO TOWERS
 
-# The following lines disable the default HFLongShort bits in the SeverityLevelComputer, and instead
-# cause any rechits flagged by 'UserDefinedBit0' to be excluded from calotower creation
+# The following lines cause any rechits flagged by 'HBHETimingShapedCutsBits'
+# to be excluded from calotower creation
+#
 import JetMETAnalysis.HcalReflagging.RemoveAddSevLevel as RemoveAddSevLevel
 
 from RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi import *
