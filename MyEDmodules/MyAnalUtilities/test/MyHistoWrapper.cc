@@ -76,17 +76,16 @@ public:
   bool ApplySavedStyle (void);
 
   void Add2Legend(TLegend *leg) {
-    std::string legdrawopt=drawoption_;
-    if (legdrawopt.size()) {
-      if (legdrawopt.find("L") != string::npos)
-	if (legdrawopt.find("E") != string::npos) legdrawopt = "LE";
-	else                                      legdrawopt = "L";
-      else if (legdrawopt.find("HISTO") != string::npos) legdrawopt = "L";
-      else if (legdrawopt.find("P") != string::npos) legdrawopt = "P";
-      else if (legdrawopt.find("F") != string::npos) legdrawopt = "F";
+    std::string legdrawopt;
+    if (h_->GetFillColor())                              legdrawopt = "F";
+    else if (drawoption_.size()) {
+      if (drawoption_.find("L") != string::npos)
+	if (drawoption_.find("E") != string::npos)       legdrawopt = "LE";
+	else                                             legdrawopt = "L";
+      else if (drawoption_.find("HIST") != string::npos) legdrawopt = "L";
+      else if (drawoption_.find("P") != string::npos)    legdrawopt = "P";
     }
-    else
-      legdrawopt = "L";
+    else                                                 legdrawopt = "L";
 
     cout << "legdrawopt="<<legdrawopt<<endl;
     leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
@@ -338,7 +337,8 @@ MyHistoWrapper<T>::ApplySavedStyle (void)
   if (!style2apply_) return false;
   TStyle *temp = gStyle;
   style2apply_->cd();
-  std::cout << gStyle->GetStatFormat() << std::endl;
+  std::cout << "Applying style " << gStyle->GetName() << endl;
+  std::cout << gStyle->GetOptStat() << std::endl;
   h_->UseCurrentStyle();
   temp->cd();
   return true;
