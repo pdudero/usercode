@@ -38,7 +38,7 @@ processLabelSection(FILE   *fp,
 
     if (theline[0] == '[') {
       new_section=true;
-      return true;
+      break;
     }
 
     string key, value;
