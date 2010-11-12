@@ -53,6 +53,7 @@ struct wPad_t {
   vector<string> stack_ids;
   vector<string> altyh_ids;
   vector<string> graph_ids;
+  vector<string> macro_ids;
   vector<string> label_ids;
   vector<string> line_ids;
   vector<string> box_ids;
@@ -121,6 +122,7 @@ static string nullstr;
 #include "spAlias.C"
 #include "spSample.C"
 #include "spGraph.C"
+#include "spMacro.C"
 #include "spStyle.C"
 #include "spTF1.C"
 #include "spHisto.C"
@@ -197,6 +199,7 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "ALIAS")     processAliasSection    (fp,theline,new_section);
     else if (section == "SAMPLE")    processSampleSection   (fp,theline,new_section);
     else if (section == "TF1")       processTF1Section      (fp,theline,new_section);
+    else if (section == "MACRO")     processMacroSection    (fp,theline,new_section);
     else {
       cerr << "Unknown section " << section << " in " << layoutFile << endl;
     }
