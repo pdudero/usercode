@@ -145,7 +145,8 @@ processHmathSection(FILE *fp,
   vector<string> v_tokens;
   vector<TH1*>   v_histos2dize;
 
-  wTH1  *wh  = NULL;
+  vector<wTH1 *> v_histos;
+
   string *hid = NULL;
   TH1   *h1 = NULL;
   float skipbinatx=-9e99;
@@ -272,7 +273,8 @@ processHmathSection(FILE *fp,
       else if (theline.find('+') != string::npos) hres->Add(f1);
 
       h1 = hres;
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
@@ -306,7 +308,8 @@ processHmathSection(FILE *fp,
       else if (theline.find('/') != string::npos) hres->Divide(tmph2);
 
       h1 = (TH1 *)hres;
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
@@ -328,7 +331,8 @@ processHmathSection(FILE *fp,
 	if (!addend) exit(-1);
 	h1->Add(addend,1.0);
       }
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
@@ -343,7 +347,8 @@ processHmathSection(FILE *fp,
       TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
       if (!tmph1) exit(-1);
       h1 = (TH1 *)IntegrateRight(tmph1,skipbinatx);
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
@@ -358,7 +363,8 @@ processHmathSection(FILE *fp,
       TH1 *tmph1 = findHisto(value,"histo operand must be defined before math ops");
       if (!tmph1) exit(-1);
       h1 = (TH1 *)IntegrateLeft(tmph1);
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     } else if (key == "skipbinatx")
@@ -401,7 +407,8 @@ processHmathSection(FILE *fp,
 	continue;
       }
       h1 = (TH1 *)tmph2->ProjectionX(newname.c_str(),lobin,hibin);
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
@@ -458,7 +465,8 @@ processHmathSection(FILE *fp,
 	  continue;
 	}
 	h1 = (TH1 *)v_hist[i]->ProjectionY(newname.c_str(),lobin,hibin);
-	wh = new wTH1(h1);
+	wTH1 *wh = new wTH1(h1);
+	v_histos.push_back(wh);
 	string hid2 = *hid;
 	if (v_hist.size() > 1) hid2 += "_"+int2str(i);
 	glmap_id2histo.insert(pair<string,wTH1 *>(hid2,wh));
@@ -512,11 +520,12 @@ processHmathSection(FILE *fp,
       tmph = (TH1 *)h3->Project3D("yx");
       h1 = (TH1 *)tmph->Clone(newname.c_str()); /* for multiple projections,
 						   otherwise root overwrites */
-      wh = new wTH1(h1);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(wh);
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
     }
     //------------------------------
-    else if (key.find("slice") != string::npos) {
+    else if (key.find("slice") != string::npos) { // [xy]slice{mean|rms|chi2}
     //------------------------------
       if (!hid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
@@ -537,40 +546,56 @@ processHmathSection(FILE *fp,
       TH2 *tmph2 = (TH2 *)findHisto(v_tokens[0],"histo operand must be defined before math ops");
       if (!tmph2) exit(-1);
       binspec = v_tokens[1];
-      Tokenize(binspec,v_tokens,"-");
-      if (v_tokens.size() != 2) {
-	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
-	cerr << theline << endl;
-	continue;
+
+      int lobin;
+      int hibin;
+      if (!binspec.compare("*")) {
+	lobin=0; hibin=-1;
+      } else {
+	Tokenize(binspec,v_tokens,"-");
+	if (v_tokens.size() != 2) {
+	  cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	  cerr << theline << endl;
+	  continue;
+	}
+
+	lobin=str2int(v_tokens[0]);
+	hibin=str2int(v_tokens[1]);
+	if (lobin > hibin) {
+	  cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
+	  cerr << theline << endl;
+	  continue;
+	}
       }
 
-      int lobin=str2int(v_tokens[0]);
-      int hibin=str2int(v_tokens[1]);
-      if (lobin > hibin) {
-	cerr << "Error, expecting binspec of form 'histo_id:lobin-hibin'";
-	cerr << theline << endl;
-	continue;
-      }
+      // Save all the histos for possible future reference:
 
-      string newname = (*hid) + "_" + string(tmph2->GetName())+"_Ybins"+binspec;
+      string newname;
       TObjArray *aSlices = new TObjArray();
-      if (key.find("x")!=string::npos) tmph2->FitSlicesX(0,lobin,hibin,0, "QNR",aSlices);
-      else if (key.find("y")!=string::npos) tmph2->FitSlicesY(0,lobin,hibin,0,"QNR",aSlices);
+      if (key.find("x")!=string::npos) {
+	newname = (*hid) + "_" + string(tmph2->GetName())+"_Xbins"+binspec;
+	tmph2->FitSlicesX(0,lobin,hibin,0, "QNR",aSlices);
+      } else if (key.find("y")!=string::npos) {
+	newname = (*hid) + "_" + string(tmph2->GetName())+"_Ybins"+binspec;
+	tmph2->FitSlicesY(0,lobin,hibin,0,"QNR",aSlices);
+      }
       else continue;
       
-      if (key.find("mean")!=string::npos) {
-	h1 = (TH1 *)(*aSlices)[1];
-      } else if (key.find("rms")!=string::npos) {
-	h1 = (TH1 *)(*aSlices)[2];
-      } else if (key.find("chi2")!=string::npos) {
-	h1 = (TH1 *)(*aSlices)[aSlices->GetEntriesFast()-1];
-      }
-      if (h1) {
-	wh = new wTH1((TH1 *)h1->Clone()); // h1 points to a "dead histo walking"
-	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
-      } else {
-	cerr << "Unknown key '" << key << "'" << endl;
-      }
+      // aSlice elements point to a "dead histos walking"
+      h1 = (TH1 *)(*aSlices)[1];
+      wTH1 *wh=new wTH1((TH1 *)h1->Clone());
+      v_histos.push_back(wh);
+      glmap_id2histo.insert(pair<string,wTH1 *>((*hid)+"mean",wh));
+
+      h1 = (TH1 *)(*aSlices)[2]; 
+      wh = new wTH1((TH1 *)h1->Clone()); 
+      v_histos.push_back(wh);
+      glmap_id2histo.insert(pair<string,wTH1 *>((*hid)+"rms",wh));
+
+      h1 = (TH1 *)(*aSlices)[aSlices->GetEntriesFast()-1];
+      wh = new wTH1((TH1 *)h1->Clone());
+      v_histos.push_back(wh);
+      glmap_id2histo.insert(pair<string,wTH1 *>((*hid)+"chi2",wh));
 
     //------------------------------
     } else if (key == "x2Dize") {  // means to take a collection of 1d plots and make a
@@ -607,7 +632,8 @@ processHmathSection(FILE *fp,
 	  for (int j=1; j<=xax->GetNbins(); j++)
 	    ((TH2D *)h1)->SetBinContent(i,j,src->GetBinContent(j));
 	}
-	wh = new wTH1(h1);
+	wTH1 *wh = new wTH1(h1);
+	v_histos.push_back(wh);
 	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
       }
 
@@ -643,7 +669,7 @@ processHmathSection(FILE *fp,
     }
 
     else {
-      processCommonHistoParams(key,value,*wh);
+      processCommonHistoParams(key,value,v_histos);
     }
   } // while getline loop
 
