@@ -108,7 +108,7 @@ wTH1 *getHistoFromSpec(const string& hid,
 
   // Expand aliii first
   if (spec.find('@') != string::npos) {
-    assert(0);
+    //assert(0);
     string temp=spec;
     expandAliii(temp,fullspec);
     if (!fullspec.size()) return NULL;
@@ -344,6 +344,17 @@ void processCommonHistoParams(const string& key,
     cerr << "unknown key " << key << endl;
   }
 }                                            // processCommonHistoParams
+
+//======================================================================
+
+void processCommonHistoParams(const string& key, 
+			      const string& value,
+			      const std::vector<wTH1 *>& v_wh)
+{
+  for (size_t i=0; i<v_wh.size(); i++) {
+    processCommonHistoParams(key,value,*(v_wh[i]));
+  }
+}
 
 //======================================================================
 
