@@ -1,5 +1,6 @@
 #include "TVectorD.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 #include "TGraphAsymmErrors.h"
 
 #ifndef LINELEN
@@ -8,7 +9,8 @@
 
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
-static map<string, TGraph *>    glmap_id2graph;
+static map<string, TGraph *>      glmap_id2graph;
+static map<string, TGraph2D *>    glmap_id2graph2d;
 
 //======================================================================
 
@@ -48,6 +50,50 @@ void loadVectorsFromFile(const char *filename,
   for (int i=0; i<vecsize; i++) {
     vx[i] = v[2*i];
     vy[i] = v[2*i+1];
+  }
+}                                                 // loadVectorsFromFile
+
+//======================================================================
+
+void loadVectorsFromFile(const char *filename, 
+			 TVectorD&   vx,
+			 TVectorD&   vy,
+			 TVectorD&   vz)
+{
+  char linein[LINELEN];
+  vector<double> v;
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  cout << "Loading vectors from file " << filename;
+
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+    double x, y, z;
+    if (sscanf(linein, "%lf %lf %lf", &x, &y, &z) != 3) {
+      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+      return;
+    }
+    else {
+      v.push_back(x); v.push_back(y); v.push_back(z);
+    }
+  }
+
+  int vecsize = v.size()/3;
+  vx.ResizeTo(vecsize);
+  vy.ResizeTo(vecsize);
+  vz.ResizeTo(vecsize);
+
+  cout << "; read " << vecsize << " lines" << endl;
+
+  for (int i=0; i<vecsize; i++) {
+    vx[i] = v[2*i];
+    vy[i] = v[2*i+1];
+    vz[i] = v[2*i+2];
   }
 }                                                 // loadVectorsFromFile
 
@@ -106,27 +152,16 @@ void loadVectorsFromFile(const char *filename,
 //======================================================================
 
 TGraph *getGraphFromSpec(const string& gid,
-			 const string& spec)
+			 const string& fullspec) // alias expansion assumed
 {
   TGraph  *gr     = NULL;
   TFile *rootfile = NULL;
   vector<string> v_tokens;
 
-  string fullspec;     // potentially expanded from aliases.
   string gspec;
   string rootfn;
 
-  cout << "processing " << spec << endl;
-
-  // Expand aliii first
-  if (spec.find('@') != string::npos) {
-    assert(0);
-    string temp=spec;
-    expandAliii(temp,fullspec);
-    if (!fullspec.size()) return NULL;
-  } else {
-    fullspec = spec;
-  }
+  cout << "processing " << fullspec << endl;
 
   // process the (expanded) specification
   Tokenize(fullspec,v_tokens,":");
@@ -183,14 +218,15 @@ processGraphSection(FILE *fp,
 		    bool& new_section)
 {
   vector<string> v_tokens;
-
-  string *gid = NULL;
-  TGraph *gr  = NULL;
+  string  xtitle,ytitle,title,draw;
+  string   *gid  = NULL;
+  TGraph   *gr   = NULL;
+  TGraph2D *gr2d = NULL;
   float xoffset=0.0,yoffset=0.0, yscale=1.0;
   int  lcolor=1,lstyle=1,lwidth=1;
   int  mcolor=1,mstyle=3,msize=1;
   int  yndiv=510;
-  TVectorD vx,vy,exl,exh,eyl,eyh;
+  TVectorD vx,vy,vz,exl,exh,eyl,eyh;
   bool asymerrors = false;
 
   cout << "Processing graph section" << endl;
@@ -226,17 +262,11 @@ processGraphSection(FILE *fp,
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
       string path = value;
-      if (gr) {
+      if (gr || gr2d) {
 	cerr << "graph already defined" << endl; continue;
       }
       if (inSet<string>(glset_graphFilesReadIn,path)) {
 	cerr << "vector file " << path << " already read in" << endl; break;
-      }
-      if (path.find('@') != string::npos) {
-	assert(0);
-	string temp=path;
-	expandAliii(temp,path);
-	if (!path.size()) continue;
       }
 
       if (asymerrors)
@@ -245,13 +275,33 @@ processGraphSection(FILE *fp,
 	loadVectorsFromFile(path.c_str(),vx,vy);
 
     //------------------------------
+    } else if (key == "vectorfile2d") {
+    //------------------------------
+      if (!gid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      string path = value;
+      if (gr || gr2d) {
+	cerr << "graph already defined" << endl; continue;
+      }
+      if (inSet<string>(glset_graphFilesReadIn,path)) {
+	cerr << "vector file " << path << " already read in" << endl; break;
+      }
+
+      gr2d = new TGraph2D(path.c_str());
+      if (gr2d->IsZombie()) {
+	cerr << "Unable to make Graph2D from file " << path << endl;
+	exit(-1);
+      }
+
+    //------------------------------
     } else if (key == "path") {
     //------------------------------
 
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (gr) {
+      if (gr || gr2d) {
 	cerr << "graph already defined" << endl; continue;
       }
       gr  = getGraphFromSpec(*gid,value);
@@ -259,7 +309,11 @@ processGraphSection(FILE *fp,
 
     } else {
       // "gr" is not defined yet!
-      if      (key == "xoffset")     xoffset = str2flt(value);
+      if      (key == "title" )      title   = value;
+      else if (key == "xtitle" )     xtitle  = value;
+      else if (key == "ytitle" )     ytitle  = value;
+      else if (key == "draw" )       draw    = value;
+      else if (key == "xoffset")     xoffset = str2flt(value);
       else if (key == "yoffset")     yoffset = str2flt(value);
       else if (key == "yscale")      yscale  = str2flt(value);
       else if (key == "linecolor")   lcolor  = str2int(value);
@@ -279,24 +333,39 @@ processGraphSection(FILE *fp,
     }
   }
 
-  if (vx.GetNoElements()) { // load utility guarantees the same size for both
-    if (yscale  != 1.0) vy *= yscale;
-    if (xoffset != 0.0) vx += xoffset;
-    if (yoffset != 0.0) vy += yoffset;
-    if (asymerrors) 
-      gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
-    else
-      gr = new TGraph(vx,vy);
+  title += ";"+xtitle+";"+ytitle;
 
-    gr->SetLineStyle(lstyle);
-    gr->SetLineColor(lcolor);
-    gr->SetLineWidth(lwidth);
-    gr->SetMarkerColor(mcolor);
-    gr->SetMarkerStyle(mstyle);
-    gr->SetMarkerSize(msize);
-    gr->GetYaxis()->SetNdivisions(yndiv);
+  if (gr2d) {
+    gr2d->SetTitle(title.c_str());
+    gr2d->SetLineStyle(lstyle);
+    gr2d->SetLineColor(lcolor);
+    gr2d->SetLineWidth(lwidth);
+    gr2d->SetMarkerColor(mcolor);
+    gr2d->SetMarkerStyle(mstyle);
+    gr2d->SetMarkerSize(msize);
+    gr2d->GetYaxis()->SetNdivisions(yndiv);
+    glmap_id2graph2d.insert(pair<string,TGraph2D *>(*gid,gr2d));
+  } else {
+    if (vx.GetNoElements()) { // load utility guarantees the same size for both
+      if (yscale  != 1.0) vy *= yscale;
+      if (xoffset != 0.0) vx += xoffset;
+      if (yoffset != 0.0) vy += yoffset;
+      if (asymerrors) 
+	gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
+      else
+	gr = new TGraph(vx,vy);
 
-    glmap_id2graph.insert(pair<string,TGraph *>(*gid,gr));
+      gr->SetTitle(title.c_str());
+      gr->SetLineStyle(lstyle);
+      gr->SetLineColor(lcolor);
+      gr->SetLineWidth(lwidth);
+      gr->SetMarkerColor(mcolor);
+      gr->SetMarkerStyle(mstyle);
+      gr->SetMarkerSize(msize);
+      gr->GetYaxis()->SetNdivisions(yndiv);
+      
+      glmap_id2graph.insert(pair<string,TGraph *>(*gid,gr));
+    }
   }
 
   return (gr != NULL);

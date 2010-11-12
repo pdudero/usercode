@@ -49,6 +49,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       Tokenize(value,wpad->line_ids,","); 
       if (!wpad->line_ids.size()) wpad->line_ids.push_back(value);
     }
+    else if (key == "boxes") {
+      Tokenize(value,wpad->box_ids,","); 
+      if (!wpad->box_ids.size()) wpad->box_ids.push_back(value);
+    }
     else if (key == "labels") {
       Tokenize(value,wpad->label_ids," ,"); 
       if (!wpad->label_ids.size())  wpad->label_ids.push_back(value);

@@ -10,7 +10,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
-  //tdrStyle->cd();
+  gStyle->cd();
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
@@ -49,34 +49,20 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 
 //======================================================================
 
-void drawInPad(wPad_t *wp, TGraph *gr, const string& drawopt)
+template<class T>
+void drawInPad(wPad_t *wp, T *obj, const string& drawopt)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
-  //tdrStyle->cd();
+  gStyle->cd();
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
   wp->vp->SetLogz(wp->logz);
 
-  cout<<"Drawing "<<gr->GetName()<<" with option(s) "<<drawopt<<endl;
+  cout<<"Drawing "<<obj->GetName()<<" with option(s) "<<drawopt<<endl;
 
-  gr->Draw(drawopt.c_str());
-
-  wp->vp->Update();
-}                                                           // drawInPad
-
-//======================================================================
-
-void drawInPad(wPad_t *wp, TLine *line, const string& drawopt)
-{
-  wp->vp->SetLogx(wp->logx);
-  wp->vp->SetLogy(wp->logy);
-  wp->vp->SetLogz(wp->logz);
-
-  cout<<"Drawing line with option(s) "<<drawopt<<endl;
-
-  line->Draw(drawopt.c_str());
+  obj->Draw(drawopt.c_str());
 
   wp->vp->Update();
 }                                                           // drawInPad
@@ -87,7 +73,7 @@ void drawInPad(wPad_t *wp, THStack *stack)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
-  //tdrStyle->cd();
+  gStyle->cd();
 
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
@@ -179,12 +165,14 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       wCanvas_t *wc = wc0;
 
       // Divvy up the pads among multiple canvases if so specified
-      unsigned j=0;
-      for (; ; j++) {
 
-	unsigned   i  =  j % npads;
-	unsigned cnum = (j / npads) + 1;
+      unsigned j=0;                      // j=global pad index 
+      for (unsigned h=0,k=0; ; j++) {    /* h=histo index in current histo multiset
+					    k=multiset index */
+	unsigned   i  =  j % npads;      // index to current pad in canvas
+	unsigned cnum = (j / npads) + 1; // current canvas number
 
+	printf("%d %d %d %d %d\n",j,i,cnum,k,h);
 	if (cnum > cs.ncanvases) break;
 
 	if ((i==0) && (cnum > cs.canvases.size())) {
@@ -195,15 +183,20 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	  wc->pads.clear();
 	}
 
-	string multihist1 = mp->histo_ids[0]+"_"+int2str(j);
+	if (!h) cout<<"Assigning multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
+
+	string multihist1 = mp->histo_ids[k]+"_"+int2str(h++);
 	if (findHisto(multihist1, "hit the end of histo multiset")) {
 	  // now we associate histogram sets with the pad set
 	  wPad_t *wp = new wPad_t(*(mp));
 	  wp->histo_ids.clear();
 	  wp->histo_ids.push_back(multihist1);
 	  wc->pads.push_back(wp);
-	} else
-	  break;
+	} else {
+	  j--; // have to back up one...
+	  h=0;
+	  if (++k == mp->histo_ids.size()) break;
+	}
       }
       npadsall = min(npadsall,j);
     } else {
@@ -430,19 +423,34 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       //string drawopt("CP");
       string drawopt("L");
       string& gid = wp->graph_ids[j];
-      map<string,TGraph *>::const_iterator it = glmap_id2graph.find(gid);
+      map<string,TGraph *>::const_iterator it     = glmap_id2graph.find(gid);
+      map<string,TGraph2D *>::const_iterator it2d = glmap_id2graph2d.find(gid);
+      TGraph *gr     = NULL;
+      TGraph2D *gr2d = NULL;
       if (it == glmap_id2graph.end()) {
-	cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
-	exit (-1);
+	if (it2d == glmap_id2graph2d.end()) {
+	  cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
+	  exit (-1);
+	} else {
+	  gr2d = it2d->second;
+	}
+      } else {
+	gr = it->second;
       }
 
-      TGraph *gr = it->second;
 
-      if (!j && !wp->histo_ids.size())
-	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+      //if (!j && !wp->histo_ids.size())
+      //drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
 
       if (gr) {
-	drawInPad(wp,gr,drawopt.c_str());
+	drawInPad<TGraph>(wp,gr,drawopt.c_str());
+	wp->vp->Update();
+
+	if (drawlegend)
+	  wl->leg->AddEntry(gr,gid.c_str(),"L");
+      }
+      if (gr2d) {
+	drawInPad<TGraph2D>(wp,gr2d,drawopt.c_str());
 	wp->vp->Update();
 
 	if (drawlegend)
@@ -469,9 +477,29 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
 
       if (line) {
-	drawInPad(wp,line,drawopt.c_str());
+	drawInPad<TLine>(wp,line,drawopt.c_str());
 	if (drawlegend)
 	  wl->leg->AddEntry(line,lid.c_str(),"L");
+      }
+    }
+
+    /***************************************************
+     * LOOP OVER BOXES DEFINED FOR PAD...
+     ***************************************************/
+
+    for (unsigned j = 0; j < wp->box_ids.size(); j++) {
+      string drawopt("L");
+      string& bid = wp->box_ids[j];
+      map<string,TBox *>::const_iterator it = glmap_id2box.find(bid);
+      if (it == glmap_id2box.end()) {
+	cerr << "ERROR: box id " << bid << " never defined in layout" << endl;
+	exit (-1);
+      }
+
+      TBox *box = it->second;
+
+      if (box) {
+	drawInPad<TBox>(wp,box,drawopt.c_str());
       }
     }
 
@@ -514,11 +542,12 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   //prdFixOverlay();
 
   if (savePlots2file) {
+    wCanvas_t *wc0 = cs.canvases[0];
     for (size_t i=0; i<cs.canvases.size(); i++) {
       wCanvas_t *wc = cs.canvases[i];
       wc->c1->cd();
-      for (size_t i=0; i<wc->savenamefmts.size(); i++)
-	saveCanvas2File(wc,wc->savenamefmts[i]);
+      for (size_t i=0; i<wc0->savenamefmts.size(); i++)
+	saveCanvas2File(wc,wc0->savenamefmts[i]);
     }
   }
 }                                                           // drawPlots

@@ -55,6 +55,7 @@ struct wPad_t {
   vector<string> graph_ids;
   vector<string> label_ids;
   vector<string> line_ids;
+  vector<string> box_ids;
   TVirtualPad *vp;
 };
 
@@ -128,6 +129,7 @@ static string nullstr;
 #include "spLayout.C"
 #include "spLegend.C"
 #include "spLine.C"
+#include "spBox.C"
 #include "spMultiHist.C"
 #include "spPad.C"
 #include "spDraw.C"
@@ -191,6 +193,7 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "LABEL")     processLabelSection    (fp,theline,new_section);
     else if (section == "LATEX")     processLatexSection    (fp,theline,new_section);
     else if (section == "LINE")      processLineSection     (fp,theline,new_section);
+    else if (section == "BOX")       processBoxSection      (fp,theline,new_section);
     else if (section == "ALIAS")     processAliasSection    (fp,theline,new_section);
     else if (section == "SAMPLE")    processSampleSection   (fp,theline,new_section);
     else if (section == "TF1")       processTF1Section      (fp,theline,new_section);
@@ -261,6 +264,7 @@ void superPlot(const string& canvasLayout="canvas.txt",
   glmap_id2latex.clear();
   glmap_id2legend.clear();
   glmap_id2line.clear();
+  glmap_id2box.clear();
   glmap_id2rootfile.clear();
   glmap_id2style.clear();
   glmap_id2tf1.clear();
