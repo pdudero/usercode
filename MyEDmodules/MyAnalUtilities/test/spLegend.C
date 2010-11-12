@@ -1,11 +1,10 @@
 #include "TLegend.h"
 
 struct wLegend_t {
-  wLegend_t(const string& inhdr,
-	    float inx1ndc=0., float iny1ndc=0.,
+  wLegend_t(float inx1ndc=0., float iny1ndc=0.,
 	    float inx2ndc=1., float iny2ndc=1.,
 	    unsigned infillclr=10) :
-    header(inhdr),
+    header(""),
     x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc),
     fillcolor(infillclr),bordersize(1),ncolumns(1),linewidth(1) {}
   string   header;
@@ -32,7 +31,7 @@ processLegendSection(FILE *fp,
   vector<string> v_tokens;
 
   string  *lid  = NULL;
-  wLegend_t *wleg = new wLegend_t("FillMe");
+  wLegend_t *wleg = new wLegend_t();
 
   cout << "Processing legend section" << endl;
 
@@ -80,6 +79,17 @@ processLegendSection(FILE *fp,
     }
   }
 
+  wleg->leg = new TLegend(wleg->x1ndc,wleg->y1ndc,
+			  wleg->x2ndc,wleg->y2ndc);
+
+  if (wleg->header.size()) wleg->leg->SetHeader(wleg->header.c_str());
+  wleg->leg->SetTextSize(wleg->textsize);
+  wleg->leg->SetTextFont(wleg->textfont);
+  wleg->leg->SetBorderSize(wleg->bordersize);
+  wleg->leg->SetFillColor(wleg->fillcolor);
+  wleg->leg->SetLineWidth(wleg->linewidth);
+  wleg->leg->SetNColumns(wleg->ncolumns);
+  
   glmap_id2legend.insert(pair<string,wLegend_t *>(*lid,wleg));
   return true;
 }                                                // processLegendSection
