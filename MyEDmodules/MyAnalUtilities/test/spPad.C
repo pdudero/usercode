@@ -45,6 +45,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       Tokenize(value,wpad->graph_ids,","); 
       if (!wpad->graph_ids.size()) wpad->graph_ids.push_back(value);
     }
+    else if (key == "rootmacros") {
+      Tokenize(value,wpad->macro_ids,","); 
+      if (!wpad->macro_ids.size()) wpad->macro_ids.push_back(value);
+    }
     else if (key == "lines") {
       Tokenize(value,wpad->line_ids,","); 
       if (!wpad->line_ids.size()) wpad->line_ids.push_back(value);
