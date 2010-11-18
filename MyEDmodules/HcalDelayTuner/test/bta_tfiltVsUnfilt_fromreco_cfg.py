@@ -1,7 +1,7 @@
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("BEAMTIMEANAL")
+process = cms.Process("BTA")
 process.maxEvents = cms.untracked.PSet (
    input = cms.untracked.int32( -1 )
 # test it!
@@ -17,12 +17,14 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
 process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
-#process.source=cms.Source("PoolSource",
-#fileNames = cms.untracked.vstring(
-#    '/store/data/Run2010A/JetMETTau/RECO/v2/000/137/028/F4059C65-3E71-DF11-B32B-001D09F295A1.root')
-#)
+process.source=cms.Source("PoolSource",
+fileNames = cms.untracked.vstring(
+#    '/store/data/Run2010A/JetMETTau/RECO/v2/000/137/028/F4059C65-3E71-DF11-B32B-001D09F295A1.root'
+    '/store/data/Run2010B/Jet/RECO/PromptReco-v2/000/148/864/8893AA77-09E1-DF11-8C84-0030487A3C92.root'
+    )
+)
 #process.load("MyEDmodules.HcalDelayTuner.jetmettau_fill1222reco_v4_10")
-process.load("MyEDmodules.HcalDelayTuner.in_cff")
+#process.load("MyEDmodules.HcalDelayTuner.in_cff")
 
 #from MyEDmodules.HcalDelayTuner.goodRunList_cfi import lumisToProcess
 #process.source.lumisToProcess = lumisToProcess
@@ -57,44 +59,74 @@ process.cleaning_seq = cms.Sequence(process.oneGoodVertexFilter*
 
 process.load('Configuration.StandardSequences.GeometryExtended_cff')
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-process.GlobalTag.globaltag = 'GR10_P_V6::All'
+#process.GlobalTag.globaltag = 'GR_R_36X_V12::All'
+process.GlobalTag.globaltag = 'GR10_P_V11::All'
 
 # Replace timecorr object
-process.tc_ascii2 = cms.ESSource("HcalTextCalibrations",
-  input = cms.VPSet(cms.PSet(
-           object = cms.string('TimeCorrs'),
-             file = cms.FileInPath('MyEDmodules/HBHERecHitRetimer/data/timecorr_may27.txt') )
-                    )
-)
-process.prefer=cms.ESPrefer('HcalTextCalibrations','tc_ascii2')
-process.hbherecoRetimed = cms.EDProducer('HBHERecHitRetimer',
-                                         input = cms.InputTag('hbhereco')
-)
+# process.tc_ascii2 = cms.ESSource("HcalTextCalibrations",
+#   input = cms.VPSet(cms.PSet(
+#            object = cms.string('TimeCorrs'),
+#              file = cms.FileInPath('MyEDmodules/HcalDelayTuner/data/timecorr_4retimer_aug20_withHF.csv') )
+#                     )
+# )
+# process.prefer=cms.ESPrefer('HcalTextCalibrations','tc_ascii2')
+# process.hbherecoRetimed = cms.EDProducer('HBHERecHitRetimer',
+#                                          input = cms.InputTag('hbhereco')
+# )
 
-from JetMETAnalysis.HcalReflagging.hbherechitreflaggerJETMET_cfi import *
-process.hbherecoReflagged = hbherechitreflaggerJETMET.clone()
-process.hbherecoReflagged.hbheInputLabel=cms.untracked.InputTag("hbherecoRetimed")
-process.hbherecoReflagged.hbheTimingFlagBit=cms.untracked.int32(31)
-process.hbherecoReflagged.ignorelowest=cms.bool(False)
-#process.hbherecoReflagged.debug=cms.untracked.int32(1)
+process.load("MyEDmodules.HcalDelayTuner.hbheTimeFilterSequences_cff")
+#process.hbheReflagStdShape.hbheInputLabel           =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflagGained10pctPlus2ns.hbheInputLabel =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflagGained15pctPlus2ns.hbheInputLabel =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflag3xNewEnvDownTo0.hbheInputLabel    =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflag3xNewEnvStopAt50.hbheInputLabel   =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflagSquareFilter.hbheInputLabel        =cms.untracked.InputTag("hbherecoRetimed")
+#process.hbheReflagSquareFilterStopAt50.hbheInputLabel=cms.untracked.InputTag("hbherecoRetimed")
 
-# The following lines disable the default HFLongShort bits in the SeverityLevelComputer, and instead
-# cause any rechits flagged by 'UserDefinedBit0' to be excluded from calotower creation
-import JetMETAnalysis.HcalReflagging.RemoveAddSevLevel as RemoveAddSevLevel
+#process.unfiltTowersHcalOnly.hbheInput=cms.InputTag("hbherecoRetimed")
 
-process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
-process.hcalRecAlgos=RemoveAddSevLevel.AddFlag(process.hcalRecAlgos,"HBHETimingShapedCutsBits",10)
+#Exclude ECAL energy altogether
+#process.filtTowers3xNewEnvStopAt50.EBSumThreshold = cms.double(999999.9)
+#process.filtTowers3xNewEnvStopAt50.EESumThreshold = cms.double(999999.9)
+#process.filtTowers3xNewEnvStopAt50.EBThreshold    = cms.double(9999.9)
+#process.filtTowers3xNewEnvStopAt50.EEThreshold    = cms.double(9999.9)
 
-process.load("RecoJets.Configuration.CaloTowersRec_cff")
-process.filtTowersTimeBit = process.towerMaker.clone(hbheInput=cms.InputTag("hbherecoReflagged"))
+process.filtTowers3xNewEnvStopAt50.EBWeight       = cms.double(0.0)
+process.filtTowers3xNewEnvStopAt50.EEWeight       = cms.double(0.0)
+process.filtTowers3xNewEnvStopAt50.EBWeights      = cms.vdouble(0.,0.,0.,0.,0.)
+process.filtTowers3xNewEnvStopAt50.EEWeights      = cms.vdouble(0.,0.,0.,0.,0.)
 
-from RecoMET.METProducers.CaloMET_cfi import met
-process.rerecomet = met.clone(src = cms.InputTag("filtTowersTimeBit"))
+process.filtTowersSquareFilter.EBWeight           = cms.double(0.0)
+process.filtTowersSquareFilter.EEWeight           = cms.double(0.0)
+process.filtTowersSquareFilter.EBWeights          = cms.vdouble(0.,0.,0.,0.,0.)
+process.filtTowersSquareFilter.EEWeights          = cms.vdouble(0.,0.,0.,0.,0.)
 
-process.rereco_seq = cms.Sequence(process.hbherecoRetimed*
-                                  process.hbherecoReflagged*
-                                  process.filtTowersTimeBit*
-                                  process.rerecomet)
+process.filtTowersSquareFilterStopAt50.EBWeight   = cms.double(0.0)
+process.filtTowersSquareFilterStopAt50.EEWeight   = cms.double(0.0)
+process.filtTowersSquareFilterStopAt50.EBWeights  = cms.vdouble(0.,0.,0.,0.,0.)
+process.filtTowersSquareFilterStopAt50.EEWeights  = cms.vdouble(0.,0.,0.,0.,0.)
+
+#
+# compare apples to apples!
+#
+process.metcmpfilt3xNewEnvStopAt50.dirtyInput.caloMETlabel=cms.untracked.InputTag("unfiltmetHcalOnly")
+
+################################################################################
+
+# Clone Reco Met
+# process.CloneWhichMet = cms.EDProducer("CaloMETShallowCloneProducer",
+#     src = cms.InputTag("filtmet3xNewEnvStopAt50","","BTA")
+# )
+
+# # Select Reco Met
+# process.SelectWhichMet = cms.EDFilter("PtMinCandSelector",
+#       src = cms.InputTag("CloneWhichMet"),
+#     ptMin = cms.double(500.0),
+#    filter = cms.bool(True)   # otherwise it won't filter the events!
+# )
+
+# process.himetfilterseq = cms.Sequence(process.CloneWhichMet*
+#                                       process.SelectWhichMet)
 
 ################################################################################
 # Analyzers
@@ -103,79 +135,31 @@ process.TFileService = cms.Service("TFileService",
     closeFileFast = cms.untracked.bool(False)
 )
 
-from MyEDmodules.HcalDelayTuner.beamtiminganal_cfi import *
-process.hbantfilt = hbtimeanal.clone()
-process.hbantfilt.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherecoReflagged")
-process.hbantfilt.runDescription       = cms.untracked.string("/JetMETTau/Run2010A-v1 PD")
-process.hbantfilt.ampCutsInfC          = cms.bool(False)
-process.hbantfilt.minHit_GeVorfC       = cms.double(0.7)
-process.hbantfilt.recHitEscaleMaxGeV   = cms.double(800.5)
-process.hbantfilt.maxEventNum2plot     = cms.int32(30000000)
+process.binners = cms.Sequence(process.cleaning_seq*
+                               #process.hbherecoRetimed*
+                               process.allFilterSeqs)
 
-process.hbantfilt.detIds2mask          = cms.vint32(14,31,1)
+#process.himetfilterseq = cms.Sequence(process.CloneWhichMet*
+#                                      process.SelectWhichMet)
 
-process.heantfilt = hetimeanal.clone()
-process.heantfilt.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbherecoReflagged")
-process.heantfilt.runDescription       = cms.untracked.string("/JetMETTau/Run2010A-v1 PD")
-process.heantfilt.ampCutsInfC          = cms.bool(False)
-process.heantfilt.minHit_GeVorfC       = cms.double(0.8)
-process.heantfilt.recHitEscaleMaxGeV   = cms.double(800.5)
-process.heantfilt.maxEventNum2plot     = cms.int32(30000000)
 
-process.metunfilt = cms.EDAnalyzer("METbinner",
-  metInput          = cms.untracked.PSet(caloMETlabel=cms.untracked.InputTag("met","","RECO")),
-  minMET4plotGeV    = cms.untracked.double( -100.0),
-  maxMET4plotGeV    = cms.untracked.double( 5000.0),
-  minSumET4plotGeV  = cms.untracked.double( -100.0),
-  maxSumET4plotGeV  = cms.untracked.double(10000.0),
-)
-
-process.mettfilt = cms.EDAnalyzer("METbinner",
-  metInput          = cms.untracked.PSet(caloMETlabel=cms.untracked.InputTag("rerecomet","","BEAMTIMEANAL")),
-  minMET4plotGeV    = cms.untracked.double( -100.0),
-  maxMET4plotGeV    = cms.untracked.double( 5000.0),
-  minSumET4plotGeV  = cms.untracked.double( -100.0),
-  maxSumET4plotGeV  = cms.untracked.double(10000.0),
-)
-
-# Need conditions to convert digi ADC to fC in the analyzer
-
-process.anal_seq     = cms.Sequence(process.hbantfilt+process.heantfilt+process.mettfilt)
-
-process.unfiltpath = cms.Path(process.cleaning_seq*process.metunfilt)
-process.tfiltpath  = cms.Path(process.cleaning_seq*process.rereco_seq*process.anal_seq)
-
-# Clone Reco Met
-process.CloneRecoMet = cms.EDProducer("CaloMETShallowCloneProducer",
-    src = cms.InputTag("met")
-)
-
-# Select Reco Met
-process.SelectRecoMet = cms.EDFilter("PtMinCandSelector",
-      src = cms.InputTag("CloneRecoMet"),
-    ptMin = cms.double(100.0),
-   filter = cms.bool(True)   # otherwise it won't filter the events!
-)
-
-process.himetfilterpath = cms.Path(process.cleaning_seq*
-                                   process.CloneRecoMet*
-                                   process.SelectRecoMet)
+#process.himetfilterpath = cms.Path(process.cleaning_seq*
+##                                   process.hbherecoRetimed*
+#                                   process.himetfilterseq)
 
 #------------------------------
 # Output module configuration
 #------------------------------
 #
-process.output = cms.OutputModule("PoolOutputModule",
-   fileName = cms.untracked.string("/home/grad/dudero/data/pool.root"),
-    # save only events passing the full path
-#    SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('himetfilterpath') ),
-   outputCommands = cms.untracked.vstring("keep *")
-)
+# process.output = cms.OutputModule("PoolOutputModule",
+#     fileName = cms.untracked.string('himetevents_reco.root'),
+#     # save only events passing the full path
+#     SelectEvents=cms.untracked.PSet(SelectEvents=cms.vstring('himetfilterpath')),
+                                  
+#     outputCommands = cms.untracked.vstring("drop *", "keep *_*_*_BTA")
+# )
 
-process.out_step = cms.EndPath(process.output)
+process.out_step = cms.EndPath(process.binners) # *process.output)
 
-process.schedule = cms.Schedule(process.unfiltpath
-                               ,process.tfiltpath
-#                              ,process.himetfilterpath
-#                              ,process.out_step
-                                )
+process.schedule = cms.Schedule(#process.himetfilterpath,
+                                process.out_step)
