@@ -91,8 +91,10 @@ void drawInPad(wPad_t *wp, THStack *stack)
   // way to get the job done.
   //
   stack->Draw("AH");
-  TH1 *grid = (TH1 *)stack->GetHistogram()->Clone();
-  grid->Draw("AXIG SAME");
+
+  TH1 *grid = (TH1 *)stack->GetHistogram();
+  if (grid) grid->Draw("AXIG SAME");
+  else cout << "Problem getting stack histogram" << endl;
 
   wp->vp->Update();
 }                                                           // drawInPad
@@ -366,9 +368,11 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	if (!myHisto) cerr<< "find returned NULL pointer for " << hid << endl;
 
 	if (!j) {
+	  // use first histogram to set quantities
 	  stack=new THStack(myHisto->histo()->GetName(),
 			    myHisto->histo()->GetTitle());
-	  stack->SetHistogram(myHisto->histo()); // use first histogram to set axes
+	  stack->SetMaximum(myHisto->histo()->GetYaxis()->GetXmax());
+	  stack->SetMinimum(myHisto->histo()->GetYaxis()->GetXmin());
 	}
 
 	stack->Add(myHisto->histo());
