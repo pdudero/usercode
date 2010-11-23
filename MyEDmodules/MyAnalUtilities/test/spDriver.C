@@ -87,6 +87,7 @@ void spDriver(const string& canvasLayout="canvas.txt",
       fprintf(fpout,"%s=%s\n",it->first.c_str(), it->second[j].c_str());
 
     fclose(fpout);
+    cout<<"================================================================="<<endl;
     gSystem->Exec(catstring.c_str());
     superPlot(tmpname,saveplots);
     unlink(tmpname.c_str());

@@ -64,7 +64,7 @@ void recurseDirs( TDirectory *thisdir,
 
     if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
       // it's a subdirectory, recurse
-      cout << "Checking path: " << ((TDirectory *)obj)->GetPath() << endl;
+      //cout << "Checking path: " << ((TDirectory *)obj)->GetPath() << endl;
       recurseDirs( (TDirectory *)obj, doFunc, Args, Output );
     } else {
       doFunc(obj, thisdir, Args, Output);
@@ -80,6 +80,7 @@ void getHistosFromRE(const string&   mhid,
 		     vector<wTH1*>&  v_wth1)
 {
   TRegexp re(sre.c_str(),kTRUE);
+  cout<<"Searching for regexp "<<sre<<" in "<<filepath<<endl;
   if (re.Status() != TRegexp::kOK) {
     cerr << "The regexp " << sre << " is invalid, Status() = ";
     cerr << re.Status() << endl;
