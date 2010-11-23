@@ -40,9 +40,9 @@ void drawStandardText(const std::string& text,
   }
 }
 
-void drawLumiText(double px, double py, int val) {
+void drawLumiText(double px, double py, float val) {
   char text[40];
-  sprintf(text,"%d pb^{-1}",val);
+  sprintf(text,"%.1f pb^{-1}",val);
 
   TLatex *plabel = new TLatex(px,py,text);
   plabel-> SetNDC();
