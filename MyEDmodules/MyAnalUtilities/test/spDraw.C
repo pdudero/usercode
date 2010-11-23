@@ -365,8 +365,11 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	wTH1 *myHisto = it->second;
 	if (!myHisto) cerr<< "find returned NULL pointer for " << hid << endl;
 
-	if (!j) stack=new THStack(myHisto->histo()->GetName(),
-				  myHisto->histo()->GetTitle());
+	if (!j) {
+	  stack=new THStack(myHisto->histo()->GetName(),
+			    myHisto->histo()->GetTitle());
+	  stack->SetHistogram(myHisto->histo()); // use first histogram to set axes
+	}
 
 	stack->Add(myHisto->histo());
 
