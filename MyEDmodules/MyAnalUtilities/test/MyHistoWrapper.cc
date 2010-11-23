@@ -212,8 +212,9 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
   if (titlefont > 0)   ax->SetTitleFont(titlefont);
   if (labelsize > 0.0) ax->SetLabelSize(labelsize);
   if (labelfont > 0)   ax->SetLabelFont(labelfont);
-  if (rangeuserMin < rangeuserMax)
-    ax->SetRangeUser(rangeuserMin,rangeuserMax);
+  if (rangeuserMin < rangeuserMax) {
+    ax->SetLimits(rangeuserMin,rangeuserMax);
+  }
   if (ndiv != 510)     ax->SetNdivisions(ndiv,kFALSE);
 
   return ax;
