@@ -69,7 +69,7 @@ void drawInPad(wPad_t *wp, T *obj, const string& drawopt)
 
 //======================================================================
 
-void drawInPad(wPad_t *wp, THStack *stack)
+void drawInPad(wPad_t *wp, wStack_t *ws, const string& drawopt="")
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
@@ -90,9 +90,18 @@ void drawInPad(wPad_t *wp, THStack *stack)
   // and if the text sizes are different..., so have to find another
   // way to get the job done.
   //
-  stack->Draw("AH");
+  if (!drawopt.size()) {
+    cout << "Drawing stack with option AH" << endl;
+    ws->stack->Draw("AH");
+  }else{
+    cout << "Drawing stack with option A "<< drawopt << endl;
+    ws->stack->Draw(string("A "+drawopt).c_str());
+  }
 
-  TH1 *grid = (TH1 *)stack->GetHistogram();
+  //ws->stack->GetXaxis()->ResetAttAxis("X");
+  //ws->stack->GetYaxis()->ResetAttAxis("Y");
+
+  TH1 *grid = (TH1 *)ws->stack->GetHistogram();
   if (grid) grid->Draw("AXIG SAME");
   else cout << "Problem getting stack histogram" << endl;
 
@@ -354,38 +363,36 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * Check for stacked histos:
      ***************************************************/
 
+    string drawopt("");
     if (wp->stack_ids.size()) {
-      THStack *stack=NULL;
+      wStack_t *ws=NULL;
       for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
-	string& hid = wp->stack_ids[j];
-	map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
-	if (it == glmap_id2histo.end()) {
-	  cerr << "ERROR: histo id " << hid << " never defined in layout" << endl;
+	string& sid = wp->stack_ids[j];
+	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
+	if (it == glmap_id2stack.end()) {
+	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
 	  exit (-1);
 	}
 
-	wTH1 *myHisto = it->second;
-	if (!myHisto) cerr<< "find returned NULL pointer for " << hid << endl;
+	ws = it->second;
+	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
 
-	if (!j) {
-	  // use first histogram to set quantities
-	  stack=new THStack(myHisto->histo()->GetName(),
-			    myHisto->histo()->GetTitle());
-	  stack->SetMaximum(myHisto->histo()->GetYaxis()->GetXmax());
-	  stack->SetMinimum(myHisto->histo()->GetYaxis()->GetXmin());
+	// Add the histos in the stack to any legend that exists
+	//
+	if (drawlegend) {
+	  for (size_t i=0; i<ws->v_histos.size(); i++) {
+	    wTH1 *wh = ws->v_histos[i];
+	    wh->ApplySavedStyle();
+	    if(wh->GetLegendEntry().size())
+	      wh->Add2Legend(wl->leg);
+	    if (!i && wh->GetDrawOption().size())
+	      drawopt = wh->GetDrawOption();
+	  }
 	}
 
-	stack->Add(myHisto->histo());
-
-	if (drawlegend && myHisto->GetLegendEntry().size()) {
-	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
-	  myHisto->Add2Legend(wl->leg);
-	}
-	myHisto->ApplySavedStyle();
 	wp->vp->Update();
       }
-      cout << "Drawing stack" << endl;
-      drawInPad(wp,stack);
+      drawInPad(wp, ws, drawopt);
     }
 
     /***************************************************
@@ -409,7 +416,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	cout << "firstInPad = " << firstInPad << endl;
 	drawInPad(wp,*myHisto,firstInPad);
 	if (myHisto->statsAreOn()) {
-	  cout << "OptStat = " <<  gStyle->GetOptStat() << endl;
 	  myHisto->DrawStats();
 	  wp->vp->Update();
 	}
@@ -557,8 +563,21 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     }
 
     /***************************************************
-     * Draw each label
+     * Draw each latex/label object
      ***************************************************/
+    
+    for (unsigned j=0; j<wp->latex_ids.size(); j++) {
+      string& lid = wp->latex_ids[j];
+      map<string,TLatex *>::const_iterator it = glmap_id2latex.find(lid);
+      if (it == glmap_id2latex.end()) {
+	cerr << "ERROR: latex id " << lid << " never defined in layout" << endl;
+	exit (-1);
+      }
+      cout << "Drawing latex object " << lid << endl;
+      TLatex *ltx = it->second;
+      ltx->Draw();
+      wp->vp->Update();
+    }
 
     for (unsigned j = 0; j < wp->label_ids.size(); j++) {
       string& lid = wp->label_ids[j];
@@ -567,6 +586,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	cerr << "ERROR: label id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
+      cout << "Drawing label object " << lid << endl;
       wLabel_t *wl = it->second;
       drawStandardText(wl->text, wl->x1ndc, wl->y1ndc,-1,-1,wl->textsize);
 
