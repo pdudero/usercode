@@ -61,6 +61,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       Tokenize(value,wpad->label_ids," ,"); 
       if (!wpad->label_ids.size())  wpad->label_ids.push_back(value);
     }
+    else if (key == "latex") {
+      Tokenize(value,wpad->latex_ids," ,"); 
+      if (!wpad->latex_ids.size())  wpad->latex_ids.push_back(value);
+    }
     else if (key == "title")        wpad->hframe->histo()->SetTitle(value.c_str());
     else if (key == "xtitle")       wpad->hframe->histo()->SetXTitle(value.c_str());
     else if (key == "ytitle")       wpad->hframe->histo()->SetYTitle(value.c_str());

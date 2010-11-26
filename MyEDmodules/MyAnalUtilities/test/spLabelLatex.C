@@ -113,6 +113,7 @@ processLatexSection(FILE   *fp,
 	break;
       }
       ltx = new TLatex();
+      ltx->SetNDC();
     }
     else if (key == "text") {
       if (value[0]=='@') {
