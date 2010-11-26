@@ -55,6 +55,7 @@ struct wPad_t {
   vector<string> graph_ids;
   vector<string> macro_ids;
   vector<string> label_ids;
+  vector<string> latex_ids;
   vector<string> line_ids;
   vector<string> box_ids;
   TVirtualPad *vp;
@@ -134,6 +135,7 @@ static string nullstr;
 #include "spBox.C"
 #include "spMultiHist.C"
 #include "spPad.C"
+#include "spStack.C"
 #include "spDraw.C"
 
 //======================================================================
@@ -190,6 +192,7 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "HISTO")     processHistoSection    (fp,theline,new_section);
     else if (section == "MULTIHIST") processMultiHistSection(fp,theline,new_section);
     else if (section == "HMATH")     processHmathSection    (fp,theline,new_section);
+    else if (section == "STACK")     processStackSection    (fp,theline,new_section);
     else if (section == "GRAPH")     processGraphSection    (fp,theline,new_section);
     else if (section == "LEGEND")    processLegendSection   (fp,theline,new_section);
     else if (section == "LABEL")     processLabelSection    (fp,theline,new_section);
@@ -244,9 +247,9 @@ canvasSet_t *initCanvasSet(const string& cLayoutFile)
     wc->motherpad->Divide(wc->npadsx,wc->npadsy);
   			     // , wc->padxmargin,wc->padymargin);
 
-    cout << "Canvas " << cLayoutFile << " dimensions "
+    cout << "Canvas " << wc->c1->GetName() << " dimensions "
 	 << wc->npadsx << "x" << wc->npadsy << endl;
-    cout << "Canvas " << cLayoutFile << " margins "
+    cout << "Canvas " << wc->c1->GetName() << " margins "
 	 << wc->padxmargin << "x" << wc->padymargin << endl;
 
   }
@@ -263,6 +266,7 @@ void superPlot(const string& canvasLayout="canvas.txt",
   glmap_aliii.clear();
   glmap_id2graph.clear();
   glmap_id2histo.clear();
+  glmap_id2stack.clear();
   glmap_id2label.clear();
   glmap_id2latex.clear();
   glmap_id2legend.clear();
