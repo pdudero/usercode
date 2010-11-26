@@ -62,18 +62,20 @@ public:
 		  int style=0,
 		  int size=0);
   void SetStats  (bool  on=true,
+		  int   optstat=1,
 		  float x1ndc=0.0,
 		  float y1ndc=0.0,
 		  float x2ndc=0.0,
 		  float y2ndc=0.0);
   void DrawStats (void);
 
-  bool statsAreOn    (void)                       { return statsAreOn_; }
-  void SetLegendEntry(const std::string& entry)   { legentry_   = entry;  }
-  void SetDrawOption (const std::string& option)  { drawoption_ = option; }
-
-  void SaveStyle       (TStyle *instyle)          { style2apply_ = instyle; }
-  bool ApplySavedStyle (void);
+  bool         statsAreOn    (void)                      { return statsAreOn_;         }
+  int          GetOptStat    (void)                      { return stats_.GetOptStat(); }
+  void         SetLegendEntry(const std::string& entry)  { legentry_   = entry;        }
+  void         SetDrawOption (const std::string& option) { drawoption_ = option;       }
+  std::string& GetDrawOption (void)                      { return drawoption_;         }
+  void         SaveStyle     (TStyle *instyle)           { style2apply_ = instyle;     }
+  bool         ApplySavedStyle (void);
 
   void Add2Legend(TLegend *leg) {
     std::string legdrawopt;
@@ -214,6 +216,7 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
   if (labelfont > 0)   ax->SetLabelFont(labelfont);
   if (rangeuserMin < rangeuserMax) {
     ax->SetLimits(rangeuserMin,rangeuserMax);
+    ax->SetRangeUser(rangeuserMin,rangeuserMax);
   }
   if (ndiv != 510)     ax->SetNdivisions(ndiv,kFALSE);
 
@@ -247,6 +250,7 @@ MyHistoWrapper<T>::SetMarker(int color, int style, int size)
 template<typename T>
 void
 MyHistoWrapper<T>::SetStats(bool  on,
+			    int   optstat,
 			    float x1ndc,
 			    float y1ndc,
 			    float x2ndc,
@@ -254,6 +258,7 @@ MyHistoWrapper<T>::SetStats(bool  on,
 {
   statsAreOn_ = on;
   h_->SetStats(on);
+  stats_.SetOptStat(optstat);
   if (x1ndc > 0.0) stats_.SetX1NDC(x1ndc);
   if (y1ndc > 0.0) stats_.SetY1NDC(y1ndc);
   if (x2ndc > 0.0) stats_.SetX2NDC(x2ndc);
@@ -315,8 +320,10 @@ MyHistoWrapper<T>::DrawStats(void)
     st1->SetX1NDC(x1); st1->SetX2NDC(x2);
     st1->SetY1NDC(y1); st1->SetY2NDC(y2);
 #if 1
-    std::cout << "Setting Stats Object for " << h_->GetName() << " to ";
-    std::cout << x1 << ", " << x2 << ", " << y1 << ", " << y2 << std::endl;
+    std::cout << "Drawing Stats Object for " << h_->GetName() << std::endl;
+    std::cout << "with OptStat = " << stats_.GetOptStat() << std::endl;
+    std::cout << "at (X=";
+    std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")"<< std::endl;
 #endif
 
   }
@@ -327,6 +334,8 @@ MyHistoWrapper<T>::DrawStats(void)
     st1->SetLineColor(h_->GetLineColor());
     st1->SetTextColor(h_->GetLineColor());
   }
+  st1->SetOptStat(stats_.GetOptStat());
+  st1->Draw();
 }
 
 //======================================================================
