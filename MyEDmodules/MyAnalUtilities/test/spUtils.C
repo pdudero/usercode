@@ -130,9 +130,11 @@ string stripDirsAndSuffix(const string& input)
 {
   string output;
   size_t startpos=input.find_last_of('/');
+  size_t endpos  =input.find_last_of('.');
   if (startpos==string::npos) startpos = 0;
   else startpos++;
-  output=input.substr(startpos,input.find_last_of('.')-startpos);
+  if (endpos==string::npos) output=input.substr(startpos);
+  else                      output=input.substr(startpos,endpos-startpos);
 
   return output;
 }
