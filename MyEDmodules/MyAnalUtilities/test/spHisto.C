@@ -176,6 +176,8 @@ void processCommonHistoParams(const string& key,
 
   vector<string> v_tokens;
 
+  int os = wh.GetOptStat();
+
   // Allow user to define a set of common parameters to be used multiple times
   //
   if (key == "applystyle") {
@@ -284,11 +286,31 @@ void processCommonHistoParams(const string& key,
 
   // stats box
   else if (key == "statson")    wh.SetStats(str2int(value) != 0);
-  else if (key == "statsx1ndc") wh.SetStats(wh.statsAreOn(),str2flt(value));
-  else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),0.0,str2flt(value));
-  else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,str2flt(value));
-  else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),0.0,0.0,0.0,str2flt(value));
-
+  else if (key == "statsx1ndc") wh.SetStats(wh.statsAreOn(),os,str2flt(value));
+  else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),os,0.0,str2flt(value));
+  else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),os,0.0,0.0,str2flt(value));
+  else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),os,0.0,0.0,0.0,str2flt(value));
+  else if (key == "optstat") {
+    if (value.find_first_not_of("012") == string::npos)  // it's an integer already
+      wh.SetStats(wh.statsAreOn(),str2int(value));
+    else {
+      os = 0;
+      if      (value.find('K') != string::npos) os += 200000000; //  kurtosis and kurtosis error printed
+      else if (value.find('k') != string::npos) os += 100000000; //  kurtosis printed
+      if      (value.find('S') != string::npos) os += 20000000; //  skewness and skewness error printed
+      else if (value.find('s') != string::npos) os += 10000000; //  skewness printed
+      if      (value.find('i') != string::npos) os += 1000000; //  integral of bins printed
+      if      (value.find('o') != string::npos) os += 100000; //  number of overflows printed
+      if      (value.find('u') != string::npos) os += 10000; //  number of underflows printed
+      if      (value.find('R') != string::npos) os += 2000; //  rms and rms error printed
+      else if (value.find('r') != string::npos) os += 1000; //  rms printed
+      if      (value.find('M') != string::npos) os += 200; //  mean value mean error values printed
+      else if (value.find('m') != string::npos) os += 100; //  mean value printed
+      if      (value.find('e') != string::npos) os += 10; //  number of entries printed
+      if      (value.find('n') != string::npos) os += 1; //  name of histogram is printed
+      wh.SetStats(wh.statsAreOn(),os);
+    }
+  }
   else if ((key == "errorson") &&
 	   str2int(value)     ) wh.histo()->Sumw2();
 
@@ -406,7 +428,7 @@ processHistoSection(FILE *fp,
 	cerr << "clone must be defined after the clonee" << endl;
 	break;
       }
-      wth1 = it->second->Clone(string(it->second->histo()->GetName())+"_clone",
+      wth1 = it->second->Clone(string(it->second->histo()->GetName())+"_"+(*hid),
 			       string(it->second->histo()->GetTitle()));
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
