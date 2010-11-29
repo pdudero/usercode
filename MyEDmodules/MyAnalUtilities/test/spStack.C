@@ -97,6 +97,7 @@ processStackSection(FILE *fp,
 
     else {
       processCommonHistoParams(key,value,*stkwh);
+      if (key=="title") ws->stack->SetTitle(stkwh->histo()->GetTitle());
     }
   } // while getline loop
 
