@@ -210,7 +210,7 @@ then
     cat >>${CFGFILE} <<EOF99
 process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
 process.load("CalibCalorimetry.HcalPlugins.Hcal_Conditions_forGlobalTag_cff")
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cfi")
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.GlobalTag.globaltag = '${GLOBALTAG}'
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hbhe_cfi")
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_ho_cfi")

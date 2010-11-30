@@ -224,7 +224,8 @@ EOF100
     then
 	cat >>${CFGFILE}<<EOF101
 process.load("RecoLocalCalo.HcalRecProducers.HcalHitReconstructor_hbhe_cfi")
-process.hbhetimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbhereco","","${PROCESSNAME}")
+process.hbtimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbhereco","","${PROCESSNAME}")
+process.hetimeanal.eventDataPset.hbheRechitLabel = cms.untracked.InputTag("hbhereco","","${PROCESSNAME}")
 EOF101
     fi
     if (( ${#HBHE_FIRSTSAMPLE} >0 ))
@@ -395,6 +396,8 @@ process.load('Configuration/StandardSequences/MagneticField_38T_cff')
 process.load('Configuration/StandardSequences/Reconstruction_cff')
 process.load('Configuration/StandardSequences/EndOfProcess_cff')
 process.load('Configuration/EventContent/EventContent_cff')
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = '${GLOBALTAG}'
 EOF140
     if (( ${#MYPATH} > 0 ))
     then
@@ -406,9 +409,7 @@ elif (( ${DOHCALRECO} ))
 then
     cat >>${CFGFILE} <<EOF141
 process.load("RecoLocalCalo.HcalRecAlgos.hcalRecAlgoESProd_cfi")
-process.load("CalibCalorimetry.HcalPlugins.Hcal_Conditions_forGlobalTag_cff")
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cfi")
-process.GlobalTag.globaltag = '${GLOBALTAG}'
+process.load("CalibCalorimetry.HcalPlugins.Hcal_FrontierConditions_cff")
 process.myreco=cms.Sequence(${MYRECO})
 EOF141
     if (( ${#MYPATH} > 0 ))
