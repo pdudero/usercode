@@ -91,10 +91,10 @@ process.load("MyEDmodules.HcalDelayTuner.hbheTimeFilterSequences_cff")
 #process.filtTowers3xNewEnvStopAt50.EBThreshold    = cms.double(9999.9)
 #process.filtTowers3xNewEnvStopAt50.EEThreshold    = cms.double(9999.9)
 
-process.filtTowers3xNewEnvStopAt50.EBWeight       = cms.double(0.0)
-process.filtTowers3xNewEnvStopAt50.EEWeight       = cms.double(0.0)
-process.filtTowers3xNewEnvStopAt50.EBWeights      = cms.vdouble(0.,0.,0.,0.,0.)
-process.filtTowers3xNewEnvStopAt50.EEWeights      = cms.vdouble(0.,0.,0.,0.,0.)
+process.filtTowersStdShape.EBWeight               = cms.double(0.0)
+process.filtTowersStdShape.EEWeight               = cms.double(0.0)
+process.filtTowersStdShape.EBWeights              = cms.vdouble(0.,0.,0.,0.,0.)
+process.filtTowersStdShape.EEWeights              = cms.vdouble(0.,0.,0.,0.,0.)
 
 process.filtTowersSquareFilter.EBWeight           = cms.double(0.0)
 process.filtTowersSquareFilter.EEWeight           = cms.double(0.0)
@@ -109,7 +109,7 @@ process.filtTowersSquareFilterStopAt50.EEWeights  = cms.vdouble(0.,0.,0.,0.,0.)
 #
 # compare apples to apples!
 #
-process.metcmpfilt3xNewEnvStopAt50.dirtyInput.caloMETlabel=cms.untracked.InputTag("unfiltmetHcalOnly")
+process.metcmpfiltStdShape.dirtyInput.caloMETlabel=cms.untracked.InputTag("unfiltmetHcalOnly")
 
 ################################################################################
 
