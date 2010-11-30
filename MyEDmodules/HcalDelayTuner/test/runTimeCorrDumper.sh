@@ -7,7 +7,12 @@ then
 fi
 
 # 'GR10_P_V6::All'
-GLOBAL_TAG=MC_38Y_V12::All
+#GLOBAL_TAG=MC_38Y_V12::All
+#GLOBAL_TAG=GR_R_38X_V14::All
+#GLOBAL_TAG=GR10_P_V12::All
+GLOBAL_TAG=GR_R_39X_V2::All
+
+RUNNUMBER=149011
 
 CFGFILE=${0%.sh}_cfg.py
 cat > ${CFGFILE} << EOF
@@ -21,7 +26,9 @@ process = cms.Process("TCDUMP")
 #-----------------------------
 
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(1))
-process.source    = cms.Source("EmptySource")
+process.source    = cms.Source("EmptySource",
+                                firstRun = cms.untracked.uint32(${RUNNUMBER})
+)
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.INFO.limit = cms.untracked.int32(-1);
