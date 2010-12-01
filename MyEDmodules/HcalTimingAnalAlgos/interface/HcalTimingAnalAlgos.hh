@@ -15,7 +15,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.hh,v 1.2 2010/08/04 13:30:52 dudero Exp $
+// $Id: HcalTimingAnalAlgos.hh,v 1.3 2010/08/10 23:46:08 dudero Exp $
 //
 //
 
@@ -108,6 +108,7 @@ protected:
   bool              ampCutsInfC_;
   double            minHitAmplitude_;       // minimum hit threshold (GeV or fC)
   double            maxHitAmplitude_;       // maximum hit threshold (GeV or fC)
+  double            minHitAmpPerChan_;      // minimum hit threshold (GeV or fC)
   double            timeWindowMinNS_;
   double            timeWindowMaxNS_;
   uint32_t          recHitTscaleNbins_;

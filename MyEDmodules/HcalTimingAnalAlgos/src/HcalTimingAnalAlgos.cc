@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalTimingAnalAlgos.cc,v 1.2 2010/08/04 13:30:52 dudero Exp $
+// $Id: HcalTimingAnalAlgos.cc,v 1.3 2010/08/10 23:46:08 dudero Exp $
 //
 //
 
@@ -387,11 +387,12 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   maxEventNum2plot_   = iConfig.getParameter<int>   ("maxEventNum2plot");
   normalizeDigis_     = iConfig.getParameter<bool>  ("normalizeDigis");
   doPerChannel_       = iConfig.getParameter<bool>  ("doPerChannel");
+  minHitAmpPerChan_   = iConfig.getUntrackedParameter<double>("minHit_GeVorfC_perChan",minHitAmplitude_);
   minEvents4avgT_     = iConfig.getParameter<int>   ("minEvents4avgT");
   doTree_             = iConfig.getUntrackedParameter<bool>("doTree",false);
 
   recHitEscaleNbins_ = (uint32_t)(recHitEscaleMaxGeV_ - recHitEscaleMinGeV_);
-  if (recHitEscaleNbins_ > 1000) recHitEscaleNbins_ = 1000;
+  //if (recHitEscaleNbins_ > 1000) recHitEscaleNbins_ = 1000;
 
   recHitEscaleMinfC_ = 5*recHitEscaleMinGeV_;
   recHitEscaleMaxfC_ = 5*recHitEscaleMaxGeV_;
@@ -406,9 +407,6 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
   std::vector<int> v_maskidnumbers =
     iConfig.getParameter<vector<int> >("detIds2mask");
 
-  if (!buildMaskSet(v_maskidnumbers))
-    throw cms::Exception("Invalid detID vector");
-
   HcalLogicalMapGenerator gen;
   lmap_ = new HcalLogicalMap(gen.createMap());
 
@@ -420,8 +418,17 @@ HcalTimingAnalAlgos::HcalTimingAnalAlgos(const edm::ParameterSet& iConfig) :
     throw cms::Exception("Unknown subdet string: ") << mysubdetstr_ << endl;
   }
 
-
   cout << "My subdet is " << mysubdetstr_ << endl;
+
+  if (!buildMaskSet(v_maskidnumbers))
+    throw cms::Exception("Invalid detID vector");
+  else if (detIds2mask_.size()) {
+    cout << "Masked channels:"<<endl;
+    set<int>::const_iterator it;
+    for (it=detIds2mask_.begin(); it!=detIds2mask_.end(); it++)
+      cout << HcalDetId::detIdFromDenseIndex(*it) << ", ";
+    cout << endl;
+  }
 
   firstEvent_ = true;
 }                            // HcalTimingAnalAlgos::HcalTimingAnalAlgos
@@ -436,21 +443,53 @@ HcalTimingAnalAlgos::buildMaskSet(const std::vector<int>& v_idnumbers)
     return false;
   }
 
+  // 99 = wildcard
   for (uint32_t i=0; i<v_idnumbers.size(); i+=3) {
-    int ieta  = v_idnumbers[i];
-    int iphi  = v_idnumbers[i+1];
-    int depth = v_idnumbers[i+2];
-    enum HcalSubdetector subdet;
-    if      (depth == 4)       subdet = HcalOuter;
-    else if (abs(ieta) <= 16)  subdet = (depth==3)? HcalEndcap:HcalBarrel;
-    else if (abs(ieta) <= 29)  subdet = HcalEndcap; // gud enuf fer gubmint werk
-    else return false;                    // no HF for splash
-    
-    if (!HcalDetId::validDetId(subdet,ieta,iphi,depth))
-      return false;
+    int ieta    = v_idnumbers[i];
+    int iphi    = v_idnumbers[i+1];
+    int depth   = v_idnumbers[i+2];
+    int minieta = ieta;
+    int maxieta = ieta;
+    int miniphi = iphi;
+    int maxiphi = iphi;
+    int mindpth = depth;
+    int maxdpth = depth;
+    int phiskip = 1;
 
-    detIds2mask_.insert(HcalDetId(subdet,ieta,iphi,depth).hashed_index());
+    switch(mysubdet_) {
+    case HcalBarrel:
+      if (depth==99)   { mindpth=1;   maxdpth=2;  }
+      if (ieta==99)    { minieta=1;   maxieta=16; } else
+	if (ieta==-99) { minieta=-16; maxieta=-1; }
+      if (iphi==99)    { miniphi=1;   maxiphi=72; }
+      break;
+    case HcalEndcap:
+      if (depth==99)   { mindpth=1;   maxdpth=3;  }
+      if (ieta==99)    { minieta=16;  maxieta=29; } else
+	if (ieta==-99) { minieta=-29; maxieta=-16;}
+      if (iphi==99)    { miniphi=1;   maxiphi=72; }
+      break;
+    case HcalForward:
+      if (depth==99)   { mindpth=1;   maxdpth=2;  }
+      if (ieta==99)    { minieta=29;  maxieta=41; } else
+	if (ieta==-99) { minieta=-41; maxieta=-29;}
+      if (iphi==99)    { miniphi=1;   maxiphi=71; phiskip=2; }
+      break;
+    default:  return false;
+    }
+
+    for (int depth=mindpth; depth<=maxdpth; depth++) {
+      for (int ieta=minieta; ieta<=maxieta; ieta++) {
+	for (int iphi=miniphi; iphi<=maxiphi; iphi+=phiskip) {
+	  if (!HcalDetId::validDetId(mysubdet_,ieta,iphi,depth)) continue;
+	  detIds2mask_.insert(HcalDetId(mysubdet_,ieta,iphi,depth).hashed_index());
+	}
+      }
+    }
   }
+  // see if all the entries were invalid
+  if (v_idnumbers.size() && !detIds2mask_.size()) return false;
+
   return true;
 }                                   // HcalTimingAnalAlgos::buildMaskSet
 
@@ -1294,7 +1333,6 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 	myAH->fill1d<TH1F>(st_rhFlagBits_,ibit+1);
       }
     }
-
     if  (mysubdet_==HcalForward) {
       fangle_   = TMath::Pi()*(fiphi_-1.)/36.;
       fradius_  = hftwrRadii[41-absieta];
@@ -1378,8 +1416,8 @@ HcalTimingAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
     // Now per channel...
 
     bool perchOverThresh = ampCutsInfC_ ?
-      (fCamplitude_ > std::max(25.0,minHitAmplitude_)) :
-      (hitenergy_   > std::max(5.0,minHitAmplitude_));
+      (fCamplitude_ > std::max(25.0,minHitAmpPerChan_)) :
+      (hitenergy_   > std::max(5.0,minHitAmpPerChan_));
 
     stringstream chname;
     uint32_t     dix;
@@ -1617,20 +1655,21 @@ HcalTimingAnalAlgos::beginJob(const edm::EventSetup& iSetup,
   }
 
   std::cout << "----------------------------------------"  << "\n"
-	    << "Parameters being used: "               << "\n" <<
-    "subdet_            = "      << mysubdetstr_       << "\n" << 
-    "globalToffset_     = "      << globalToffset_     << "\n" << 
-    "globalFlagMask_    = "<<hex << globalFlagMask_    << "\n" << 
-    "ampCutsInfC_       = "      << ampCutsInfC_       << "\n" << 
-    "minHitAmplitude_   = "<<dec << minHitAmplitude_   << "\n" << 
-    "maxHitAmplitude_   = "      << maxHitAmplitude_   << "\n" << 
-    "normalizeDigis_    = "      << normalizeDigis_    << "\n" <<
-    "doPerChannel_      = "      << doPerChannel_      << "\n" <<
-    "doTree_            = "      << doTree_            << "\n" <<
-    "minEvents4avgT_    = "      << minEvents4avgT_    << "\n" <<
-    "firstsamp_         = "      << firstsamp_         << "\n" <<
-    "nsamps_            = "      << nsamps_            << "\n" <<
-    "presamples_        = "      << presamples_        << "\n";
+	    << "Parameters being used: "                << "\n" <<
+    "subdet_             = "      << mysubdetstr_       << "\n" << 
+    "globalToffset_      = "      << globalToffset_     << "\n" << 
+    "globalFlagMask_     = "<<hex << globalFlagMask_    << "\n" << 
+    "ampCutsInfC_        = "      << ampCutsInfC_       << "\n" << 
+    "minHitAmplitude_    = "<<dec << minHitAmplitude_   << "\n" << 
+    "maxHitAmplitude_    = "      << maxHitAmplitude_   << "\n" << 
+    "recHitEscaleMaxGeV_ = "      << recHitEscaleMaxGeV_<< "\n" <<
+    "normalizeDigis_     = "      << normalizeDigis_    << "\n" <<
+    "doPerChannel_       = "      << doPerChannel_      << "\n" <<
+    "doTree_             = "      << doTree_            << "\n" <<
+    "minEvents4avgT_     = "      << minEvents4avgT_    << "\n" <<
+    "firstsamp_          = "      << firstsamp_         << "\n" <<
+    "nsamps_             = "      << nsamps_            << "\n" <<
+    "presamples_         = "      << presamples_        << "\n";
 #if 0
     "timeWindowMinNS_   = "      << timeWindowMinNS_   << "\n" << 
     "timeWindowMaxNS_   = "      << timeWindowMaxNS_   << "\n";
