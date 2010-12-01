@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: BeamTimingAnalAlgos.hh,v 1.2 2010/08/04 13:30:52 dudero Exp $
+// $Id: BeamTimingAnalAlgos.hh,v 1.3 2010/08/10 23:43:10 dudero Exp $
 //
 //
 
@@ -31,7 +31,9 @@
 #include "TProfile2D.h"
 
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloTopology/interface/CaloTowerConstituentsMap.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
+#include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
 
 //
 // class declaration
@@ -82,8 +84,9 @@ private:
 				 float& fCamplitude);
 
   template<class Digi,class RecHit>
-  void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi> >& digihandle,
-				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle);
+  void   processDigisAndRecHits (const edm::Handle<edm::SortedCollection<Digi>   >& digihandle,
+				 const edm::Handle<edm::SortedCollection<RecHit> >& rechithandle,
+				 const edm::Handle<CaloTowerCollection>&            towerhandle);
   void   findConfirmedHits      (const edm::Handle<HFRecHitCollection>& rechithandle,
 				 const edm::Handle<HFDigiCollection>&   digihandle);
 
@@ -100,9 +103,13 @@ private:
   int hbheOutOfTimeFlagBit_;
   BeamHitTimeCorrector *timecor_; // beam hit time (vertex displacement) corrector
 
+  const CaloTowerConstituentsMap *twrConstituentsMap_;
+  float emfraction_, emfThreshold_;
+
   float avgTminus_,  avgTplus_;
   int   nhitsminus_, nhitsplus_;
   float totalEminus_, totalEplus_;
+  int   nOutOfTimeHitsPerEv_;
   float partnerfCamplitude_;
 
   float treco3ts_;                    // time reconstructed with 3TS charge weighted algo
@@ -118,7 +125,8 @@ private:
   std::vector<std::string> v_nestedCuts_;      // vector of nested cut strings
   std::vector<std::string> v_hitCategories_;   // vector of parallel cut strings
 
-  std::string st_cutNone_, st_cutHitEwindow_, st_cutBadFlags_, st_cutBadBx_, st_cutBadEv_, st_cutOutOfTime_;
+  std::string st_cutNone_,st_cutHitEwindow_,st_cutMaskedIDs_,st_cutBadFlags_,st_cutBadBx_,st_cutBadEv_;
+  std::string st_cutOutOfTime_,st_cutEMconfirm_, st_isHB15or16_, st_isHE28or29_;
   std::string st_fraction2ts_, st_region1_,st_region2_,st_region3_,st_region4_,st_region5_;
 
   // names of hit categories
@@ -130,6 +138,7 @@ private:
   std::string st_nHitsMinus_;
   std::string st_totalEplus_;
   std::string st_totalEminus_;
+  std::string st_nOOThitsPerEv_;
 
   std::string st_rhCorTimesD1vsD2plus_;
   std::string st_rhCorTimesD1vsD2minus_;
