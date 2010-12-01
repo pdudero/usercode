@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.17 2010/08/04 13:35:47 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.18 2010/08/11 00:16:44 dudero Exp $
 //
 //
 
@@ -166,27 +166,42 @@ public:
   template<class T> T *book3d(Tkey key, const HistoParams_t& pars, bool verbose=true);
 
   template<class T> T *book2d(const std::string& name,
-			      const char *title,
+			      const std::string& title,
 			      int nbinsx, const double xbins[],
 			      int nbinsy, double ymin, double ymax,
 			      bool verbose=true);
   template<class T> T *book2d(const std::string& name,
-			      const char *title,
+			      const std::string& title,
 			      int nbinsx, double xmin, double xmax,
 			      int nbinsy, const double ybins[],
 			      bool verbose=true);
 
+  template<class T> T *book3d(const std::string& name,
+			      const std::string& title,
+			      int nbinsx, const double xbins[],
+			      int nbinsy, const double ybins[],
+			      int nbinsz, const double zbins[],
+			      bool verbose=true);
+
   template<class T> T *book2d(Tkey key,
 			      const std::string& name,
-			      const char *title,
+			      const std::string& title,
 			      int nbinsx, const double xbins[],
 			      int nbinsy, double ymin, double ymax,
 			      bool verbose=true);
   template<class T> T *book2d(Tkey key,
 			      const std::string& name,
-			      const char *title,
+			      const std::string& title,
 			      int nbinsx, double xmin, double xmax,
 			      int nbinsy, const double ybins[],
+			      bool verbose=true);
+
+  template<class T> T *book3d(Tkey key,
+			      const std::string& name,
+			      const std::string& title,
+			      int nbinsx, const double xbins[],
+			      int nbinsy, const double ybins[],
+			      int nbinsz, const double zbins[],
 			      bool verbose=true);
 
   template<class T> void book1d(const std::vector<HistoParams_t>& v_pars);
@@ -207,7 +222,8 @@ public:
   template<class T> T *get(Tkey key);
 
   template<class T> void fill1d(const std::map<std::string,double>& vals);
-  template<class T> void fill1d(const std::string& hname,double val,double weight=1.0);
+  template<class T> void fill1d(const std::string& hname,double val,double weight=1.0,
+				bool verbose=false);
   template<class T> void fill2d(const std::map<std::string,std::pair<double,double> >& vals);
   template<class T> void fill2d(const std::string& hname,double valx,double valy,double weight=1.0);
   template<class T> void fill3d(const std::string& hname,
@@ -458,23 +474,25 @@ void myAnalHistosTC<Tkey>::book2d(const std::vector<HistoParams_t>& v_pars)
 template <class Tkey>
 template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
-				const char *title,
+				const std::string& title,
 				int nbinsx, const double xbins[],
 				int nbinsy, double ymin, double ymax,
 				bool verbose)
 {
   Histo_t histo;
-  histo.hpars.name = name;
-  histo.hpars.title=std::string(title);
-  histo.hpars.nbinsx=nbinsx;
-  histo.hpars.nbinsy=nbinsy;
-  histo.hpars.miny=ymin;
-  histo.hpars.maxy=ymax;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;
+  histo.hpars.minx   = xbins[0];
+  histo.hpars.maxx   = xbins[nbinsx];
+  histo.hpars.nbinsy = nbinsy;
+  histo.hpars.miny   = ymin;
+  histo.hpars.maxy   = ymax;
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
     std::cout << myname_ << ": booking standard histogram " << name << std::endl;
-  histo.ptr = dir_->make <T> (name.c_str(), title,
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
 			      nbinsx, xbins,
 			      nbinsy, ymin, ymax);
 
@@ -493,25 +511,61 @@ T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
 template <class Tkey>
 template <class T>
 T *myAnalHistosTC<Tkey>::book2d(const std::string& name,
-				const char *title,
+				const std::string& title,
 				int nbinsx, double xmin, double xmax,
 				int nbinsy, const double ybins[],
 				bool verbose)
 {
   Histo_t histo;
-  histo.hpars.name=name;
-  histo.hpars.title=std::string(title);
-  histo.hpars.nbinsx=nbinsx;
-  histo.hpars.minx=xmin;
-  histo.hpars.maxx=xmax;
-  histo.hpars.nbinsy=nbinsy;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;
+  histo.hpars.minx   = xmin;
+  histo.hpars.maxx   = xmax;
+  histo.hpars.nbinsy = nbinsy;
+  histo.hpars.miny   = ybins[0];
+  histo.hpars.maxy   = ybins[nbinsy];
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
     std::cout << myname_ << ": booking standard histogram " << name << std::endl;
-  histo.ptr = dir_->make <T> (name.c_str(), title,
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
 			      nbinsx, xmin, xmax,
 			      nbinsy, ybins);
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << name << std::endl;
+  }
+
+  return (T *)histo.ptr;
+}
+
+//======================================================================
+
+template <class Tkey>
+template<class T>
+T *myAnalHistosTC<Tkey>::book3d(const std::string& name,
+				const std::string& title,
+				int nbinsx, const double xbins[],
+				int nbinsy, const double ybins[],
+				int nbinsz, const double zbins[],
+				bool verbose)
+{
+  Histo_t histo;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;  histo.hpars.minx=xbins[0];  histo.hpars.maxx=xbins[nbinsx];
+  histo.hpars.nbinsy = nbinsy;  histo.hpars.miny=ybins[0];  histo.hpars.maxy=ybins[nbinsy];
+  histo.hpars.nbinsz = nbinsz;  histo.hpars.minz=zbins[0];  histo.hpars.maxz=zbins[nbinsz];
+
+  //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
+  if (verbose)
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
+			      nbinsx, xbins, nbinsy, ybins, nbinsz, zbins);
 
   std::pair<typename myHashmap_t::iterator,bool> retpair =
     hm_histos_->insert(std::pair<Tkey,Histo_t>(histo.hpars.name,histo));
@@ -529,23 +583,25 @@ template <class Tkey>
 template <class T>
 T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 				const std::string& name,
-				const char *title,
+				const std::string& title,
 				int nbinsx, const double xbins[],
 				int nbinsy, double ymin, double ymax,
 				bool verbose)
 {
   Histo_t histo;
-  histo.hpars.name = name;
-  histo.hpars.title=std::string(title);
-  histo.hpars.nbinsx=nbinsx;
-  histo.hpars.nbinsy=nbinsy;
-  histo.hpars.miny=ymin;
-  histo.hpars.maxy=ymax;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;
+  histo.hpars.minx   = xbins[0];
+  histo.hpars.maxx   = xbins[nbinsx];
+  histo.hpars.nbinsy = nbinsy;
+  histo.hpars.miny   = ymin;
+  histo.hpars.maxy   = ymax;
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
     std::cout << myname_ << ": booking standard histogram " << name << std::endl;
-  histo.ptr = dir_->make <T> (name.c_str(), title,
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
 			      nbinsx, xbins,
 			      nbinsy, ymin, ymax);
 
@@ -565,23 +621,25 @@ template <class Tkey>
 template <class T>
 T *myAnalHistosTC<Tkey>::book2d(Tkey key,
 				const std::string& name,
-				const char *title,
+				const std::string& title,
 				int nbinsx, double xmin, double xmax,
 				int nbinsy, const double ybins[],
 				bool verbose)
 {
   Histo_t histo;
-  histo.hpars.name=name;
-  histo.hpars.title=std::string(title);
-  histo.hpars.nbinsx=nbinsx;
-  histo.hpars.minx=xmin;
-  histo.hpars.maxx=xmax;
-  histo.hpars.nbinsy=nbinsy;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;
+  histo.hpars.minx   = xmin;
+  histo.hpars.maxx   = xmax;
+  histo.hpars.nbinsy = nbinsy;
+  histo.hpars.miny   = ybins[0];
+  histo.hpars.maxy   = ybins[nbinsy];
 
   //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
   if (verbose)
     std::cout << myname_ << ": booking standard histogram " << name << std::endl;
-  histo.ptr = dir_->make <T> (name.c_str(), title,
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
 			      nbinsx, xmin, xmax,
 			      nbinsy, ybins);
 
@@ -657,6 +715,39 @@ void myAnalHistosTC<Tkey>::book3d(const std::vector<HistoParams_t>& v_pars)
 {
   for (uint32_t i=0; i<v_pars.size(); i++)
     book3d<T>(v_pars[i]);
+}
+
+template <class Tkey>
+template<class T>
+T *myAnalHistosTC<Tkey>::book3d(Tkey key,
+				const std::string& name,
+				const std::string& title,
+				int nbinsx, const double xbins[],
+				int nbinsy, const double ybins[],
+				int nbinsz, const double zbins[],
+				bool verbose)
+{
+  Histo_t histo;
+  histo.hpars.name   = name;
+  histo.hpars.title  = title;
+  histo.hpars.nbinsx = nbinsx;  histo.hpars.minx=xbins[0];  histo.hpars.maxx=xbins[nbinsx];
+  histo.hpars.nbinsy = nbinsy;  histo.hpars.miny=ybins[0];  histo.hpars.maxy=ybins[nbinsy];
+  histo.hpars.nbinsz = nbinsz;  histo.hpars.minz=zbins[0];  histo.hpars.maxz=zbins[nbinsz];
+
+  //edm::LogInfo("booking histogram ") << histo.hpars.name << std::endl;
+  if (verbose)
+    std::cout << myname_ << ": booking standard histogram " << name << std::endl;
+  histo.ptr = dir_->make <T> (name.c_str(), title.c_str(),
+			      nbinsx, xbins, nbinsy, ybins, nbinsz, zbins);
+
+  std::pair<typename myHashmap_t::iterator,bool> retpair =
+    hm_histos_->insert(std::pair<Tkey,Histo_t>(key,histo));
+
+  if (!retpair.second) {
+    throw cms::Exception("booking failed, key already taken: ") << key << std::endl;
+  }
+
+  return (T *)histo.ptr;
 }
 
 //======================================================================
@@ -825,11 +916,19 @@ myAnalHistosTC<Tkey>::bookClone(const std::string& cloneName,const T& h,
 template <class Tkey>
 template <class T>
 void
-myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
+myAnalHistosTC<Tkey>::fill1d(const std::string& hname,
+			     double val,
+			     double weight,
+			     bool verbose)
 {
   typename myHashmap_t::const_iterator ith;
 
   ith = hm_histos_->find(hname);
+
+  if (verbose) {
+    std::cout << myname_ << ": filling standard histogram " << hname;
+    std::cout << ", val="<< val << "\tweight=" << weight << std::endl;
+  }
 
   if (ith != hm_histos_->end()) {
     T *p = (T *)ith->second.ptr;
@@ -837,8 +936,9 @@ myAnalHistosTC<Tkey>::fill1d(const std::string& hname,double val,double weight)
     else
       p->Fill(val,weight);
   } else {
-    //    edm::LogError("Couldn't find hash for " + hname + "! ") 
-    throw cms::Exception("Couldn't find hash for " + hname)  <<"! val="<< val << "\tweight=" << weight << std::endl;
+    //edm::LogError( myname_+": Couldn't find hash for " + hname + "! ") 
+    throw cms::Exception(myname_+": Couldn't find hash for "+hname)
+      <<"! val="<< val << "\tweight=" << weight << std::endl;
     //dump();
   }
 }
@@ -859,7 +959,7 @@ myAnalHistosTC<Tkey>::fill1d(const std::map<std::string,double>& vals)
       T *p = (T *)ith->second.ptr;
       p->Fill(itv->second);
     } else {
-      edm::LogError("Couldn't find hash for " + itv->first + "!");
+      edm::LogError(myname_+"Couldn't find hash for "+itv->first + "!");
       //dump();
     }
   }
