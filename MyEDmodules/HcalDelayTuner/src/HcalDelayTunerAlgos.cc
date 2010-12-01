@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HcalDelayTunerAlgos.cc,v 1.24 2010/05/18 21:18:34 dudero Exp $
+// $Id: HcalDelayTunerAlgos.cc,v 1.25 2010/06/12 09:34:24 dudero Exp $
 //
 //
 
@@ -655,7 +655,7 @@ HcalDelayTunerAlgos::bookHistos4allCuts(void)
 
   st_rhFlagBits_ = "h1d_rhFlagBits" + mysubdetstr_;
   add1dHisto( st_rhFlagBits_,
-	      "RecHit Quality Flag Bits, "+mysubdetstr_+", Run "+runnumstr_+"; Flag Name",
+	      "RecHit Quality Flag Bits, "+mysubdetstr_+", Run "+runnumstr_,
 	      20,0.5,20.5,v_hpars1d);  // see below (post-booking) for bin labeling
   
   if ((mysubdet_ == HcalBarrel)||

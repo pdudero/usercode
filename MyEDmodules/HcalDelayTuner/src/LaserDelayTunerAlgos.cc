@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: LaserDelayTunerAlgos.cc,v 1.11 2010/04/26 12:57:31 dudero Exp $
+// $Id: LaserDelayTunerAlgos.cc,v 1.12 2010/05/05 23:38:39 dudero Exp $
 //
 //
 
@@ -327,7 +327,7 @@ LaserDelayTunerAlgos::process(const myEventData& ed)
       ed.fedrawdata().isValid())
   {
     //checking FEDs for calibration information
-    for (int i=FEDNumbering::getHcalFEDIds().first;i<=FEDNumbering::getHcalFEDIds().second; i++) {
+    for (int i=FEDNumbering::MINHCALFEDID;i<=FEDNumbering::MAXHCALFEDID; i++) {
       const FEDRawData& fedData = ed.fedrawdata()->FEDData(i) ;
       if ( fedData.size() < 24 ) continue ;
       int value = ((const HcalDCCHeader*)(fedData.data()))->getCalibType() ;
