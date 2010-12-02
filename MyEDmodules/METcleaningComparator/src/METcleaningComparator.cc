@@ -13,7 +13,7 @@
 //
 // Original Author:  Phil Dudero
 //         Created:  Tue May 11 16:17:42 CDT 2010
-// $Id: METcleaningComparator.cc,v 1.3 2010/05/31 13:35:25 dudero Exp $
+// $Id: METcleaningComparator.cc,v 1.4 2010/07/15 15:22:09 dudero Exp $
 //
 //
 
@@ -27,7 +27,7 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/Framework/interface/TriggerNames.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
@@ -58,8 +58,8 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
 
-  bool reflaggerTouchedThisEvent   (const HBHERecHitCollection& rechits,
-				    const HFRecHitCollection& hfrechits,
+  bool reflaggerTouchedThisEvent   (const  edm::Handle<HBHERecHitCollection>& hbhehandle,
+				    const  edm::Handle<HFRecHitCollection>&   hfhandle,
 				    const CaloMETCollection& dirtyMET,
 				    const CaloMETCollection& cleanMET,
 				    std::vector<double>& v_hbheHitEnergiesRemoved,
@@ -75,7 +75,8 @@ private:
 				    double& signifOfdeltamet,
 				    double& deltasignif);
   
-  bool HCALfilterTouchedThisEvent  (const edm::TriggerResults& trgresults);
+  bool HCALfilterTouchedThisEvent  (const edm::TriggerResults& trgresults,
+				    const edm::TriggerNames&   trgnames);
   bool HCALfilterTouchedThisEvent  (const bool hbheNoiseResult);
 
   void compare(const myEventData& d1,
@@ -109,6 +110,11 @@ private:
   TH1F *h1f_clnMETevfilt_;
   TH1F *h1f_clnMETreflag_;
   TH1F *h1f_clnMETjetID_;
+
+  TH1F *h1f_nPVall_;
+  TH1F *h1f_nPVevfilt_;
+  TH1F *h1f_nPVreflag_;
+  TH1F *h1f_nPVjetID_;
 
   TH2F *h2f_deltaMETjetidVSreflagger_;
 
@@ -230,8 +236,8 @@ METcleaningComparator::compare(const myEventData& d1,
 // ----------------------------------------------------------
 
 bool
-METcleaningComparator::reflaggerTouchedThisEvent(const HBHERecHitCollection& hbherechits,
-						 const HFRecHitCollection& hfrechits,
+METcleaningComparator::reflaggerTouchedThisEvent(const edm::Handle<HBHERecHitCollection>& hbhehandle,
+						 const edm::Handle<HFRecHitCollection>&   hfhandle,
 						 const CaloMETCollection& dirtyMET,
 						 const CaloMETCollection& cleanMET,
 						 std::vector<double>& v_hbheHitEnergiesRemoved,
@@ -241,13 +247,19 @@ METcleaningComparator::reflaggerTouchedThisEvent(const HBHERecHitCollection& hbh
 						 double& signifOfdeltamet,
 						 double& deltasignif)
 {
-  for (size_t i=0; i<hbherechits.size(); i++)
-    if (hbherechits[i].flagField(hbheFlagBit_))
-      v_hbheHitEnergiesRemoved.push_back(hbherechits[i].energy());
+  if (hbhehandle.isValid()) {
+    const HBHERecHitCollection& hbherechits = *hbhehandle;
+    for (size_t i=0; i<hbherechits.size(); i++)
+      if (hbherechits[i].flagField(hbheFlagBit_))
+	v_hbheHitEnergiesRemoved.push_back(hbherechits[i].energy());
+  }
 
-  for (size_t i=0; i<hfrechits.size(); i++)
-    if (hfrechits[i].flagField(hfFlagBit_))
-      v_hfHitEnergiesRemoved.push_back(hfrechits[i].energy());
+  if (hfhandle.isValid()) {
+    const HFRecHitCollection& hfrechits = *hfhandle;
+    for (size_t i=0; i<hfrechits.size(); i++)
+      if (hfrechits[i].flagField(hfFlagBit_))
+	v_hfHitEnergiesRemoved.push_back(hfrechits[i].energy());
+  }
 
   deltamet   = cleanMET.front().pt()    - dirtyMET.front().pt();    // signed
   deltasumet = dirtyMET.front().sumEt() - cleanMET.front().sumEt(); // nonnegative
@@ -286,21 +298,18 @@ METcleaningComparator::jetidCleanerTouchedThisEvent(const CaloMETCollection& dir
 // ---------------------------------------------------------------------
 
 bool
-METcleaningComparator::HCALfilterTouchedThisEvent(const edm::TriggerResults& trgresults)
+METcleaningComparator::HCALfilterTouchedThisEvent(const edm::TriggerResults& trgresults,
+						  const edm::TriggerNames&   trgnames)
 {
   if (firstEvent_) { // latch the evfiltpath index
-    edm::TriggerNames triggerNames;
-
-    // get trigger names
-    triggerNames.init(trgresults);
 
     unsigned i;
-    for (i=0; i!=trgresults.size(); i++) {
-      if (triggerNames.triggerName(i) == evfiltpath_) {
+    for (i=0; i!=trgnames.size(); i++) {
+      if (trgnames.triggerName(i) == evfiltpath_) {
 	evfiltpathindex_ = i; break;
       }
     }
-    if (i==trgresults.size())
+    if (i==trgnames.size())
       throw cms::Exception("Path not found: ") << evfiltpath_;
     firstEvent_ = false;
   }
@@ -337,6 +346,9 @@ METcleaningComparator::analyze(const edm::Event& iEvent,
      }
    }
 
+   // get trigger names
+   //const edm::TriggerNames & triggerNames = iEvent.triggerNames(trgresults);
+
    dirtyInput_->get(iEvent,iSetup);
    jetidOutput_->get(iEvent,iSetup);
    reflagOutput_->get(iEvent,iSetup);
@@ -348,8 +360,8 @@ METcleaningComparator::analyze(const edm::Event& iEvent,
 
    //bool evfilt = HCALfilterTouchedThisEvent(*(evfiltOutput_->trgResults()));
    bool evfilt = HCALfilterTouchedThisEvent(*(evfiltOutput_->hbheNoiseResult()));
-   bool reflag = reflaggerTouchedThisEvent (*(reflagOutput_->hbherechits()),
-					    *(reflagOutput_->hfrechits()),
+   bool reflag = reflaggerTouchedThisEvent (reflagOutput_->hbherechits(),
+					    reflagOutput_->hfrechits(),
 					    *(dirtyInput_->calomet()),
 					    *(reflagOutput_->calomet()),
 					    v_hbheHitEnergies,
@@ -401,6 +413,14 @@ METcleaningComparator::analyze(const edm::Event& iEvent,
        myAH->fill1d<TH1F>("h1f_hfHitEnergiesRemoved",   v_hfHitEnergies[i]);
 
      h2f_deltaMETjetidVSreflagger_->Fill(deltaMETjetid,deltaMETreflag);
+   }
+
+   if (dirtyInput_->vertices().isValid()) {
+     int npv = dirtyInput_->vertices()->size();
+     h1f_nPVall_->Fill(npv);
+     if (evfilt) h1f_nPVevfilt_->Fill(npv);
+     if (reflag) h1f_nPVreflag_->Fill(npv);
+     if (jetid)  h1f_nPVjetID_ ->Fill(npv);
    }
 }
 
@@ -459,6 +479,20 @@ METcleaningComparator::beginJob()
   myAnalHistos::HistoParams_t hpars4("","",nbinsMET,mindMET4plotGeV_,maxdMET4plotGeV_,100,-1.,1.);
   myAnalHistos::HistoParams_t hpars5("","",100,-1.,1.);
 
+  // noise rejection rates as a function of pileup events (#PVs)
+  h1f_nPVall_       = fs->make<TH1F>("h1f_nPVall", "Number of primary vertices",
+				     11, -0.5, 10.5);
+
+  h1f_nPVevfilt_    = fs->make<TH1F>("h1f_nPVevfilt",
+     "Noise Rejection Rate vs. Pileup Events (Event Filter); # PVs; # Events touched/Total ",
+				     11, -0.5, 10.5);
+  h1f_nPVreflag_    = fs->make<TH1F>("h1f_nPVreflag",
+     "Noise Rejection Rate vs. Pileup Events (Reflagger); # PVs; # Events touched/Total ",
+				     11, -0.5, 10.5);
+  h1f_nPVjetID_     = fs->make<TH1F>("h1f_nPVjetID",
+     "Noise Rejection Rate vs. Pileup Events (Jet ID); # PVs; # Events touched/Total ",
+				     11, -0.5, 10.5);
+
   for (int i=0; i<2; i++)
     for (int j=0; j<2; j++)
       for (int k=0; k<2; k++) {
@@ -492,13 +526,17 @@ METcleaningComparator::endJob() {
   cout << "evfilt\treflag\tJetID\t#events\t%" << endl;
   int nevents = h3f_correlations_->GetEntries();
   for (int i=1; i<=2; i++)
-    for (int j=1; j<=2; j++)
+     for (int j=1; j<=2; j++)
       for (int k=1; k<=2; k++) {
 	int thisbin=h3f_correlations_->GetBinContent(i,j,k);
 	cout << i-1 << "\t" << j-1 << "\t" << k-1 << "\t";
 	cout << thisbin << "\t" << 100.*(double)thisbin/nevents;
 	cout << endl;
       }
+
+  //h1f_nPVevfilt_->Divide(h1f_nPVall_);
+  //h1f_nPVreflag_->Divide(h1f_nPVall_);
+  //h1f_nPVjetID_ ->Divide(h1f_nPVall_);
 }
 
 //define this as a plug-in
