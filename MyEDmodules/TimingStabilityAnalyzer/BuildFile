@@ -1,0 +1,17 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=MyEDmodules/MyAnalUtilities>
+<use name=DataFormats/HcalDetId>
+<use name=DataFormats/HcalRecHit>
+<use name=CondFormats/HcalObjects>
+<use name=CalibCalorimetry/HcalAlgos>
+<use name=CommonTools/UtilAlgos>
+<use name=CommonTools/Utils>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=MyEDmodulesTimingStabilityAnalyzer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>
