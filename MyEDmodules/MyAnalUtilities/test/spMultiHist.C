@@ -2,46 +2,52 @@
 #include "TRegexp.h"
 #include "TObjArray.h"
 
-// multi-ID to vector of histo IDs
-static map<string, vector<string> >     glmap_mid2hid;
-
 //======================================================================
-
-void regexMatch( TObject    *obj,
-		 TDirectory *dir,
-		 TObjArray  *Args,
-		 TObjArray  *Matches)
+// Regex match a histo name in a directory
+//
+void regexMatchHisto( TObject    *obj,
+		      TDirectory *dir,
+		      TObjArray  *Args,   // list of regexes to match
+		      TObjArray  *Matches)
 {
-  TObjString *sre = (TObjString *)(*Args)[0];
-  TRegexp re(sre->GetString(),kFALSE);
-  if (re.Status() != TRegexp::kOK) {
-    cerr << "The regexp " << sre->GetString() << " is invalid, Status() = ";
-    cerr << re.Status() << endl;
-    exit(-1);
-  }
-
-  TString path( (char*)strstr( dir->GetPath(), ":" ) );
-  path.Remove( 0, 2 ); // gets rid of ":/"
-
-  TString fullspec = TString(dir->GetPath()) + "/" + obj->GetName();
-
-  if ((fullspec.Index(re) != kNPOS) &&
-      (obj->InheritsFrom("TH1"))) {
-    // we have a match
-    // Check to see if it's already in memory
-    map<string,string>::const_iterator it = glmap_objpaths2id.find(dir->GetPath());
-    if (it != glmap_objpaths2id.end()) {
-      cout << "Object " << fullspec << " already read in, here it is" << endl;
-      map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
-
-      // Is this okay? It's going to get wrapped again...
-      Matches->AddLast(hit->second->histo());
-    } else {
-      // success, record that you read it in.
-      Matches->AddLast(obj);
+  for (int i=0; i<Args->GetEntriesFast(); i++) {
+    TObjString *sre = (TObjString *)(*Args)[i];
+    TRegexp re(sre->GetString(),kFALSE);
+    if (re.Status() != TRegexp::kOK) {
+      cerr << "The regexp " << sre->GetString() << " is invalid, Status() = ";
+      cerr << re.Status() << endl;
+      exit(-1);
     }
-  }
-}                                                          // regexMatch
+
+    TString path( (char*)strstr( dir->GetPath(), ":" ) );
+    path.Remove( 0, 2 ); // gets rid of ":/"
+
+    TString fullspec = TString(dir->GetPath()) + "/" + obj->GetName();
+
+    if ((fullspec.Index(re) != kNPOS) &&
+	(obj->InheritsFrom("TH1"))) {
+      // we have a match
+      // Check to see if it's already in memory
+      map<string,string>::const_iterator it = glmap_objpath2id.find(dir->GetPath());
+      if (it != glmap_objpath2id.end()) {
+	if (gl_verbose)
+	  cout << "Object " << fullspec << " already read in, here it is" << endl;
+	map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
+
+	// Is this okay? It's going to get wrapped again...
+	TObjString *path = new TObjString(fullspec);
+	Matches->AddLast(path);
+	Matches->AddLast(hit->second->histo());
+      } else {
+	// success, record that you read it in.
+	TObjString *path = new TObjString(fullspec);
+	Matches->AddLast(path);
+	Matches->AddLast(obj);
+      }
+      break; // don't let the object match more than one regex
+    } // if we have a match
+  } // Arg loop
+}                                                     // regexMatchHisto
 
 //======================================================================
 
@@ -77,14 +83,29 @@ void recurseDirs( TDirectory *thisdir,
 void getHistosFromRE(const string&   mhid,
 		     const string&   filepath,
 		     const string&   sre,
-		     vector<wTH1*>&  v_wth1)
+		     vector<std::pair<string,wTH1*> >&  v_wth1)
 {
-  TRegexp re(sre.c_str(),kTRUE);
-  cout<<"Searching for regexp "<<sre<<" in "<<filepath<<endl;
-  if (re.Status() != TRegexp::kOK) {
-    cerr << "The regexp " << sre << " is invalid, Status() = ";
-    cerr << re.Status() << endl;
-    exit(-1);
+  if (gl_verbose)
+    cout<<"Searching for regexp "<<sre<<" in "<<filepath;
+
+  // allow for multiple regexes in OR combination
+  vector<string> v_regexes;
+  Tokenize(sre,v_regexes,"|");
+  if (!v_regexes.size())
+    v_regexes.push_back(sre);
+
+  // Check 'em now!
+  TObjArray *Args = new TObjArray();
+  for (size_t i=0; i<v_regexes.size(); i++) {
+    TRegexp re(v_regexes[i].c_str(),kTRUE);
+    if (re.Status() != TRegexp::kOK) {
+      cerr << "The regexp " << v_regexes[i] << " is invalid, Status() = ";
+      cerr << re.Status() << endl;
+      exit(-1);
+    }
+    else {
+      Args->AddLast(new TObjString(v_regexes[i].c_str()));
+    }
   }
 
   TFile *rootfile = NULL;
@@ -96,33 +117,44 @@ void getHistosFromRE(const string&   mhid,
 
   if (rootfile->IsZombie()) {
     cerr << "File failed to open, " << filepath << endl;
-    return;
-  } else {
-    glmap_id2rootfile.insert(pair<string,TFile*>(filepath,rootfile));
-
-    TObjArray *Args    = new TObjArray();
-    TObjArray *Matches = new TObjArray();
-    TObjString objsre(sre.c_str());
-    Args->AddFirst(&objsre);
-    recurseDirs(rootfile, &regexMatch, Args, Matches);
+    Args->Delete();
     delete Args;
-
-    vector<string> v_hidi;
-
-    // Add the matches to the global map of histos
-    for (int i=0; i<Matches->GetEntriesFast(); i++) {
-      wTH1 *wth1 = new wTH1((TH1 *)((*Matches)[i]));
-      string hidi= mhid+"_"+int2str(i);
-      glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
-      v_wth1.push_back(wth1);
-      v_hidi.push_back(hidi);
-      //glmap_objpaths2id.insert(pair<string,string>(fullspec,hidi));
-    }
-
-    glmap_mid2hid.insert(pair<string,vector<string> >(mhid,v_hidi));
-
-    delete Matches;
+    return;
   }
+
+  glmap_id2rootfile.insert(pair<string,TFile*>(filepath,rootfile));
+
+  TObjArray *Matches = new TObjArray();
+  recurseDirs(rootfile, &regexMatchHisto, Args, Matches);
+  Args->Delete();
+  delete Args;
+
+  // Returns two objects per match: 
+  // 1. the (string) path that was matched and
+  // 2. the object whose path matched
+  //
+  int nx2matches = Matches->GetEntriesFast();
+  if (gl_verbose) cout << "... " << nx2matches/2 << " match(es) found.";
+
+  // Add the matches to the global map of histos
+  int istart = v_wth1.size();
+
+  for (int i=0; i<nx2matches; i+=2) {
+    TString fullspec = ((TObjString *)(*Matches)[i])->GetString();
+    wTH1 *wth1 = new wTH1((TH1 *)((*Matches)[i+1]));
+    wth1->histo()->UseCurrentStyle();
+    string hidi= mhid+"_"+int2str(istart+(i/2));
+    v_wth1.push_back(std::pair<string,wTH1 *>(hidi,wth1));
+
+    //glmap_objpath2id.insert(pair<string,string>(fullspec,hidi));
+    glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
+    glmap_id2objpath.insert(pair<string,string>(hidi,string(fullspec.Data())));
+  }
+
+  //Matches->Delete(); // need the histos!
+  delete Matches;
+
+  if (gl_verbose) cout << endl;
 }                                                     // getHistosFromRE
 
 //======================================================================
@@ -133,10 +165,11 @@ processMultiHistSection(FILE *fp,
 			bool& new_section)
 {
   vector<string> v_tokens;
-  vector<wTH1 *> v_wth1;
+  vector<std::pair<string, wTH1 *> > v_histos;
   string mhid;
 
-  cout << "Processing multihist section" << endl;
+  if (gl_verbose)
+    cout << "Processing multihist section" << endl;
 
   new_section=false;
 
@@ -181,53 +214,59 @@ processMultiHistSection(FILE *fp,
 
       // File globbing pattern can select multiple files
       // regular expression pattern can select multiple histos within each file.
-      // Aliases containing glob pattern not yet implemented.
       //
       string fileglob = v_tokens[0];
+      string stregex  = v_tokens[1];
 
-      // Check for file alias
-      if (fileglob[0] == '@') {
-	assert(0);
-	string rootfn = extractAlias(fileglob.substr(1));
-	if (!rootfn.size()) {
-	  exit(-1);
+      int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
+      if (stat) {
+	switch (stat) {
+	case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
+	case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
+	case GLOB_ABORTED: cerr << "glob read error "; break;
+	default: cerr << "unknown glob error stat=" << stat << " "; break;
 	}
-	getHistosFromRE(mhid,rootfn,v_tokens[1], v_wth1);
-      } else {
-	int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
-	if (stat) {
-	  switch (stat) {
-	  case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
-	  case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
-	  case GLOB_ABORTED: cerr << "glob read error "; break;
-	  default: cerr << "unknown glob error stat=" << stat << " "; break;
-	  }
-	  cerr << fileglob << endl;
-	  exit(-1);
-	}
-
-	for (size_t i=0; i<globbuf.gl_pathc; i++) {
-	  char *path = globbuf.gl_pathv[i];
-	  if (!strncmp(&path[strlen(path)-6],".root",5)) {
-	    cerr << "non-root file found in glob, skipping: " << path << endl;
-	  } else {
-	    getHistosFromRE(mhid,string(path),v_tokens[1], v_wth1);
-	  }
-	}
-	globfree(&globbuf);
+	cerr << fileglob << endl;
+	exit(-1);
       }
-    } else if (!v_wth1.size()) {  // all other keys must have "path" defined
-      cerr << "key 'pathglob' or 'vartable' must be defined before key " << key << endl;
+      if (gl_verbose) cout<<globbuf.gl_pathc<<" files match the glob pattern"<<endl;
+      for (size_t i=0; i<globbuf.gl_pathc; i++) {
+	char *path = globbuf.gl_pathv[i];
+	if (!strncmp(&path[strlen(path)-6],".root",5)) {
+	  cerr << "non-root file found in glob, skipping: " << path << endl;
+	} else {
+	  getHistosFromRE(mhid,string(path),stregex, v_histos);
+	}
+      }
+      if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
+      globfree(&globbuf);
+
+    //-----------------------
+    } else if( key == "printf" ) {
+    //-----------------------
+
+      Tokenize(value,v_tokens,"\",");
+      switch( v_tokens.size() ) {
+      case 1: printf (v_tokens[0].c_str()); break;
+      case 2: printf (v_tokens[0].c_str(),v_tokens[1].c_str()); break;
+      default:
+	cerr << "Unsupported number of arguments, " << value << endl;
+	exit(-1);
+      }
+
+    } else if( !v_histos.size() ) {  // all other keys must have "path" defined
+      cerr << "histo vector is empty" << endl;
+      cerr << "key 'pathglob' or 'vartable' must define nonempty histo set before key " << key << endl;
       break;
     }
 
     else {
-      for (size_t i=0; i<v_wth1.size(); i++)
-	processCommonHistoParams(key,value,*(v_wth1[i]));
+      processCommonHistoParams(key,value,v_histos);
+      if( key == "printfstats" )   cout << endl;
     }
   }
 
-  return (v_wth1.size());
+  return (v_histos.size());
 }                                             // processMultiHistSection
 
 //======================================================================
