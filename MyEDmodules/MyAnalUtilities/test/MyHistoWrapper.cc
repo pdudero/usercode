@@ -15,7 +15,7 @@ public:
 		    const std::string& title,
 		    int nbins, float min, float max);
   MyHistoWrapper<T>(T *h, const std::string& name, const std::string& title);
-  MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; }
+  MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; verbosity_=true; }
   ~MyHistoWrapper() {}
   inline T *histo() const {return h_;}
 
@@ -63,10 +63,10 @@ public:
 		  int size=0);
   void SetStats  (bool  on=true,
 		  int   optstat=1,
-		  float x1ndc=0.0,
-		  float y1ndc=0.0,
-		  float x2ndc=0.0,
-		  float y2ndc=0.0);
+		  float x1ndc=0.,
+		  float y1ndc=0.,
+		  float x2ndc=0.,
+		  float y2ndc=0.);
   void DrawStats (void);
 
   bool         statsAreOn    (void)                      { return statsAreOn_;         }
@@ -76,6 +76,8 @@ public:
   std::string& GetDrawOption (void)                      { return drawoption_;         }
   void         SaveStyle     (TStyle *instyle)           { style2apply_ = instyle;     }
   bool         ApplySavedStyle (void);
+  std::string& GetPathInFile (void)                      { return pathInFile_;         }
+  void         SetPathInFile (const std::string& inpath) { pathInFile_ = inpath;       }
 
   void Add2Legend(TLegend *leg) {
     std::string legdrawopt;
@@ -89,7 +91,8 @@ public:
     }
     else                                                 legdrawopt = "L";
 
-    cout << "legdrawopt="<<legdrawopt<<endl;
+    if (verbosity_)
+      cout << "legdrawopt="<<legdrawopt<<endl;
     leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
   }
 
@@ -98,6 +101,8 @@ public:
   void loadFitFunction(TF1 *fitfn) {if (fitfn) v_fits_.push_back(fitfn);}
 
   void DrawFits(const std::string& drawopt="");
+
+  void ShutUpAlready() { verbosity_ = false; }
 
   MyHistoWrapper<T> *Clone(const std::string& newname,
 			   const std::string& newtitle);
@@ -114,9 +119,11 @@ private:
 		 float rangeuserMax=-1e99,
 		 int   ndiv=510);
   T *h_;
+  std::string pathInFile_;
   std::string legentry_;
   std::string drawoption_;
   bool        statsAreOn_;
+  bool        verbosity_;
   TPaveStats  stats_; // placeholder for storing stats options.
 
   TStyle     *style2apply_;
@@ -134,6 +141,7 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
   h_ = new T(name.c_str(),title.c_str(),nbins,min,max);
   drawoption_=std::string("");
   style2apply_ = NULL;
+  verbosity_=true;
 }
 
 //======================================================================
@@ -144,6 +152,7 @@ MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::stri
   if (name.size())  h_->SetName (name.c_str());
   if (title.size()) h_->SetTitle(title.c_str());
   style2apply_ = NULL;
+  verbosity_=true;
 }
 
 //======================================================================
@@ -215,7 +224,7 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
   if (labelsize > 0.0) ax->SetLabelSize(labelsize);
   if (labelfont > 0)   ax->SetLabelFont(labelfont);
   if (rangeuserMin < rangeuserMax) {
-    ax->SetLimits(rangeuserMin,rangeuserMax);
+    //ax->SetLimits(rangeuserMin,rangeuserMax);
     ax->SetRangeUser(rangeuserMin,rangeuserMax);
   }
   if (ndiv != 510)     ax->SetNdivisions(ndiv,kFALSE);
@@ -274,7 +283,8 @@ MyHistoWrapper<T>::Draw(const std::string& drawopt)
   if (drawopt.find("COL") != std::string::npos)
     gStyle->SetPalette(1,0); // always!
 
-  cout << "Drawing " << h_->GetName() << " with " << drawopt << endl;
+  if (verbosity_)
+    cout<<"Drawing "<<h_->GetName()<<" with option(s) "<<drawopt<<endl;
 
   h_->Draw(drawopt.c_str());
 }
@@ -285,12 +295,17 @@ template<typename T>
 void
 MyHistoWrapper<T>::DrawFits(const std::string& drawopt)
 {
+  string option;
   for (size_t i=0; i<v_fits_.size(); i++)  {
     TF1 *f1 = v_fits_[i];
-    cout << "Drawing fit " << f1->GetName() << " with " << drawopt << endl;
+    if (verbosity_)
+      cout<<"Drawing fit "<<f1->GetName()<<" with option(s) "<<drawopt<<endl;
+    else 
+      option="Q";
+
     double xmin,xmax;
     f1->GetRange(xmin,xmax);
-    h_->Fit(f1,"",drawopt.c_str(),xmin,xmax);
+    h_->Fit(f1,option.c_str(),drawopt.c_str(),xmin,xmax);
     //f1->Draw(drawopt.c_str());
   }
 }
@@ -303,10 +318,14 @@ MyHistoWrapper<T>::DrawStats(void)
 {
   TPaveStats *st1 = (TPaveStats*)h_->GetListOfFunctions()->FindObject("stats");
   if (!st1) {
-    std::cout << "Error, couldn't find stats object for ";
-    std::cout << h_->GetName() << std::endl;
+    std::cerr << "Error, couldn't find stats object for ";
+    std::cerr << h_->GetName() << std::endl;
     return;
   }
+
+  st1->UseCurrentStyle();
+  st1->SetTextSize(0.03);
+  st1->SetTextFont(42);
 
   double x1 = stats_.GetX1NDC();
   double x2 = stats_.GetX2NDC();
@@ -319,14 +338,17 @@ MyHistoWrapper<T>::DrawStats(void)
       (y2 > y1) && (y2 < 1.)) {
     st1->SetX1NDC(x1); st1->SetX2NDC(x2);
     st1->SetY1NDC(y1); st1->SetY2NDC(y2);
-#if 1
-    std::cout << "Drawing Stats Object for " << h_->GetName() << std::endl;
-    std::cout << "with OptStat = " << stats_.GetOptStat() << std::endl;
-    std::cout << "at (X=";
-    std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")"<< std::endl;
-#endif
 
+    if (verbosity_) {
+      std::cout << "Drawing Stats Object for " << h_->GetName() << std::endl;
+      std::cout << "with OptStat = " << stats_.GetOptStat() << std::endl;
+      std::cout << "at (X=";
+      std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")"<< std::endl;
+    }
+  } else {
+    std::cout<<"Sorry, Charlie"<<endl;
   }
+
   if (drawoption_ == "P") {
     st1->SetLineColor(h_->GetMarkerColor());
     st1->SetTextColor(h_->GetMarkerColor());
@@ -347,8 +369,10 @@ MyHistoWrapper<T>::ApplySavedStyle (void)
   if (!style2apply_) return false;
   TStyle *temp = gStyle;
   style2apply_->cd();
-  std::cout << "Applying style " << gStyle->GetName() << endl;
-  std::cout << gStyle->GetOptStat() << std::endl;
+  if (verbosity_) {
+    std::cout << "Applying style " << gStyle->GetName() << endl;
+    std::cout << gStyle->GetOptStat() << std::endl;
+  }
   h_->UseCurrentStyle();
   temp->cd();
   return true;
