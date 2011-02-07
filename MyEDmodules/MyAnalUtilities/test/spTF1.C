@@ -25,6 +25,7 @@ processTF1Section(FILE *fp,
   string *form = NULL;
   TF1    *f1   = NULL;
   double xmin=0.0, xmax=0.0;
+  int lcol=-1,lwid=-1,lsty=-1;
   vector<string> parstrs;
 
   cout << "Processing TF1 section" << endl;
@@ -78,8 +79,12 @@ processTF1Section(FILE *fp,
       Tokenize(value,parstrs,",");
     }
 
-    else if (key == "xmin") xmin = str2flt(value);
-    else if (key == "xmax") xmax = str2flt(value);
+    else if (key == "xmin")      xmin = str2flt(value);
+    else if (key == "xmax")      xmax = str2flt(value);
+    else if (key == "linecolor") lcol = str2int(value);
+    else if (key == "linestyle") lsty = str2int(value);
+    else if (key == "linewidth") lwid = str2int(value);
+
   }
 
   if (fid && form && (xmax > xmin)) {
@@ -87,6 +92,10 @@ processTF1Section(FILE *fp,
     for (size_t i=0; i<parstrs.size(); i++) {
       f1->SetParameter(i,str2flt(parstrs[i]));
     }
+    if (lsty>=0) f1->SetLineStyle(lsty);
+    if (lcol>=0) f1->SetLineColor(lcol);
+    if (lwid>=0) f1->SetLineWidth(lwid);
+
     glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
     //delete fid;
     //delete form;
