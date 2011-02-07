@@ -40,7 +40,8 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
 {
   vector<string> v_tokens;
 
-  cout << "Processing alias section" << endl;
+  if (gl_verbose)
+    cout << "Processing alias section" << endl;
 
   new_section=false;
 
@@ -65,7 +66,8 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
 	cerr<<"Error, couldn't open alias include file '"<<value<<"'"<<endl;
 	exit(-1);
       }
-      cout << "Loading include file '" << value << "'" << endl;
+      if (gl_verbose)
+	cout << "Loading include file '" << value << "'" << endl;
       processAliasSection(fp,theline,new_section);
 
     } else {
@@ -86,7 +88,8 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
 	}
 
 	glmap_aliii.insert(pair<string,string>(key,aspec));
-	cout << "alias '" << key << "' added" << endl;
+	if (gl_verbose)
+	  cout << "alias '" << key << "' added" << endl;
       }
     }
   } // while loop

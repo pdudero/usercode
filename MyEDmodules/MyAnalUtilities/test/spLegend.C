@@ -33,7 +33,8 @@ processLegendSection(FILE *fp,
   string  *lid  = NULL;
   wLegend_t *wleg = new wLegend_t();
 
-  cout << "Processing legend section" << endl;
+  if (gl_verbose)
+    cout << "Processing legend section" << endl;
 
   new_section=false;
 

@@ -25,7 +25,8 @@ processLabelSection(FILE   *fp,
 {
   vector<string> v_tokens;
 
-  cout << "Processing label section" << endl;
+  if (gl_verbose)
+    cout << "Processing label section" << endl;
 
   string  *lid  = NULL;
   wLabel_t *wlab = new wLabel_t("FillMe");
@@ -81,7 +82,8 @@ processLatexSection(FILE   *fp,
 {
   vector<string> v_tokens;
 
-  cout << "Processing latex section" << endl;
+  if (gl_verbose)
+    cout << "Processing latex section" << endl;
   string  *lid  = NULL;
   double posx=.5,posy=.5;
 

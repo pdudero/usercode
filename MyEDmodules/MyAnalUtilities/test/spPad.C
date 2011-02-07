@@ -8,7 +8,8 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
   float xmin=1e99, xmax=-1e99;
   float ymin=1e99, ymax=-1e99;
 
-  cout << "Processing pad section" << endl;
+  if (gl_verbose)
+    cout << "Processing pad section" << endl;
 
   new_section=false;
 

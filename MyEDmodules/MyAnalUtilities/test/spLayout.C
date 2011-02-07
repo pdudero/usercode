@@ -7,7 +7,8 @@ processLayoutSection(FILE         *fp,
 		     canvasSet_t&  cs,
 		     bool&         new_section)
 {
-  cout << "Processing layout section" << endl;
+  if (gl_verbose)
+    cout << "Processing layout section" << endl;
 
   new_section=false;
 
@@ -28,17 +29,20 @@ processLayoutSection(FILE         *fp,
     if (key == "ncanvases") {
       unsigned long ncanvases = str2int(value);
       if (ncanvases > 0) cs.ncanvases = ncanvases;
-      else cout << "ncanvases="<<ncanvases<<"?? You can't be serious." << endl;
+      else if (gl_verbose)
+	cout << "ncanvases="<<ncanvases<<"?? You can't be serious." << endl;
     }
     else if (key == "npadsx") {
       unsigned long npadsx = str2int(value);
       if (npadsx > 0) wc0->npadsx = npadsx;
-      else cout << "npadsx="<<npadsx<<"?? You can't be serious." << endl;
+      else if (gl_verbose)
+	cout << "npadsx="<<npadsx<<"?? You can't be serious." << endl;
     }
     else if (key == "npadsy") {
       unsigned long npadsy = str2int(value);
       if (npadsy > 0) wc0->npadsy = npadsy;
-      else cout << "npadsy="<<npadsy<<"?? You can't be serious." << endl;
+      else if (gl_verbose)
+	cout << "npadsy="<<npadsy<<"?? You can't be serious." << endl;
     }
     else if (key == "padxdim") {
       unsigned long padxdim = str2int(value);
