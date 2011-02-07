@@ -18,6 +18,8 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
   wp->vp->SetGridx(wp->gridx);
   wp->vp->SetGridy(wp->gridy);
 
+  if (!gl_verbose) myHisto.ShutUpAlready();
+
   if (firstInPad) {
     if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
     if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
@@ -50,26 +52,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 //======================================================================
 
 template<class T>
-void drawInPad(wPad_t *wp, T *obj, const string& drawopt)
-{
-  wp->vp->SetFillColor(wp->fillcolor);
-
-  gStyle->cd();
-
-  wp->vp->SetLogx(wp->logx);
-  wp->vp->SetLogy(wp->logy);
-  wp->vp->SetLogz(wp->logz);
-
-  cout<<"Drawing "<<obj->GetName()<<" with option(s) "<<drawopt<<endl;
-
-  obj->Draw(drawopt.c_str());
-
-  wp->vp->Update();
-}                                                           // drawInPad
-
-//======================================================================
-
-void drawInPad(wPad_t *wp, wStack_t *ws, const string& drawopt="")
+void drawInPad(wPad_t *wp, T *obj,const string& drawopt, bool firstInPad=false)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
@@ -81,31 +64,68 @@ void drawInPad(wPad_t *wp, wStack_t *ws, const string& drawopt="")
   wp->vp->SetGridx(wp->gridx);
   wp->vp->SetGridy(wp->gridy);
 
-  if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
-  if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
-  if (wp->rightmargin)  wp->vp->SetRightMargin (wp->rightmargin);
-  if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
-
-  // what a hassle. Root redraws the axes automatically for stacks,
-  // and if the text sizes are different..., so have to find another
-  // way to get the job done.
-  //
-  if (!drawopt.size()) {
-    cout << "Drawing stack with option AH" << endl;
-    ws->stack->Draw("AH");
-  }else{
-    cout << "Drawing stack with option A "<< drawopt << endl;
-    ws->stack->Draw(string("A "+drawopt).c_str());
+  if (firstInPad) {
+    if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
+    if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
+    if (wp->rightmargin)  wp->vp->SetRightMargin (wp->rightmargin);
+    if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
   }
 
-  //ws->stack->GetXaxis()->ResetAttAxis("X");
-  //ws->stack->GetYaxis()->ResetAttAxis("Y");
+  if (gl_verbose)
+    cout<<"Drawing "<<obj->GetName()<<" with option(s) "<<drawopt<<endl;
 
-  TH1 *grid = (TH1 *)ws->stack->GetHistogram();
-  if (grid) grid->Draw("AXIG SAME");
-  else cout << "Problem getting stack histogram" << endl;
+  obj->Draw(drawopt.c_str());
 
   wp->vp->Update();
+}                                                           // drawInPad
+
+//======================================================================
+
+void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
+	       const string& drawopt="")
+{
+  wp->vp->SetFillColor(wp->fillcolor);
+
+  gStyle->cd();
+
+  wp->vp->SetLogx(wp->logx);
+  wp->vp->SetLogy(wp->logy);
+  wp->vp->SetLogz(wp->logz);
+  wp->vp->SetGridx(wp->gridx);
+  wp->vp->SetGridy(wp->gridy);
+
+  if (firstInPad) {
+    if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
+    if (wp->bottommargin) wp->vp->SetBottomMargin(wp->bottommargin);
+    if (wp->rightmargin)  wp->vp->SetRightMargin (wp->rightmargin);
+    if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
+
+    // The sum histogram is used to set up the plot itself, far easier
+    // this way than messing with the histogram internal to the stack,
+    // and allows for fits on the sum.
+    //
+    ws->sum->Draw(drawopt);
+  } else {
+    if (!strstr(drawopt.c_str(),"nostack")) {
+      if (!ws->sum->statsAreOn()) drawopt.size() ?
+				  ws->sum->Draw(drawopt+ " same") :
+				  ws->sum->DrawSame();
+      else {                      drawopt.size() ?
+				  ws->sum->Draw(drawopt+ " sames") :
+				  ws->sum->DrawSames();
+      }
+    }
+  }
+
+  if (gl_verbose)
+    cout << "Drawing stack with option AH" << endl;
+  ws->stack->Draw("AH SAME");
+
+  ws->sum->DrawFits("same");   wp->vp->Update();
+  ws->sum->DrawStats();        wp->vp->Update();
+
+  //ws->sum->Draw("AXIG SAME");
+  //wp->vp->Update();
 }                                                           // drawInPad
 
 //======================================================================
@@ -141,7 +161,7 @@ void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
 	picfilename += datafile;
       }	break;
       default:
-	cout<<"Unrecognized format code %"<<namefmt[pos0]<<endl;
+	cerr<<"Unrecognized format code %"<<namefmt[pos0]<<endl;
 	break;
       }
       pos0++;
@@ -154,6 +174,98 @@ void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
 
 //======================================================================
 
+unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occupied pads
+{
+  wCanvas_t *wc0    = cs.canvases[0];
+  unsigned npads    = wc0->npadsx*wc0->npadsy;
+  unsigned npadsall = cs.ncanvases*npads;
+
+  // Note: wci can't be wCanvas_t& because apparently filling the
+  //       vector messes up the reference to the first element!
+  //
+  wCanvas_t wci(*wc0); // doesn't copy member "pads"
+  wPad_t    *mp = wc0->multipad;
+  wCanvas_t *wc = wc0;
+
+  // Divvy up the pads among multiple canvases if so specified
+
+  unsigned ipad=0;                      // ipad=global pad index, not the Apple product!
+  for (unsigned h=0,k=0; ; ipad++) {    /* h=histo index in current histo multiset
+					   k=multiset index */
+    unsigned   i  =  ipad % npads;      // index to current pad in canvas
+    unsigned cnum = (ipad / npads) + 1; // current canvas number
+
+    if (cnum > cs.ncanvases) break;
+
+    if ((i==0) && (cnum > cs.canvases.size())) {
+      if (gl_verbose)
+	cout << "making new canvas" << endl;
+      wc = new wCanvas_t(wci);
+      cs.canvases.push_back(wc);
+      wc->title = cs.title + "_" + int2str(cnum);
+      wc->pads.clear();
+    }
+
+    if (!h && gl_verbose)
+      cout<<"Assigning multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
+
+    string multihist1 = mp->histo_ids[k]+"_"+int2str(h++);
+    if (findHisto(multihist1, "hit the end of histo multiset")) {
+      // now we associate histogram sets with the pad set
+      wPad_t *wp = new wPad_t(*(mp));
+      wp->histo_ids.clear();
+      wp->histo_ids.push_back(multihist1);
+      wc->pads.push_back(wp);
+    } else {
+      ipad--; // have to back up one...
+      h=0;
+      if (++k == mp->histo_ids.size()) break;
+    }
+  }
+
+  return min(npadsall,ipad+1);
+}                                               // assignHistos2Multipad
+
+//======================================================================
+
+unsigned assignPads2Canvases(canvasSet_t& cs)
+{
+  wCanvas_t *wc0    = cs.canvases[0];
+  unsigned npads    = wc0->npadsx*wc0->npadsy;
+  unsigned npadsall = cs.ncanvases*npads;
+
+  // Note: wci can't be wCanvas_t& because apparently filling the
+  //       vector messes up the reference to the first element!
+  //
+  wCanvas_t wci(*wc0); // doesn't copy member "pads"
+  wCanvas_t *wc = wc0;
+
+  // Divvy up the pads among multiple canvases if so specified
+
+  unsigned ipad=0;                      // ipad=global pad index 
+  for (;ipad<wc0->pads.size(); ipad++) {
+    unsigned   i  =  ipad % npads;      // index to current pad in canvas
+    unsigned cnum = (ipad / npads) + 1; // current canvas number
+
+    if (cnum > cs.ncanvases) break;
+
+    if ((i==0) && (cnum > cs.canvases.size())) {
+      if (gl_verbose)
+	cout << "making new canvas" << endl;
+      wc = new wCanvas_t(wci);
+      cs.canvases.push_back(wc);
+      wc->title = cs.title + "_" + int2str(cnum);
+      wc->pads.clear();
+    }
+
+    wc->pads.push_back(wc0->pads[ipad]);
+  }
+
+  return min(npadsall,ipad+1);
+}                                                 // assignPads2Canvases
+
+//======================================================================
+
 void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 {
   wCanvas_t *wc0 = cs.canvases[0];
@@ -161,7 +273,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   unsigned npadsall = cs.ncanvases*npads;
 
   if (!npads) {
-    cout << "Nothing to draw, guess I'm done." << endl;
+    if (gl_verbose) cout << "Nothing to draw, guess I'm done." << endl;
     return; // no pads to draw on.
 
   } else if (!wc0->pads.size()) {
@@ -171,51 +283,13 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      ********************************************************/
 
     if (wc0->multipad) {
-      // Note: wci can't be wCanvas_t& because apparently filling the
-      //       vector messes up the reference to the first element!
-      //
-      wCanvas_t wci(*wc0); // doesn't copy member "pads"
-      wPad_t    *mp = wc0->multipad;
-      wCanvas_t *wc = wc0;
-
-      // Divvy up the pads among multiple canvases if so specified
-
-      unsigned j=0;                      // j=global pad index 
-      for (unsigned h=0,k=0; ; j++) {    /* h=histo index in current histo multiset
-					    k=multiset index */
-	unsigned   i  =  j % npads;      // index to current pad in canvas
-	unsigned cnum = (j / npads) + 1; // current canvas number
-
-	if (cnum > cs.ncanvases) break;
-
-	if ((i==0) && (cnum > cs.canvases.size())) {
-	  cout << "making new canvas" << endl;
-	  wc = new wCanvas_t(wci);
-	  cs.canvases.push_back(wc);
-	  wc->title = cs.title + "_" + int2str(cnum);
-	  wc->pads.clear();
-	}
-
-	if (!h) cout<<"Assigning multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
-
-	string multihist1 = mp->histo_ids[k]+"_"+int2str(h++);
-	if (findHisto(multihist1, "hit the end of histo multiset")) {
-	  // now we associate histogram sets with the pad set
-	  wPad_t *wp = new wPad_t(*(mp));
-	  wp->histo_ids.clear();
-	  wp->histo_ids.push_back(multihist1);
-	  wc->pads.push_back(wp);
-	} else {
-	  j--; // have to back up one...
-	  h=0;
-	  if (++k == mp->histo_ids.size()) break;
-	}
-      }
-      npadsall = min(npadsall,j);
+      npadsall = assignHistos2Multipad(cs);
     } else {
-      cout << "npads>0, but no pad specs supplied, exiting." << endl;
+      cerr << "npads>0, but no pad specs supplied, exiting." << endl;
       return; // no pads to draw on.
     }
+  } else if (cs.ncanvases>1) {
+    npadsall = assignPads2Canvases(cs);
   } else {
     npadsall = min(npadsall,wc0->pads.size());
   }
@@ -238,7 +312,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     wc0->c1->Update();
   }
 
-  cout << "Drawing on " << npadsall << " pad(s)" << endl;
+  if (gl_verbose)
+    cout << "Drawing on " << npadsall << " pad(s)" << endl;
 
   wLegend_t *wl = NULL;
 
@@ -247,12 +322,12 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
    ***************************************************/
 
   vector<vector<string> >::const_iterator it;
-  for (unsigned j = 0; j< npadsall; j++) {
+  for (unsigned ipad = 0; ipad< npadsall; ipad++) {
 
-    cout << "Drawing pad# " << j << endl;
+    if (gl_verbose) cout << "Drawing pad# " << ipad+1 << endl;
 
-    unsigned   i  =  j % npads;
-    unsigned cnum = (j / npads) + 1;
+    unsigned   i  =  ipad % npads;
+    unsigned cnum = (ipad / npads) + 1;
 
     wCanvas_t *wc = cs.canvases[cnum-1];
 
@@ -317,8 +392,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * Check for external macros to run on the pad
      ***************************************************/
     for (size_t i=0; i<wp->macro_ids.size(); i++) {
-      map<string,string>::const_iterator it = glmap_objpaths2id.find(wp->macro_ids[i]);
-      if (it != glmap_objpaths2id.end()) {
+      map<string,string>::const_iterator it = glmap_objpath2id.find(wp->macro_ids[i]);
+      if (it != glmap_objpath2id.end()) {
 	string path = it->second;
 	int error;
 	gROOT->Macro(path.c_str(), &error, kTRUE); // update current pad
@@ -352,47 +427,11 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       if (testing &&
 	  !strcmp(testing->IsA()->GetName(),"TLegend")) {
 	TLegend *pullTheOtherOne = (TLegend *)testing;
-	cout << "Found legend from macro" << endl;
+	if (gl_verbose) cout << "Found legend from macro" << endl;
 	wl = new wLegend_t();
 	wl->leg = pullTheOtherOne;
 	drawlegend = true;
       }
-    }
-
-    /***************************************************
-     * Check for stacked histos:
-     ***************************************************/
-
-    string drawopt("");
-    if (wp->stack_ids.size()) {
-      wStack_t *ws=NULL;
-      for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
-	string& sid = wp->stack_ids[j];
-	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
-	if (it == glmap_id2stack.end()) {
-	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
-	  exit (-1);
-	}
-
-	ws = it->second;
-	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
-
-	// Add the histos in the stack to any legend that exists
-	//
-	if (drawlegend) {
-	  for (size_t i=0; i<ws->v_histos.size(); i++) {
-	    wTH1 *wh = ws->v_histos[i];
-	    wh->ApplySavedStyle();
-	    if(wh->GetLegendEntry().size())
-	      wh->Add2Legend(wl->leg);
-	    if (!i && wh->GetDrawOption().size())
-	      drawopt = wh->GetDrawOption();
-	  }
-	}
-
-	wp->vp->Update();
-      }
-      drawInPad(wp, ws, drawopt);
     }
 
     /***************************************************
@@ -410,20 +449,24 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       wTH1 *myHisto = it->second;
       
       if (myHisto) {
-	cout << "Drawing " << hid << " => ";
-	cout << myHisto->histo()->GetName() << endl;
-	bool firstInPad = !(j||wp->stack_ids.size());
-	cout << "firstInPad = " << firstInPad << endl;
-	drawInPad(wp,*myHisto,firstInPad);
-	if (myHisto->statsAreOn()) {
-	  myHisto->DrawStats();
-	  wp->vp->Update();
+	bool firstInPad = !j;
+	if (gl_verbose) {
+	  cout << "Drawing " << hid << " => ";
+	  cout << myHisto->histo()->GetName() << endl;
+	  cout << "firstInPad = " << firstInPad << endl;
 	}
-	myHisto->DrawFits();
+	drawInPad(wp,*myHisto,firstInPad);
+
+	myHisto->DrawFits("same");
 	if (drawlegend && myHisto->GetLegendEntry().size()) {
 	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
 	  myHisto->Add2Legend(wl->leg);
 	}
+	if (myHisto->statsAreOn()) {
+	  myHisto->DrawStats();
+	  wp->vp->Update();
+	}
+
 	myHisto->ApplySavedStyle();
 	wp->vp->Update();
       }
@@ -471,8 +514,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      ***************************************************/
 
     for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
-      //string drawopt("CP");
-      string drawopt("L");
       string& gid = wp->graph_ids[j];
       map<string,wGraph_t *>::const_iterator it   = glmap_id2graph.find(gid);
       map<string,TGraph2D *>::const_iterator it2d = glmap_id2graph2d.find(gid);
@@ -495,16 +536,60 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       //drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
 
       if (wg) {
-	drawInPad<TGraph>(wp,wg->gr,drawopt.c_str());
+	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),true);
 	wp->vp->Update();
 	if (drawlegend)
 	  wl->leg->AddEntry(wg->gr,gid.c_str(),"L");
       }
       if (gr2d) {
-	drawInPad<TGraph2D>(wp,gr2d,drawopt.c_str());
+	drawInPad<TGraph2D>(wp,gr2d,"COLZ",true);
 	wp->vp->Update();
 	if (drawlegend)
 	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),"L");
+      }
+    }
+
+    /***************************************************
+     * LOOP OVER STACKS DEFINED FOR PAD...
+     ***************************************************/
+
+    string drawopt("");
+    if (wp->stack_ids.size()) {
+      wStack_t *ws=NULL;
+      for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
+	string& sid = wp->stack_ids[j];
+	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
+	if (it == glmap_id2stack.end()) {
+	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
+	  exit (-1);
+	}
+
+	bool firstInPad = !(j ||
+			    wp->histo_ids.size()||
+			    wp->altyh_ids.size() ||
+			    wp->graph_ids.size());
+
+	ws = it->second;
+	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
+
+	// Add the histos in the stack to any legend that exists
+
+	//
+	if (drawlegend) {
+	  for (size_t i=0; i<ws->v_histos.size(); i++) {
+	    wTH1 *wh = ws->v_histos[i];
+	    wh->ApplySavedStyle();
+	    if(wh->GetLegendEntry().size())
+	      wh->Add2Legend(wl->leg);
+	  }
+	}
+
+	if (ws->sum->GetDrawOption().size())
+	  drawopt = ws->sum->GetDrawOption();
+
+	drawInPad(wp, ws, firstInPad, drawopt);
+
+	wp->vp->Update();
       }
     }
 
@@ -573,7 +658,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	cerr << "ERROR: latex id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
-      cout << "Drawing latex object " << lid << endl;
+      if (gl_verbose) cout << "Drawing latex object " << lid << endl;
       TLatex *ltx = it->second;
       ltx->Draw();
       wp->vp->Update();
@@ -586,7 +671,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	cerr << "ERROR: label id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
-      cout << "Drawing label object " << lid << endl;
+      if (gl_verbose) cout << "Drawing label object " << lid << endl;
       wLabel_t *wl = it->second;
       drawStandardText(wl->text, wl->x1ndc, wl->y1ndc,-1,-1,wl->textsize);
 
