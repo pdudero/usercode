@@ -13,11 +13,12 @@ struct wGraph_t {
     yndiv(510),
     lcolor(1),lstyle(1),lwidth(1),
     mcolor(1),mstyle(3),msize(1),
-    leglabel(""),gr(NULL) {}
+    leglabel(""),drawopt(""),gr(NULL) {}
   int  yndiv;
   int  lcolor,lstyle,lwidth;
   int  mcolor,mstyle,msize;
   string leglabel;
+  string drawopt;
   TGraph *gr;
 };
 
@@ -42,7 +43,8 @@ void loadVectorsFromFile(const char *filename,
     return;
   }
 
-  cout << "Loading vectors from file " << filename;
+  if (gl_verbose)
+    cout << "Loading vectors from file " << filename;
 
   while (!feof(fp) && fgets(linein,LINELEN,fp)) {
     double x, y;
@@ -59,7 +61,7 @@ void loadVectorsFromFile(const char *filename,
   vx.ResizeTo(vecsize);
   vy.ResizeTo(vecsize);
 
-  cout << "; read " << vecsize << " lines" << endl;
+  if (gl_verbose) cout << "; read " << vecsize << " lines" << endl;
 
   for (int i=0; i<vecsize; i++) {
     vx[i] = v[2*i];
@@ -84,7 +86,7 @@ void loadVectorsFromFile(const char *filename,
     return;
   }
 
-  cout << "Loading vectors from file " << filename;
+  if (gl_verbose) cout << "Loading vectors from file " << filename;
 
   while (!feof(fp) && fgets(linein,LINELEN,fp)) {
     double x, y, z;
@@ -102,7 +104,7 @@ void loadVectorsFromFile(const char *filename,
   vy.ResizeTo(vecsize);
   vz.ResizeTo(vecsize);
 
-  cout << "; read " << vecsize << " lines" << endl;
+  if (gl_verbose) cout << "; read " << vecsize << " lines" << endl;
 
   for (int i=0; i<vecsize; i++) {
     vx[i] = v[2*i];
@@ -128,7 +130,7 @@ void loadVectorsFromFile(const char *filename,
     return;
   }
 
-  cout << "Loading vectors from file " << filename;
+  if (gl_verbose) cout << "Loading vectors from file " << filename;
 
   while (!feof(fp) && fgets(linein,LINELEN,fp)) {
     double x, y, ymin,ymax;
@@ -151,7 +153,7 @@ void loadVectorsFromFile(const char *filename,
   eyl.ResizeTo(vecsize);
   eyh.ResizeTo(vecsize);
 
-  cout << "; read " << vecsize << " lines" << endl;
+  if (gl_verbose) cout << "; read " << vecsize << " lines" << endl;
 
   for (int i=0; i<vecsize; i++) {
     vx[i]  = v[6*i];
@@ -165,6 +167,27 @@ void loadVectorsFromFile(const char *filename,
 
 //======================================================================
 
+void
+printVectorsToFile(wGraph_t *wg, const string& filename)
+{
+  if (wg->gr->InheritsFrom("TGraphAsymmErrors")) {
+    TGraphAsymmErrors *agr = (TGraphAsymmErrors *)wg->gr;
+    cout<<"lox\tctrx\thix\tloy\tctry\thiy\tex\tey"<<endl;
+    for (int i=0; i<agr->GetN(); i++) {
+      double x,y, ex, ey, lox,hix,loy,hiy;
+      agr->GetPoint(i,x,y);
+      ex = agr->GetErrorX(i);
+      ey = agr->GetErrorY(i);
+      lox = x-ex; hix = x+ex;
+      loy = y-ey; hiy = y+ey;
+      cout <<lox<<"\t"<<x<<"\t"<<hix<<"\t";
+      cout <<loy<<"\t"<<y<<"\t"<<hiy<<"\t"<<ex<<"\t"<<ey<<endl;
+    }
+  }
+}                                                  // printVectorsToFile
+
+//======================================================================
+
 TGraph *getGraphFromSpec(const string& gid,
 			 const string& fullspec) // alias expansion assumed
 {
@@ -175,7 +198,7 @@ TGraph *getGraphFromSpec(const string& gid,
   string gspec;
   string rootfn;
 
-  cout << "processing " << fullspec << endl;
+  if (gl_verbose) cout << "processing " << fullspec << endl;
 
   // process the (expanded) specification
   Tokenize(fullspec,v_tokens,":");
@@ -189,13 +212,13 @@ TGraph *getGraphFromSpec(const string& gid,
     gspec  = v_tokens[1];
   }
 
-  map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
-  if (it != glmap_objpaths2id.end()) {
+  map<string,string>::const_iterator it = glmap_objpath2id.find(fullspec);
+  if (it != glmap_objpath2id.end()) {
     // Allow the possibility to run the script a second time in root
-    cout << "Object " << fullspec << " already read in, here it is" << endl;
+    if (gl_verbose) cout << "Object " << fullspec << " already read in, here it is" << endl;
     map<string,wGraph_t *>::const_iterator git = glmap_id2graph.find(it->second);
     if (git == glmap_id2graph.end()) {
-      cout << "oops, sorry, I lied." << endl;
+      if (gl_verbose) cout << "oops, sorry, I lied." << endl;
       return NULL;
     }
     gr = git->second->gr;
@@ -216,7 +239,7 @@ TGraph *getGraphFromSpec(const string& gid,
 	cerr << "couldn't find " << gspec << " in " << rootfn << endl;
       } else {
 	// success, record that you read it in.
-	glmap_objpaths2id.insert(pair<string,string>(fullspec,gid));
+	glmap_objpath2id.insert(pair<string,string>(fullspec,gid));
       }
     }
   }
@@ -231,15 +254,17 @@ processGraphSection(FILE *fp,
 		    bool& new_section)
 {
   vector<string> v_tokens;
-  string  xtitle,ytitle,title,draw;
+  string  xtitle,ytitle,title;
   string   *gid  = NULL;
   TGraph2D *gr2d = NULL;
   TVectorD vx,vy,vz,exl,exh,eyl,eyh;
   float xoffset=0.0,yoffset=0.0, yscale=1.0;
+  float xmin=0.,xmax=0.,ymin=0.,ymax=0.;
+  float xtitoff=-1.,ytitoff=-1.;
   bool asymerrors = false;
   wGraph_t *wg = new wGraph_t();
 
-  cout << "Processing graph section" << endl;
+  if (gl_verbose) cout << "Processing graph section" << endl;
 
   new_section=false;
 
@@ -317,23 +342,58 @@ processGraphSection(FILE *fp,
       wg->gr  = getGraphFromSpec(*gid,value);
       if (!wg->gr) continue;
 
+    //------------------------------
+    } else if (key == "bayesdiv") {
+    //------------------------------
+
+      Tokenize(value,v_tokens,",/"); // either comma-separated or using '/'
+      if (v_tokens.size() != 2) {
+	cerr << "expect comma-separated list of exactly two histo specs to divide! ";
+	cerr << theline << endl;
+	continue;
+      }
+
+      TH1 *tmph1 = (TH1 *)findHisto(v_tokens[0]); if (!tmph1) exit(-1);
+      TH1 *tmph2 = (TH1 *)findHisto(v_tokens[1]); if (!tmph2) exit(-1);
+
+      cout << tmph1->GetNbinsX() << " " << tmph2->GetNbinsX() << endl;
+
+      // equivalent to BayesDivide
+      //
+      if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
+      else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
+      if (!wg->gr) {
+	cerr << "BayesDivide didn't work! wonder why..." << endl;
+	continue;
+      } else if (gl_verbose) {
+	cout << wg->gr->GetN() << " points in the graph" << endl;
+      }
+
     } else {
-      if      (key == "xoffset")     xoffset     = str2flt(value);
-      else if (key == "yoffset")     yoffset     = str2flt(value);
-      else if (key == "yscale")      yscale      = str2flt(value);
-      else if (key == "title" )      title       = value;
-      else if (key == "xtitle" )     xtitle      = value;
-      else if (key == "ytitle" )     ytitle      = value;
-      else if (key == "draw" )       draw        = value;
-      else if (key == "linecolor")   wg->lcolor  = str2int(value);
-      else if (key == "linestyle")   wg->lstyle  = str2int(value);
-      else if (key == "linewidth")   wg->lwidth  = str2int(value);
-      else if (key == "markercolor") wg->mcolor  = str2int(value);
-      else if (key == "markerstyle") wg->mstyle  = str2int(value);
-      else if (key == "markersize")  wg->msize   = str2int(value);
-      else if (key == "asymerrors")  asymerrors  = (bool)str2int(value);
-      else if (key == "yndiv")       wg->yndiv   = str2int(value);
-      else if (key == "leglabel")    wg->leglabel= value;
+      if     ( key == "xoffset" )      xoffset   = str2flt(value);
+      else if( key == "yoffset" )      yoffset   = str2flt(value);
+      else if( key == "yscale" )       yscale    = str2flt(value);
+      else if( key == "title"  )       title     = value;
+      else if( key == "xtitle" )       xtitle    = value;
+      else if( key == "ytitle" )       ytitle    = value;
+      else if( key == "xtitleoffset" ) xtitoff   = str2flt(value);
+      else if( key == "ytitleoffset" ) ytitoff   = str2flt(value);
+      else if( key == "xmin" )         xmin      = str2flt(value);
+      else if( key == "xmax" )         xmax      = str2flt(value);
+      else if( key == "ymin" )         ymin      = str2flt(value);
+      else if( key == "ymax" )         ymax      = str2flt(value);
+      else if( key == "draw" )         wg->drawopt = value;
+      else if( key == "linecolor" )    wg->lcolor  = str2int(value);
+      else if( key == "linestyle" )    wg->lstyle  = str2int(value);
+      else if( key == "linewidth" )    wg->lwidth  = str2int(value);
+      else if( key == "markercolor" )  wg->mcolor  = str2int(value);
+      else if( key == "markerstyle" )  wg->mstyle  = str2int(value);
+      else if( key == "markersize"  )  wg->msize   = str2int(value);
+      else if( key == "asymerrors" )   asymerrors  = (bool)str2int(value);
+      else if( key == "yndiv" )        wg->yndiv   = str2int(value);
+      else if( key == "leglabel" )     wg->leglabel= value;
+      else if( key == "setprecision" ) cout << setprecision(str2int(value));
+      else if( key == "printvecs2file") printVectorsToFile(wg,value);
       else {
 	cerr << "unknown key " << key << endl;
       }
@@ -364,18 +424,22 @@ processGraphSection(FILE *fp,
 	wg->gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
       else
 	wg->gr = new TGraph(vx,vy);
-
-      wg->gr->SetTitle(title.c_str());
-      wg->gr->SetLineStyle   (wg->lstyle);
-      wg->gr->SetLineColor   (wg->lcolor);
-      wg->gr->SetLineWidth   (wg->lwidth);
-      wg->gr->SetMarkerColor (wg->mcolor);
-      wg->gr->SetMarkerStyle (wg->mstyle);
-      wg->gr->SetMarkerSize  (wg->msize);
-      wg->gr->GetYaxis()->SetNdivisions(wg->yndiv);
-      
-      glmap_id2graph.insert(pair<string,wGraph_t *>(*gid,wg));
     }
+    wg->gr->SetTitle(title.c_str());
+    wg->gr->SetLineStyle   (wg->lstyle);
+    wg->gr->SetLineColor   (wg->lcolor);
+    wg->gr->SetLineWidth   (wg->lwidth);
+    wg->gr->SetMarkerColor (wg->mcolor);
+    wg->gr->SetMarkerStyle (wg->mstyle);
+    wg->gr->SetMarkerSize  (wg->msize);
+    wg->gr->GetYaxis()->SetNdivisions(wg->yndiv);
+
+    if (xmax>xmin)   wg->gr->GetXaxis()->SetRangeUser(xmin,xmax);
+    if (ymax>ymin)   wg->gr->GetYaxis()->SetRangeUser(ymin,ymax);
+    if (xtitoff>=0.) wg->gr->GetXaxis()->SetTitleOffset(xtitoff);
+    if (ytitoff>=0.) wg->gr->GetYaxis()->SetTitleOffset(ytitoff);
+
+    glmap_id2graph.insert(pair<string,wGraph_t *>(*gid,wg));
   }
 
   return ((gr2d != NULL) || (wg->gr != NULL));
