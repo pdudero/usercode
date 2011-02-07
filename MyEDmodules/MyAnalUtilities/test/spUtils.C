@@ -1,7 +1,10 @@
+#include <sstream>
 
 #ifndef LINELEN
 #define LINELEN 512
 #endif
+
+static unsigned gl_linect=0;
 
 //======================================================================
 
@@ -42,34 +45,36 @@ size_t ci_find(const string& str1, const string& str2)
 //======================================================================
 // Got this from
 // http://oopweb.com/CPP/Documents/CPPHOWTO/Volume/C++Programming-HOWTO-7.html
-
+// returns one token (the whole string) if none of the delimiters are found.
+//
 void Tokenize(const string& str,
 	      vector<string>& tokens,
 	      const string& delimiters = " ",
 	      bool include_delimiters=false)
 {
+  string src=str;
   tokens.clear();
 
   // Skip delimiters at beginning.
-  string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  string::size_type lastPos = src.find_first_not_of(delimiters, 0);
   if (include_delimiters && lastPos>0)
-    tokens.push_back(str.substr(0,lastPos));
+    tokens.push_back(src.substr(0,lastPos));
 
   // Find first "non-delimiter".
-  string::size_type pos = str.find_first_of(delimiters, lastPos);
+  string::size_type pos = src.find_first_of(delimiters, lastPos);
 
   while (string::npos != pos || string::npos != lastPos) {
     // Found a token, add it to the vector.
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    tokens.push_back(src.substr(lastPos, pos - lastPos));
 
-    lastPos = str.find_first_not_of(delimiters, pos);
+    lastPos = src.find_first_not_of(delimiters, pos);
 
     if (include_delimiters && pos!=string::npos) {
-      tokens.push_back(str.substr(pos, lastPos-pos));
+      tokens.push_back(src.substr(pos, lastPos-pos));
     } //else skip delimiters.
 
     // Find next delimiter
-    pos = str.find_first_of(delimiters, lastPos);
+    pos = src.find_first_of(delimiters, lastPos);
   }
 }                                                            // Tokenize
 
@@ -86,6 +91,8 @@ bool getLine(FILE *fp, string& theline, const string& callerid="")
   } else return false;
 
   //cout << theline <<  ", callerid = " << callerid << endl;
+
+  gl_linect++;
 
   return true;
 }                                                             // getLine
