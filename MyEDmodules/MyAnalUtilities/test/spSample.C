@@ -4,17 +4,18 @@
 #define LINELEN 512
 #endif
 
-static map<string, pair<int,double> >  glmap_id2sample;
+static map<string, pair<double,double> >  glmap_id2sample;
 
 //======================================================================
 
 double
 getSampleScaleFactor(const string& sid,double luminvpb)
 {
-  map<string,pair<int,double> >::const_iterator it = glmap_id2sample.find(sid);
+  map<string,pair<double,double> >::const_iterator it = glmap_id2sample.find(sid);
   if (it != glmap_id2sample.end()) {
-    int    nev  = it->second.first;
+    double nev  = it->second.first;
     double xsec = it->second.second;
+    if (gl_verbose) cout << nev << "\t" << xsec << "\t" << luminvpb << endl;
     return(xsec*luminvpb/nev);
   } else {
     cerr << "Sample " << sid << " not found, ";
@@ -32,9 +33,10 @@ processSampleSection(FILE *fp,
 {
   string *sid = NULL;
   double xsecpb=0.0, filteff=1.0;
-  int   nevents=0;
+  double nevents=0;
 
-  cout << "Processing sample section" << endl;
+  if (gl_verbose)
+    cout << "Processing sample section" << endl;
 
   new_section=false;
 
@@ -73,7 +75,7 @@ processSampleSection(FILE *fp,
       if (!sid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      nevents=str2int(value);
+      nevents=str2flt(value);
 
     //------------------------------
     } else if (key == "filteff") {
@@ -92,8 +94,8 @@ processSampleSection(FILE *fp,
 
   if ((nevents>0)&&
       (xsecpb>0.)) {
-    pair<int,double> sample(nevents,xsecpb);
-    glmap_id2sample.insert(pair<string, pair<int,double> >(*sid,sample));
+    pair<double,double> sample(nevents,xsecpb);
+    glmap_id2sample.insert(pair<string, pair<double,double> >(*sid,sample));
     return true;
   }
   return false;
