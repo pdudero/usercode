@@ -3,6 +3,7 @@
 struct wStack_t {
   wStack_t() : stack(NULL) {}
   THStack *stack;
+  wTH1    *sum; // shadow histogram to receive all formatting commands
   std::vector<wTH1 *> v_histos; /* have to keep the histos around for
 				   legend labels and drawoptions */
 };
@@ -20,8 +21,6 @@ processStackSection(FILE *fp,
 {
   vector<string> v_tokens;
 
-  wTH1  *stkwh = NULL; /* will become the histogram used to draw the stack,
-			  collect user preferences here. */
   string  *sid = NULL;
   wStack_t *ws = NULL;
 
@@ -82,9 +81,10 @@ processStackSection(FILE *fp,
 	if (!ws) {
 	  ws        = new wStack_t();
 	  ws->stack = new THStack(wh->histo()->GetName(),wh->histo()->GetTitle());
-	  stkwh     = wh->Clone(wh->histo()->GetName(),wh->histo()->GetTitle());
-	  stkwh->histo()->Reset();
-	}
+	  ws->sum   = wh->Clone(wh->histo()->GetName(),
+				wh->histo()->GetTitle());
+	} else 
+	  ws->sum->histo()->Add(wh->histo());
 
 	ws->stack->Add(wh->histo());
 	ws->v_histos.push_back(wh);
@@ -96,24 +96,14 @@ processStackSection(FILE *fp,
     }
 
     else {
-      processCommonHistoParams(key,value,*stkwh);
-      if (key=="title") ws->stack->SetTitle(stkwh->histo()->GetTitle());
+      processCommonHistoParams(key,value, "", *(ws->sum));
+      if (key=="title") ws->stack->SetTitle(ws->sum->histo()->GetTitle());
     }
   } // while getline loop
 
-  if  (ws) {
-    // Done defining, now we can set the histogram of the stack
-    ws->stack->SetHistogram(stkwh->histo()); // only available in 5.26+
-
-    // How to control the y-axis of a stack simply?
-    ws->stack->SetMaximum(stkwh->histo()->GetYaxis()->GetXmax());
-    ws->stack->SetMinimum(stkwh->histo()->GetYaxis()->GetXmin());
-
+  if  (ws)
     glmap_id2stack.insert(pair<string,wStack_t *>(*sid,ws));
 
-    // Don't need this anymore - happily the destructor leaves the TH1 intact
-    delete stkwh;
-  }
   return (ws != NULL);
 }                                                 // processStackSection
 
