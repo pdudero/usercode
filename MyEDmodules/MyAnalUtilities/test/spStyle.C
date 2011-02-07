@@ -1,6 +1,7 @@
 #include "TStyle.h"
 #include "mystyle.C"
-#include "tdrstyle4timing.C"
+//#include "tdrstyle4timing.C"
+#include "tdrstyle.C"
 
 static map<string, TStyle *>    glmap_id2style;
 
@@ -14,7 +15,8 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
   string *sid      = NULL;
   TStyle *thestyle = NULL;
 
-  cout << "Processing style section" << endl;
+  if (gl_verbose)
+    cout << "Processing style section" << endl;
 
   new_section=false;
 
@@ -59,11 +61,18 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
 	cerr << "unknown style name " << value << endl;
     }
     else if (key == "optstat")  {
-      cout << "OptStat = " << thestyle->GetOptStat() << endl;
+      if (gl_verbose) cout << "OptStat = " << thestyle->GetOptStat() << endl;
       thestyle->SetOptStat(value.c_str());
-      cout << "OptStat = " << thestyle->GetOptStat() << endl;
+      if (gl_verbose) cout << "OptStat = " << thestyle->GetOptStat() << endl;
     }
     else if (key == "opttitle")  thestyle->SetOptTitle(str2int(value));
+
+    else if (key == "padrightmargin")  thestyle->SetPadRightMargin (str2flt(value));
+    else if (key == "padleftmargin")   thestyle->SetPadLeftMargin  (str2flt(value));
+    else if (key == "padtopmargin")    thestyle->SetPadTopMargin   (str2flt(value));
+    else if (key == "padbottommargin") thestyle->SetPadBottomMargin(str2flt(value));
+    else if (key == "padgridx")        thestyle->SetPadGridX       (str2int(value));
+    else if (key == "padgridy")        thestyle->SetPadGridY       (str2int(value));
 
     // Set the position/size of the title box
 
