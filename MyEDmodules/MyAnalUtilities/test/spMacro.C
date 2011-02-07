@@ -1,13 +1,14 @@
 
 //======================================================================
 
-void
+int
 processMacroSection(FILE *fp,
 		    string& theline,
 		    bool& new_section)
 {
   vector<string> v_tokens;
   string *mid = NULL;
+  int success = 0;
 
   cout << "Processing macro section" << endl;
 
@@ -42,12 +43,15 @@ processMacroSection(FILE *fp,
       }
 
       // We're actually using this map in reverse here!
-      glmap_objpaths2id.insert(pair<string,string>(*mid,value));
+      glmap_objpath2id.insert(pair<string,string>(*mid,value));
+
+      success = 1;
 
     } else {
       cerr << "unknown key " << key << endl;
     }
   }
+  return success;
 }                                                 // processGraphSection
 
 //======================================================================
