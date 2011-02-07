@@ -1,6 +1,3 @@
-// Script takes output of HBHEHORecPulseAnal1.cc and reconstructs the HBHEHO
-// pulse from successive TDC-indexed histograms.
-//
 
 #include <iostream>
 #include <vector>
@@ -23,11 +20,12 @@ typedef unsigned long uint32_t;
 #endif
 
 struct FileInfo_t {
-  FileInfo_t(TFile *infp,string inpath,float inxs,int innev, int innrb,float inwt):
-    fp(infp),path(inpath),xsec(inxs),nev(innev),nrebin(innrb),weight(inwt) {}
+  FileInfo_t(TFile *infp,string inpath,float inxs,int innev, float inkf, int innrb,float inwt):
+    fp(infp),path(inpath),xsec(inxs),kfact(inkf),nev(innev),nrebin(innrb),weight(inwt) {}
   TFile *fp;
   string path;
   float  xsec;
+  float  kfact;
   int    nev;
   int    nrebin;
   float  weight;
@@ -59,12 +57,12 @@ int getFileInfo(const char *filewithpaths,
   while (!feof(pathfp) && fgets(line, 256, pathfp)) {
     char path[256];
     int nev;
-    float xsec,weight;
+    float xsec,weight,kfactor=1.0;
     int nrebin = 0;
 
     if (line[0] == '#') continue;
 
-    int nscanned = sscanf(line, "%s %f %d %d", path,&xsec,&nev,&nrebin);
+    int nscanned = sscanf(line, "%s %f %d %f %d", path,&xsec,&nev,&kfactor,&nrebin);
 
     TFile *tfile =  new TFile(path);
     
@@ -73,16 +71,18 @@ int getFileInfo(const char *filewithpaths,
       return 0;
     }
 
-    if ((nscanned != 3) &&
-	(nscanned != 4)   )  {
-      cerr << "pathfile requires <pathstring> <xsec> <nevents> [nrebin]\n";
+    if ((nscanned < 3) ||
+	(nscanned > 5)   )  {
+      cerr << "pathfile requires <pathstring> <xsec> <nevents> [kfactor] [nrebin]\n";
       return 0;
-    } else
-      cout << xsec << " " << integluminvpb << " " << nev << " " << nrebin << endl;
+    }
+    //else
+    //cout << xsec << " " << integluminvpb << " " << nev << " " << nrebin << endl;
 
-    weight = (xsec*integluminvpb)/((float)nev);
-    cout << "calculated weight for file " << path << " = " << weight << endl;
-    FileInfo_t fileinfo(tfile,path,xsec,nev,nrebin,weight);
+    weight = (xsec*integluminvpb*kfactor)/((float)nev);
+    cout << "calculated weight for file " << path << " = ";
+    cout << "("<<xsec<<"*"<<integluminvpb<<"*"<<kfactor<<")/("<<nev<<")="<<weight<<endl;
+    FileInfo_t fileinfo(tfile,path,xsec,nev,kfactor,nrebin,weight);
     v_rootfiles.push_back(fileinfo);
   }
   return 1;
@@ -94,10 +94,12 @@ int getFileInfo(const char *filewithpaths,
 void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 
   cout << "Target path: " << target->GetPath() << endl;
+
   TString path( (char*)strstr( target->GetPath(), ":" ) );
   path.Remove( 0, 2 );
 
   source.fp->cd( path );
+
   TDirectory *current_sourcedir = gDirectory;
 
   // loop over all keys in this directory
@@ -106,6 +108,7 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 
   TIter nextkey( current_sourcedir->GetListOfKeys() );
   TKey *key;
+
   while ( (key = (TKey*)nextkey())) {
 
     // read object from first source file
@@ -114,13 +117,13 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 
     if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
       // descendant of TH1 -> scale it
-
+#if 0
       if (newdir) {
 	newdir=false;
 	cout << "Scaling histograms: " << endl;
       }
-
       cout << obj->GetName() << " ";
+#endif
       TH1 *h1 = (TH1*)obj;
       TH1 *h2 = NULL;
 
@@ -160,10 +163,10 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
       // it's a subdirectory
 
       newdir = true;
-
+#if 0
       cout << "\n=====> Found subdirectory " << obj->GetName();
       cout << "<=====\n" << endl;
-
+#endif
       // create a new subdir of same name and title in the target file
       target->cd();
       TDirectory *newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
@@ -193,7 +196,7 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 
   } // while ( ( TKey *key = (TKey*)nextkey() ) )
 
-  cout << endl;
+  //cout << endl;
 
   // save modifications to target file
   target->Write();
@@ -201,9 +204,11 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 }
 
 //======================================================================
-
+// Example: multiscale("files2scale.txt",36.145,"NLO")
+//
 void multiscale(const char* filewithpaths,
 		float integluminvpb,
+		const char* csordersuffix="",
 		bool writeErrors=false)
 {
   vector<FileInfo_t> v_rootfiles;
@@ -211,20 +216,27 @@ void multiscale(const char* filewithpaths,
   if (!getFileInfo(filewithpaths, v_rootfiles,integluminvpb))
     return;
 
+  int time2sleep = (int)max(5.0,0.5*v_rootfiles.size());
+
+  for (int i=time2sleep; i>=0; i--) {
+    cout << i;
+    if (i) {cout << "..." << flush; sleep(1); }
+  }
+  cout << endl;
+    
   // EXTRACT HISTOGRAMS and SCALE EACH
   for (unsigned int i=0; i<v_rootfiles.size(); i++) {
 
-    char scalename[80];
+    char scalename[256];
     FileInfo_t file = v_rootfiles[i];
     char *fn = strrchr(file.path.c_str(),'/');
     if (!fn) fn = (char *)file.path.c_str();
     else fn++;
     char *ptr = strstr(fn, ".root");
     *ptr = 0;
-    sprintf (scalename, "%s_%dinvpb.root", fn, (int)integluminvpb);
+    sprintf (scalename, "%s_%dipb%s.root", fn, (int)(integluminvpb+0.5),csordersuffix);
     cout << "Writing to " << scalename << endl;
     TFile *scaledfp = new TFile(scalename,"RECREATE");
-
     ScaleAll1file(scaledfp, file, writeErrors);
     scaledfp->Write();
     delete scaledfp;
