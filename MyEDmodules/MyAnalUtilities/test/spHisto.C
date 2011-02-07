@@ -4,9 +4,15 @@
 TH1 *findHisto(const string& hid, const string& errmsg="")
 {
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
-  if (it == glmap_id2histo.end()) {
+  if( it == glmap_id2histo.end() ) {
     // Try finding the first
     cerr << "Histo ID " << hid << " not found. " << errmsg << endl;
+    if( gl_verbose) {
+      cout << "Available histo IDs are: " << endl;
+      for (it = glmap_id2histo.begin(); it != glmap_id2histo.end(); it++)
+	cout << it->first << " ";
+      cout << endl;
+    }
     return NULL;
   }
   return it->second->histo();
@@ -14,10 +20,137 @@ TH1 *findHisto(const string& hid, const string& errmsg="")
 
 //======================================================================
 
+void printUsage(const string additionalinfo="") {
+  cerr << "\nERROR in printfstat format: " << additionalinfo<< endl;
+  cerr << "printfstat format: \"printf fmt str\",arg1,arg2,...";
+  cerr << "where argX = {k|s|i|I|o|u|r|m|e|p|f|h|d}"        << endl;
+  cerr << "	where p=filepath:histo path"                << endl;
+  cerr << "	      h=histo path"                         << endl;
+  cerr << "	      f=filename"                           << endl;
+  cerr << "	      d=histo containing directory/folder"  << endl;
+  cerr << "	      I=integral including over/underflows" << endl;
+  cerr << "	      ksiourme=> see ROOT documentation"    << endl;
+}
+
+void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
+{
+  if (gl_verbose)
+    cout << "print statistics for histo "<<histo_id<<" => "<<h->GetName()<<endl;
+
+  int nbinsx = (int)h->GetNbinsX();
+  vector<string> v_args, v_fmts;
+  Tokenize(printfspec,v_args,"\",");
+  if( v_args.size()<2 ) {
+    printUsage("insufficient number of arguments");
+    return;
+  }
+  // first arg must be a quoted printf format string
+  bool includepcts=true;
+  Tokenize( v_args[0],v_fmts,"%",includepcts ); // might include "%%" to print % sign
+  if( v_fmts.size() < 2 ) {
+    printUsage("insufficient number of format specifiers");
+    return;
+  }
+#if 0
+  cout<<endl;
+  cout<<"args: "; for( size_t i=0; i<v_args.size(); i++ ) cout<<i<<":\""<<v_args[i]<<"\" | "; cout<<endl;
+  cout<<"fmts: "; for( size_t i=0; i<v_fmts.size(); i++ ) cout<<i<<":\""<<v_fmts[i]<<"\" | "; cout<<endl;
+#endif
+
+  //cout << v_args.size() << "\t" << v_fmts.size() << "\t";
+  for( size_t iarg=1,jfmt=0; jfmt<v_fmts.size(); ) {
+    string arg = (iarg < v_args.size()) ? v_args[iarg] : "";
+    string fmt = v_fmts[jfmt++];
+
+    //cout << "(\""<<fmt<<"\","<<arg<<")\t"<<iarg<<"\t"<<jfmt<<"\t";
+
+    if( fmt.find("%") == string::npos ) {
+      printf( fmt.c_str() );
+    } else if( (fmt.size() > 1) &&
+	       (fmt.find_first_not_of("%") == string::npos) ) {
+      if (fmt.size()==2)
+	printf ("%%");
+      else {
+	cerr << "quit f*!)!#%ing around" << endl;
+	exit(-1);
+      }
+    } else {
+      if( jfmt > v_fmts.size()-1 ) {
+	printUsage("not enough format specifiers for number of arguments");
+	return;
+      }
+      fmt = "%" + v_fmts[jfmt++];
+
+      if( arg.size() > 2 ) {
+	printUsage("unrecognized argument: "+arg);
+	return;
+      }
+      //cout<<"\nprintf(\""<<fmt<<"\","<<arg<<");"<<endl;
+#if 1
+      char c = arg[0];
+      switch( c ) {
+      case 'k': printf( fmt.c_str(), h->GetKurtosis() );             break;
+      case 's': printf( fmt.c_str(), h->GetSkewness() );             break;
+      case 'i': printf( fmt.c_str(), h->Integral() );                break;
+      case 'I': printf( fmt.c_str(), h->Integral( 0,nbinsx+1 ) );    break; // include u/oflows
+      case 'o': printf( fmt.c_str(), h->GetBinContent( nbinsx+1 ) ); break;
+      case 'u': printf( fmt.c_str(), h->GetBinContent( 0 ) );        break;
+      case 'r': printf( fmt.c_str(), h->GetRMS() );                  break;
+      case 'm': printf( fmt.c_str(), h->GetMean() );                 break;
+      case 'e': printf( fmt.c_str(), h->GetEntries() );              break;
+      case 'p': // full histo path
+      case 'f': // root filename
+      case 'h': // histo path in file
+      case 'd': // name of containing directory/folder
+	{
+	  map<string,string>::const_iterator it = glmap_id2objpath.find(histo_id);
+	  if( it == glmap_id2objpath.end() ) {
+	    cerr << "Couldn't find path for histo with id " << histo_id << endl;
+	    return;
+	  }
+	  if( c=='p')  printf( fmt.c_str(), (it->second).c_str() );
+	  else {
+	    vector<string> v_tokens;
+	    Tokenize(it->second,v_tokens,":");
+	    switch (c) {
+	    case 'h': printf( fmt.c_str(), v_tokens[1].c_str() ); break;
+	    case 'd':
+	      {
+		size_t dirnumber=0;
+		if (arg.size()>1) dirnumber=(size_t)str2int(arg.substr(1));
+		Tokenize(v_tokens[1],v_tokens,"/");
+		if( v_tokens.size() < 2) cout << "/";
+		else if (dirnumber>=v_tokens.size()) continue;
+		else printf( fmt.c_str(), v_tokens[dirnumber].c_str() );
+	      }
+	      break;
+	    case 'f':
+	      {
+		Tokenize(v_tokens[0],v_tokens,"/");
+		printf( fmt.c_str(), (v_tokens.rbegin())->c_str() );
+	      }
+	      break;
+	    }
+	  }
+	}
+	break;
+      default:
+	printUsage("Unrecognized stat specifier: "+arg);
+	return;
+      } // switch (c)
+      iarg++;
+#endif
+    } // fmt = "%X"
+  } // arg loop
+}
+
+
+//======================================================================
+
 void printHisto2File(TH1 *histo, string filename)
 {
   FILE *fp = fopen(filename.c_str(),"w");
-  if (histo->InheritsFrom("TH3")) {
+  if( histo->InheritsFrom("TH3") ) {
     TH3 *h3 = (TH3 *)histo;
     int totaln = (int)h3->GetEntries();
     fprintf(fp,"#%s\t%s\t%s\tw\t%%\n",
@@ -35,7 +168,7 @@ void printHisto2File(TH1 *histo, string filename)
 		  100.*h3->GetBinContent(ix,iy,iz)/(float)totaln);
     cout << "File " << filename << " written with contents of ";
     cout << h3->GetName() << endl;
-  } else if (histo->InheritsFrom("TH2")) {
+  } else if( histo->InheritsFrom("TH2") ) {
     TH2 *h2 = (TH2 *)histo;
     fprintf(fp,"#x\ty\tz\n");
     for (int ix=1; ix<=h2->GetNbinsX(); ix++)
@@ -61,33 +194,54 @@ void printHisto2File(TH1 *histo, string filename)
 
 //======================================================================
 
-void saveHisto2File(TH1 *histo, string rootfn)
+void saveHisto2File(TH1 *histo, string outspec)
 {
   TFile *rootfile;
+  string rootfn,newname;
+  TH1 *target;
 
+#if 0
   //This filename input can be an alias
   //
-  if (rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
+  if( rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
     rootfn = extractAlias(rootfn.substr(1));
-    if (!rootfn.size()) return;
+    if( !rootfn.size()) return;
   }
+#endif
+
+  if( outspec.find(":") != string::npos) {
+    vector<string> v_tokens;
+    Tokenize(outspec,v_tokens,":");
+
+    rootfn = v_tokens[0];
+    newname = v_tokens[1];
+  } else
+    rootfn = outspec;
 
   // Check to see if the file has already been opened
 
-  map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
-  if (it != glmap_id2rootfile.end())
-    rootfile = it->second;
-  else {
-    rootfile = new TFile(rootfn.c_str(),"RECREATE");
-  }
+  //map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
+  //if( it != glmap_id2rootfile.end())
+  //    rootfile = it->second;
+  //else {
+  rootfile = new TFile(rootfn.c_str(),"UPDATE");
+  //}
 
-  if (rootfile->IsZombie()) {
+  if( rootfile->IsZombie() ) {
     cerr << "File failed to open, " << rootfn << endl;
   } else {
-    cout<<"Writing histo "<<histo->GetName()<<" to file "<<rootfn<<endl;
-    glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
-    histo->SetDirectory(rootfile);
-    histo->Write();
+    target = histo;
+    if( newname.size() ) {
+      cout<<"Writing histo "<<newname<<" to file "<<rootfn<<endl;
+      target = (TH1 *)histo->Clone(newname.c_str());
+      //target->SetTitle(histo->GetTitle());
+    } else
+      cout<<"Writing histo "<<histo->GetName()<<" to file "<<rootfn<<endl;
+
+    //glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
+    target->SetDirectory(rootfile);
+    target->Write();
+    rootfile->Close();
   }
 }                                                      // saveHisto2File
 
@@ -101,23 +255,24 @@ wTH1 *getHistoFromSpec(const string& hid,
   vector<string> v_tokens;
   string fullspec;     // potentially expanded from aliases.
 
-  cout << "processing " << spec << endl;
+  if( gl_verbose)
+    cout << "processing " << spec << endl;
 
   string hspec;
   string rootfn;
 
   // Expand aliii first
-  if (spec.find('@') != string::npos) {
+  if( spec.find('@') != string::npos) {
     //assert(0);
     string temp=spec;
     expandAliii(temp,fullspec);
-    if (!fullspec.size()) return NULL;
+    if( !fullspec.size() ) return NULL;
   } else {
     fullspec = spec;
   }
 
   Tokenize(fullspec,v_tokens,":");
-  if ((v_tokens.size() != 2) ||
+  if( (v_tokens.size() != 2) ||
       (!v_tokens[0].size())  ||
       (!v_tokens[1].size())    ) {
     cerr << "malformed root histo path file:folder/subfolder/.../histo " << fullspec << endl;
@@ -127,40 +282,46 @@ wTH1 *getHistoFromSpec(const string& hid,
     hspec  = v_tokens[1];
   }
 
-  map<string,string>::const_iterator it = glmap_objpaths2id.find(fullspec);
-  if (it != glmap_objpaths2id.end()) {
+#if 0
+  map<string,string>::const_iterator it = glmap_objpath2id.find(fullspec);
+  if( it != glmap_objpath2id.end() ) {
     // Allow the possibility to run the script a second time in root
-    cout << "Object " << fullspec << " already read in, here it is" << endl;
+    if( gl_verbose)
+      cout << "Object " << fullspec << " already read in, here it is" << endl;
     map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
-    if (hit == glmap_id2histo.end()) {
-      cout << "oops, sorry, I lied." << endl;
+    if( hit == glmap_id2histo.end() ) {
+      if( gl_verbose)
+	cout << "oops, sorry, I lied." << endl;
       return NULL;
     }
     wth1 = hit->second;
   } else {
+#endif
     // Now check to see if this file has already been opened...
     map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
-    if (it != glmap_id2rootfile.end())
+    if( it != glmap_id2rootfile.end() )
       rootfile = it->second;
     else
       rootfile = new TFile(rootfn.c_str());
 
-    if (rootfile->IsZombie()) {
+    if( rootfile->IsZombie() ) {
       cerr << "File failed to open, " << rootfn << endl;
     } else {
       glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
       TH1 *h1 = (TH1 *)rootfile->Get(hspec.c_str());
-      if (!h1) {
+      if( !h1) {
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
       } else {
 	// success, record that you read it in.
-	cerr << "Found " << fullspec << endl;
-	glmap_objpaths2id.insert(pair<string,string>(fullspec,hid));
+	if( gl_verbose) cout << "Found " << fullspec << endl;
+	glmap_objpath2id.insert(pair<string,string>(fullspec,hid));
+	glmap_id2objpath.insert(pair<string,string>(hid,fullspec));
+	h1->UseCurrentStyle();
 	wth1 = new wTH1(h1);
 	glmap_id2histo.insert(pair<string,wTH1 *>(hid,wth1));
       }
     }
-  }
+    //}
   return wth1;
 }                                                    // getHistoFromSpec
 
@@ -168,6 +329,7 @@ wTH1 *getHistoFromSpec(const string& hid,
 
 void processCommonHistoParams(const string& key, 
 			      const string& value,
+			      const string& histo_id,
 			      wTH1& wh)
 {
   static float xmin=1e99, xmax=-1e99;
@@ -180,9 +342,9 @@ void processCommonHistoParams(const string& key,
 
   // Allow user to define a set of common parameters to be used multiple times
   //
-  if (key == "applystyle") {
+  if( key == "applystyle" ) {
     map<string,TStyle *>::const_iterator it = glmap_id2style.find(value);
-    if (it == glmap_id2style.end()) {
+    if( it == glmap_id2style.end() ) {
       cerr << "Style " << value << " not found, ";
       cerr << "must be defined first" << endl;
       return;
@@ -190,159 +352,167 @@ void processCommonHistoParams(const string& key,
       wh.SaveStyle(it->second);
     }
   }
-  else if (key == "draw")        wh.SetDrawOption(value);
-  else if (key == "title")       wh.histo()->SetTitle(value.c_str());
+  else if( key == "draw" )        wh.SetDrawOption(value);
+  else if( key == "title" )       wh.histo()->SetTitle(value.c_str());
 
-  else if (key == "markercolor") wh.SetMarker(str2int(value));
-  else if (key == "markerstyle") wh.SetMarker(0,str2int(value));
-  else if (key == "markersize")  wh.SetMarker(0,0,str2int(value));
-  else if (key == "linecolor")   wh.SetLine(str2int(value));
-  else if (key == "linestyle")   wh.SetLine(0,str2int(value));
-  else if (key == "linewidth")   wh.SetLine(0,0,str2int(value));
-  else if (key == "fillcolor")   wh.histo()->SetFillColor(str2int(value));
-  else if (key == "leglabel")    wh.SetLegendEntry(value);
+  else if( key == "markercolor" ) wh.SetMarker(str2int(value) );
+  else if( key == "markerstyle" ) wh.SetMarker(0,str2int(value));
+  else if( key == "markersize" )  wh.SetMarker(0,0,str2int(value));
+  else if( key == "linecolor" )   wh.SetLine(str2int(value));
+  else if( key == "linestyle" )   wh.SetLine(0,str2int(value));
+  else if( key == "linewidth" )   wh.SetLine(0,0,str2int(value));
+  else if( key == "fillcolor" )   wh.histo()->SetFillColor(str2int(value));
+  else if( key == "leglabel" )    wh.SetLegendEntry(value);
 
-  else if (key == "rebin")       ((TH1 *)wh.histo())->Rebin(str2int(value));
+  else if( key == "rebin" )       ((TH1 *)wh.histo())->Rebin(str2int(value));
 
-  else if (key == "rebinx") {
-    if (wh.histo()->InheritsFrom("TH2")) ((TH2 *)wh.histo())->RebinX(str2int(value));
+  else if( key == "rebinx" ) {
+    if( wh.histo()->InheritsFrom("TH2") ) ((TH2 *)wh.histo())->RebinX(str2int(value));
     else                                 ((TH1 *)wh.histo())->Rebin(str2int(value));
   }
-  else if (key == "rebiny") {
-    if (wh.histo()->InheritsFrom("TH2")) ((TH2 *)wh.histo())->RebinY(str2int(value));
+  else if( key == "rebiny" ) {
+    if( wh.histo()->InheritsFrom("TH2") ) ((TH2 *)wh.histo())->RebinY(str2int(value));
     else {
       cerr << "\trebiny: not defined for 1-d histograms" << endl;
     }
   } 
 
   // axes
-  else if (key == "xtitle")       wh.SetXaxis(value);
-  else if (key == "ytitle")       wh.SetYaxis(value);
-  else if (key == "ztitle")       wh.SetZaxis(value);
-  else if (key == "xtitlesize")   wh.SetXaxis("",false,str2flt(value));
-  else if (key == "ytitlesize")   wh.SetYaxis("",false,str2flt(value));
-  else if (key == "ztitlesize")   wh.SetZaxis("",false,str2flt(value));
-  else if (key == "xtitleoffset") wh.SetXaxis("",false,0,str2flt(value));
-  else if (key == "ytitleoffset") wh.SetYaxis("",false,0,str2flt(value));
-  else if (key == "ztitleoffset") wh.SetZaxis("",false,0,str2flt(value));
-  else if (key == "xtitlefont")   wh.SetXaxis("",false,0,0,str2int(value));
-  else if (key == "ytitlefont")   wh.SetYaxis("",false,0,0,str2int(value));
-  else if (key == "ztitlefont")   wh.SetZaxis("",false,0,0,str2int(value));
-  else if (key == "xlabelsize")   wh.SetXaxis("",false,0,0,0,str2flt(value));
-  else if (key == "ylabelsize")   wh.SetYaxis("",false,0,0,0,str2flt(value));
-  else if (key == "zlabelsize")   wh.SetZaxis("",false,0,0,0,str2flt(value));
-  else if (key == "xlabelfont")   wh.SetXaxis("",false,0,0,0,0,str2int(value));
-  else if (key == "ylabelfont")   wh.SetYaxis("",false,0,0,0,0,str2int(value));
-  else if (key == "zlabelfont")   wh.SetZaxis("",false,0,0,0,0,str2int(value));
-  else if (key == "xndiv")  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
-  else if (key == "yndiv")  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
-  else if (key == "zndiv")  wh.SetZaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
+  else if( key == "xtitle" )       wh.SetXaxis(value);
+  else if( key == "ytitle" )       wh.SetYaxis(value);
+  else if( key == "ztitle" )       wh.SetZaxis(value);
+  else if( key == "xtitlesize" )   wh.SetXaxis("",false,str2flt(value));
+  else if( key == "ytitlesize" )   wh.SetYaxis("",false,str2flt(value));
+  else if( key == "ztitlesize" )   wh.SetZaxis("",false,str2flt(value));
+  else if( key == "xtitleoffset" ) wh.SetXaxis("",false,0,str2flt(value));
+  else if( key == "ytitleoffset" ) wh.SetYaxis("",false,0,str2flt(value));
+  else if( key == "ztitleoffset" ) wh.SetZaxis("",false,0,str2flt(value));
+  else if( key == "xtitlefont" )   wh.SetXaxis("",false,0,0,str2int(value));
+  else if( key == "ytitlefont" )   wh.SetYaxis("",false,0,0,str2int(value));
+  else if( key == "ztitlefont" )   wh.SetZaxis("",false,0,0,str2int(value));
+  else if( key == "xlabelsize" )   wh.SetXaxis("",false,0,0,0,str2flt(value));
+  else if( key == "ylabelsize" )   wh.SetYaxis("",false,0,0,0,str2flt(value));
+  else if( key == "zlabelsize" )   wh.SetZaxis("",false,0,0,0,str2flt(value));
+  else if( key == "xlabelfont" )   wh.SetXaxis("",false,0,0,0,0,str2int(value));
+  else if( key == "ylabelfont" )   wh.SetYaxis("",false,0,0,0,0,str2int(value));
+  else if( key == "zlabelfont" )   wh.SetZaxis("",false,0,0,0,0,str2int(value));
+  else if( key == "xndiv" )  wh.SetXaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
+  else if( key == "yndiv" )  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
+  else if( key == "zndiv" )  wh.SetZaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
-  else if (key == "xmin") {
+  else if( key == "xmin" ) {
     xmin = str2flt(value);
     wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
   }
-  else if (key == "xmax") {
+  else if( key == "xmax" ) {
     xmax = str2flt(value);
     wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
   }
-  else if (key == "ymin") {
+  else if( key == "ymin" ) {
     ymin = str2flt(value);
     wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
   }
-  else if (key == "ymax") {
+  else if( key == "ymax" ) {
     ymax = str2flt(value);
     wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
   }
-  else if (key == "zmin") {
+  else if( key == "zmin" ) {
     zmin = str2flt(value);
     wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
   }
-  else if (key == "zmax") {
+  else if( key == "zmax" ) {
     zmax = str2flt(value);
     wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
   }
 
-  else if (key == "xbinlabels") {
-    Tokenize(value,v_tokens,",");
-    if (!v_tokens.size()) {
+  else if( key == "xbinlabels" ) {
+    Tokenize(value,v_tokens,"," );
+    if( !v_tokens.size() ) {
       cerr << "expect comma-separated list of bin labels ";
       cerr << value << endl;
     }
-    cout << "Loaded " << v_tokens.size() << " x-axis bin labels" << endl;
+    if( gl_verbose )
+      cout << "Loaded " << v_tokens.size() << " x-axis bin labels" << endl;
     for (int ibin=1; ibin<=min((int)v_tokens.size(),wh.histo()->GetNbinsX()); ibin++)
-      wh.histo()->GetXaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
+      wh.histo()->GetXaxis()->SetBinLabel( ibin,v_tokens[ibin-1].c_str() );
   }
 
-  else if (key == "ybinlabels") {
-    Tokenize(value,v_tokens,",");
-    if (!v_tokens.size()) {
+  else if( key == "ybinlabels" ) {
+    Tokenize(value,v_tokens,"," );
+    if( !v_tokens.size() ) {
       cerr << "expect comma-separated list of bin labels ";
       cerr << value << endl;
     }
-    for (int ibin=1; ibin<=min((int)v_tokens.size(),wh.histo()->GetNbinsY()); ibin++)
-      wh.histo()->GetYaxis()->SetBinLabel(ibin,v_tokens[ibin-1].c_str());
+    for( int ibin=1; ibin<=min((int)v_tokens.size(),wh.histo()->GetNbinsY() ); ibin++)
+      wh.histo()->GetYaxis()->SetBinLabel( ibin,v_tokens[ibin-1].c_str() );
   }
 
   // stats box
-  else if (key == "statson")    wh.SetStats(str2int(value) != 0);
-  else if (key == "statsx1ndc") wh.SetStats(wh.statsAreOn(),os,str2flt(value));
-  else if (key == "statsy1ndc") wh.SetStats(wh.statsAreOn(),os,0.0,str2flt(value));
-  else if (key == "statsx2ndc") wh.SetStats(wh.statsAreOn(),os,0.0,0.0,str2flt(value));
-  else if (key == "statsy2ndc") wh.SetStats(wh.statsAreOn(),os,0.0,0.0,0.0,str2flt(value));
-  else if (key == "optstat") {
-    if (value.find_first_not_of("012") == string::npos)  // it's an integer already
-      wh.SetStats(wh.statsAreOn(),str2int(value));
+  else if( key == "statson" )    wh.SetStats(str2int(value) != 0);
+  else if( key == "statsx1ndc" ) wh.SetStats(wh.statsAreOn(),os,str2flt(value));
+  else if( key == "statsy1ndc" ) wh.SetStats(wh.statsAreOn(),os,0.0,str2flt(value));
+  else if( key == "statsx2ndc" ) wh.SetStats(wh.statsAreOn(),os,0.0,0.0,str2flt(value));
+  else if( key == "statsy2ndc" ) wh.SetStats(wh.statsAreOn(),os,0.0,0.0,0.0,str2flt(value));
+  else if( key == "optstat" ) {
+    if( value.find_first_not_of("012") == string::npos )  // it's an integer already
+      wh.SetStats( wh.statsAreOn(),str2int(value) );
     else {
       os = 0;
-      if      (value.find('K') != string::npos) os += 200000000; //  kurtosis and kurtosis error printed
-      else if (value.find('k') != string::npos) os += 100000000; //  kurtosis printed
-      if      (value.find('S') != string::npos) os += 20000000; //  skewness and skewness error printed
-      else if (value.find('s') != string::npos) os += 10000000; //  skewness printed
-      if      (value.find('i') != string::npos) os += 1000000; //  integral of bins printed
-      if      (value.find('o') != string::npos) os += 100000; //  number of overflows printed
-      if      (value.find('u') != string::npos) os += 10000; //  number of underflows printed
-      if      (value.find('R') != string::npos) os += 2000; //  rms and rms error printed
-      else if (value.find('r') != string::npos) os += 1000; //  rms printed
-      if      (value.find('M') != string::npos) os += 200; //  mean value mean error values printed
-      else if (value.find('m') != string::npos) os += 100; //  mean value printed
-      if      (value.find('e') != string::npos) os += 10; //  number of entries printed
-      if      (value.find('n') != string::npos) os += 1; //  name of histogram is printed
-      wh.SetStats(wh.statsAreOn(),os);
+      if     ( value.find('K') != string::npos ) os += 200000000; //  kurtosis and kurtosis error printed
+      else if( value.find('k') != string::npos ) os += 100000000; //  kurtosis printed
+      if     ( value.find('S') != string::npos ) os += 20000000; //  skewness and skewness error printed
+      else if( value.find('s') != string::npos ) os += 10000000; //  skewness printed
+      if     ( value.find('i') != string::npos ) os += 1000000; //  integral of bins printed
+      if     ( value.find('o') != string::npos ) os += 100000; //  number of overflows printed
+      if     ( value.find('u') != string::npos ) os += 10000; //  number of underflows printed
+      if     ( value.find('R') != string::npos ) os += 2000; //  rms and rms error printed
+      else if( value.find('r') != string::npos ) os += 1000; //  rms printed
+      if     ( value.find('M') != string::npos ) os += 200; //  mean value mean error values printed
+      else if( value.find('m') != string::npos ) os += 100; //  mean value printed
+      if     ( value.find('e') != string::npos ) os += 10; //  number of entries printed
+      if     ( value.find('n') != string::npos ) os += 1; //  name of histogram is printed
+      wh.SetStats( wh.statsAreOn(),os );
     }
   }
-  else if ((key == "errorson") &&
+  else if( (key == "errorson" ) &&
 	   str2int(value)     ) wh.histo()->Sumw2();
 
-  else if (key == "erroroption") {
+  //==============================
+  else if( key == "erroroption" ) {
+  //==============================
     // only for TProfiles.
     // allowed options are
     // ' ' (default, e=spread/sqrt(n)
     // 's' (e=spread)
     // others -> see ROOT documentation!
     //
-    if (wh.histo()->InheritsFrom("TProfile")) {
+    if( wh.histo()->InheritsFrom("TProfile") ) {
       ((TProfile *)wh.histo())->SetErrorOption(value.c_str());
     }
   }
-  else if (key == "print2file") {
-    printHisto2File(wh.histo(),value);
-  }
-  else if (key == "save2file") {
-    saveHisto2File(wh.histo(),value);
-  }
-  else if ((key == "normalize") &&
-	   str2int(value)) {
+
+  // iostream parameters
+  else if( key == "setprecision" ) cout << setprecision( str2int(value) );
+  else if( key == "setwidth" )     cout << setw        ( str2int(value) );
+
+  else if( key == "printfstats" )  printHistoStats( wh.histo(),histo_id,value );
+  else if( key == "print2file" )   printHisto2File( wh.histo(),value );
+  else if( key == "save2file" )     saveHisto2File( wh.histo(),value );
+  else if( (key == "normalize") &&
+	   str2int(value) ) {
     TH1 *h1 = (TH1 *)wh.histo();
-    if (h1->Integral() > 0.0)
-      h1->Scale(1./h1->Integral());
+    if( h1->Integral() > 0.0 )
+      h1->Scale( 1./h1->Integral() );
     else
       cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
-  else if (key == "scaleby") {
+  //==============================
+  else if( key == "scaleby" ) {
+  //==============================
+
     // Expect value=@samplename(integlumi_invpb)
     Tokenize(value,v_tokens,"()");
-    if (v_tokens.size() != 2) {
+    if( v_tokens.size() != 2 ) {
       cerr << "invalid scaleby specifier, " << value << endl;
       return;
     }
@@ -350,16 +520,24 @@ void processCommonHistoParams(const string& key,
     double sf = getSampleScaleFactor(v_tokens[0],
 				     (double)str2flt(v_tokens[1]));
     TH1 *h1 = (TH1 *)wh.histo();
+    if( gl_verbose ) cout << "scaling histo "<<h1->GetName()<<" by "<<sf<<endl;
     h1->Scale(sf);
   }
-  else if (key == "fits") {
+  //==============================
+  else if( key == "fits" ) {
+  //==============================
+
     Tokenize(value,v_tokens,","); 
     for (size_t i=0; i<v_tokens.size(); i++) {
       TF1 *tf1 = findTF1(v_tokens[i]);
-      if (!tf1) {
-	cerr << "TF1 " << v_tokens[i] << "must be defined first" << endl;
+      if( !tf1 ) {
+	cerr << "TF1 " << v_tokens[i] << " must be defined first" << endl;
+	continue;
       }
-      wh.loadFitFunction(tf1);
+      string funcnewname = v_tokens[i]+histo_id;
+      TF1 *mytf1 = new TF1(*tf1);
+      mytf1->SetName(funcnewname.c_str());
+      wh.loadFitFunction(mytf1);
     }
   }
   else {
@@ -371,10 +549,10 @@ void processCommonHistoParams(const string& key,
 
 void processCommonHistoParams(const string& key, 
 			      const string& value,
-			      const std::vector<wTH1 *>& v_wh)
+			      const std::vector<std::pair<string,wTH1 *> >& v_wh)
 {
   for (size_t i=0; i<v_wh.size(); i++) {
-    processCommonHistoParams(key,value,*(v_wh[i]));
+    processCommonHistoParams(key,value,v_wh[i].first,*(v_wh[i].second));
   }
 }
 
@@ -390,26 +568,27 @@ processHistoSection(FILE *fp,
   wTH1   *wth1 = NULL;
   string *hid  = NULL;
 
-  cout << "Processing histo section" << endl;
+  if( gl_verbose )
+    cout << "Processing histo section" << endl;
 
   new_section=false;
 
   while (getLine(fp,theline,"histo")) {
-    if (!theline.size()) continue;
-    if (theline[0] == '#') continue; // comments are welcome
+    if( !theline.size() ) continue;
+    if( theline[0] == '#' ) continue; // comments are welcome
 
-    if (theline[0] == '[') {
+    if( theline[0] == '[' ) {
       new_section=true;
       return true;
     }
 
     string key, value;
-    if (!getKeyValue(theline,key,value)) continue;
+    if( !getKeyValue(theline,key,value) ) continue;
 
     //--------------------
-    if (key == "id") {
+    if( key == "id" ) {
     //--------------------
-      if (hid != NULL) {
+      if( hid != NULL ) {
 	cerr << "no more than one id per histo section allowed " << value << endl;
 	break;
       }
@@ -417,13 +596,13 @@ processHistoSection(FILE *fp,
       hid = new string(value);
 
     //------------------------------
-    } else if (key == "clone") {
+    } else if( key == "clone" ) {
     //------------------------------
-      if (!hid) {
+      if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(value);
-      if (it == glmap_id2histo.end()) {
+      if( it == glmap_id2histo.end() ) {
 	cerr << "Histo ID " << value << " not found,";
 	cerr << "clone must be defined after the clonee" << endl;
 	break;
@@ -433,31 +612,31 @@ processHistoSection(FILE *fp,
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
-    } else if (key == "path") {
+    } else if( key == "path" ) {
     //------------------------------
-      if (!hid) {
+      if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wth1) {
+      if( wth1 ) {
 	cerr << "histo already defined" << endl; continue;
       }
       wth1  = getHistoFromSpec(*hid,value);
-      if (!wth1) continue;
+      if( !wth1 ) continue;
 
     //------------------------------
-    } else if (key == "hprop") {    // fill a histogram with a per-bin property of another
+    } else if( key == "hprop" ) {    // fill a histogram with a per-bin property of another
     //------------------------------
-      if (!hid) {
+      if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wth1) {
+      if( wth1 ) {
 	cerr << "histo already defined" << endl; continue;
       }
 
       // Tokenize again to get the histo ID and the desired property
       string hprop = value;
       Tokenize(hprop,v_tokens,":");
-      if ((v_tokens.size() != 2) ||
+      if( (v_tokens.size() != 2) ||
 	  (!v_tokens[0].size())  ||
 	  (!v_tokens[1].size())    ) {
 	cerr << "malformed hid:property specification " << hprop << endl; continue;
@@ -467,7 +646,7 @@ processHistoSection(FILE *fp,
       string prop   = v_tokens[1];
 
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(tgthid);
-      if (it == glmap_id2histo.end()) {
+      if( it == glmap_id2histo.end() ) {
 	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
 	break;
       }
@@ -478,7 +657,7 @@ processHistoSection(FILE *fp,
       h1->Clear();
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
       
-      if (!prop.compare("errors")) {
+      if( !prop.compare("errors") ) {
 	int nbins = h1->GetNbinsX()*h1->GetNbinsY()*h1->GetNbinsZ();
 	for (int ibin=1; ibin<=nbins; ibin++)
 	  h1->SetBinContent(ibin,tgth1->GetBinError(ibin));
@@ -488,13 +667,13 @@ processHistoSection(FILE *fp,
 	break;
       }
 
-    } else if (!wth1) {  // all other keys must have "path" defined
+    } else if( !wth1 ) {  // all other keys must have "path" defined
       cerr << "key 'path' or 'clone' must be defined before key " << key << endl;
       break;
     }
 
     else {
-      processCommonHistoParams(key,value,*wth1);
+      processCommonHistoParams(key,value,*hid,*wth1);
     }
   }
   return (wth1 != NULL);
