@@ -332,29 +332,66 @@ void x2DizeHistos(const vector<string>& inhistids,
 
 //======================================================================
 
-void rebinVariable1D(const vector<string>& inhistids,
+void rebinVariable1D(const string& hidlist,
 		     string binrange,
 		     float minStatsPerBin,
 		     const string& newsuffix,
 		     vector<pair<string,wTH1 *> >& outhistos)
 {
+  // This routine receives a list of ids of histograms to be rebinned together
+  // with asymmetric binning, depending on the statistics contents of the
+  // associated histograms. Some of the histograms can be specified as
+  // participating in the minStatsPerBin requirement, while others would be
+  // left out and simply forced to the binning that is determined by the participants.
+  // The two comma-separated lists are themselves separated by a semicolon.
+  //
+  vector<string> v_tokens,prihistids,sechistids;
+  Tokenize(hidlist,v_tokens,";");
+  if (v_tokens.size() > 2) {
+    cerr << "ERROR: only one ';' allowed/expected: ";
+    cerr << hidlist << endl;
+    return;
+  }
+
+  if (v_tokens.size() == 2)
+    Tokenize(v_tokens[1],sechistids,",");
+
+  Tokenize(v_tokens[0],prihistids,",");
+  if (!prihistids.size()) {
+    cerr << "ERROR: expected list of one or more (comma-separated) histo ids: ";
+    cerr << v_tokens[0] << endl;
+    return;
+  }
+
   if (gl_verbose)
     cout<<"Rebinning histos with "<<minStatsPerBin<<" min. stats per bin"<<endl;
 
-  vector<TH1F *> inhistos;
-  vector<float>  sums(inhistids.size(),0.);
+  vector<TH1F *> prihistos;
+  vector<TH1F *> sechistos;
+  vector<float>  sums(prihistids.size(),0.);
 
-  for (size_t i=0; i<inhistids.size(); i++) {
-    TH1F *tmph1 = (TH1F *)findHisto(inhistids[i],
+  // GET PRIMARY HISTOS
+
+  for (size_t i=0; i<prihistids.size(); i++) {
+    TH1F *tmph1 = (TH1F *)findHisto(prihistids[i],
 		      "histo operand must be defined before math ops");
     if (!tmph1) exit(-1);
-    inhistos.push_back(tmph1);
+    prihistos.push_back(tmph1);
   }
 
-  if (!inhistos.size()) return;
+  if (!prihistos.size()) return;
+
+  // GET SECONDARY HISTOS
+
+  for (size_t i=0; i<sechistids.size(); i++) {
+    TH1F *tmph1 = (TH1F *)findHisto(sechistids[i],
+		      "histo operand must be defined before math ops");
+    if (!tmph1) exit(-1);
+    sechistos.push_back(tmph1);
+  }
 
   int lobin=1;                        // excludes underflow by default
-  int hibin=inhistos[0]->GetNbinsX(); // excludes overflow by default
+  int hibin=prihistos[0]->GetNbinsX(); // excludes overflow by default
 
   if (binrange.size())
     if (!parseBinRange(binrange,lobin,hibin))
@@ -370,7 +407,7 @@ void rebinVariable1D(const vector<string>& inhistids,
   if (gl_verbose) {
     cout << "New binmap: " << endl;
     printf("ibin\tnewibin\tx_bin");
-    for (size_t i=0; i<inhistos.size(); i++) 
+    for (size_t i=0; i<prihistos.size(); i++) 
       printf("\tscale\ty_bin\tCum");
     printf("\tS_min\n");
   }
@@ -380,7 +417,7 @@ void rebinVariable1D(const vector<string>& inhistids,
     minsum = FLT_MAX;
     maxval = -FLT_MAX;
     if (donewbin) {
-      newbinvals.push_back(inhistos[0]->GetXaxis()->GetBinLowEdge(ibin));
+      newbinvals.push_back(prihistos[0]->GetXaxis()->GetBinLowEdge(ibin));
       oldbinnums.push_back(ibin);
     }
 
@@ -388,8 +425,8 @@ void rebinVariable1D(const vector<string>& inhistids,
     str.str("");
     str << ibin << "\t" << nnewbins << "\t" << newbinvals[nnewbins-1];
 
-    for (size_t i=0; i<inhistos.size(); i++) {
-      TH1F *inhist = inhistos[i];
+    for (size_t i=0; i<prihistos.size(); i++) {
+      TH1F *inhist = prihistos[i];
       // To deal with weighted histograms, scale the content of each bin to
       // the number of *effective* entries in the histo:
       //
@@ -420,19 +457,33 @@ void rebinVariable1D(const vector<string>& inhistids,
   }
 
   cout << str.str() << endl;
-  newbinvals.push_back(inhistos[0]->GetXaxis()->GetXmax());
+  newbinvals.push_back(prihistos[0]->GetXaxis()->GetXmax());
 
   // now create new varbin histos
   //
   if (gl_verbose) cout << "New histos: ";
-  for (size_t i=0; i<inhistos.size(); i++) {
-    TH1F   *inhist = inhistos[i];
+  for (size_t i=0; i<prihistos.size(); i++) {
+    TH1F   *inhist = prihistos[i];
     string newname = string(inhist->GetName())+"_"+newsuffix;
     TH1   *newhist = inhist->Rebin(nnewbins,
 				   newname.c_str(),
 				   &newbinvals.front());
     wTH1     *wh = new wTH1(newhist);
-    string newid = inhistids[i]+"_"+newsuffix;
+    string newid = prihistids[i]+"_"+newsuffix;
+    if (gl_verbose) cout << "("<<newid<<","<<newname<<"), ";
+    outhistos.push_back(pair<string,wTH1 *>(newid,wh));
+    glmap_id2histo.insert(pair<string,wTH1 *>(newid,wh));
+  }
+
+  // SECONDARY histos
+  for (size_t i=0; i<sechistos.size(); i++) {
+    TH1F   *inhist = sechistos[i];
+    string newname = string(inhist->GetName())+"_"+newsuffix;
+    TH1   *newhist = inhist->Rebin(nnewbins,
+				   newname.c_str(),
+				   &newbinvals.front());
+    wTH1     *wh = new wTH1(newhist);
+    string newid = sechistids[i]+"_"+newsuffix;
     if (gl_verbose) cout << "("<<newid<<","<<newname<<"), ";
     outhistos.push_back(pair<string,wTH1 *>(newid,wh));
     glmap_id2histo.insert(pair<string,wTH1 *>(newid,wh));
@@ -786,14 +837,7 @@ processHmathSection(FILE *fp,
 	cerr << "histo already defined" << endl; continue;
       }
 
-      Tokenize(value,v_tokens,",");
-      if (!v_tokens.size()) {
-	cerr << "ERROR: expect comma-separated list of histo ids";
-	cerr << theline << endl;
-	continue;
-      }
-
-      rebinVariable1D(v_tokens,binrange,statsPerBin,*hid,v_histos);
+      rebinVariable1D(value,binrange,statsPerBin,*hid,v_histos);
 
     } else if (!v_histos.size()) {
       cerr << "an operation key must be defined before key " << key << endl;
