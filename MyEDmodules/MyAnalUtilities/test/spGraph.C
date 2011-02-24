@@ -14,9 +14,15 @@ struct wGraph_t {
     lcolor(1),lstyle(1),lwidth(1),
     mcolor(1),mstyle(3),msize(1),
     leglabel(""),drawopt(""),gr(NULL) {}
+  wGraph_t(const wGraph_t& wg,const string& newname) :
+    yndiv(wg.yndiv),
+    lcolor(wg.lcolor),lstyle(wg.lstyle),lwidth(wg.lwidth),
+    mcolor(wg.mcolor),mstyle(wg.mstyle),msize(wg.msize),
+    leglabel(wg.leglabel),drawopt(wg.drawopt),gr(NULL) { gr = (TGraph *)wg.gr->Clone(newname.c_str()); }
   int  yndiv;
   int  lcolor,lstyle,lwidth;
   int  mcolor,mstyle,msize;
+  int  fcolor,fstyle;
   string leglabel;
   string drawopt;
   TGraph *gr;
@@ -262,7 +268,7 @@ processGraphSection(FILE *fp,
   float xmin=0.,xmax=0.,ymin=0.,ymax=0.;
   float xtitoff=-1.,ytitoff=-1.;
   bool asymerrors = false;
-  wGraph_t *wg = new wGraph_t();
+  wGraph_t *wg = NULL;
 
   if (gl_verbose) cout << "Processing graph section" << endl;
 
@@ -297,12 +303,14 @@ processGraphSection(FILE *fp,
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
       string path = value;
-      if (wg->gr || gr2d) {
+      if (wg || gr2d) {
 	cerr << "graph already defined" << endl; continue;
       }
       if (inSet<string>(glset_graphFilesReadIn,path)) {
 	cerr << "vector file " << path << " already read in" << endl; break;
       }
+
+      wg = new wGraph_t();
 
       if (asymerrors)
 	loadVectorsFromFile(path.c_str(),vx,vy,exl,exh,eyl,eyh);
@@ -316,7 +324,7 @@ processGraphSection(FILE *fp,
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
       string path = value;
-      if (wg->gr || gr2d) {
+      if (wg || gr2d) {
 	cerr << "graph already defined" << endl; continue;
       }
       if (inSet<string>(glset_graphFilesReadIn,path)) {
@@ -336,11 +344,30 @@ processGraphSection(FILE *fp,
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wg->gr || gr2d) {
+      if (wg || gr2d) {
 	cerr << "graph already defined" << endl; continue;
       }
+      wg = new wGraph_t();
       wg->gr  = getGraphFromSpec(*gid,value);
       if (!wg->gr) continue;
+
+    //------------------------------
+    } else if (key == "clone") {
+    //------------------------------
+
+      if (!gid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (wg || gr2d) {
+	cerr << "graph already defined" << endl; continue;
+      }
+      map<string,wGraph_t *>::const_iterator it = glmap_id2graph.find(value);
+      if( it == glmap_id2graph.end() ) {
+	cerr << "Graph ID " << value << " not found,";
+	cerr << "clone must be defined after the clonee" << endl;
+	break;
+      }
+      wg  = new wGraph_t(*(it->second),*gid);
 
     //------------------------------
     } else if (key == "bayesdiv") {
@@ -358,10 +385,14 @@ processGraphSection(FILE *fp,
 
       cout << tmph1->GetNbinsX() << " " << tmph2->GetNbinsX() << endl;
 
+      wg = new wGraph_t();
+
       // equivalent to BayesDivide
       //
-      if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
-      else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
+      if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"debug");
+      else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"");
+      //if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
+      //else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
       if (!wg->gr) {
 	cerr << "BayesDivide didn't work! wonder why..." << endl;
 	continue;
@@ -369,6 +400,8 @@ processGraphSection(FILE *fp,
 	cout << wg->gr->GetN() << " points in the graph" << endl;
       }
 
+    } else if (!wg && !gr2d) {
+      cerr<<"One of keys path,clone,vectorfile,vectorfile2d or bayesdiv must be defined before key..."<<key<<endl;
     } else {
       if     ( key == "xoffset" )      xoffset   = str2flt(value);
       else if( key == "yoffset" )      yoffset   = str2flt(value);
@@ -389,6 +422,8 @@ processGraphSection(FILE *fp,
       else if( key == "markercolor" )  wg->mcolor  = str2int(value);
       else if( key == "markerstyle" )  wg->mstyle  = str2int(value);
       else if( key == "markersize"  )  wg->msize   = str2int(value);
+      else if( key == "fillcolor" )    wg->fcolor  = str2int(value);
+      else if( key == "fillstyle" )    wg->fstyle  = str2int(value);
       else if( key == "asymerrors" )   asymerrors  = (bool)str2int(value);
       else if( key == "yndiv" )        wg->yndiv   = str2int(value);
       else if( key == "leglabel" )     wg->leglabel= value;
@@ -413,6 +448,8 @@ processGraphSection(FILE *fp,
     gr2d->SetMarkerColor (wg->mcolor);
     gr2d->SetMarkerStyle (wg->mstyle);
     gr2d->SetMarkerSize  (wg->msize);
+    gr2d->SetFillStyle   (wg->fstyle);
+    gr2d->SetFillColor   (wg->fcolor);
     gr2d->GetYaxis()->SetNdivisions(wg->yndiv);
     glmap_id2graph2d.insert(pair<string,TGraph2D *>(*gid,gr2d));
   } else {
@@ -432,6 +469,8 @@ processGraphSection(FILE *fp,
     wg->gr->SetMarkerColor (wg->mcolor);
     wg->gr->SetMarkerStyle (wg->mstyle);
     wg->gr->SetMarkerSize  (wg->msize);
+    wg->gr->SetFillStyle   (wg->fstyle);
+    wg->gr->SetFillColor   (wg->fcolor);
     wg->gr->GetYaxis()->SetNdivisions(wg->yndiv);
 
     if (xmax>xmin)   wg->gr->GetXaxis()->SetRangeUser(xmin,xmax);
@@ -442,7 +481,7 @@ processGraphSection(FILE *fp,
     glmap_id2graph.insert(pair<string,wGraph_t *>(*gid,wg));
   }
 
-  return ((gr2d != NULL) || (wg->gr != NULL));
+  return ((gr2d != NULL) || (wg != NULL));
 }                                                 // processGraphSection
 
 //======================================================================
