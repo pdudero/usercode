@@ -19,7 +19,7 @@ void expandAliii(const string& input,
 		 string& output)
 {
   const bool include_delimiters = true;
-  const string ispunc("\",./<>?;:'[]{}\\|`~!#$%^&*()_-+=");
+  const string ispunc("\",./<>?;:'[]{}\\|`~!#$%^&*()_-+= ");
 
   output.clear();
   vector<string> v_tokens;
