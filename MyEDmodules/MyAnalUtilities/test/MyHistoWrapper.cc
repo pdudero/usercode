@@ -324,7 +324,7 @@ MyHistoWrapper<T>::DrawStats(void)
   }
 
   st1->UseCurrentStyle();
-  st1->SetTextSize(0.03);
+  //st1->SetTextSize(0.03);
   st1->SetTextFont(42);
 
   double x1 = stats_.GetX1NDC();
