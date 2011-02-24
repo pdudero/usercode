@@ -246,6 +246,53 @@ void saveHisto2File(TH1 *histo, string outspec)
 }                                                      // saveHisto2File
 
 //======================================================================
+// takes table of "xloedge bincontent binerror"
+//
+void load1DHistoContentsFromTextFile(const char *filename, 
+				     wTH1 *&wth1)
+{
+  char linein[LINELEN];
+  double xloedge[100],binc[100],bine[100];
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  if (gl_verbose)
+    cout << "Loading vectors from file " << filename;
+
+  int nbins=0;
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+
+    if (nbins >= 100) {
+      cerr << "Change me! I can only take 100 bins max." << endl;
+      exit(-1);
+    }
+    int nscan= sscanf(linein, "%lf %lf %lf", &xloedge[nbins], &binc[nbins], &bine[nbins]);
+
+    if (nscan==1) { // take this as the end of the histogram, the last "lowedge"
+      break;
+    } else  if (nscan != 3) {
+      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+      return;
+    }
+    nbins++;
+  }
+
+  wth1 = new wTH1(new TH1D(filename,filename,nbins,xloedge));
+
+  if (gl_verbose) cout << "; read " << nbins << " lines" << endl;
+
+  for (int ibin=1; ibin<=nbins; ibin++) {
+    wth1->histo()->Fill(wth1->histo()->GetXaxis()->GetBinCenter(ibin),binc[ibin-1]);
+    wth1->histo()->SetBinError(ibin,bine[ibin-1]);
+  }
+}                                    //  load1DHistoContentsFromTextFile
+
+//======================================================================
 
 wTH1 *getHistoFromSpec(const string& hid,
 		       const string& spec)
@@ -400,30 +447,12 @@ void processCommonHistoParams(const string& key,
   else if( key == "yndiv" )  wh.SetYaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
   else if( key == "zndiv" )  wh.SetZaxis("",false,0,0,0,0,0,1e99,-1e99,str2int(value));
 
-  else if( key == "xmin" ) {
-    xmin = str2flt(value);
-    wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
-  }
-  else if( key == "xmax" ) {
-    xmax = str2flt(value);
-    wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax);
-  }
-  else if( key == "ymin" ) {
-    ymin = str2flt(value);
-    wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
-  }
-  else if( key == "ymax" ) {
-    ymax = str2flt(value);
-    wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax);
-  }
-  else if( key == "zmin" ) {
-    zmin = str2flt(value);
-    wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
-  }
-  else if( key == "zmax" ) {
-    zmax = str2flt(value);
-    wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax);
-  }
+  else if( key == "xmin" ) { xmin=str2flt(value); wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax); }
+  else if( key == "xmax" ) { xmax=str2flt(value); wh.SetXaxis("",false,0,0,0,0,0,xmin,xmax); }
+  else if( key == "ymin" ) { ymin=str2flt(value); wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax); }
+  else if( key == "ymax" ) { ymax=str2flt(value); wh.SetYaxis("",false,0,0,0,0,0,ymin,ymax); }
+  else if( key == "zmin" ) { zmin=str2flt(value); wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax); }
+  else if( key == "zmax" ) { zmax=str2flt(value); wh.SetZaxis("",false,0,0,0,0,0,zmin,zmax); }
 
   else if( key == "xbinlabels" ) {
     Tokenize(value,v_tokens,"," );
@@ -622,6 +651,16 @@ processHistoSection(FILE *fp,
       }
       wth1  = getHistoFromSpec(*hid,value);
       if( !wth1 ) continue;
+
+    //------------------------------
+    } else if( key == "loadtxtfile" ) {
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      load1DHistoContentsFromTextFile(value.c_str(),wth1);
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
     } else if( key == "hprop" ) {    // fill a histogram with a per-bin property of another
