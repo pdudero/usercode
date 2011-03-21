@@ -123,6 +123,8 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "statformat")   thestyle->SetStatFormat  (value.c_str());
     else if (key == "statstyle")    thestyle->SetStatStyle   (str2int(value.c_str()));
 
+    else if (key == "fitformat")    thestyle->SetFitFormat   (value.c_str());
+
     else if (key == "painttextfmt") thestyle->SetPaintTextFormat(value.c_str());
     else if (key == "markersize")   thestyle->SetMarkerSize(str2flt(value));
     else {
