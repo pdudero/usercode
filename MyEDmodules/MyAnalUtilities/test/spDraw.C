@@ -435,6 +435,49 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     }
 
     /***************************************************
+     * LOOP OVER STACKS DEFINED FOR PAD...
+     ***************************************************/
+
+    string drawopt("");
+    if (wp->stack_ids.size()) {
+      wStack_t *ws=NULL;
+      for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
+	string& sid = wp->stack_ids[j];
+	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
+	if (it == glmap_id2stack.end()) {
+	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
+	  exit (-1);
+	}
+
+	bool firstInPad = !j;
+
+	ws = it->second;
+	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
+
+	// Add the histos in the stack to any legend that exists
+
+	//
+	if (drawlegend) {
+	  for (size_t i=0; i<ws->v_histos.size(); i++) {
+	    wTH1 *wh = ws->v_histos[i];
+	    wh->ApplySavedStyle();
+	    if(wh->GetLegendEntry().size())
+	      wh->Add2Legend(wl->leg);
+	  }
+	}
+
+	if (ws->sum->GetDrawOption().size()) {
+	  drawopt = ws->sum->GetDrawOption();
+	  cout << "drawopt stored with histo = " << drawopt << endl;
+	}
+
+	drawInPad(wp, ws, firstInPad, drawopt);
+
+	wp->vp->Update();
+      }
+    } // stack loop
+
+    /***************************************************
      * LOOP OVER HISTOS DEFINED FOR PAD...
      ***************************************************/
 
@@ -449,7 +492,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       wTH1 *myHisto = it->second;
       
       if (myHisto) {
-	bool firstInPad = !j;
+	bool firstInPad = !j && !wp->stack_ids.size();
 	if (gl_verbose) {
 	  cout << "Drawing " << hid << " => ";
 	  cout << myHisto->histo()->GetName() << endl;
@@ -539,59 +582,15 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),true);
 	wp->vp->Update();
 	if (drawlegend)
-	  wl->leg->AddEntry(wg->gr,gid.c_str(),"L");
+	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
       if (gr2d) {
 	drawInPad<TGraph2D>(wp,gr2d,"COLZ",true);
 	wp->vp->Update();
 	if (drawlegend)
-	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),"L");
+	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
-    }
-
-    /***************************************************
-     * LOOP OVER STACKS DEFINED FOR PAD...
-     ***************************************************/
-
-    string drawopt("");
-    if (wp->stack_ids.size()) {
-      wStack_t *ws=NULL;
-      for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
-	string& sid = wp->stack_ids[j];
-	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
-	if (it == glmap_id2stack.end()) {
-	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
-	  exit (-1);
-	}
-
-	bool firstInPad = !(j ||
-			    wp->histo_ids.size()||
-			    wp->altyh_ids.size() ||
-			    wp->graph_ids.size());
-
-	ws = it->second;
-	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
-
-	// Add the histos in the stack to any legend that exists
-
-	//
-	if (drawlegend) {
-	  for (size_t i=0; i<ws->v_histos.size(); i++) {
-	    wTH1 *wh = ws->v_histos[i];
-	    wh->ApplySavedStyle();
-	    if(wh->GetLegendEntry().size())
-	      wh->Add2Legend(wl->leg);
-	  }
-	}
-
-	if (ws->sum->GetDrawOption().size())
-	  drawopt = ws->sum->GetDrawOption();
-
-	drawInPad(wp, ws, firstInPad, drawopt);
-
-	wp->vp->Update();
-      }
-    }
+    } // graph loop
 
     /***************************************************
      * LOOP OVER LINES DEFINED FOR PAD...
