@@ -13,18 +13,21 @@ struct wGraph_t {
     yndiv(510),
     lcolor(1),lstyle(1),lwidth(1),
     mcolor(1),mstyle(3),msize(1),
-    leglabel(""),drawopt(""),gr(NULL) {}
+    fcolor(0),fstyle(1001),
+    leglabel(""),drawopt(""),legdrawopt(""),gr(NULL) {}
   wGraph_t(const wGraph_t& wg,const string& newname) :
     yndiv(wg.yndiv),
     lcolor(wg.lcolor),lstyle(wg.lstyle),lwidth(wg.lwidth),
     mcolor(wg.mcolor),mstyle(wg.mstyle),msize(wg.msize),
-    leglabel(wg.leglabel),drawopt(wg.drawopt),gr(NULL) { gr = (TGraph *)wg.gr->Clone(newname.c_str()); }
+    leglabel(wg.leglabel),drawopt(wg.drawopt),legdrawopt(wg.legdrawopt),
+    gr(NULL) { gr = (TGraph *)wg.gr->Clone(newname.c_str()); }
   int  yndiv;
   int  lcolor,lstyle,lwidth;
   int  mcolor,mstyle,msize;
   int  fcolor,fstyle;
   string leglabel;
   string drawopt;
+  string legdrawopt;
   TGraph *gr;
 };
 
@@ -415,7 +418,6 @@ processGraphSection(FILE *fp,
       else if( key == "xmax" )         xmax      = str2flt(value);
       else if( key == "ymin" )         ymin      = str2flt(value);
       else if( key == "ymax" )         ymax      = str2flt(value);
-      else if( key == "draw" )         wg->drawopt = value;
       else if( key == "linecolor" )    wg->lcolor  = str2int(value);
       else if( key == "linestyle" )    wg->lstyle  = str2int(value);
       else if( key == "linewidth" )    wg->lwidth  = str2int(value);
@@ -424,9 +426,11 @@ processGraphSection(FILE *fp,
       else if( key == "markersize"  )  wg->msize   = str2int(value);
       else if( key == "fillcolor" )    wg->fcolor  = str2int(value);
       else if( key == "fillstyle" )    wg->fstyle  = str2int(value);
-      else if( key == "asymerrors" )   asymerrors  = (bool)str2int(value);
       else if( key == "yndiv" )        wg->yndiv   = str2int(value);
-      else if( key == "leglabel" )     wg->leglabel= value;
+      else if( key == "asymerrors" )   asymerrors  = (bool)str2int(value);
+      else if( key == "leglabel" )     wg->leglabel   = value;
+      else if( key == "draw" )         wg->drawopt    = value;
+      else if( key == "legdraw" )      wg->legdrawopt = value;
       else if( key == "setprecision" ) cout << setprecision(str2int(value));
       else if( key == "printvecs2file") printVectorsToFile(wg,value);
       else {
@@ -462,6 +466,7 @@ processGraphSection(FILE *fp,
       else
 	wg->gr = new TGraph(vx,vy);
     }
+    wg->gr->UseCurrentStyle();
     wg->gr->SetTitle(title.c_str());
     wg->gr->SetLineStyle   (wg->lstyle);
     wg->gr->SetLineColor   (wg->lcolor);
