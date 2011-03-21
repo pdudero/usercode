@@ -1,4 +1,10 @@
+#include <algorithm>
 
+inline bool isnumeric(const std::string& foo) {
+  return (count_if(foo.begin(), foo.end(), ::isdigit) == (int)foo.size());
+  //std::count_if(c.begin(), c.end(),
+  //std::bind2nd(static_cast< bool (*)( char, std::locale const& ) >(&std::isalpha ),std::locale() ) ) ;
+}
 //======================================================================
 
 TH1 *findHisto(const string& hid, const string& errmsg="")
@@ -32,12 +38,30 @@ void printUsage(const string additionalinfo="") {
   cerr << "	      ksiourme=> see ROOT documentation"    << endl;
 }
 
+double getStat(TH1 *h, const string& key)
+{
+  char c = key[0];
+  int nbinsx = (int)h->GetNbinsX();
+  switch( c ) {
+  case 'k': return h->GetKurtosis();
+  case 's': return h->GetSkewness();
+  case 'i': return h->Integral();
+  case 'I': return h->Integral( 0,nbinsx+1 ); // include u/oflows
+  case 'o': return h->GetBinContent( nbinsx+1 );
+  case 'u': return h->GetBinContent( 0 );
+  case 'r': return h->GetRMS();
+  case 'm': return h->GetMean();
+  case 'e': return h->GetEntries();
+  default:break;
+  }
+  return -9e99;
+}
+
 void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 {
   if (gl_verbose)
     cout << "print statistics for histo "<<histo_id<<" => "<<h->GetName()<<endl;
 
-  int nbinsx = (int)h->GetNbinsX();
   vector<string> v_args, v_fmts;
   Tokenize(printfspec,v_args,"\",");
   if( v_args.size()<2 ) {
@@ -46,7 +70,7 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
   }
   // first arg must be a quoted printf format string
   bool includepcts=true;
-  Tokenize( v_args[0],v_fmts,"%",includepcts ); // might include "%%" to print % sign
+  Tokenize( v_args[0],v_fmts,"%\\",includepcts ); // might include "%%" to print % sign
   if( v_fmts.size() < 2 ) {
     printUsage("insufficient number of format specifiers");
     return;
@@ -64,8 +88,22 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 
     //cout << "(\""<<fmt<<"\","<<arg<<")\t"<<iarg<<"\t"<<jfmt<<"\t";
 
+    // handle escape characters \n and \t
+    if( (fmt == "\\") &&
+	(jfmt<v_fmts.size()) ) {
+      switch (v_fmts[jfmt][0]) {
+      case 'n': cout << "\n"; break;
+      case 't': cout << "\t"; break;
+      }
+      if (v_fmts[jfmt].size() > 1)
+	v_fmts[jfmt] = v_fmts[jfmt].substr(1);
+      else
+	jfmt++;
+      continue;
+    }
     if( fmt.find("%") == string::npos ) {
-      printf( fmt.c_str() );
+      //printf( fmt.c_str() );
+      cout << fmt;
     } else if( (fmt.size() > 1) &&
 	       (fmt.find_first_not_of("%") == string::npos) ) {
       if (fmt.size()==2)
@@ -81,69 +119,83 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
       }
       fmt = "%" + v_fmts[jfmt++];
 
-      if( arg.size() > 2 ) {
-	printUsage("unrecognized argument: "+arg);
-	return;
-      }
-      //cout<<"\nprintf(\""<<fmt<<"\","<<arg<<");"<<endl;
-#if 1
-      char c = arg[0];
-      switch( c ) {
-      case 'k': printf( fmt.c_str(), h->GetKurtosis() );             break;
-      case 's': printf( fmt.c_str(), h->GetSkewness() );             break;
-      case 'i': printf( fmt.c_str(), h->Integral() );                break;
-      case 'I': printf( fmt.c_str(), h->Integral( 0,nbinsx+1 ) );    break; // include u/oflows
-      case 'o': printf( fmt.c_str(), h->GetBinContent( nbinsx+1 ) ); break;
-      case 'u': printf( fmt.c_str(), h->GetBinContent( 0 ) );        break;
-      case 'r': printf( fmt.c_str(), h->GetRMS() );                  break;
-      case 'm': printf( fmt.c_str(), h->GetMean() );                 break;
-      case 'e': printf( fmt.c_str(), h->GetEntries() );              break;
-      case 'p': // full histo path
-      case 'f': // root filename
-      case 'h': // histo path in file
-      case 'd': // name of containing directory/folder
-	{
-	  map<string,string>::const_iterator it = glmap_id2objpath.find(histo_id);
-	  if( it == glmap_id2objpath.end() ) {
-	    cerr << "Couldn't find path for histo with id " << histo_id << endl;
+      if( arg.size() > 2 ) { // check for normalization
+	size_t pos = arg.find("/");
+	if( pos != string::npos ) {
+	  string numerstr=arg.substr(0,pos);
+	  string denomstr=arg.substr(pos+1);
+	  if( isnumeric(denomstr) ) {
+	    float denom = str2flt(denomstr);
+	    if( isnumeric(numerstr) ) {
+	      float numer = str2flt(numerstr);
+	      printf( fmt.c_str(), numer/denom );
+	    } else if (numerstr.find_first_of("ksiIourmep") != string::npos) {
+	      double stat = getStat(h,numerstr);
+	      printf( fmt.c_str(), stat/denom );
+	    } else {
+	      printUsage("numerator not understood: "+arg);
+	      return;
+	    }
+	  } else {
+	    printUsage("denominator must be numeric: "+arg);
 	    return;
 	  }
-	  if( c=='p')  printf( fmt.c_str(), (it->second).c_str() );
-	  else {
-	    vector<string> v_tokens;
-	    Tokenize(it->second,v_tokens,":");
-	    switch (c) {
-	    case 'h': printf( fmt.c_str(), v_tokens[1].c_str() ); break;
-	    case 'd':
-	      {
-		size_t dirnumber=0;
-		if (arg.size()>1) dirnumber=(size_t)str2int(arg.substr(1));
-		Tokenize(v_tokens[1],v_tokens,"/");
-		if( v_tokens.size() < 2) cout << "/";
-		else if (dirnumber>=v_tokens.size()) continue;
-		else printf( fmt.c_str(), v_tokens[dirnumber].c_str() );
+	} else {
+	  printUsage("unrecognized argument: "+arg);
+	  return;
+	}
+      } else if (arg.find_first_of("ksiIourmep") != string::npos) {
+	double stat = getStat(h,arg);
+	printf( fmt.c_str(), stat );
+      } else {
+	char c = arg[0];
+	switch( c ) {
+	case 'p': // full histo path
+	case 'f': // root filename
+	case 'h': // histo path in file
+	case 'd': // name of containing directory/folder
+	  {
+	    map<string,string>::const_iterator it = glmap_id2objpath.find(histo_id);
+	    if( it == glmap_id2objpath.end() ) {
+	      cerr << "Couldn't find path for histo with id " << histo_id << endl;
+	      return;
+	    }
+	    if( c=='p')  printf( fmt.c_str(), (it->second).c_str() );
+	    else {
+	      vector<string> v_tokens;
+	      Tokenize(it->second,v_tokens,":");
+	      switch (c) {
+	      case 'h': printf( fmt.c_str(), v_tokens[1].c_str() ); break;
+	      case 'd':
+		{
+		  size_t dirnumber=0;
+		  if (arg.size()>1) dirnumber=(size_t)str2int(arg.substr(1));
+		  Tokenize(v_tokens[1],v_tokens,"/");
+		  if( v_tokens.size() < 2) cout << "/";
+		  else if (dirnumber>=v_tokens.size()) continue;
+		  else printf( fmt.c_str(), v_tokens[dirnumber].c_str() );
+		}
+		break;
+	      case 'f':
+		{
+		  Tokenize(v_tokens[0],v_tokens,"/");
+		  printf( fmt.c_str(), (v_tokens.rbegin())->c_str() );
+		}
+		break;
 	      }
-	      break;
-	    case 'f':
-	      {
-		Tokenize(v_tokens[0],v_tokens,"/");
-		printf( fmt.c_str(), (v_tokens.rbegin())->c_str() );
-	      }
-	      break;
 	    }
 	  }
-	}
-	break;
-      default:
-	printUsage("Unrecognized stat specifier: "+arg);
-	return;
-      } // switch (c)
+	  break;
+	default:
+	  printUsage("Unrecognized stat specifier: "+arg);
+	  return;
+	} // switch (c)
+      } // non stat key
       iarg++;
-#endif
+
     } // fmt = "%X"
   } // arg loop
-}
-
+}                                                     // printHistoStats
 
 //======================================================================
 
@@ -400,6 +452,16 @@ void processCommonHistoParams(const string& key,
     }
   }
   else if( key == "draw" )        wh.SetDrawOption(value);
+  else if( key == "fitopt" )      wh.SetFitOption(value);
+  else if( key == "fitrange" ) {
+    Tokenize(value,v_tokens,"," );
+    if( v_tokens.size() != 2 ) {
+      cerr << "fitrange key expects xmin,xmax; value= ";
+      cerr << value << endl;
+    } else {
+      wh.SetFitRange(str2flt(v_tokens[0]),str2flt(v_tokens[1]));
+    }
+  }
   else if( key == "title" )       wh.histo()->SetTitle(value.c_str());
 
   else if( key == "markercolor" ) wh.SetMarker(str2int(value) );
@@ -411,8 +473,10 @@ void processCommonHistoParams(const string& key,
   else if( key == "fillcolor" )   wh.histo()->SetFillColor(str2int(value));
   else if( key == "leglabel" )    wh.SetLegendEntry(value);
 
-  else if( key == "rebin" )       ((TH1 *)wh.histo())->Rebin(str2int(value));
-
+  else if( key == "rebin" ) {
+    if (str2int(value))
+      ((TH1 *)wh.histo())->Rebin(str2int(value));
+  }
   else if( key == "rebinx" ) {
     if( wh.histo()->InheritsFrom("TH2") ) ((TH2 *)wh.histo())->RebinX(str2int(value));
     else                                 ((TH1 *)wh.histo())->Rebin(str2int(value));
