@@ -1,6 +1,8 @@
 #include "TKey.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
+#include "TObjString.h"
+#include "TClass.h"
 
 //======================================================================
 // Regex match a histo name in a directory
@@ -35,13 +37,13 @@ void regexMatchHisto( TObject    *obj,
 	map<string,wTH1 *>::const_iterator hit = glmap_id2histo.find(it->second);
 
 	// Is this okay? It's going to get wrapped again...
-	TObjString *path = new TObjString(fullspec);
-	Matches->AddLast(path);
+	TObjString *rpath = new TObjString(fullspec);
+	Matches->AddLast(rpath);
 	Matches->AddLast(hit->second->histo());
       } else {
 	// success, record that you read it in.
-	TObjString *path = new TObjString(fullspec);
-	Matches->AddLast(path);
+	TObjString *rpath = new TObjString(fullspec);
+	Matches->AddLast(rpath);
 	Matches->AddLast(obj);
       }
       break; // don't let the object match more than one regex

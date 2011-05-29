@@ -64,13 +64,16 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 
   vector<string> v_args, v_fmts;
   Tokenize(printfspec,v_args,"\",");
+#if 0
   if( v_args.size()<2 ) {
     printUsage("insufficient number of arguments");
     return;
   }
+#endif
   // first arg must be a quoted printf format string
   bool includepcts=true;
   Tokenize( v_args[0],v_fmts,"%\\",includepcts ); // might include "%%" to print % sign
+
   if( v_fmts.size() < 2 ) {
     printUsage("insufficient number of format specifiers");
     return;
@@ -94,6 +97,7 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
       switch (v_fmts[jfmt][0]) {
       case 'n': cout << "\n"; break;
       case 't': cout << "\t"; break;
+      default : cout << "\\" << v_fmts[jfmt][0]; break;
       }
       if (v_fmts[jfmt].size() > 1)
 	v_fmts[jfmt] = v_fmts[jfmt].substr(1);

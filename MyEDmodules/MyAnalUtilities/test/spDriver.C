@@ -73,6 +73,10 @@ void loadMultiAliii(const string& tableFilename,
   while (getLine(fpin,theline,"alias")) {
     if (!theline.size())   continue;
     if (theline[0] == '#') continue; // comments are welcome
+    if (theline[0] == '^') {
+      cout << theline.substr(1) << endl;
+      continue;
+    }
 
     Tokenize(theline, v_tokens,"\t");
     if (v_tokens.size() != parnames.size()) {
@@ -92,6 +96,7 @@ void loadMultiAliii(const string& tableFilename,
 void writeTmpConfig(const string& canvasLayout,
 		    const string& tmpname,
 		    const varTable_t& m_partable,
+		    string& postfix,
 		    int   irow)
 {
   FILE *fpout = fopen(tmpname.c_str(),"w");
@@ -110,7 +115,9 @@ void writeTmpConfig(const string& canvasLayout,
 
     if (parspec == "DRIVER.prefix")
       cout << values[irow];
-    else {
+    else if (parspec == "DRIVER.postfix") {
+      postfix = values[irow];
+    } else {
       vector<string> subtokens;
       Tokenize(parspec,subtokens,".");
       if (subtokens.size() != 2) {
@@ -157,8 +164,11 @@ void spDriver(const string& canvasLayout="canvas.txt",
     if (verbose)
       cout<<"================================================================="<<endl;
     string tmpname = "/tmp/"+stripDirsAndSuffix(canvasLayout)+"_"+int2str(irow)+".txt";
-    writeTmpConfig(canvasLayout,tmpname,m_partable,irow);
+    string postfix;
+    writeTmpConfig(canvasLayout,tmpname,m_partable,postfix,irow);
     superPlot(tmpname,saveplots,verbose);
+    if (postfix.size())
+      printf(postfix.c_str());
     unlink(tmpname.c_str());
   }
 }

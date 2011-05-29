@@ -8,7 +8,10 @@
 #include <sstream>
 #include <ctype.h>     // isdigit
 #include <stdlib.h>
+//#define __size_t unsigned // needed for glob.h!!
+#include "/usr/lib/gcc/x86_64-redhat-linux/4.1.2/include/stddef.h"
 #include <glob.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -26,7 +29,7 @@ struct wPad_t {
 			rightmargin(0.),leftmargin(0.),
 			fillcolor(10),logx(0),logy(0),logz(0),
 			legid("")
-  { hframe = new wTH1(name,name,100,0.0,1.0); }
+  { hframe = new wTH1(new TH1F(name.c_str(),name.c_str(),100,0.0,1.0)); }
   wPad_t(const wPad_t& wp) {
     topmargin   = wp.topmargin;
     bottommargin= wp.bottommargin;

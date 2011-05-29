@@ -3,10 +3,12 @@
 struct wLegend_t {
   wLegend_t(float inx1ndc=0., float iny1ndc=0.,
 	    float inx2ndc=1., float iny2ndc=1.,
-	    unsigned infillclr=10) :
+	    unsigned infillclr=0) :
     header(""),
     x1ndc(inx1ndc),y1ndc(iny1ndc), x2ndc(inx2ndc),y2ndc(iny2ndc),
-    fillcolor(infillclr),bordersize(1),ncolumns(1),linewidth(1) {}
+    fillcolor(infillclr),bordersize(1),ncolumns(1),linewidth(1),
+    textfont(42)
+  {}
   string   header;
   float    x1ndc, y1ndc;
   float    x2ndc, y2ndc;

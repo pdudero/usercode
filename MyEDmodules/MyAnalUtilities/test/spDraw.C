@@ -223,7 +223,7 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
     }
   }
 
-  return min(npadsall,ipad+1);
+  return std::min(npadsall,ipad+1);
 }                                               // assignHistos2Multipad
 
 //======================================================================
@@ -261,7 +261,7 @@ unsigned assignPads2Canvases(canvasSet_t& cs)
     wc->pads.push_back(wc0->pads[ipad]);
   }
 
-  return min(npadsall,ipad+1);
+  return std::min(npadsall,ipad+1);
 }                                                 // assignPads2Canvases
 
 //======================================================================
@@ -291,7 +291,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   } else if (cs.ncanvases>1) {
     npadsall = assignPads2Canvases(cs);
   } else {
-    npadsall = min(npadsall,wc0->pads.size());
+    npadsall = std::min(npadsall,(unsigned)wc0->pads.size());
   }
 
   wc0->c1->cd();
@@ -315,23 +315,23 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   if (gl_verbose)
     cout << "Drawing on " << npadsall << " pad(s)" << endl;
 
-  wLegend_t *wl = NULL;
+  wLegend_t *wleg = NULL;
 
   /***************************************************
    * LOOP OVER PADS...
    ***************************************************/
 
-  vector<vector<string> >::const_iterator it;
+  //vector<vector<string> >::const_iterator it;
   for (unsigned ipad = 0; ipad< npadsall; ipad++) {
 
     if (gl_verbose) cout << "Drawing pad# " << ipad+1 << endl;
 
-    unsigned   i  =  ipad % npads;
-    unsigned cnum = (ipad / npads) + 1;
+    unsigned ipadc =  ipad % npads;
+    unsigned cnum  = (ipad / npads) + 1;
 
     wCanvas_t *wc = cs.canvases[cnum-1];
 
-    if (!i && (cnum-1)) { // first canvas already created
+    if (!ipadc && (cnum-1)) { // first canvas already created
       wc->c1 = new TCanvas(wc->title.c_str(),wc->title.c_str(),
 			  wc->padxdim*wc->npadsx,
 			  wc->padydim*wc->npadsy);
@@ -348,14 +348,14 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 			   // , wc->padxmargin,wc->padymargin);
     }
 
-    wPad_t *& wp = wc->pads[i];
-    wp->vp = wc->motherpad->cd(i+1);
+    wPad_t *& wp = wc->pads[ipadc];
+    wp->vp = wc->motherpad->cd(ipadc+1);
 
     if (!wp->histo_ids.size() &&
 	!wp->stack_ids.size() &&
 	!wp->graph_ids.size() &&
 	!wp->macro_ids.size()) {
-      cerr << "ERROR: pad #" << i+1 << " has no ids defined for it";
+      cerr << "ERROR: pad #" << ipadc+1 << " has no ids defined for it";
       cerr << ", continuing to the next" << endl;
       continue;
     }
@@ -416,7 +416,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       map<string,wLegend_t *>::const_iterator it=glmap_id2legend.find(wp->legid);
       if (it != glmap_id2legend.end()) {
 	drawlegend = true;
-	wl = it->second;
+	wleg = it->second;
       } else {
 	cerr << "ERROR: legend id " << wp->legid;
 	cerr << " never defined in layout" << endl;
@@ -428,8 +428,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	  !strcmp(testing->IsA()->GetName(),"TLegend")) {
 	TLegend *pullTheOtherOne = (TLegend *)testing;
 	if (gl_verbose) cout << "Found legend from macro" << endl;
-	wl = new wLegend_t();
-	wl->leg = pullTheOtherOne;
+	wleg = new wLegend_t();
+	wleg->leg = pullTheOtherOne;
 	drawlegend = true;
       }
     }
@@ -438,7 +438,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * LOOP OVER STACKS DEFINED FOR PAD...
      ***************************************************/
 
-    string drawopt("");
     if (wp->stack_ids.size()) {
       wStack_t *ws=NULL;
       for (unsigned j = 0; j < wp->stack_ids.size(); j++) {
@@ -462,10 +461,11 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	    wTH1 *wh = ws->v_histos[i];
 	    wh->ApplySavedStyle();
 	    if(wh->GetLegendEntry().size())
-	      wh->Add2Legend(wl->leg);
+	      wh->Add2Legend(wleg->leg);
 	  }
 	}
 
+	string drawopt("");
 	if (ws->sum->GetDrawOption().size()) {
 	  drawopt = ws->sum->GetDrawOption();
 	  cout << "drawopt stored with histo = " << drawopt << endl;
@@ -502,8 +502,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
 	myHisto->DrawFits("same");
 	if (drawlegend && myHisto->GetLegendEntry().size()) {
-	  if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
-	  myHisto->Add2Legend(wl->leg);
+	  if (wleg->drawoption.size()) myHisto->SetDrawOption(wleg->drawoption);
+	  myHisto->Add2Legend(wleg->leg);
 	}
 	if (myHisto->statsAreOn()) {
 	  myHisto->DrawStats();
@@ -547,8 +547,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       axis->Draw();
       gPad->Update();
       if (drawlegend && myHisto->GetLegendEntry().size()) {
-	if (wl->drawoption.size()) myHisto->SetDrawOption(wl->drawoption);
-	myHisto->Add2Legend(wl->leg);
+	if (wleg->drawoption.size()) myHisto->SetDrawOption(wleg->drawoption);
+	myHisto->Add2Legend(wleg->leg);
       }
     }
 
@@ -559,36 +559,29 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
       string& gid = wp->graph_ids[j];
       map<string,wGraph_t *>::const_iterator it   = glmap_id2graph.find(gid);
-      map<string,TGraph2D *>::const_iterator it2d = glmap_id2graph2d.find(gid);
       wGraph_t *wg   = NULL;
-      TGraph2D *gr2d = NULL;
 
       if (it == glmap_id2graph.end()) {
-	if (it2d == glmap_id2graph2d.end()) {
-	  cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
-	  exit (-1);
-	} else {
-	  gr2d = it2d->second;
-	}
+	cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
+	exit (-1);
       } else {
 	wg = it->second;
       }
 
-
       //if (!j && !wp->histo_ids.size() && !wp->macro_ids.size())
       //drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
 
-      if (wg) {
+      if (wg && wg->gr) {
 	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),true);
 	wp->vp->Update();
 	if (drawlegend)
-	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
-      if (gr2d) {
-	drawInPad<TGraph2D>(wp,gr2d,"COLZ",true);
+      if (wg && wg->gr2d) {
+	drawInPad<TGraph2D>(wp,wg->gr2d,wg->drawopt.c_str(),true);
 	wp->vp->Update();
 	if (drawlegend)
-	  wl->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
     } // graph loop
 
@@ -599,13 +592,13 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     for (unsigned j = 0; j < wp->line_ids.size(); j++) {
       string drawopt("L");
       string& lid = wp->line_ids[j];
-      map<string,TLine *>::const_iterator it = glmap_id2line.find(lid);
-      if (it == glmap_id2line.end()) {
+      map<string,TLine *>::const_iterator it2 = glmap_id2line.find(lid);
+      if (it2 == glmap_id2line.end()) {
 	cerr << "ERROR: line id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
 
-      TLine *line = it->second;
+      TLine *line = it2->second;
 
       if (!j && !wp->histo_ids.size() && !wp->macro_ids.size())
 	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
@@ -613,7 +606,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       if (line) {
 	drawInPad<TLine>(wp,line,drawopt.c_str());
 	//if (drawlegend)
-	//wl->leg->AddEntry(line,lid.c_str(),"L");
+	//wleg->leg->AddEntry(line,lid.c_str(),"L");
       }
     }
 
@@ -624,13 +617,13 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     for (unsigned j = 0; j < wp->box_ids.size(); j++) {
       string drawopt("L");
       string& bid = wp->box_ids[j];
-      map<string,TBox *>::const_iterator it = glmap_id2box.find(bid);
-      if (it == glmap_id2box.end()) {
+      map<string,TBox *>::const_iterator it2 = glmap_id2box.find(bid);
+      if (it2 == glmap_id2box.end()) {
 	cerr << "ERROR: box id " << bid << " never defined in layout" << endl;
 	exit (-1);
       }
 
-      TBox *box = it->second;
+      TBox *box = it2->second;
 
       if (box) {
 	drawInPad<TBox>(wp,box,drawopt.c_str());
@@ -642,7 +635,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      ***************************************************/
 
     if (drawlegend) {
-      wl->leg->Draw("same");
+      wleg->leg->Draw("same");
       wp->vp->Update();
     }
 
@@ -652,27 +645,27 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     
     for (unsigned j=0; j<wp->latex_ids.size(); j++) {
       string& lid = wp->latex_ids[j];
-      map<string,TLatex *>::const_iterator it = glmap_id2latex.find(lid);
-      if (it == glmap_id2latex.end()) {
+      map<string,TLatex *>::const_iterator it2 = glmap_id2latex.find(lid);
+      if (it2 == glmap_id2latex.end()) {
 	cerr << "ERROR: latex id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
       if (gl_verbose) cout << "Drawing latex object " << lid << endl;
-      TLatex *ltx = it->second;
+      TLatex *ltx = it2->second;
       ltx->Draw();
       wp->vp->Update();
     }
 
     for (unsigned j = 0; j < wp->label_ids.size(); j++) {
       string& lid = wp->label_ids[j];
-      map<string,wLabel_t *>::const_iterator it = glmap_id2label.find(lid);
-      if (it == glmap_id2label.end()) {
+      map<string,wLabel_t *>::const_iterator it2 = glmap_id2label.find(lid);
+      if (it2 == glmap_id2label.end()) {
 	cerr << "ERROR: label id " << lid << " never defined in layout" << endl;
 	exit (-1);
       }
       if (gl_verbose) cout << "Drawing label object " << lid << endl;
-      wLabel_t *wl = it->second;
-      drawStandardText(wl->text, wl->x1ndc, wl->y1ndc,-1,-1,wl->textsize);
+      wLabel_t *wlab = it2->second;
+      drawStandardText(wlab->text, wlab->x1ndc, wlab->y1ndc,-1,-1,wlab->textsize);
 
       wp->vp->Update();
     }
@@ -683,14 +676,14 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   //prdFixOverlay();
 
   if (savePlots2file) {
-    wCanvas_t *wc0 = cs.canvases[0];
+    wc0 = cs.canvases[0];
     if (!wc0->savenamefmts.size())  // define a default
       wc0->savenamefmts.push_back("%F_%C.png");
     for (size_t i=0; i<cs.canvases.size(); i++) {
       wCanvas_t *wc = cs.canvases[i];
       wc->c1->cd();
-      for (size_t i=0; i<wc0->savenamefmts.size(); i++)
-	saveCanvas2File(wc,wc0->savenamefmts[i]);
+      for (size_t j=0; j<wc0->savenamefmts.size(); j++)
+	saveCanvas2File(wc,wc0->savenamefmts[j]);
     }
   }
 }                                                           // drawPlots

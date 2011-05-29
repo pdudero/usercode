@@ -11,9 +11,11 @@
 template <class T>
 class MyHistoWrapper {
 public:
+#if 0
   MyHistoWrapper<T>(const std::string& name,
 		    const std::string& title,
 		    int nbins, float min, float max);
+#endif
   MyHistoWrapper<T>(T *h, const std::string& name, const std::string& title);
   MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; verbosity_=true; fitxmin_=fitxmax_=0; }
   ~MyHistoWrapper() {}
@@ -139,7 +141,7 @@ private:
 };
 
 //======================================================================
-
+#if 0
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 				  const std::string& title,
@@ -151,7 +153,7 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
   verbosity_=true;
   fitxmin_=fitxmax_=0;
 }
-
+#endif
 //======================================================================
 
 template<typename T>

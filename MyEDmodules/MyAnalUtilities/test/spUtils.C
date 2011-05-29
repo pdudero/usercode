@@ -99,7 +99,10 @@ bool getLine(FILE *fp, string& theline, const string& callerid="")
 
 //======================================================================
 
-bool getKeyValue(const string& theline, string& key, string& value)
+bool getKeyValue(const string& theline,
+		 string& key,
+		 string& value,
+		 bool expandAliii=true)
 { 
   vector<string> v_tokens;
   Tokenize(theline,v_tokens,"=");
@@ -120,12 +123,19 @@ bool getKeyValue(const string& theline, string& key, string& value)
     value+=v_tokens[i];
   }
 
-  if (value.find('@') != string::npos) {
+  for( int i=0; 
+       expandAliii && (value.find('@') != string::npos);
+       i++) {
     string temp=value;
     extern void expandAliii(const string& input, 
 			    string& output);
+      
     expandAliii(temp,value);
-    if (!value.size()) return false;
+    if( !value.size()) return false;
+    if( i>=10 ) {
+      cerr << "Potential alias mutual self-reference cycle detected, please fix!" << endl;
+      exit(-1);
+    }
   }
 
   return true;

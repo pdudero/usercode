@@ -82,11 +82,11 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "gridx")        wpad->gridx        = str2int(value);
     else if (key == "gridy")        wpad->gridy        = str2int(value);
     else if (key == "xmin") {
-      float xmin = str2flt(value);
+      xmin = str2flt(value);
       wpad->hframe->SetXaxis("",false,0,0,0,0,0,xmin,xmax);
     }
     else if (key == "xmax") {
-      float xmax = str2flt(value);
+      xmax = str2flt(value);
       wpad->hframe->SetXaxis("",false,0,0,0,0,0,xmin,xmax);
     }
     else if (key == "ymin") {

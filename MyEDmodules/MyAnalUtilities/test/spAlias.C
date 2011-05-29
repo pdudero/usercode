@@ -56,20 +56,20 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
     }
 
     string key, value;
-    if (!getKeyValue(theline,key,value)) continue;
+    if (!getKeyValue(theline,key,value,false)) continue;
 
     //--------------------
     if (key=="includefile") { // reserved for putting aliii in a separate file
     //--------------------
-      FILE *fp = fopen(value.c_str(),"r");
-      if (!fp) {
+      FILE *fp2 = fopen(value.c_str(),"r");
+      if (!fp2) {
 	cerr<<"Error, couldn't open alias include file '"<<value<<"'"<<endl;
 	exit(-1);
       }
       if (gl_verbose)
 	cout << "Loading include file '" << value << "'" << endl;
-      processAliasSection(fp,theline,new_section);
-
+      processAliasSection(fp2,theline,new_section);
+      fclose(fp2);
     } else {
       map<string,string>::const_iterator it;
       it = glmap_aliii.find(key);
@@ -81,12 +81,13 @@ processAliasSection(FILE *fp,string& theline, bool& new_section)
 	// encountered are considered to bound the alias key, rather
 	// than be a part of it, such as '/' and ':'
 	string aspec = value;
+#if 0
 	if (aspec.find('@') != string::npos) {
 	  string temp=aspec;
 	  expandAliii(temp,aspec);
 	  if (!aspec.size()) continue;
 	}
-
+#endif
 	glmap_aliii.insert(pair<string,string>(key,aspec));
 	if (gl_verbose)
 	  cout << "alias '" << key << "' added" << endl;

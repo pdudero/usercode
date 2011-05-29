@@ -1,3 +1,4 @@
+
 bool parseBinRange ( const string& binrange,
 		     int& lobin,
 		     int& hibin )
@@ -150,7 +151,7 @@ void projectY(const string& binspec,
     if (tmph2) {
       v_hist.push_back(tmph2);
       for (int i=1; tmph2; i++) {
-	string multihist1 = histname+"_"+int2str(i);
+	multihist1 = histname+"_"+int2str(i);
 	tmph2 = (TH2 *)findHisto(multihist1, "hit the end of histo multiset");
 	if (tmph2) v_hist.push_back(tmph2);
       }
@@ -272,7 +273,7 @@ wTH1 *catMultiHist(const string& myhid,
       break;
   }
   if (m_histos2cat.size()) {
-    rethist = new wTH1D(myhid.c_str(),myhid.c_str(),totalbins,1,totalbins);
+    rethist = new wTH1D(new TH1D(myhid.c_str(),myhid.c_str(),totalbins,1,totalbins));
     TAxis *xax = rethist->histo()->GetXaxis();
     int glbin=1;
     map<string,TH1 *>::const_iterator it;
