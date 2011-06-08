@@ -104,7 +104,7 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
 
   // loop over all keys in this directory
 
-  bool newdir = true;
+  bool isnewdir = true;
 
   TIter nextkey( current_sourcedir->GetListOfKeys() );
   TKey *key;
@@ -118,8 +118,8 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
     if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
       // descendant of TH1 -> scale it
 #if 0
-      if (newdir) {
-	newdir=false;
+      if (isnewdir) {
+	isnewdir=false;
 	cout << "Scaling histograms: " << endl;
       }
       cout << obj->GetName() << " ";
@@ -162,7 +162,7 @@ void ScaleAll1file( TDirectory *target, FileInfo_t& source, bool writeErrors ) {
     } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
       // it's a subdirectory
 
-      newdir = true;
+      isnewdir = true;
 #if 0
       cout << "\n=====> Found subdirectory " << obj->GetName();
       cout << "<=====\n" << endl;
@@ -218,9 +218,9 @@ void multiscale(const char* filewithpaths,
 
   int time2sleep = (int)max(5.0,0.5*v_rootfiles.size());
 
-  for (int i=time2sleep; i>=0; i--) {
-    cout << i;
-    if (i) {cout << "..." << flush; sleep(1); }
+  for (int i=time2sleep; i>0; i--) {
+    if (!(i%30) || i==15 || i<5) cout<<i<< "..."<<flush;
+    sleep(1);
   }
   cout << endl;
     
