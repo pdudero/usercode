@@ -1,0 +1,8 @@
+
+ -- Profile Likelihood -- 
+Limit: r < 4.68661 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+mean   expected limit: r < 2.902 +/- 0.0536563 @ 95%CL (500 toyMC)
+median expected limit: r < 2.62153 @ 95%CL (500 toyMC)
+   68% expected band : 1.70984 < r < 4.20618
+   95% expected band : 1.15692 < r < 5.59922
