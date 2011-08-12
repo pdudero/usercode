@@ -1,0 +1,11 @@
+>>> including systematics
+>>> method used to compute upper limit is ProfileLikelihood
+>>> random number generator seed is 123456
+
+Sanity checks on the model: OK
+Computing limit starting from observation
+  1) RooRealVar:: n_obs_bina01 = 2183
+
+ -- Profile Likelihood -- 
+Limit: r < 3.98075 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)

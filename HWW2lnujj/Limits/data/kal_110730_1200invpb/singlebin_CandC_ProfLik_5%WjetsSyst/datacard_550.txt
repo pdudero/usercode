@@ -1,0 +1,13 @@
+imax 1  # number of channels
+jmax 2  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin             a01 
+observation     853 
+--------------------
+bin              a01   a01   a01 
+process          HWW   WJets     WW  
+process          0     1     2   
+rate           17.60 649.300 127.800 
+--------------------
+WJetsUnc  lnN    -    1.05   -

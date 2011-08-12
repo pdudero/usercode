@@ -1,0 +1,3009 @@
+>>> including systematics
+>>> method used to compute upper limit is ProfileLikelihood
+>>> random number generator seed is 123456
+
+Sanity checks on the model: OK
+Generate toy 1/500
+  1) RooRealVar:: n_obs_bina01 = 2634
+
+ -- Profile Likelihood -- 
+Limit: r < 2.34501 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 2/500
+  1) RooRealVar:: n_obs_bina01 = 2731
+
+ -- Profile Likelihood -- 
+Limit: r < 3.35061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 3/500
+  1) RooRealVar:: n_obs_bina01 = 2736
+
+ -- Profile Likelihood -- 
+Limit: r < 3.40249 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 4/500
+  1) RooRealVar:: n_obs_bina01 = 2801
+
+ -- Profile Likelihood -- 
+Limit: r < 4.07703 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 5/500
+  1) RooRealVar:: n_obs_bina01 = 2671
+
+ -- Profile Likelihood -- 
+Limit: r < 2.72809 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 6/500
+  1) RooRealVar:: n_obs_bina01 = 2604
+
+ -- Profile Likelihood -- 
+Limit: r < 2.05943 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 7/500
+  1) RooRealVar:: n_obs_bina01 = 2734
+
+ -- Profile Likelihood -- 
+Limit: r < 3.38174 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 8/500
+  1) RooRealVar:: n_obs_bina01 = 2700
+
+ -- Profile Likelihood -- 
+Limit: r < 3.02896 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 9/500
+  1) RooRealVar:: n_obs_bina01 = 2425
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00194 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 10/500
+  1) RooRealVar:: n_obs_bina01 = 2624
+
+ -- Profile Likelihood -- 
+Limit: r < 2.24595 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 11/500
+  1) RooRealVar:: n_obs_bina01 = 2544
+
+ -- Profile Likelihood -- 
+Limit: r < 1.59303 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 12/500
+  1) RooRealVar:: n_obs_bina01 = 2647
+
+ -- Profile Likelihood -- 
+Limit: r < 2.47926 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 13/500
+  1) RooRealVar:: n_obs_bina01 = 2834
+
+ -- Profile Likelihood -- 
+Limit: r < 4.41901 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 14/500
+  1) RooRealVar:: n_obs_bina01 = 2542
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57974 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 15/500
+  1) RooRealVar:: n_obs_bina01 = 2754
+
+ -- Profile Likelihood -- 
+Limit: r < 3.58927 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 16/500
+  1) RooRealVar:: n_obs_bina01 = 2716
+
+ -- Profile Likelihood -- 
+Limit: r < 3.19494 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 17/500
+  1) RooRealVar:: n_obs_bina01 = 2681
+
+ -- Profile Likelihood -- 
+Limit: r < 2.83183 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 18/500
+  1) RooRealVar:: n_obs_bina01 = 2834
+
+ -- Profile Likelihood -- 
+Limit: r < 4.41901 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 19/500
+  1) RooRealVar:: n_obs_bina01 = 2573
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 20/500
+  1) RooRealVar:: n_obs_bina01 = 2569
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 21/500
+  1) RooRealVar:: n_obs_bina01 = 2680
+
+ -- Profile Likelihood -- 
+Limit: r < 2.82146 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 22/500
+  1) RooRealVar:: n_obs_bina01 = 2745
+
+ -- Profile Likelihood -- 
+Limit: r < 3.49588 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 23/500
+  1) RooRealVar:: n_obs_bina01 = 2680
+
+ -- Profile Likelihood -- 
+Limit: r < 2.82146 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 24/500
+  1) RooRealVar:: n_obs_bina01 = 2538
+
+ -- Profile Likelihood -- 
+Limit: r < 1.55356 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 25/500
+  1) RooRealVar:: n_obs_bina01 = 2645
+
+ -- Profile Likelihood -- 
+Limit: r < 2.4583 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 26/500
+  1) RooRealVar:: n_obs_bina01 = 2717
+
+ -- Profile Likelihood -- 
+Limit: r < 3.20532 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 27/500
+  1) RooRealVar:: n_obs_bina01 = 2689
+
+ -- Profile Likelihood -- 
+Limit: r < 2.91484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 28/500
+  1) RooRealVar:: n_obs_bina01 = 2665
+
+ -- Profile Likelihood -- 
+Limit: r < 2.66586 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 29/500
+  1) RooRealVar:: n_obs_bina01 = 2781
+
+ -- Profile Likelihood -- 
+Limit: r < 3.86942 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 30/500
+  1) RooRealVar:: n_obs_bina01 = 2554
+
+ -- Profile Likelihood -- 
+Limit: r < 1.66158 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 31/500
+  1) RooRealVar:: n_obs_bina01 = 2475
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20607 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 32/500
+  1) RooRealVar:: n_obs_bina01 = 2586
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 33/500
+  1) RooRealVar:: n_obs_bina01 = 2549
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62687 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 34/500
+  1) RooRealVar:: n_obs_bina01 = 2574
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80943 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 35/500
+  1) RooRealVar:: n_obs_bina01 = 2638
+
+ -- Profile Likelihood -- 
+Limit: r < 2.38579 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 36/500
+  1) RooRealVar:: n_obs_bina01 = 2653
+
+ -- Profile Likelihood -- 
+Limit: r < 2.5413 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 37/500
+  1) RooRealVar:: n_obs_bina01 = 2505
+
+ -- Profile Likelihood -- 
+Limit: r < 1.35717 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 38/500
+  1) RooRealVar:: n_obs_bina01 = 2755
+
+ -- Profile Likelihood -- 
+Limit: r < 3.59965 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 39/500
+  1) RooRealVar:: n_obs_bina01 = 2815
+
+ -- Profile Likelihood -- 
+Limit: r < 4.22209 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 40/500
+  1) RooRealVar:: n_obs_bina01 = 2713
+
+ -- Profile Likelihood -- 
+Limit: r < 3.1638 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 41/500
+  1) RooRealVar:: n_obs_bina01 = 2759
+
+ -- Profile Likelihood -- 
+Limit: r < 3.64115 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 42/500
+  1) RooRealVar:: n_obs_bina01 = 2442
+
+ -- Profile Likelihood -- 
+Limit: r < 1.06547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 43/500
+  1) RooRealVar:: n_obs_bina01 = 2769
+
+ -- Profile Likelihood -- 
+Limit: r < 3.74491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 44/500
+  1) RooRealVar:: n_obs_bina01 = 2730
+
+ -- Profile Likelihood -- 
+Limit: r < 3.34023 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 45/500
+  1) RooRealVar:: n_obs_bina01 = 2751
+
+ -- Profile Likelihood -- 
+Limit: r < 3.55814 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 46/500
+  1) RooRealVar:: n_obs_bina01 = 2595
+
+ -- Profile Likelihood -- 
+Limit: r < 1.98074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 47/500
+  1) RooRealVar:: n_obs_bina01 = 2711
+
+ -- Profile Likelihood -- 
+Limit: r < 3.14304 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 48/500
+  1) RooRealVar:: n_obs_bina01 = 2605
+
+ -- Profile Likelihood -- 
+Limit: r < 2.06837 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 49/500
+  1) RooRealVar:: n_obs_bina01 = 2607
+
+ -- Profile Likelihood -- 
+Limit: r < 2.08638 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 50/500
+  1) RooRealVar:: n_obs_bina01 = 2646
+
+ -- Profile Likelihood -- 
+Limit: r < 2.46867 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 51/500
+  1) RooRealVar:: n_obs_bina01 = 2614
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15064 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 52/500
+  1) RooRealVar:: n_obs_bina01 = 2808
+
+ -- Profile Likelihood -- 
+Limit: r < 4.14956 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 53/500
+  1) RooRealVar:: n_obs_bina01 = 2487
+
+ -- Profile Likelihood -- 
+Limit: r < 1.26363 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 54/500
+  1) RooRealVar:: n_obs_bina01 = 2783
+
+ -- Profile Likelihood -- 
+Limit: r < 3.89017 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 55/500
+  1) RooRealVar:: n_obs_bina01 = 2644
+
+ -- Profile Likelihood -- 
+Limit: r < 2.44793 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 56/500
+  1) RooRealVar:: n_obs_bina01 = 2573
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 57/500
+  1) RooRealVar:: n_obs_bina01 = 2550
+
+ -- Profile Likelihood -- 
+Limit: r < 1.63374 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 58/500
+  1) RooRealVar:: n_obs_bina01 = 2462
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14786 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 59/500
+  1) RooRealVar:: n_obs_bina01 = 2671
+
+ -- Profile Likelihood -- 
+Limit: r < 2.72809 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 60/500
+  1) RooRealVar:: n_obs_bina01 = 2544
+
+ -- Profile Likelihood -- 
+Limit: r < 1.59303 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 61/500
+  1) RooRealVar:: n_obs_bina01 = 2770
+
+ -- Profile Likelihood -- 
+Limit: r < 3.75529 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 62/500
+  1) RooRealVar:: n_obs_bina01 = 2742
+
+ -- Profile Likelihood -- 
+Limit: r < 3.46475 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 63/500
+  1) RooRealVar:: n_obs_bina01 = 2597
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99795 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 64/500
+  1) RooRealVar:: n_obs_bina01 = 2629
+
+ -- Profile Likelihood -- 
+Limit: r < 2.29491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 65/500
+  1) RooRealVar:: n_obs_bina01 = 2583
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88097 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 66/500
+  1) RooRealVar:: n_obs_bina01 = 2754
+
+ -- Profile Likelihood -- 
+Limit: r < 3.58927 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 67/500
+  1) RooRealVar:: n_obs_bina01 = 2615
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15998 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 68/500
+  1) RooRealVar:: n_obs_bina01 = 2616
+
+ -- Profile Likelihood -- 
+Limit: r < 2.16936 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 69/500
+  1) RooRealVar:: n_obs_bina01 = 2737
+
+ -- Profile Likelihood -- 
+Limit: r < 3.41287 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 70/500
+  1) RooRealVar:: n_obs_bina01 = 2472
+
+ -- Profile Likelihood -- 
+Limit: r < 1.19245 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 71/500
+  1) RooRealVar:: n_obs_bina01 = 2586
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 72/500
+  1) RooRealVar:: n_obs_bina01 = 2846
+
+ -- Profile Likelihood -- 
+Limit: r < 4.54384 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 73/500
+  1) RooRealVar:: n_obs_bina01 = 2836
+
+ -- Profile Likelihood -- 
+Limit: r < 4.43974 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 74/500
+  1) RooRealVar:: n_obs_bina01 = 2654
+
+ -- Profile Likelihood -- 
+Limit: r < 2.55168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 75/500
+  1) RooRealVar:: n_obs_bina01 = 2948
+
+ -- Profile Likelihood -- 
+Limit: r < 5.60211 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 76/500
+  1) RooRealVar:: n_obs_bina01 = 2706
+
+ -- Profile Likelihood -- 
+Limit: r < 3.09114 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 77/500
+  1) RooRealVar:: n_obs_bina01 = 2716
+
+ -- Profile Likelihood -- 
+Limit: r < 3.19494 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 78/500
+  1) RooRealVar:: n_obs_bina01 = 2529
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49659 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 79/500
+  1) RooRealVar:: n_obs_bina01 = 2931
+
+ -- Profile Likelihood -- 
+Limit: r < 5.42574 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 80/500
+  1) RooRealVar:: n_obs_bina01 = 2748
+
+ -- Profile Likelihood -- 
+Limit: r < 3.52701 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 81/500
+  1) RooRealVar:: n_obs_bina01 = 2734
+
+ -- Profile Likelihood -- 
+Limit: r < 3.38174 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 82/500
+  1) RooRealVar:: n_obs_bina01 = 2536
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54067 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 83/500
+  1) RooRealVar:: n_obs_bina01 = 2595
+
+ -- Profile Likelihood -- 
+Limit: r < 1.98074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 84/500
+  1) RooRealVar:: n_obs_bina01 = 2476
+
+ -- Profile Likelihood -- 
+Limit: r < 1.21072 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 85/500
+  1) RooRealVar:: n_obs_bina01 = 2575
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81723 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 86/500
+  1) RooRealVar:: n_obs_bina01 = 2778
+
+ -- Profile Likelihood -- 
+Limit: r < 3.83829 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 87/500
+  1) RooRealVar:: n_obs_bina01 = 2507
+
+ -- Profile Likelihood -- 
+Limit: r < 1.36813 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 88/500
+  1) RooRealVar:: n_obs_bina01 = 2633
+
+ -- Profile Likelihood -- 
+Limit: r < 2.33491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 89/500
+  1) RooRealVar:: n_obs_bina01 = 2683
+
+ -- Profile Likelihood -- 
+Limit: r < 2.85259 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 90/500
+  1) RooRealVar:: n_obs_bina01 = 2668
+
+ -- Profile Likelihood -- 
+Limit: r < 2.69697 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 91/500
+  1) RooRealVar:: n_obs_bina01 = 2617
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17879 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 92/500
+  1) RooRealVar:: n_obs_bina01 = 2630
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 93/500
+  1) RooRealVar:: n_obs_bina01 = 2787
+
+ -- Profile Likelihood -- 
+Limit: r < 3.932 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 94/500
+  1) RooRealVar:: n_obs_bina01 = 2378
+
+ -- Profile Likelihood -- 
+Limit: r < 0.852588 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 95/500
+  1) RooRealVar:: n_obs_bina01 = 2572
+
+ -- Profile Likelihood -- 
+Limit: r < 1.79397 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 96/500
+  1) RooRealVar:: n_obs_bina01 = 2797
+
+ -- Profile Likelihood -- 
+Limit: r < 4.03559 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 97/500
+  1) RooRealVar:: n_obs_bina01 = 2654
+
+ -- Profile Likelihood -- 
+Limit: r < 2.55168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 98/500
+  1) RooRealVar:: n_obs_bina01 = 2542
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57974 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 99/500
+  1) RooRealVar:: n_obs_bina01 = 2703
+
+ -- Profile Likelihood -- 
+Limit: r < 3.06 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 100/500
+  1) RooRealVar:: n_obs_bina01 = 2660
+
+ -- Profile Likelihood -- 
+Limit: r < 2.61403 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 101/500
+  1) RooRealVar:: n_obs_bina01 = 2641
+
+ -- Profile Likelihood -- 
+Limit: r < 2.41679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 102/500
+  1) RooRealVar:: n_obs_bina01 = 2919
+
+ -- Profile Likelihood -- 
+Limit: r < 5.30123 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 103/500
+  1) RooRealVar:: n_obs_bina01 = 2720
+
+ -- Profile Likelihood -- 
+Limit: r < 3.23645 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 104/500
+  1) RooRealVar:: n_obs_bina01 = 2842
+
+ -- Profile Likelihood -- 
+Limit: r < 4.50233 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 105/500
+  1) RooRealVar:: n_obs_bina01 = 2682
+
+ -- Profile Likelihood -- 
+Limit: r < 2.84221 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 106/500
+  1) RooRealVar:: n_obs_bina01 = 2578
+
+ -- Profile Likelihood -- 
+Limit: r < 1.84091 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 107/500
+  1) RooRealVar:: n_obs_bina01 = 2440
+
+ -- Profile Likelihood -- 
+Limit: r < 1.0577 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 108/500
+  1) RooRealVar:: n_obs_bina01 = 2535
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53427 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 109/500
+  1) RooRealVar:: n_obs_bina01 = 2690
+
+ -- Profile Likelihood -- 
+Limit: r < 2.92522 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 110/500
+  1) RooRealVar:: n_obs_bina01 = 2718
+
+ -- Profile Likelihood -- 
+Limit: r < 3.21569 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 111/500
+  1) RooRealVar:: n_obs_bina01 = 2709
+
+ -- Profile Likelihood -- 
+Limit: r < 3.12228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 112/500
+  1) RooRealVar:: n_obs_bina01 = 2735
+
+ -- Profile Likelihood -- 
+Limit: r < 3.39211 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 113/500
+  1) RooRealVar:: n_obs_bina01 = 2583
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88097 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 114/500
+  1) RooRealVar:: n_obs_bina01 = 2850
+
+ -- Profile Likelihood -- 
+Limit: r < 4.58534 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 115/500
+  1) RooRealVar:: n_obs_bina01 = 2583
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88097 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 116/500
+  1) RooRealVar:: n_obs_bina01 = 2725
+
+ -- Profile Likelihood -- 
+Limit: r < 3.28834 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 117/500
+  1) RooRealVar:: n_obs_bina01 = 2653
+
+ -- Profile Likelihood -- 
+Limit: r < 2.5413 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 118/500
+  1) RooRealVar:: n_obs_bina01 = 2649
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49984 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 119/500
+  1) RooRealVar:: n_obs_bina01 = 2822
+
+ -- Profile Likelihood -- 
+Limit: r < 4.29463 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 120/500
+  1) RooRealVar:: n_obs_bina01 = 2421
+
+ -- Profile Likelihood -- 
+Limit: r < 0.987796 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 121/500
+  1) RooRealVar:: n_obs_bina01 = 2530
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50279 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 122/500
+  1) RooRealVar:: n_obs_bina01 = 2776
+
+ -- Profile Likelihood -- 
+Limit: r < 3.81754 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 123/500
+  1) RooRealVar:: n_obs_bina01 = 2490
+
+ -- Profile Likelihood -- 
+Limit: r < 1.27861 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 124/500
+  1) RooRealVar:: n_obs_bina01 = 2465
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16099 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 125/500
+  1) RooRealVar:: n_obs_bina01 = 2701
+
+ -- Profile Likelihood -- 
+Limit: r < 3.0393 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 126/500
+  1) RooRealVar:: n_obs_bina01 = 2762
+
+ -- Profile Likelihood -- 
+Limit: r < 3.67228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 127/500
+  1) RooRealVar:: n_obs_bina01 = 2592
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95521 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 128/500
+  1) RooRealVar:: n_obs_bina01 = 2748
+
+ -- Profile Likelihood -- 
+Limit: r < 3.52701 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 129/500
+  1) RooRealVar:: n_obs_bina01 = 2451
+
+ -- Profile Likelihood -- 
+Limit: r < 1.10146 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 130/500
+  1) RooRealVar:: n_obs_bina01 = 2815
+
+ -- Profile Likelihood -- 
+Limit: r < 4.22209 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 131/500
+  1) RooRealVar:: n_obs_bina01 = 2641
+
+ -- Profile Likelihood -- 
+Limit: r < 2.41679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 132/500
+  1) RooRealVar:: n_obs_bina01 = 2490
+
+ -- Profile Likelihood -- 
+Limit: r < 1.27861 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 133/500
+  1) RooRealVar:: n_obs_bina01 = 2335
+
+ -- Profile Likelihood -- 
+Limit: r < 0.743183 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 134/500
+  1) RooRealVar:: n_obs_bina01 = 2524
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46608 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 135/500
+  1) RooRealVar:: n_obs_bina01 = 2449
+
+ -- Profile Likelihood -- 
+Limit: r < 1.09331 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 136/500
+  1) RooRealVar:: n_obs_bina01 = 2727
+
+ -- Profile Likelihood -- 
+Limit: r < 3.3091 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 137/500
+  1) RooRealVar:: n_obs_bina01 = 2616
+
+ -- Profile Likelihood -- 
+Limit: r < 2.16936 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 138/500
+  1) RooRealVar:: n_obs_bina01 = 2827
+
+ -- Profile Likelihood -- 
+Limit: r < 4.34645 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 139/500
+  1) RooRealVar:: n_obs_bina01 = 2532
+
+ -- Profile Likelihood -- 
+Limit: r < 1.51528 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 140/500
+  1) RooRealVar:: n_obs_bina01 = 2528
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49042 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 141/500
+  1) RooRealVar:: n_obs_bina01 = 2689
+
+ -- Profile Likelihood -- 
+Limit: r < 2.91484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 142/500
+  1) RooRealVar:: n_obs_bina01 = 2496
+
+ -- Profile Likelihood -- 
+Limit: r < 1.30928 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 143/500
+  1) RooRealVar:: n_obs_bina01 = 2555
+
+ -- Profile Likelihood -- 
+Limit: r < 1.66863 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 144/500
+  1) RooRealVar:: n_obs_bina01 = 2566
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74852 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 145/500
+  1) RooRealVar:: n_obs_bina01 = 2587
+
+ -- Profile Likelihood -- 
+Limit: r < 1.91371 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 146/500
+  1) RooRealVar:: n_obs_bina01 = 2468
+
+ -- Profile Likelihood -- 
+Limit: r < 1.17433 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 147/500
+  1) RooRealVar:: n_obs_bina01 = 2784
+
+ -- Profile Likelihood -- 
+Limit: r < 3.90093 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 148/500
+  1) RooRealVar:: n_obs_bina01 = 2758
+
+ -- Profile Likelihood -- 
+Limit: r < 3.63077 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 149/500
+  1) RooRealVar:: n_obs_bina01 = 2619
+
+ -- Profile Likelihood -- 
+Limit: r < 2.19776 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 150/500
+  1) RooRealVar:: n_obs_bina01 = 2653
+
+ -- Profile Likelihood -- 
+Limit: r < 2.5413 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 151/500
+  1) RooRealVar:: n_obs_bina01 = 2742
+
+ -- Profile Likelihood -- 
+Limit: r < 3.46475 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 152/500
+  1) RooRealVar:: n_obs_bina01 = 2665
+
+ -- Profile Likelihood -- 
+Limit: r < 2.66586 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 153/500
+  1) RooRealVar:: n_obs_bina01 = 2605
+
+ -- Profile Likelihood -- 
+Limit: r < 2.06837 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 154/500
+  1) RooRealVar:: n_obs_bina01 = 2823
+
+ -- Profile Likelihood -- 
+Limit: r < 4.305 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 155/500
+  1) RooRealVar:: n_obs_bina01 = 2441
+
+ -- Profile Likelihood -- 
+Limit: r < 1.06157 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 156/500
+  1) RooRealVar:: n_obs_bina01 = 2561
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71166 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 157/500
+  1) RooRealVar:: n_obs_bina01 = 2539
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56005 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 158/500
+  1) RooRealVar:: n_obs_bina01 = 2683
+
+ -- Profile Likelihood -- 
+Limit: r < 2.85259 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 159/500
+  1) RooRealVar:: n_obs_bina01 = 2705
+
+ -- Profile Likelihood -- 
+Limit: r < 3.08076 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 160/500
+  1) RooRealVar:: n_obs_bina01 = 2856
+
+ -- Profile Likelihood -- 
+Limit: r < 4.64759 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 161/500
+  1) RooRealVar:: n_obs_bina01 = 2383
+
+ -- Profile Likelihood -- 
+Limit: r < 0.866853 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 162/500
+  1) RooRealVar:: n_obs_bina01 = 2750
+
+ -- Profile Likelihood -- 
+Limit: r < 3.54776 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 163/500
+  1) RooRealVar:: n_obs_bina01 = 2873
+
+ -- Profile Likelihood -- 
+Limit: r < 4.82397 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 164/500
+  1) RooRealVar:: n_obs_bina01 = 2623
+
+ -- Profile Likelihood -- 
+Limit: r < 2.23622 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 165/500
+  1) RooRealVar:: n_obs_bina01 = 2592
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95521 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 166/500
+  1) RooRealVar:: n_obs_bina01 = 2788
+
+ -- Profile Likelihood -- 
+Limit: r < 3.94236 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 167/500
+  1) RooRealVar:: n_obs_bina01 = 2652
+
+ -- Profile Likelihood -- 
+Limit: r < 2.53093 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 168/500
+  1) RooRealVar:: n_obs_bina01 = 2852
+
+ -- Profile Likelihood -- 
+Limit: r < 4.60609 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 169/500
+  1) RooRealVar:: n_obs_bina01 = 2629
+
+ -- Profile Likelihood -- 
+Limit: r < 2.29491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 170/500
+  1) RooRealVar:: n_obs_bina01 = 2666
+
+ -- Profile Likelihood -- 
+Limit: r < 2.67623 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 171/500
+  1) RooRealVar:: n_obs_bina01 = 2737
+
+ -- Profile Likelihood -- 
+Limit: r < 3.41287 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 172/500
+  1) RooRealVar:: n_obs_bina01 = 2333
+
+ -- Profile Likelihood -- 
+Limit: r < 0.738617 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 173/500
+  1) RooRealVar:: n_obs_bina01 = 2822
+
+ -- Profile Likelihood -- 
+Limit: r < 4.29463 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 174/500
+  1) RooRealVar:: n_obs_bina01 = 2563
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7263 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 175/500
+  1) RooRealVar:: n_obs_bina01 = 2508
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37365 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 176/500
+  1) RooRealVar:: n_obs_bina01 = 2640
+
+ -- Profile Likelihood -- 
+Limit: r < 2.40646 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 177/500
+  1) RooRealVar:: n_obs_bina01 = 2657
+
+ -- Profile Likelihood -- 
+Limit: r < 2.583 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 178/500
+  1) RooRealVar:: n_obs_bina01 = 2674
+
+ -- Profile Likelihood -- 
+Limit: r < 2.7592 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 179/500
+  1) RooRealVar:: n_obs_bina01 = 2737
+
+ -- Profile Likelihood -- 
+Limit: r < 3.41287 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 180/500
+  1) RooRealVar:: n_obs_bina01 = 2422
+
+ -- Profile Likelihood -- 
+Limit: r < 0.991305 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 181/500
+  1) RooRealVar:: n_obs_bina01 = 2566
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74852 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 182/500
+  1) RooRealVar:: n_obs_bina01 = 2488
+
+ -- Profile Likelihood -- 
+Limit: r < 1.2686 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 183/500
+  1) RooRealVar:: n_obs_bina01 = 2653
+
+ -- Profile Likelihood -- 
+Limit: r < 2.5413 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 184/500
+  1) RooRealVar:: n_obs_bina01 = 2594
+
+ -- Profile Likelihood -- 
+Limit: r < 1.97219 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 185/500
+  1) RooRealVar:: n_obs_bina01 = 2773
+
+ -- Profile Likelihood -- 
+Limit: r < 3.78642 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 186/500
+  1) RooRealVar:: n_obs_bina01 = 2591
+
+ -- Profile Likelihood -- 
+Limit: r < 1.94678 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 187/500
+  1) RooRealVar:: n_obs_bina01 = 2610
+
+ -- Profile Likelihood -- 
+Limit: r < 2.11368 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 188/500
+  1) RooRealVar:: n_obs_bina01 = 2557
+
+ -- Profile Likelihood -- 
+Limit: r < 1.68283 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 189/500
+  1) RooRealVar:: n_obs_bina01 = 2917
+
+ -- Profile Likelihood -- 
+Limit: r < 5.28048 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 190/500
+  1) RooRealVar:: n_obs_bina01 = 2688
+
+ -- Profile Likelihood -- 
+Limit: r < 2.90447 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 191/500
+  1) RooRealVar:: n_obs_bina01 = 2676
+
+ -- Profile Likelihood -- 
+Limit: r < 2.77995 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 192/500
+  1) RooRealVar:: n_obs_bina01 = 2875
+
+ -- Profile Likelihood -- 
+Limit: r < 4.84472 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 193/500
+  1) RooRealVar:: n_obs_bina01 = 2597
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99795 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 194/500
+  1) RooRealVar:: n_obs_bina01 = 2813
+
+ -- Profile Likelihood -- 
+Limit: r < 4.20137 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 195/500
+  1) RooRealVar:: n_obs_bina01 = 2594
+
+ -- Profile Likelihood -- 
+Limit: r < 1.97219 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 196/500
+  1) RooRealVar:: n_obs_bina01 = 2645
+
+ -- Profile Likelihood -- 
+Limit: r < 2.4583 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 197/500
+  1) RooRealVar:: n_obs_bina01 = 2685
+
+ -- Profile Likelihood -- 
+Limit: r < 2.87334 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 198/500
+  1) RooRealVar:: n_obs_bina01 = 2870
+
+ -- Profile Likelihood -- 
+Limit: r < 4.79285 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 199/500
+  1) RooRealVar:: n_obs_bina01 = 2749
+
+ -- Profile Likelihood -- 
+Limit: r < 3.53739 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 200/500
+  1) RooRealVar:: n_obs_bina01 = 2825
+
+ -- Profile Likelihood -- 
+Limit: r < 4.32573 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 201/500
+  1) RooRealVar:: n_obs_bina01 = 2609
+
+ -- Profile Likelihood -- 
+Limit: r < 2.10454 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 202/500
+  1) RooRealVar:: n_obs_bina01 = 2903
+
+ -- Profile Likelihood -- 
+Limit: r < 5.13523 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 203/500
+  1) RooRealVar:: n_obs_bina01 = 2562
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71896 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 204/500
+  1) RooRealVar:: n_obs_bina01 = 2639
+
+ -- Profile Likelihood -- 
+Limit: r < 2.39608 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 205/500
+  1) RooRealVar:: n_obs_bina01 = 2491
+
+ -- Profile Likelihood -- 
+Limit: r < 1.28365 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 206/500
+  1) RooRealVar:: n_obs_bina01 = 2368
+
+ -- Profile Likelihood -- 
+Limit: r < 0.825087 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 207/500
+  1) RooRealVar:: n_obs_bina01 = 2533
+
+ -- Profile Likelihood -- 
+Limit: r < 1.52158 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 208/500
+  1) RooRealVar:: n_obs_bina01 = 2934
+
+ -- Profile Likelihood -- 
+Limit: r < 5.45686 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 209/500
+  1) RooRealVar:: n_obs_bina01 = 2764
+
+ -- Profile Likelihood -- 
+Limit: r < 3.69303 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 210/500
+  1) RooRealVar:: n_obs_bina01 = 2909
+
+ -- Profile Likelihood -- 
+Limit: r < 5.19748 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 211/500
+  1) RooRealVar:: n_obs_bina01 = 2809
+
+ -- Profile Likelihood -- 
+Limit: r < 4.15992 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 212/500
+  1) RooRealVar:: n_obs_bina01 = 2766
+
+ -- Profile Likelihood -- 
+Limit: r < 3.71378 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 213/500
+  1) RooRealVar:: n_obs_bina01 = 2826
+
+ -- Profile Likelihood -- 
+Limit: r < 4.33609 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 214/500
+  1) RooRealVar:: n_obs_bina01 = 2641
+
+ -- Profile Likelihood -- 
+Limit: r < 2.41679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 215/500
+  1) RooRealVar:: n_obs_bina01 = 2711
+
+ -- Profile Likelihood -- 
+Limit: r < 3.14304 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 216/500
+  1) RooRealVar:: n_obs_bina01 = 2307
+
+ -- Profile Likelihood -- 
+Limit: r < 0.682925 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 217/500
+  1) RooRealVar:: n_obs_bina01 = 2612
+
+ -- Profile Likelihood -- 
+Limit: r < 2.13208 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 218/500
+  1) RooRealVar:: n_obs_bina01 = 2542
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57974 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 219/500
+  1) RooRealVar:: n_obs_bina01 = 2438
+
+ -- Profile Likelihood -- 
+Limit: r < 1.05001 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 220/500
+  1) RooRealVar:: n_obs_bina01 = 2704
+
+ -- Profile Likelihood -- 
+Limit: r < 3.07038 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 221/500
+  1) RooRealVar:: n_obs_bina01 = 2588
+
+ -- Profile Likelihood -- 
+Limit: r < 1.922 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 222/500
+  1) RooRealVar:: n_obs_bina01 = 2561
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71166 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 223/500
+  1) RooRealVar:: n_obs_bina01 = 2580
+
+ -- Profile Likelihood -- 
+Limit: r < 1.85693 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 224/500
+  1) RooRealVar:: n_obs_bina01 = 2588
+
+ -- Profile Likelihood -- 
+Limit: r < 1.922 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 225/500
+  1) RooRealVar:: n_obs_bina01 = 2405
+
+ -- Profile Likelihood -- 
+Limit: r < 0.934022 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 226/500
+  1) RooRealVar:: n_obs_bina01 = 2563
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7263 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 227/500
+  1) RooRealVar:: n_obs_bina01 = 2515
+
+ -- Profile Likelihood -- 
+Limit: r < 1.41313 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 228/500
+  1) RooRealVar:: n_obs_bina01 = 2396
+
+ -- Profile Likelihood -- 
+Limit: r < 0.905645 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 229/500
+  1) RooRealVar:: n_obs_bina01 = 2852
+
+ -- Profile Likelihood -- 
+Limit: r < 4.60609 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 230/500
+  1) RooRealVar:: n_obs_bina01 = 2421
+
+ -- Profile Likelihood -- 
+Limit: r < 0.987796 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 231/500
+  1) RooRealVar:: n_obs_bina01 = 2368
+
+ -- Profile Likelihood -- 
+Limit: r < 0.825087 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 232/500
+  1) RooRealVar:: n_obs_bina01 = 2740
+
+ -- Profile Likelihood -- 
+Limit: r < 3.444 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 233/500
+  1) RooRealVar:: n_obs_bina01 = 2345
+
+ -- Profile Likelihood -- 
+Limit: r < 0.766662 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 234/500
+  1) RooRealVar:: n_obs_bina01 = 2601
+
+ -- Profile Likelihood -- 
+Limit: r < 2.03285 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 235/500
+  1) RooRealVar:: n_obs_bina01 = 2625
+
+ -- Profile Likelihood -- 
+Limit: r < 2.25573 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 236/500
+  1) RooRealVar:: n_obs_bina01 = 2714
+
+ -- Profile Likelihood -- 
+Limit: r < 3.17418 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 237/500
+  1) RooRealVar:: n_obs_bina01 = 2654
+
+ -- Profile Likelihood -- 
+Limit: r < 2.55168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 238/500
+  1) RooRealVar:: n_obs_bina01 = 2649
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49984 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 239/500
+  1) RooRealVar:: n_obs_bina01 = 2947
+
+ -- Profile Likelihood -- 
+Limit: r < 5.59174 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 240/500
+  1) RooRealVar:: n_obs_bina01 = 2532
+
+ -- Profile Likelihood -- 
+Limit: r < 1.51528 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 241/500
+  1) RooRealVar:: n_obs_bina01 = 2560
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7044 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 242/500
+  1) RooRealVar:: n_obs_bina01 = 2449
+
+ -- Profile Likelihood -- 
+Limit: r < 1.09331 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 243/500
+  1) RooRealVar:: n_obs_bina01 = 2795
+
+ -- Profile Likelihood -- 
+Limit: r < 4.01487 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 244/500
+  1) RooRealVar:: n_obs_bina01 = 2834
+
+ -- Profile Likelihood -- 
+Limit: r < 4.41901 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 245/500
+  1) RooRealVar:: n_obs_bina01 = 2696
+
+ -- Profile Likelihood -- 
+Limit: r < 2.98736 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 246/500
+  1) RooRealVar:: n_obs_bina01 = 2587
+
+ -- Profile Likelihood -- 
+Limit: r < 1.91371 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 247/500
+  1) RooRealVar:: n_obs_bina01 = 2582
+
+ -- Profile Likelihood -- 
+Limit: r < 1.87288 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 248/500
+  1) RooRealVar:: n_obs_bina01 = 2693
+
+ -- Profile Likelihood -- 
+Limit: r < 2.95582 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 249/500
+  1) RooRealVar:: n_obs_bina01 = 2537
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54709 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 250/500
+  1) RooRealVar:: n_obs_bina01 = 2614
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15064 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 251/500
+  1) RooRealVar:: n_obs_bina01 = 2910
+
+ -- Profile Likelihood -- 
+Limit: r < 5.20786 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 252/500
+  1) RooRealVar:: n_obs_bina01 = 2566
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74852 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 253/500
+  1) RooRealVar:: n_obs_bina01 = 2662
+
+ -- Profile Likelihood -- 
+Limit: r < 2.63476 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 254/500
+  1) RooRealVar:: n_obs_bina01 = 2627
+
+ -- Profile Likelihood -- 
+Limit: r < 2.27515 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 255/500
+  1) RooRealVar:: n_obs_bina01 = 2666
+
+ -- Profile Likelihood -- 
+Limit: r < 2.67623 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 256/500
+  1) RooRealVar:: n_obs_bina01 = 2683
+
+ -- Profile Likelihood -- 
+Limit: r < 2.85259 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 257/500
+  1) RooRealVar:: n_obs_bina01 = 2563
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7263 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 258/500
+  1) RooRealVar:: n_obs_bina01 = 2553
+
+ -- Profile Likelihood -- 
+Limit: r < 1.65457 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 259/500
+  1) RooRealVar:: n_obs_bina01 = 2563
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7263 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 260/500
+  1) RooRealVar:: n_obs_bina01 = 2592
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95521 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 261/500
+  1) RooRealVar:: n_obs_bina01 = 2668
+
+ -- Profile Likelihood -- 
+Limit: r < 2.69697 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 262/500
+  1) RooRealVar:: n_obs_bina01 = 2866
+
+ -- Profile Likelihood -- 
+Limit: r < 4.75134 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 263/500
+  1) RooRealVar:: n_obs_bina01 = 2769
+
+ -- Profile Likelihood -- 
+Limit: r < 3.74491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 264/500
+  1) RooRealVar:: n_obs_bina01 = 2661
+
+ -- Profile Likelihood -- 
+Limit: r < 2.62439 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 265/500
+  1) RooRealVar:: n_obs_bina01 = 2580
+
+ -- Profile Likelihood -- 
+Limit: r < 1.85693 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 266/500
+  1) RooRealVar:: n_obs_bina01 = 2792
+
+ -- Profile Likelihood -- 
+Limit: r < 3.98379 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 267/500
+  1) RooRealVar:: n_obs_bina01 = 2481
+
+ -- Profile Likelihood -- 
+Limit: r < 1.23439 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 268/500
+  1) RooRealVar:: n_obs_bina01 = 2525
+
+ -- Profile Likelihood -- 
+Limit: r < 1.47212 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 269/500
+  1) RooRealVar:: n_obs_bina01 = 2741
+
+ -- Profile Likelihood -- 
+Limit: r < 3.45438 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 270/500
+  1) RooRealVar:: n_obs_bina01 = 2543
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58637 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 271/500
+  1) RooRealVar:: n_obs_bina01 = 2597
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99795 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 272/500
+  1) RooRealVar:: n_obs_bina01 = 2618
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18825 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 273/500
+  1) RooRealVar:: n_obs_bina01 = 2769
+
+ -- Profile Likelihood -- 
+Limit: r < 3.74491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 274/500
+  1) RooRealVar:: n_obs_bina01 = 2782
+
+ -- Profile Likelihood -- 
+Limit: r < 3.8798 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 275/500
+  1) RooRealVar:: n_obs_bina01 = 2640
+
+ -- Profile Likelihood -- 
+Limit: r < 2.40646 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 276/500
+  1) RooRealVar:: n_obs_bina01 = 2515
+
+ -- Profile Likelihood -- 
+Limit: r < 1.41313 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 277/500
+  1) RooRealVar:: n_obs_bina01 = 2421
+
+ -- Profile Likelihood -- 
+Limit: r < 0.987796 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 278/500
+  1) RooRealVar:: n_obs_bina01 = 2326
+
+ -- Profile Likelihood -- 
+Limit: r < 0.722966 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 279/500
+  1) RooRealVar:: n_obs_bina01 = 2630
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 280/500
+  1) RooRealVar:: n_obs_bina01 = 2725
+
+ -- Profile Likelihood -- 
+Limit: r < 3.28834 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 281/500
+  1) RooRealVar:: n_obs_bina01 = 2756
+
+ -- Profile Likelihood -- 
+Limit: r < 3.61002 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 282/500
+  1) RooRealVar:: n_obs_bina01 = 2849
+
+ -- Profile Likelihood -- 
+Limit: r < 4.57496 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 283/500
+  1) RooRealVar:: n_obs_bina01 = 2558
+
+ -- Profile Likelihood -- 
+Limit: r < 1.68998 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 284/500
+  1) RooRealVar:: n_obs_bina01 = 2670
+
+ -- Profile Likelihood -- 
+Limit: r < 2.71772 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 285/500
+  1) RooRealVar:: n_obs_bina01 = 2573
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 286/500
+  1) RooRealVar:: n_obs_bina01 = 2867
+
+ -- Profile Likelihood -- 
+Limit: r < 4.76172 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 287/500
+  1) RooRealVar:: n_obs_bina01 = 2731
+
+ -- Profile Likelihood -- 
+Limit: r < 3.35061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 288/500
+  1) RooRealVar:: n_obs_bina01 = 2607
+
+ -- Profile Likelihood -- 
+Limit: r < 2.08638 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 289/500
+  1) RooRealVar:: n_obs_bina01 = 2781
+
+ -- Profile Likelihood -- 
+Limit: r < 3.86942 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 290/500
+  1) RooRealVar:: n_obs_bina01 = 2482
+
+ -- Profile Likelihood -- 
+Limit: r < 1.2392 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 291/500
+  1) RooRealVar:: n_obs_bina01 = 2612
+
+ -- Profile Likelihood -- 
+Limit: r < 2.13208 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 292/500
+  1) RooRealVar:: n_obs_bina01 = 2553
+
+ -- Profile Likelihood -- 
+Limit: r < 1.65457 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 293/500
+  1) RooRealVar:: n_obs_bina01 = 2784
+
+ -- Profile Likelihood -- 
+Limit: r < 3.90093 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 294/500
+  1) RooRealVar:: n_obs_bina01 = 2654
+
+ -- Profile Likelihood -- 
+Limit: r < 2.55168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 295/500
+  1) RooRealVar:: n_obs_bina01 = 2643
+
+ -- Profile Likelihood -- 
+Limit: r < 2.43755 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 296/500
+  1) RooRealVar:: n_obs_bina01 = 2901
+
+ -- Profile Likelihood -- 
+Limit: r < 5.11448 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 297/500
+  1) RooRealVar:: n_obs_bina01 = 2826
+
+ -- Profile Likelihood -- 
+Limit: r < 4.33609 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 298/500
+  1) RooRealVar:: n_obs_bina01 = 2479
+
+ -- Profile Likelihood -- 
+Limit: r < 1.22485 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 299/500
+  1) RooRealVar:: n_obs_bina01 = 2783
+
+ -- Profile Likelihood -- 
+Limit: r < 3.89017 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 300/500
+  1) RooRealVar:: n_obs_bina01 = 2617
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17879 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 301/500
+  1) RooRealVar:: n_obs_bina01 = 2720
+
+ -- Profile Likelihood -- 
+Limit: r < 3.23645 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 302/500
+  1) RooRealVar:: n_obs_bina01 = 2522
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45409 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 303/500
+  1) RooRealVar:: n_obs_bina01 = 2738
+
+ -- Profile Likelihood -- 
+Limit: r < 3.42324 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 304/500
+  1) RooRealVar:: n_obs_bina01 = 2715
+
+ -- Profile Likelihood -- 
+Limit: r < 3.18456 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 305/500
+  1) RooRealVar:: n_obs_bina01 = 2668
+
+ -- Profile Likelihood -- 
+Limit: r < 2.69697 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 306/500
+  1) RooRealVar:: n_obs_bina01 = 2626
+
+ -- Profile Likelihood -- 
+Limit: r < 2.26557 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 307/500
+  1) RooRealVar:: n_obs_bina01 = 2590
+
+ -- Profile Likelihood -- 
+Limit: r < 1.93839 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 308/500
+  1) RooRealVar:: n_obs_bina01 = 2607
+
+ -- Profile Likelihood -- 
+Limit: r < 2.08638 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 309/500
+  1) RooRealVar:: n_obs_bina01 = 2643
+
+ -- Profile Likelihood -- 
+Limit: r < 2.43755 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 310/500
+  1) RooRealVar:: n_obs_bina01 = 2727
+
+ -- Profile Likelihood -- 
+Limit: r < 3.3091 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 311/500
+  1) RooRealVar:: n_obs_bina01 = 2734
+
+ -- Profile Likelihood -- 
+Limit: r < 3.38174 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 312/500
+  1) RooRealVar:: n_obs_bina01 = 2631
+
+ -- Profile Likelihood -- 
+Limit: r < 2.31482 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 313/500
+  1) RooRealVar:: n_obs_bina01 = 2550
+
+ -- Profile Likelihood -- 
+Limit: r < 1.63374 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 314/500
+  1) RooRealVar:: n_obs_bina01 = 2509
+
+ -- Profile Likelihood -- 
+Limit: r < 1.3792 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 315/500
+  1) RooRealVar:: n_obs_bina01 = 2570
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77867 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 316/500
+  1) RooRealVar:: n_obs_bina01 = 2838
+
+ -- Profile Likelihood -- 
+Limit: r < 4.46047 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 317/500
+  1) RooRealVar:: n_obs_bina01 = 2940
+
+ -- Profile Likelihood -- 
+Limit: r < 5.51911 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 318/500
+  1) RooRealVar:: n_obs_bina01 = 2704
+
+ -- Profile Likelihood -- 
+Limit: r < 3.07038 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 319/500
+  1) RooRealVar:: n_obs_bina01 = 2392
+
+ -- Profile Likelihood -- 
+Limit: r < 0.893439 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 320/500
+  1) RooRealVar:: n_obs_bina01 = 2442
+
+ -- Profile Likelihood -- 
+Limit: r < 1.06547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 321/500
+  1) RooRealVar:: n_obs_bina01 = 2501
+
+ -- Profile Likelihood -- 
+Limit: r < 1.33561 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 322/500
+  1) RooRealVar:: n_obs_bina01 = 2732
+
+ -- Profile Likelihood -- 
+Limit: r < 3.36098 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 323/500
+  1) RooRealVar:: n_obs_bina01 = 2551
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64065 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 324/500
+  1) RooRealVar:: n_obs_bina01 = 2601
+
+ -- Profile Likelihood -- 
+Limit: r < 2.03285 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 325/500
+  1) RooRealVar:: n_obs_bina01 = 2797
+
+ -- Profile Likelihood -- 
+Limit: r < 4.03559 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 326/500
+  1) RooRealVar:: n_obs_bina01 = 2392
+
+ -- Profile Likelihood -- 
+Limit: r < 0.893439 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 327/500
+  1) RooRealVar:: n_obs_bina01 = 2745
+
+ -- Profile Likelihood -- 
+Limit: r < 3.49588 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 328/500
+  1) RooRealVar:: n_obs_bina01 = 2815
+
+ -- Profile Likelihood -- 
+Limit: r < 4.22209 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 329/500
+  1) RooRealVar:: n_obs_bina01 = 2783
+
+ -- Profile Likelihood -- 
+Limit: r < 3.89017 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 330/500
+  1) RooRealVar:: n_obs_bina01 = 2443
+
+ -- Profile Likelihood -- 
+Limit: r < 1.06938 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 331/500
+  1) RooRealVar:: n_obs_bina01 = 2590
+
+ -- Profile Likelihood -- 
+Limit: r < 1.93839 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 332/500
+  1) RooRealVar:: n_obs_bina01 = 2784
+
+ -- Profile Likelihood -- 
+Limit: r < 3.90093 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 333/500
+  1) RooRealVar:: n_obs_bina01 = 2732
+
+ -- Profile Likelihood -- 
+Limit: r < 3.36098 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 334/500
+  1) RooRealVar:: n_obs_bina01 = 2546
+
+ -- Profile Likelihood -- 
+Limit: r < 1.60646 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 335/500
+  1) RooRealVar:: n_obs_bina01 = 2536
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54067 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 336/500
+  1) RooRealVar:: n_obs_bina01 = 2630
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 337/500
+  1) RooRealVar:: n_obs_bina01 = 2475
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20607 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 338/500
+  1) RooRealVar:: n_obs_bina01 = 2501
+
+ -- Profile Likelihood -- 
+Limit: r < 1.33561 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 339/500
+  1) RooRealVar:: n_obs_bina01 = 2702
+
+ -- Profile Likelihood -- 
+Limit: r < 3.04961 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 340/500
+  1) RooRealVar:: n_obs_bina01 = 2529
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49659 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 341/500
+  1) RooRealVar:: n_obs_bina01 = 2549
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62687 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 342/500
+  1) RooRealVar:: n_obs_bina01 = 2480
+
+ -- Profile Likelihood -- 
+Limit: r < 1.22961 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 343/500
+  1) RooRealVar:: n_obs_bina01 = 2737
+
+ -- Profile Likelihood -- 
+Limit: r < 3.41287 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 344/500
+  1) RooRealVar:: n_obs_bina01 = 2709
+
+ -- Profile Likelihood -- 
+Limit: r < 3.12228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 345/500
+  1) RooRealVar:: n_obs_bina01 = 2569
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 346/500
+  1) RooRealVar:: n_obs_bina01 = 2716
+
+ -- Profile Likelihood -- 
+Limit: r < 3.19494 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 347/500
+  1) RooRealVar:: n_obs_bina01 = 2333
+
+ -- Profile Likelihood -- 
+Limit: r < 0.738617 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 348/500
+  1) RooRealVar:: n_obs_bina01 = 2831
+
+ -- Profile Likelihood -- 
+Limit: r < 4.38791 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 349/500
+  1) RooRealVar:: n_obs_bina01 = 2750
+
+ -- Profile Likelihood -- 
+Limit: r < 3.54776 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 350/500
+  1) RooRealVar:: n_obs_bina01 = 2969
+
+ -- Profile Likelihood -- 
+Limit: r < 5.81999 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 351/500
+  1) RooRealVar:: n_obs_bina01 = 2614
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15064 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 352/500
+  1) RooRealVar:: n_obs_bina01 = 2876
+
+ -- Profile Likelihood -- 
+Limit: r < 4.8551 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 353/500
+  1) RooRealVar:: n_obs_bina01 = 2598
+
+ -- Profile Likelihood -- 
+Limit: r < 2.00662 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 354/500
+  1) RooRealVar:: n_obs_bina01 = 2776
+
+ -- Profile Likelihood -- 
+Limit: r < 3.81754 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 355/500
+  1) RooRealVar:: n_obs_bina01 = 2551
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64065 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 356/500
+  1) RooRealVar:: n_obs_bina01 = 2618
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18825 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 357/500
+  1) RooRealVar:: n_obs_bina01 = 2532
+
+ -- Profile Likelihood -- 
+Limit: r < 1.51528 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 358/500
+  1) RooRealVar:: n_obs_bina01 = 2721
+
+ -- Profile Likelihood -- 
+Limit: r < 3.24683 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 359/500
+  1) RooRealVar:: n_obs_bina01 = 2649
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49984 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 360/500
+  1) RooRealVar:: n_obs_bina01 = 2425
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00194 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 361/500
+  1) RooRealVar:: n_obs_bina01 = 2691
+
+ -- Profile Likelihood -- 
+Limit: r < 2.93559 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 362/500
+  1) RooRealVar:: n_obs_bina01 = 2537
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54709 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 363/500
+  1) RooRealVar:: n_obs_bina01 = 2830
+
+ -- Profile Likelihood -- 
+Limit: r < 4.37755 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 364/500
+  1) RooRealVar:: n_obs_bina01 = 2641
+
+ -- Profile Likelihood -- 
+Limit: r < 2.41679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 365/500
+  1) RooRealVar:: n_obs_bina01 = 2531
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50902 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 366/500
+  1) RooRealVar:: n_obs_bina01 = 2387
+
+ -- Profile Likelihood -- 
+Limit: r < 0.878522 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 367/500
+  1) RooRealVar:: n_obs_bina01 = 2610
+
+ -- Profile Likelihood -- 
+Limit: r < 2.11368 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 368/500
+  1) RooRealVar:: n_obs_bina01 = 2529
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49659 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 369/500
+  1) RooRealVar:: n_obs_bina01 = 2580
+
+ -- Profile Likelihood -- 
+Limit: r < 1.85693 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 370/500
+  1) RooRealVar:: n_obs_bina01 = 2875
+
+ -- Profile Likelihood -- 
+Limit: r < 4.84472 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 371/500
+  1) RooRealVar:: n_obs_bina01 = 2644
+
+ -- Profile Likelihood -- 
+Limit: r < 2.44793 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 372/500
+  1) RooRealVar:: n_obs_bina01 = 2666
+
+ -- Profile Likelihood -- 
+Limit: r < 2.67623 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 373/500
+  1) RooRealVar:: n_obs_bina01 = 2696
+
+ -- Profile Likelihood -- 
+Limit: r < 2.98736 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 374/500
+  1) RooRealVar:: n_obs_bina01 = 2564
+
+ -- Profile Likelihood -- 
+Limit: r < 1.73367 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 375/500
+  1) RooRealVar:: n_obs_bina01 = 2529
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49659 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 376/500
+  1) RooRealVar:: n_obs_bina01 = 2498
+
+ -- Profile Likelihood -- 
+Limit: r < 1.31973 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 377/500
+  1) RooRealVar:: n_obs_bina01 = 2609
+
+ -- Profile Likelihood -- 
+Limit: r < 2.10454 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 378/500
+  1) RooRealVar:: n_obs_bina01 = 2457
+
+ -- Profile Likelihood -- 
+Limit: r < 1.12644 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 379/500
+  1) RooRealVar:: n_obs_bina01 = 2777
+
+ -- Profile Likelihood -- 
+Limit: r < 3.82792 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 380/500
+  1) RooRealVar:: n_obs_bina01 = 2586
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 381/500
+  1) RooRealVar:: n_obs_bina01 = 2732
+
+ -- Profile Likelihood -- 
+Limit: r < 3.36098 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 382/500
+  1) RooRealVar:: n_obs_bina01 = 2493
+
+ -- Profile Likelihood -- 
+Limit: r < 1.29382 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 383/500
+  1) RooRealVar:: n_obs_bina01 = 2739
+
+ -- Profile Likelihood -- 
+Limit: r < 3.43362 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 384/500
+  1) RooRealVar:: n_obs_bina01 = 2756
+
+ -- Profile Likelihood -- 
+Limit: r < 3.61002 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 385/500
+  1) RooRealVar:: n_obs_bina01 = 2757
+
+ -- Profile Likelihood -- 
+Limit: r < 3.6204 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 386/500
+  1) RooRealVar:: n_obs_bina01 = 2564
+
+ -- Profile Likelihood -- 
+Limit: r < 1.73367 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 387/500
+  1) RooRealVar:: n_obs_bina01 = 2774
+
+ -- Profile Likelihood -- 
+Limit: r < 3.79679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 388/500
+  1) RooRealVar:: n_obs_bina01 = 2919
+
+ -- Profile Likelihood -- 
+Limit: r < 5.30123 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 389/500
+  1) RooRealVar:: n_obs_bina01 = 2617
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17879 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 390/500
+  1) RooRealVar:: n_obs_bina01 = 2684
+
+ -- Profile Likelihood -- 
+Limit: r < 2.86296 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 391/500
+  1) RooRealVar:: n_obs_bina01 = 2679
+
+ -- Profile Likelihood -- 
+Limit: r < 2.81108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 392/500
+  1) RooRealVar:: n_obs_bina01 = 2798
+
+ -- Profile Likelihood -- 
+Limit: r < 4.04595 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 393/500
+  1) RooRealVar:: n_obs_bina01 = 2770
+
+ -- Profile Likelihood -- 
+Limit: r < 3.75529 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 394/500
+  1) RooRealVar:: n_obs_bina01 = 2771
+
+ -- Profile Likelihood -- 
+Limit: r < 3.76566 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 395/500
+  1) RooRealVar:: n_obs_bina01 = 2749
+
+ -- Profile Likelihood -- 
+Limit: r < 3.53739 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 396/500
+  1) RooRealVar:: n_obs_bina01 = 2436
+
+ -- Profile Likelihood -- 
+Limit: r < 1.0424 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 397/500
+  1) RooRealVar:: n_obs_bina01 = 2565
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 398/500
+  1) RooRealVar:: n_obs_bina01 = 2722
+
+ -- Profile Likelihood -- 
+Limit: r < 3.25721 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 399/500
+  1) RooRealVar:: n_obs_bina01 = 2606
+
+ -- Profile Likelihood -- 
+Limit: r < 2.07735 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 400/500
+  1) RooRealVar:: n_obs_bina01 = 2542
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57974 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 401/500
+  1) RooRealVar:: n_obs_bina01 = 2831
+
+ -- Profile Likelihood -- 
+Limit: r < 4.38791 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 402/500
+  1) RooRealVar:: n_obs_bina01 = 2534
+
+ -- Profile Likelihood -- 
+Limit: r < 1.52791 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 403/500
+  1) RooRealVar:: n_obs_bina01 = 2627
+
+ -- Profile Likelihood -- 
+Limit: r < 2.27515 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 404/500
+  1) RooRealVar:: n_obs_bina01 = 2421
+
+ -- Profile Likelihood -- 
+Limit: r < 0.987796 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 405/500
+  1) RooRealVar:: n_obs_bina01 = 2479
+
+ -- Profile Likelihood -- 
+Limit: r < 1.22485 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 406/500
+  1) RooRealVar:: n_obs_bina01 = 2675
+
+ -- Profile Likelihood -- 
+Limit: r < 2.76958 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 407/500
+  1) RooRealVar:: n_obs_bina01 = 2697
+
+ -- Profile Likelihood -- 
+Limit: r < 2.9978 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 408/500
+  1) RooRealVar:: n_obs_bina01 = 2934
+
+ -- Profile Likelihood -- 
+Limit: r < 5.45686 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 409/500
+  1) RooRealVar:: n_obs_bina01 = 2658
+
+ -- Profile Likelihood -- 
+Limit: r < 2.59333 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 410/500
+  1) RooRealVar:: n_obs_bina01 = 2762
+
+ -- Profile Likelihood -- 
+Limit: r < 3.67228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 411/500
+  1) RooRealVar:: n_obs_bina01 = 2742
+
+ -- Profile Likelihood -- 
+Limit: r < 3.46475 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 412/500
+  1) RooRealVar:: n_obs_bina01 = 2506
+
+ -- Profile Likelihood -- 
+Limit: r < 1.36264 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 413/500
+  1) RooRealVar:: n_obs_bina01 = 2659
+
+ -- Profile Likelihood -- 
+Limit: r < 2.60368 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 414/500
+  1) RooRealVar:: n_obs_bina01 = 2975
+
+ -- Profile Likelihood -- 
+Limit: r < 5.88224 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 415/500
+  1) RooRealVar:: n_obs_bina01 = 2897
+
+ -- Profile Likelihood -- 
+Limit: r < 5.07298 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 416/500
+  1) RooRealVar:: n_obs_bina01 = 2500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.33029 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 417/500
+  1) RooRealVar:: n_obs_bina01 = 2501
+
+ -- Profile Likelihood -- 
+Limit: r < 1.33561 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 418/500
+  1) RooRealVar:: n_obs_bina01 = 2716
+
+ -- Profile Likelihood -- 
+Limit: r < 3.19494 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 419/500
+  1) RooRealVar:: n_obs_bina01 = 2638
+
+ -- Profile Likelihood -- 
+Limit: r < 2.38579 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 420/500
+  1) RooRealVar:: n_obs_bina01 = 2633
+
+ -- Profile Likelihood -- 
+Limit: r < 2.33491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 421/500
+  1) RooRealVar:: n_obs_bina01 = 2731
+
+ -- Profile Likelihood -- 
+Limit: r < 3.35061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 422/500
+  1) RooRealVar:: n_obs_bina01 = 2391
+
+ -- Profile Likelihood -- 
+Limit: r < 0.890426 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 423/500
+  1) RooRealVar:: n_obs_bina01 = 2513
+
+ -- Profile Likelihood -- 
+Limit: r < 1.4017 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 424/500
+  1) RooRealVar:: n_obs_bina01 = 2644
+
+ -- Profile Likelihood -- 
+Limit: r < 2.44793 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 425/500
+  1) RooRealVar:: n_obs_bina01 = 2851
+
+ -- Profile Likelihood -- 
+Limit: r < 4.59571 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 426/500
+  1) RooRealVar:: n_obs_bina01 = 2637
+
+ -- Profile Likelihood -- 
+Limit: r < 2.37581 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 427/500
+  1) RooRealVar:: n_obs_bina01 = 2902
+
+ -- Profile Likelihood -- 
+Limit: r < 5.12486 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 428/500
+  1) RooRealVar:: n_obs_bina01 = 2705
+
+ -- Profile Likelihood -- 
+Limit: r < 3.08076 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 429/500
+  1) RooRealVar:: n_obs_bina01 = 2753
+
+ -- Profile Likelihood -- 
+Limit: r < 3.57889 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 430/500
+  1) RooRealVar:: n_obs_bina01 = 2655
+
+ -- Profile Likelihood -- 
+Limit: r < 2.56206 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 431/500
+  1) RooRealVar:: n_obs_bina01 = 2788
+
+ -- Profile Likelihood -- 
+Limit: r < 3.94236 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 432/500
+  1) RooRealVar:: n_obs_bina01 = 2841
+
+ -- Profile Likelihood -- 
+Limit: r < 4.49196 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 433/500
+  1) RooRealVar:: n_obs_bina01 = 2615
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15998 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 434/500
+  1) RooRealVar:: n_obs_bina01 = 2606
+
+ -- Profile Likelihood -- 
+Limit: r < 2.07735 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 435/500
+  1) RooRealVar:: n_obs_bina01 = 2674
+
+ -- Profile Likelihood -- 
+Limit: r < 2.7592 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 436/500
+  1) RooRealVar:: n_obs_bina01 = 2731
+
+ -- Profile Likelihood -- 
+Limit: r < 3.35061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 437/500
+  1) RooRealVar:: n_obs_bina01 = 2646
+
+ -- Profile Likelihood -- 
+Limit: r < 2.46867 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 438/500
+  1) RooRealVar:: n_obs_bina01 = 2728
+
+ -- Profile Likelihood -- 
+Limit: r < 3.31947 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 439/500
+  1) RooRealVar:: n_obs_bina01 = 2663
+
+ -- Profile Likelihood -- 
+Limit: r < 2.64512 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 440/500
+  1) RooRealVar:: n_obs_bina01 = 2723
+
+ -- Profile Likelihood -- 
+Limit: r < 3.26759 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 441/500
+  1) RooRealVar:: n_obs_bina01 = 2714
+
+ -- Profile Likelihood -- 
+Limit: r < 3.17418 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 442/500
+  1) RooRealVar:: n_obs_bina01 = 2687
+
+ -- Profile Likelihood -- 
+Limit: r < 2.89409 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 443/500
+  1) RooRealVar:: n_obs_bina01 = 2763
+
+ -- Profile Likelihood -- 
+Limit: r < 3.68266 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 444/500
+  1) RooRealVar:: n_obs_bina01 = 2540
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56658 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 445/500
+  1) RooRealVar:: n_obs_bina01 = 2484
+
+ -- Profile Likelihood -- 
+Limit: r < 1.24889 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 446/500
+  1) RooRealVar:: n_obs_bina01 = 2484
+
+ -- Profile Likelihood -- 
+Limit: r < 1.24889 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 447/500
+  1) RooRealVar:: n_obs_bina01 = 2812
+
+ -- Profile Likelihood -- 
+Limit: r < 4.191 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 448/500
+  1) RooRealVar:: n_obs_bina01 = 2635
+
+ -- Profile Likelihood -- 
+Limit: r < 2.35514 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 449/500
+  1) RooRealVar:: n_obs_bina01 = 2574
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80943 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 450/500
+  1) RooRealVar:: n_obs_bina01 = 2704
+
+ -- Profile Likelihood -- 
+Limit: r < 3.07038 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 451/500
+  1) RooRealVar:: n_obs_bina01 = 2562
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71896 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 452/500
+  1) RooRealVar:: n_obs_bina01 = 2762
+
+ -- Profile Likelihood -- 
+Limit: r < 3.67228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 453/500
+  1) RooRealVar:: n_obs_bina01 = 2505
+
+ -- Profile Likelihood -- 
+Limit: r < 1.35717 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 454/500
+  1) RooRealVar:: n_obs_bina01 = 2618
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18825 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 455/500
+  1) RooRealVar:: n_obs_bina01 = 2608
+
+ -- Profile Likelihood -- 
+Limit: r < 2.09544 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 456/500
+  1) RooRealVar:: n_obs_bina01 = 2650
+
+ -- Profile Likelihood -- 
+Limit: r < 2.51019 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 457/500
+  1) RooRealVar:: n_obs_bina01 = 2611
+
+ -- Profile Likelihood -- 
+Limit: r < 2.12286 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 458/500
+  1) RooRealVar:: n_obs_bina01 = 2580
+
+ -- Profile Likelihood -- 
+Limit: r < 1.85693 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 459/500
+  1) RooRealVar:: n_obs_bina01 = 2569
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 460/500
+  1) RooRealVar:: n_obs_bina01 = 2615
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15998 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 461/500
+  1) RooRealVar:: n_obs_bina01 = 2606
+
+ -- Profile Likelihood -- 
+Limit: r < 2.07735 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 462/500
+  1) RooRealVar:: n_obs_bina01 = 2667
+
+ -- Profile Likelihood -- 
+Limit: r < 2.6866 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 463/500
+  1) RooRealVar:: n_obs_bina01 = 2730
+
+ -- Profile Likelihood -- 
+Limit: r < 3.34023 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 464/500
+  1) RooRealVar:: n_obs_bina01 = 2618
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18825 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 465/500
+  1) RooRealVar:: n_obs_bina01 = 2285
+
+ -- Profile Likelihood -- 
+Limit: r < 0.640618 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 466/500
+  1) RooRealVar:: n_obs_bina01 = 2621
+
+ -- Profile Likelihood -- 
+Limit: r < 2.2169 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 467/500
+  1) RooRealVar:: n_obs_bina01 = 2469
+
+ -- Profile Likelihood -- 
+Limit: r < 1.17882 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 468/500
+  1) RooRealVar:: n_obs_bina01 = 2592
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95521 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 469/500
+  1) RooRealVar:: n_obs_bina01 = 2597
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99795 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 470/500
+  1) RooRealVar:: n_obs_bina01 = 2505
+
+ -- Profile Likelihood -- 
+Limit: r < 1.35717 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 471/500
+  1) RooRealVar:: n_obs_bina01 = 2725
+
+ -- Profile Likelihood -- 
+Limit: r < 3.28834 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 472/500
+  1) RooRealVar:: n_obs_bina01 = 2493
+
+ -- Profile Likelihood -- 
+Limit: r < 1.29382 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 473/500
+  1) RooRealVar:: n_obs_bina01 = 2551
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64065 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 474/500
+  1) RooRealVar:: n_obs_bina01 = 2730
+
+ -- Profile Likelihood -- 
+Limit: r < 3.34023 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 475/500
+  1) RooRealVar:: n_obs_bina01 = 2488
+
+ -- Profile Likelihood -- 
+Limit: r < 1.2686 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 476/500
+  1) RooRealVar:: n_obs_bina01 = 2663
+
+ -- Profile Likelihood -- 
+Limit: r < 2.64512 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 477/500
+  1) RooRealVar:: n_obs_bina01 = 2633
+
+ -- Profile Likelihood -- 
+Limit: r < 2.33491 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 478/500
+  1) RooRealVar:: n_obs_bina01 = 2845
+
+ -- Profile Likelihood -- 
+Limit: r < 4.53346 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 479/500
+  1) RooRealVar:: n_obs_bina01 = 2741
+
+ -- Profile Likelihood -- 
+Limit: r < 3.45438 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 480/500
+  1) RooRealVar:: n_obs_bina01 = 2709
+
+ -- Profile Likelihood -- 
+Limit: r < 3.12228 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 481/500
+  1) RooRealVar:: n_obs_bina01 = 2578
+
+ -- Profile Likelihood -- 
+Limit: r < 1.84091 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 482/500
+  1) RooRealVar:: n_obs_bina01 = 2664
+
+ -- Profile Likelihood -- 
+Limit: r < 2.65549 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 483/500
+  1) RooRealVar:: n_obs_bina01 = 2632
+
+ -- Profile Likelihood -- 
+Limit: r < 2.32484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 484/500
+  1) RooRealVar:: n_obs_bina01 = 2682
+
+ -- Profile Likelihood -- 
+Limit: r < 2.84221 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 485/500
+  1) RooRealVar:: n_obs_bina01 = 2679
+
+ -- Profile Likelihood -- 
+Limit: r < 2.81108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 486/500
+  1) RooRealVar:: n_obs_bina01 = 2460
+
+ -- Profile Likelihood -- 
+Limit: r < 1.13922 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 487/500
+  1) RooRealVar:: n_obs_bina01 = 2502
+
+ -- Profile Likelihood -- 
+Limit: r < 1.34096 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 488/500
+  1) RooRealVar:: n_obs_bina01 = 2552
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64759 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 489/500
+  1) RooRealVar:: n_obs_bina01 = 2618
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18825 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 490/500
+  1) RooRealVar:: n_obs_bina01 = 2822
+
+ -- Profile Likelihood -- 
+Limit: r < 4.29463 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 491/500
+  1) RooRealVar:: n_obs_bina01 = 2486
+
+ -- Profile Likelihood -- 
+Limit: r < 1.25869 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 492/500
+  1) RooRealVar:: n_obs_bina01 = 2544
+
+ -- Profile Likelihood -- 
+Limit: r < 1.59303 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 493/500
+  1) RooRealVar:: n_obs_bina01 = 2565
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 494/500
+  1) RooRealVar:: n_obs_bina01 = 2712
+
+ -- Profile Likelihood -- 
+Limit: r < 3.15342 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 495/500
+  1) RooRealVar:: n_obs_bina01 = 2654
+
+ -- Profile Likelihood -- 
+Limit: r < 2.55168 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 496/500
+  1) RooRealVar:: n_obs_bina01 = 2649
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49984 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 497/500
+  1) RooRealVar:: n_obs_bina01 = 2600
+
+ -- Profile Likelihood -- 
+Limit: r < 2.02406 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 498/500
+  1) RooRealVar:: n_obs_bina01 = 2821
+
+ -- Profile Likelihood -- 
+Limit: r < 4.28427 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 499/500
+  1) RooRealVar:: n_obs_bina01 = 2455
+
+ -- Profile Likelihood -- 
+Limit: r < 1.11801 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 500/500
+  1) RooRealVar:: n_obs_bina01 = 2602
+
+ -- Profile Likelihood -- 
+Limit: r < 2.04167 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+mean   expected limit: r < 2.60163 +/- 0.0510098 @ 95%CL (500 toyMC)
+median expected limit: r < 2.41679 @ 95%CL (500 toyMC)
+   68% expected band : 1.47212 < r < 3.81754
+   95% expected band : 0.890426 < r < 5.20786
