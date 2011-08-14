@@ -1,0 +1,12 @@
+>>> including systematics
+>>> method used to compute upper limit is ProfileLikelihood
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Sanity checks on the model: OK
+Computing limit starting from observation
+
+ -- Profile Likelihood -- 
+Limit: r < 0.401303 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
