@@ -1,0 +1,2473 @@
+>>> including systematics
+>>> method used to compute upper limit is ProfileLikelihood
+>>> random number generator seed is 123456
+
+Sanity checks on the model: OK
+Generate toy 1/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95633 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 2/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.744896 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 3/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99589 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 4/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30725 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 5/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.871074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 6/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50469 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 7/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.93454 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 8/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46682 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 9/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.04298 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 10/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.52959 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 11/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.517074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 12/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77657 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 13/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.94036 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 14/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.76108 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 15/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.51454 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 16/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.975895 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 17/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.23931 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 18/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50226 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 19/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14071 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 20/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.88075 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 21/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.644 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 22/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16131 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 23/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.09534 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 24/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.840408 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 25/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.2458 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 26/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.85162 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 27/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 28/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20299 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 29/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7498 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 30/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.47143 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 31/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.620173 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 32/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.41767 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 33/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.687437 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 34/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.99036 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 35/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.93322 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 36/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20201 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 37/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00312 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 38/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.69236 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 39/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.45793 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 40/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53977 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 41/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53579 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 42/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.776222 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 43/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.04759 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 44/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.63993 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 45/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.23182 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 46/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5725 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 47/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53456 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 48/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.27441 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 49/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.21212 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 50/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80284 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 51/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.91271 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 52/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.58823 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 53/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00134 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 54/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5701 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 55/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43208 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 56/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.572628 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 57/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.592656 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 58/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16961 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 59/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.07624 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 60/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.92925 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 61/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45909 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 62/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.16425 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 63/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.904845 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 64/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.6452 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 65/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.07136 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 66/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.73115 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 67/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58055 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 68/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.01291 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 69/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.840239 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 70/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.01051 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 71/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.982829 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 72/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.31075 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 73/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.23324 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 74/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49211 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 75/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.43862 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 76/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.31856 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 77/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.7705 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 78/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.634309 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 79/500
+
+ -- Profile Likelihood -- 
+Limit: r < 3.90146 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 80/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.94878 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 81/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17364 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 82/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.55725 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 83/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.72432 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 84/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.698064 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 85/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.972505 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 86/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.20144 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 87/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 88/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58456 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 89/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64695 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 90/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.07976 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 91/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.698725 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 92/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14705 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 93/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49812 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 94/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.440345 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 95/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5402 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 96/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81327 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 97/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90365 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 98/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.702495 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 99/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.919604 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 100/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.6925 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 101/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50689 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 102/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.29883 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 103/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.149 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 104/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.26704 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 105/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.03679 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 106/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.850459 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 107/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.861894 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 108/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16258 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 109/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.886773 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 110/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.18417 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 111/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.41704 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 112/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.991074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 113/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.864347 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 114/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.08006 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 115/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.829766 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 116/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.3601 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 117/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.843318 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 118/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.61194 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 119/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.04012 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 120/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46919 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 121/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.61209 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 122/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.43806 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 123/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.881547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 124/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.810126 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 125/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 126/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.25164 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 127/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.628946 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 128/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88349 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 129/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.897397 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 130/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.27185 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 131/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.968162 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 132/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71622 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 133/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.50098 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 134/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.867544 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 135/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.10387 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 136/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62779 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 137/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00902 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 138/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.982831 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 139/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.602865 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 140/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.892965 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 141/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37606 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 142/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.77719 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 143/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.17809 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 144/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.717025 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 145/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.543742 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 146/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.42878 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 147/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81737 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 148/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.725284 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 149/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.48838 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 150/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.02501 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 151/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20315 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 152/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.784742 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 153/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53722 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 154/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.02785 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 155/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16866 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 156/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.789053 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 157/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.966235 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 158/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90565 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 159/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.4564 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 160/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.34405 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 161/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.545457 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 162/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7426 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 163/500
+
+ -- Profile Likelihood -- 
+Limit: r < 3.18256 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 164/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.989349 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 165/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50961 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 166/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.44667 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 167/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.03654 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 168/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54676 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 169/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56758 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 170/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.69142 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 171/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.70502 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 172/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.658626 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 173/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56406 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 174/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.22442 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 175/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.779006 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 176/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.974671 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 177/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.978138 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 178/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37511 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 179/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.44269 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 180/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.09533 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 181/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.75722 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 182/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.08663 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 183/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.60964 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 184/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.647065 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 185/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.4154 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 186/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62099 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 187/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71271 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 188/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.897382 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 189/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.91915 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 190/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.729139 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 191/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5543 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 192/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.53484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 193/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.844832 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 194/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46955 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 195/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.01774 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 196/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.928662 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 197/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.64773 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 198/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.28323 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 199/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43027 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 200/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.0618 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 201/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.79407 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 202/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.4329 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 203/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.07969 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 204/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.17138 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 205/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.647082 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 206/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.878663 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 207/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.84036 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 208/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.74144 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 209/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.686061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 210/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62694 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 211/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.35522 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 212/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.53258 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 213/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.76575 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 214/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49502 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 215/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.26774 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 216/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.51017 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 217/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.44305 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 218/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.0697 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 219/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.599557 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 220/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.03252 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 221/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.36934 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 222/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.807409 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 223/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.81933 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 224/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.801963 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 225/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.362753 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 226/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.12859 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 227/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.755869 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 228/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.608488 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 229/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17769 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 230/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.813115 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 231/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.429345 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 232/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.2072 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 233/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.612951 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 234/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.736888 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 235/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.73666 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 236/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.685315 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 237/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81983 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 238/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58878 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 239/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.57791 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 240/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.2897 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 241/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.15309 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 242/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.01621 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 243/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.06686 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 244/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.970605 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 245/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.90957 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 246/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.588056 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 247/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.672022 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 248/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.16058 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 249/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.18409 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 250/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.52739 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 251/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.35795 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 252/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.48615 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 253/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88801 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 254/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.690862 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 255/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.21892 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 256/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.30452 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 257/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.615226 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 258/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.91489 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 259/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.44703 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 260/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.25773 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 261/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.893981 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 262/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17314 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 263/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.73815 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 264/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45884 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 265/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.043 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 266/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.05741 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 267/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.87244 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 268/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.87823 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 269/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.65646 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 270/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.756093 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 271/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.23687 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 272/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.59845 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 273/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.29522 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 274/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.75556 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 275/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.970933 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 276/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.713978 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 277/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49309 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 278/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.554824 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 279/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.0621 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 280/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.25232 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 281/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.8845 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 282/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.73179 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 283/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.987202 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 284/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.12411 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 285/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.39009 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 286/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.49541 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 287/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.40057 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 288/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.59199 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 289/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30465 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 290/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.60218 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 291/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.11484 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 292/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.983038 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 293/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.02123 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 294/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.837074 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 295/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45906 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 296/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.28985 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 297/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.65064 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 298/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.636105 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 299/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14625 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 300/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.45383 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 301/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.44218 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 302/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.0187 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 303/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.82192 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 304/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58202 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 305/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.07494 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 306/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.802392 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 307/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.99268 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 308/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.794122 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 309/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 310/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.27382 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 311/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45009 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 312/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.56279 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 313/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.48774 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 314/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.792864 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 315/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.489111 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 316/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81755 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 317/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53406 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 318/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.7724 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 319/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.578628 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 320/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14794 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 321/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.574828 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 322/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71469 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 323/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 324/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.18992 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 325/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.27883 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 326/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.01978 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 327/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.17665 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 328/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.863525 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 329/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.70799 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 330/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.13372 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 331/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.20105 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 332/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15397 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 333/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 334/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.735181 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 335/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.666857 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 336/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.48142 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 337/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.875691 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 338/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.432161 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 339/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.17266 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 340/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.792176 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 341/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.39515 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 342/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.915746 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 343/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.998905 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 344/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.39528 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 345/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.880994 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 346/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43775 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 347/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.15589 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 348/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.55519 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 349/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.728 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 350/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.86347 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 351/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.887909 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 352/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.40648 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 353/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.678107 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 354/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.79436 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 355/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.60315 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 356/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.61583 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 357/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56941 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 358/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.55997 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 359/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54065 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 360/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.01338 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 361/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.01249 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 362/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.98569 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 363/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.62236 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 364/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.801421 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 365/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.777569 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 366/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.698099 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 367/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.812096 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 368/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.6176 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 369/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.817847 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 370/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.77444 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 371/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.10265 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 372/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.10712 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 373/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.720357 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 374/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.812661 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 375/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.457565 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 376/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.13095 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 377/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.80534 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 378/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.609567 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 379/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.56258 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 380/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43247 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 381/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 382/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.640691 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 383/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74472 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 384/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.15088 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 385/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.75411 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 386/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.58548 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 387/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5196 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 388/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.13308 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 389/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5182 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 390/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49407 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 391/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.6877 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 392/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46841 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 393/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.49103 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 394/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.72111 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 395/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81221 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 396/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.60068 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 397/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.736984 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 398/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.4078 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 399/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37436 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 400/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.697145 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 401/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.713598 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 402/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.812685 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 403/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.22702 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 404/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.920705 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 405/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.05105 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 406/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 407/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.14014 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 408/500
+
+ -- Profile Likelihood -- 
+Limit: r < 3.15425 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 409/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.86644 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 410/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.02194 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 411/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.26219 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 412/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.0957 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 413/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.69316 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 414/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.65872 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 415/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.74103 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 416/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.967698 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 417/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.53354 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 418/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.32122 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 419/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.16702 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 420/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.4021 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 421/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00387 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 422/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.967671 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 423/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.69011 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 424/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.902673 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 425/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57905 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 426/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37276 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 427/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.23333 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 428/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.83779 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 429/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.40386 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 430/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62754 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 431/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.14394 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 432/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.03076 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 433/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.855042 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 434/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.28844 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 435/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.70849 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 436/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.754344 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 437/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.929253 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 438/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.9457 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 439/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.13522 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 440/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.57733 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 441/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43832 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 442/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 443/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.50897 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 444/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.46514 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 445/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 446/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.590728 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 447/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.54269 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 448/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 449/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.774096 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 450/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.56038 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 451/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.45319 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 452/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.28406 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 453/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.15593 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 454/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5046 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 455/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.30759 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 456/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.62692 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 457/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.36652 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 458/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.00853 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 459/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.37269 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 460/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.35492 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 461/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.59088 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 462/500
+
+ -- Profile Likelihood -- 
+Limit: r < 2.03054 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 463/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.921763 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 464/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71237 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 465/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.528232 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 466/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.05199 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 467/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.664551 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 468/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.51512 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 469/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.68964 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 470/500
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 471/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.43271 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 472/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.38547 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 473/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.648631 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 474/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.981663 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 475/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.19324 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 476/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.19892 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 477/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5365 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 478/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.71659 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 479/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.66654 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 480/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.619369 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 481/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.5864 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 482/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.892979 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 483/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.926983 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 484/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.87916 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 485/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.927061 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 486/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.883379 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 487/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.927255 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 488/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.903661 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 489/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.833866 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 490/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.81322 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 491/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.15006 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 492/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.443742 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 493/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.528 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 494/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.41238 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 495/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.44335 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 496/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.88866 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 497/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.40471 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 498/500
+
+ -- Profile Likelihood -- 
+Limit: r < 1.95201 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 499/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.820605 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+Generate toy 500/500
+
+ -- Profile Likelihood -- 
+Limit: r < 0.738516 @ 95% CL
+Done in 0.00 min (cpu), 0.00 min (real)
+mean   expected limit: r < 1.41201 +/- 0.0268212 @ 95%CL (488 toyMC)
+median expected limit: r < 1.41009 @ 95%CL (488 toyMC)
+   68% expected band : 0.807409 < r < 2.04759
+   95% expected band : 0.543742 < r < 2.65872
