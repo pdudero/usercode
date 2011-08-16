@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.11 2010/06/14 13:11:21 dudero Exp $
+// $Id: myEventData.hh,v 1.12 2010/08/04 13:36:49 dudero Exp $
 //
 //
 
@@ -61,24 +61,24 @@ public:
   static const std::vector<edm::EventRange>          getEvents2Process(void);
   static const std::vector<edm::LuminosityBlockRange> getLumis2Process(void);
 
-  inline edm::Handle<HcalTBTriggerData>      hcaltbtrigdata(void)  const { return hcaltbtrigdata_; }
-  inline edm::Handle<FEDRawDataCollection>   fedrawdata(void)      const { return fedrawdata_;  }
-  inline edm::Handle<HcalLaserDigi>          laserdigi(void)       const { return laserdigi_;   }
-  inline edm::Handle<HBHEDigiCollection>     hbhedigis(void)       const { return hbhedigis_;   }
-  inline edm::Handle<HBHERecHitCollection>   hbherechits(void)     const { return hbherechits_; }
-  inline edm::Handle<HFRecHitCollection>     hfrechits(void)       const { return hfrechits_;   }
-  inline edm::Handle<HFDigiCollection>       hfdigis(void)         const { return hfdigis_;     }
-  inline edm::Handle<HORecHitCollection>     horechits(void)       const { return horechits_;   }
-  inline edm::Handle<HODigiCollection>       hodigis(void)         const { return hodigis_;     }
-  inline edm::Handle<ZDCRecHitCollection>    zdcrechits(void)      const { return zdcrechits_;  }
-  inline edm::Handle<ZDCDigiCollection>      zdcdigis(void)        const { return zdcdigis_;    }
-  inline edm::Handle<CaloTowerCollection>    towers(void)          const { return towers_;      }
-  inline edm::Handle<CaloMETCollection>      calomet(void)         const { return calomet_;     }
-  inline edm::Handle<METCollection>          recomet(void)         const { return recomet_;     }
-  inline edm::Handle<edm::PCaloHitContainer> simhits(void)         const { return hsimhits_;    }
-  inline edm::Handle<edm::TriggerResults>    trgResults(void)      const { return trgResults_;  }
-  inline edm::Handle<reco::VertexCollection> vertices(void)        const { return vertices_;    }
-  inline edm::Handle<bool>                   hbheNoiseResult(void) const { return hbheNoiseResult_; }
+  inline edm::Handle<HcalTBTriggerData>       hcaltbtrigdata(void)  const { return hcaltbtrigdata_; }
+  inline edm::Handle<FEDRawDataCollection>    fedrawdata(void)      const { return fedrawdata_;  }
+  inline edm::Handle<HcalLaserDigi>           laserdigi(void)       const { return laserdigi_;   }
+  inline edm::Handle<HBHEDigiCollection>      hbhedigis(void)       const { return hbhedigis_;   }
+  inline edm::Handle<HBHERecHitCollection>    hbherechits(void)     const { return hbherechits_; }
+  inline edm::Handle<HFRecHitCollection>      hfrechits(void)       const { return hfrechits_;   }
+  inline edm::Handle<HFDigiCollection>        hfdigis(void)         const { return hfdigis_;     }
+  inline edm::Handle<HORecHitCollection>      horechits(void)       const { return horechits_;   }
+  inline edm::Handle<HODigiCollection>        hodigis(void)         const { return hodigis_;     }
+  inline edm::Handle<ZDCRecHitCollection>     zdcrechits(void)      const { return zdcrechits_;  }
+  inline edm::Handle<ZDCDigiCollection>       zdcdigis(void)        const { return zdcdigis_;    }
+  inline edm::Handle<CaloTowerCollection>     towers(void)          const { return towers_;      }
+  inline edm::Handle<reco::CaloMETCollection> calomet(void)         const { return calomet_;     }
+  inline edm::Handle<reco::METCollection>     recomet(void)         const { return recomet_;     }
+  inline edm::Handle<edm::PCaloHitContainer>  simhits(void)         const { return hsimhits_;    }
+  inline edm::Handle<edm::TriggerResults>     trgResults(void)      const { return trgResults_;  }
+  inline edm::Handle<reco::VertexCollection>  vertices(void)        const { return vertices_;    }
+  inline edm::Handle<bool>                    hbheNoiseResult(void) const { return hbheNoiseResult_; }
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }

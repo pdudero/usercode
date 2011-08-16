@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myAnalHistos.hh,v 1.18 2010/08/11 00:16:44 dudero Exp $
+// $Id: myAnalHistos.hh,v 1.19 2010/12/01 23:54:17 dudero Exp $
 //
 //
 
@@ -332,7 +332,7 @@ myAnalHistosTC<Tkey>::myAnalHistosTC(const std::string& dirdescr,
 				     TFileDirectory& subdir)
 {
   std::cout << "Making histo folder " << dirdescr << " in subdir ";
-  std::cout << subdir.cd()->GetName() << std::endl;
+  std::cout << subdir.getBareDirectory()->GetName() << std::endl;
 
   dir_ = new TFileDirectory(subdir.mkdir(dirdescr));
   myname_ = dirdescr;

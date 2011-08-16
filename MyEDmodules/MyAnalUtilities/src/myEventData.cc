@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.10 2010/06/14 13:11:21 dudero Exp $
+// $Id: myEventData.cc,v 1.11 2010/08/04 13:36:49 dudero Exp $
 //
 //
 
@@ -61,6 +61,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   hbheNoiseResultTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheNoiseResultLabel",edm::InputTag(""))),
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
+  using namespace std;
   if (fedRawDataTag_.label().size()) cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
   if (tbTrigDataTag_.label().size()) cout << "tbTrigDataTag_ = " << tbTrigDataTag_ << endl;
   if (laserDigiTag_ .label().size()) cout << "laserDigiTag_  = " << laserDigiTag_  << endl;
@@ -129,6 +130,7 @@ void
 myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
+  using namespace std;
 
   eventId_ = iEvent.id();
   runn_    = eventId_.run();
