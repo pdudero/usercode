@@ -1,0 +1,15 @@
+imax 1  # number of channels
+jmax 6  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin            1
+observation    4489
+--------------------
+shapes * * kal-histo-shapes-TH1.root $PROCESS_Mass_$MASS $PROCESS_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                 1      1      1      1      1      1      1  
+process          Signal     QCD     Top   Wjets   Zjets Ztautau diboson 
+process             0      1      2      3      4      5      6  
+rate             177.79   82.28   62.25 3914.12  140.05   12.05  258.99 
+--------------------
+WJetsUnc     lnN    -      -      -     1.02    -      -      -   
