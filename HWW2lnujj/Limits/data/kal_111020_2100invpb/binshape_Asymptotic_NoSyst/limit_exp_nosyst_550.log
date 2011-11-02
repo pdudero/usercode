@@ -1,0 +1,50 @@
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binbn2jet340to360_proc_Bkgrdtot = 917.94
+  2) RooRealVar:: n_exp_binbn2jet360to500_proc_Bkgrdtot = 3097.05
+  3) RooRealVar:: n_exp_binbn2jet500to725_proc_Bkgrdtot = 815.16
+  4) RooRealVar:: n_exp_binbn3jet280to360_proc_Bkgrdtot = 1488.76
+  5) RooRealVar:: n_exp_binbn3jet360to760_proc_Bkgrdtot = 1427.56
+  6) RooRealVar::                                     r = 0.2
+Obs: 
+  1) RooCategory:: CMS_channel = bn3jet360to760
+  2) RooRealVar::    CMS_th1x = 9.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binbn2jet340to360_proc_Bkgrdtot = 917.94
+  2) RooRealVar:: n_exp_binbn2jet360to500_proc_Bkgrdtot = 3097.05
+  3) RooRealVar:: n_exp_binbn2jet500to725_proc_Bkgrdtot = 815.16
+  4) RooRealVar:: n_exp_binbn3jet280to360_proc_Bkgrdtot = 1488.76
+  5) RooRealVar:: n_exp_binbn3jet360to760_proc_Bkgrdtot = 1427.56
+  6) RooRealVar::                                     r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = bn3jet360to760
+  2) RooRealVar::    CMS_th1x = 9.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binbn2jet340to360_proc_Bkgrdtot = 917.94
+  2) RooRealVar:: n_exp_binbn2jet360to500_proc_Bkgrdtot = 3097.05
+  3) RooRealVar:: n_exp_binbn2jet500to725_proc_Bkgrdtot = 815.16
+  4) RooRealVar:: n_exp_binbn3jet280to360_proc_Bkgrdtot = 1488.76
+  5) RooRealVar:: n_exp_binbn3jet360to760_proc_Bkgrdtot = 1427.56
+  6) RooRealVar::                                     r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = bn3jet360to760
+  2) RooRealVar::    CMS_th1x = 9.5
+
+ -- Asymptotic -- 
+Observed Limit: r < 3.2561
+Expected  2.5%: r < 1.2036
+Expected 16.0%: r < 1.6009
+Expected 50.0%: r < 2.2183
+Expected 84.0%: r < 3.0813
+Expected 97.5%: r < 4.0939
+
+Done in 0.00 min (cpu), 0.00 min (real)
