@@ -1,0 +1,18 @@
+imax 4  # number of channels
+jmax 1  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin             bn2jet300to360 bn2jet360to400 bn3jet300to360 bn3jet360to400
+observation               3531           1374           1014            444
+--------------------
+shapes * * kal-histo-shapes-milwin-M=350.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin              bn2jet300to360 bn2jet360to400 bn3jet300to360 bn3jet360to400 bn2jet300to360 bn2jet360to400 bn3jet300to360 bn3jet360to400
+process                  Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
+process                       0              0              0              0              1              1              1              1
+rate                      63.33          42.02          25.65          15.96        3561.66        1397.85        1012.24         474.18
+--------------------
+Sigxsec    shape             1.0            1.0            1.0            1.0            -              -             -              -   
+lumi         lnN           1.045          1.045          1.045          1.045            -              -             -              -   
+Wjetshape  shape              -              -              -              -             1.0            1.0           1.0            1.0 
+Wjetsnorm    lnN              -              -              -              -           1.025          1.025         1.059          1.059 
