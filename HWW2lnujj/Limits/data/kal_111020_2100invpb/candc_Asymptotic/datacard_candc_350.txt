@@ -1,0 +1,16 @@
+imax 4  # number of channels
+jmax 1  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin             bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480
+observation               7620           2602           3728            984
+--------------------
+bin              bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480 bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480
+process                  Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
+process                       0              0              0              0              1              1              1              1
+rate                      75.14          60.15          43.30          25.93        7657.66        2589.81        3768.36        1013.34
+--------------------
+Sigxsec      lnN           1.190          1.190          1.190          1.190            -              -             -              -   
+lumi         lnN           1.045          1.045          1.045          1.045            -              -             -              -   
+Wjetshape    lnN              -              -              -              -           1.007          1.007         1.001          1.013 
+Wjetsnorm    lnN              -              -              -              -           1.025          1.025         1.059          1.059 
