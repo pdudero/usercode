@@ -1,18 +1,18 @@
-imax 4  # number of channels
+imax 7  # number of channels
 jmax 1  # number of backgrounds
 kmax *  # number of nuisance parameters
 --------------------
-bin             bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480
-observation               7620           2602           3728            984
+bin             bn2jet150to200 bn2jet200to360 bn2jet360to500 bn2jet500to800 bn3jet150to200 bn3jet200to360 bn3jet360to800
+observation               3370          17031           3097            865            477           3728           1437
 --------------------
 shapes * * kal-histo-shapes-M=350.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
 --------------------
-bin              bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480 bn2jet260to360 bn2jet360to460 bn3jet200to360 bn3jet360to480
-process                  Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
-process                       0              0              0              0              1              1              1              1
-rate                      75.14          60.15          43.30          25.93        7657.66        2589.81        3768.36        1013.34
+bin              bn2jet150to200 bn2jet200to360 bn2jet360to500 bn2jet500to800 bn3jet150to200 bn3jet200to360 bn3jet360to800 bn2jet150to200 bn2jet200to360 bn2jet360to500 bn2jet500to800 bn3jet150to200 bn3jet200to360 bn3jet360to800
+process                  Signal         Signal         Signal         Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
+process                       0              0              0              0              0              0              0              1              1              1              1              1              1              1
+rate                       0.53          80.77          63.37           3.45           1.27          43.30          30.59        3303.30       17113.38        3097.05         878.90         483.32        3768.36        1437.04
 --------------------
-Sigxsec    shape             1.0            1.0            1.0            1.0            -              -             -              -   
-lumi         lnN           1.045          1.045          1.045          1.045            -              -             -              -   
-Wjetshape  shape              -              -              -              -             1.0            1.0           1.0            1.0 
-Wjetsnorm    lnN              -              -              -              -           1.025          1.025         1.059          1.059 
+Sigxsec    shape     1.0     1.0     1.0     1.0     1.0     1.0     1.0     -      -      -      -      -      -      -  
+lumi         lnN   1.045   1.045   1.045   1.045   1.045   1.045   1.045     -      -      -      -      -      -      -  
+Wjetshape  shape      -       -       -       -       -       -       -      1.0    1.0    1.0    1.0    1.0    1.0    1.0
+Wjetsnorm    lnN      -       -       -       -       -       -       -    1.025  1.025  1.025  1.025  1.059  1.059  1.059
