@@ -5,12 +5,14 @@ kmax *  # number of nuisance parameters
 bin                     mu2jet
 observation               1891
 --------------------
+shapes * * hww-histo-shapes-M=450.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
 bin                      mu2jet         mu2jet
 process                  Signal       Bkgrdtot
 process                       0              1
 rate                      38.14        1894.07
 --------------------
-Bckgrdnorm   lnN           -          1.01742    
+Bckgrdnorm   lnN           -          1.015    
 Bckgrdshape shape           -              1    
 Siglumi      lnN         1.045          -      
 Sigxsec      lnN         1.172          -      
