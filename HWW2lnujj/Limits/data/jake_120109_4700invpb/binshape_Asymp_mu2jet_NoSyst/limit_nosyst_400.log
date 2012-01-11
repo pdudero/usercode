@@ -1,0 +1,17 @@
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+
+ -- Asymptotic -- 
+Observed Limit: r < 1.6216
+Expected  2.5%: r < 0.4531
+Expected 16.0%: r < 0.6027
+Expected 50.0%: r < 0.8351
+Expected 84.0%: r < 1.1599
+Expected 97.5%: r < 1.5411
+
+Done in 0.00 min (cpu), 0.00 min (real)
