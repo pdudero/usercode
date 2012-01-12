@@ -1,0 +1,41 @@
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 3925.76
+  2) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1879.04
+  3) RooRealVar::                             r = 0.2
+Obs: 
+  1) RooCategory:: CMS_channel = mu2jet
+  2) RooRealVar::    CMS_th1x = 14.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 3925.76
+  2) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1879.04
+  3) RooRealVar::                             r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = mu2jet
+  2) RooRealVar::    CMS_th1x = 14.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 3925.76
+  2) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1879.04
+  3) RooRealVar::                             r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = mu2jet
+  2) RooRealVar::    CMS_th1x = 14.5
+
+ -- Asymptotic -- 
+Observed Limit: r < 1.8187
+Expected  2.5%: r < 0.5938
+Expected 16.0%: r < 0.7899
+Expected 50.0%: r < 1.0945
+Expected 84.0%: r < 1.5203
+Expected 97.5%: r < 2.0199
+
+Done in 0.00 min (cpu), 0.00 min (real)
