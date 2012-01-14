@@ -1,0 +1,47 @@
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 1914.11
+  2) RooRealVar:: n_exp_binel3jet_proc_Bkgrdtot = 755.7
+  3) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1398.1
+  4) RooRealVar:: n_exp_binmu3jet_proc_Bkgrdtot = 795.9
+  5) RooRealVar::                             r = 0.2
+Obs: 
+  1) RooCategory:: CMS_channel = mu3jet
+  2) RooRealVar::    CMS_th1x = 12.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 1914.11
+  2) RooRealVar:: n_exp_binel3jet_proc_Bkgrdtot = 755.7
+  3) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1398.1
+  4) RooRealVar:: n_exp_binmu3jet_proc_Bkgrdtot = 795.9
+  5) RooRealVar::                             r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = mu3jet
+  2) RooRealVar::    CMS_th1x = 12.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binel2jet_proc_Bkgrdtot = 1914.11
+  2) RooRealVar:: n_exp_binel3jet_proc_Bkgrdtot = 755.7
+  3) RooRealVar:: n_exp_binmu2jet_proc_Bkgrdtot = 1398.1
+  4) RooRealVar:: n_exp_binmu3jet_proc_Bkgrdtot = 795.9
+  5) RooRealVar::                             r = 10
+Obs: 
+  1) RooCategory:: CMS_channel = mu3jet
+  2) RooRealVar::    CMS_th1x = 12.5
+
+ -- Asymptotic -- 
+Observed Limit: r < 0.3259
+Expected  2.5%: r < 0.2998
+Expected 16.0%: r < 0.3987
+Expected 50.0%: r < 0.5525
+Expected 84.0%: r < 0.7675
+Expected 97.5%: r < 1.0197
+
+Done in 0.00 min (cpu), 0.00 min (real)
