@@ -1,0 +1,19 @@
+imax 4  # number of channels
+jmax 1  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin                     el2jet         el3jet         mu2jet         mu3jet
+observation               2696           1494           2776           1644
+--------------------
+shapes * * hww-histo-shapes-M=180.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                      el2jet         el3jet         mu2jet         mu3jet         el2jet         el3jet         mu2jet         mu3jet
+process                  Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
+process                       0              0              0              0              1              1              1              1
+rate                      45.66          20.94          54.36          21.57        2697.17        1494.00        2778.27        1644.00
+--------------------
+Bckgrdnorm   lnN            -              -              -              -            1.007          1.006          1.005          1.006     
+Bckgrdshape shape            -              -              -              -                1              1              1              1     
+Siglumi      lnN          1.045          1.045          1.045          1.045            -              -              -              -       
+Sigtrigeff   lnN           1.01           1.01           1.01           1.01            -              -              -              -       
+Sigxsec      lnN          1.181          1.181          1.181          1.181            -              -              -              -       
