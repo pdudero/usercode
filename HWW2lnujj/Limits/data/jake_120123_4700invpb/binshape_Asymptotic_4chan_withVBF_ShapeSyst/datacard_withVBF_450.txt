@@ -2,18 +2,24 @@ imax 4  # number of channels
 jmax 1  # number of backgrounds
 kmax *  # number of nuisance parameters
 --------------------
-bin                     el2jet         el3jet         mu2jet         mu3jet
-observation               2720            994           1891            804
+bin                       el2jet     el3jet     mu2jet     mu3jet
+observation                 2720        994       1891        804
 --------------------
 shapes * * hww-histo-shapes-withVBF-M=450.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
 --------------------
-bin                      el2jet         el3jet         mu2jet         mu3jet         el2jet         el3jet         mu2jet         mu3jet
-process                  Signal         Signal         Signal         Signal       Bkgrdtot       Bkgrdtot       Bkgrdtot       Bkgrdtot
-process                       0              0              0              0              1              1              1              1
-rate                      44.20          21.18          42.10          22.14        2723.64         995.18        1894.17         804.74
+bin                       el2jet     el3jet     mu2jet     mu3jet     el2jet     el3jet     mu2jet     mu3jet
+process                   Signal     Signal     Signal     Signal   Bkgrdtot   Bkgrdtot   Bkgrdtot   Bkgrdtot
+process                        0          0          0          0          1          1          1          1
+rate                       40.35      19.44      38.14      20.29    2723.65     995.02    1894.18     805.62
 --------------------
-Bckgrdnorm   lnN            -              -              -              -            1.008          1.007          1.014          1.017     
-Bckgrdshape shape            -              -              -              -                1              1              1              1     
-Siglumi      lnN          1.045          1.045          1.045          1.045            -              -              -              -       
-Sigtrigeff   lnN           1.01           1.01           1.01           1.01            -              -              -              -       
-Sigxsec      lnN          1.172          1.172          1.172          1.172            -              -              -              -       
+Bckgrdnormel2jet    lnN       -          -          -          -      1.007          -          -          -   
+Bckgrdnormel3jet    lnN       -          -          -          -          -      1.017          -          -   
+Bckgrdnormmu2jet    lnN       -          -          -          -          -          -      1.008          -   
+Bckgrdnormmu3jet    lnN       -          -          -          -          -          -          -      1.014   
+Bckgrdshapeel2jet shape       -          -          -          -          1          -          -          -   
+Bckgrdshapeel3jet shape       -          -          -          -          -          1          -          -   
+Bckgrdshapemu2jet shape       -          -          -          -          -          -          1          -   
+Bckgrdshapemu3jet shape       -          -          -          -          -          -          -          1   
+Siglumi             lnN   1.045      1.045      1.045      1.045          -          -          -          -   
+Sigtrigeff          lnN    1.01       1.01       1.01       1.01          -          -          -          -   
+Sigxsec             lnN   1.172      1.172      1.172      1.172          -          -          -          -   
