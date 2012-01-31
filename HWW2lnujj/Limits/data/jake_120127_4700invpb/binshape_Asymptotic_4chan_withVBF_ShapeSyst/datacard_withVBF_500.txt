@@ -1,0 +1,25 @@
+imax 4  # number of channels
+jmax 1  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin                       el2jet     el3jet     mu2jet     mu3jet
+observation                 3107       1146       3677        960
+--------------------
+shapes * * hww-histo-shapes-withVBF-M=500.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                       el2jet     el3jet     mu2jet     mu3jet     el2jet     el3jet     mu2jet     mu3jet
+process                   Signal     Signal     Signal     Signal   Bkgrdtot   Bkgrdtot   Bkgrdtot   Bkgrdtot
+process                        0          0          0          0          1          1          1          1
+rate                       25.98      13.18      36.99      15.08    3111.38    1147.37    3684.02     961.19
+--------------------
+Bckgrdnormel2jet    lnN       -          -          -          -      1.007          -          -          -   
+Bckgrdnormel3jet    lnN       -          -          -          -          -      1.016          -          -   
+Bckgrdnormmu2jet    lnN       -          -          -          -          -          -      1.006          -   
+Bckgrdnormmu3jet    lnN       -          -          -          -          -          -          -      1.012   
+Bckgrdshapeel2jet shape       -          -          -          -          1          -          -          -   
+Bckgrdshapeel3jet shape       -          -          -          -          -          1          -          -   
+Bckgrdshapemu2jet shape       -          -          -          -          -          -          1          -   
+Bckgrdshapemu3jet shape       -          -          -          -          -          -          -          1   
+Siglumi             lnN   1.045      1.045      1.045      1.045          -          -          -          -   
+Sigtrigeff          lnN    1.01       1.01       1.01       1.01          -          -          -          -   
+Sigxsec             lnN   1.177      1.177      1.177      1.177          -          -          -          -   

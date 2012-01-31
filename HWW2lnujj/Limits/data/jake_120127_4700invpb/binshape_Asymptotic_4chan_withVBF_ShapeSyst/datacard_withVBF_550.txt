@@ -1,0 +1,25 @@
+imax 4  # number of channels
+jmax 1  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin                       el2jet     el3jet     mu2jet     mu3jet
+observation                 1738        715       1037       1156
+--------------------
+shapes * * hww-histo-shapes-withVBF-M=550.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                       el2jet     el3jet     mu2jet     mu3jet     el2jet     el3jet     mu2jet     mu3jet
+process                   Signal     Signal     Signal     Signal   Bkgrdtot   Bkgrdtot   Bkgrdtot   Bkgrdtot
+process                        0          0          0          0          1          1          1          1
+rate                       12.61       6.60      11.33      10.01    1739.93     715.88    1040.10    1156.89
+--------------------
+Bckgrdnormel2jet    lnN       -          -          -          -      1.009          -          -          -   
+Bckgrdnormel3jet    lnN       -          -          -          -          -       1.02          -          -   
+Bckgrdnormmu2jet    lnN       -          -          -          -          -          -      1.011          -   
+Bckgrdnormmu3jet    lnN       -          -          -          -          -          -          -      1.013   
+Bckgrdshapeel2jet shape       -          -          -          -          1          -          -          -   
+Bckgrdshapeel3jet shape       -          -          -          -          -          1          -          -   
+Bckgrdshapemu2jet shape       -          -          -          -          -          -          1          -   
+Bckgrdshapemu3jet shape       -          -          -          -          -          -          -          1   
+Siglumi             lnN   1.045      1.045      1.045      1.045          -          -          -          -   
+Sigtrigeff          lnN    1.01       1.01       1.01       1.01          -          -          -          -   
+Sigxsec             lnN  1.1855     1.1855     1.1855     1.1855          -          -          -          -   
