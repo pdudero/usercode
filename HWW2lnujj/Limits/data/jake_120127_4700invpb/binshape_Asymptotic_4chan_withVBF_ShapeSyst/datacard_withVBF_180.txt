@@ -20,6 +20,11 @@ Bckgrdshapeel2jet shape       -          -          -          -          1     
 Bckgrdshapeel3jet shape       -          -          -          -          -          1          -          -   
 Bckgrdshapemu2jet shape       -          -          -          -          -          -          1          -   
 Bckgrdshapemu3jet shape       -          -          -          -          -          -          -          1   
+Sigaccptpdf         lnN    1.02       1.02       1.02       1.02          -          -          -          -   
 Siglumi             lnN   1.045      1.045      1.045      1.045          -          -          -          -   
+Sigseleffel2jet     lnN   1.058          -          -          -          -          -          -          -   
+Sigseleffel3jet     lnN       -      1.075          -          -          -          -          -          -   
+Sigseleffmu2jet     lnN       -          -      1.036          -          -          -          -          -   
+Sigseleffmu3jet     lnN       -          -          -      1.076          -          -          -          -   
 Sigtrigeff          lnN    1.01       1.01       1.01       1.01          -          -          -          -   
 Sigxsec             lnN   1.181      1.181      1.181      1.181          -          -          -          -   
