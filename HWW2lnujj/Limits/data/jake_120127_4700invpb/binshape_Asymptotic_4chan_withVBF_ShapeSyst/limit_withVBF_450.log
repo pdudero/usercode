@@ -5,11 +5,11 @@
 Computing limit starting from observation
 
  -- Asymptotic -- 
-Observed Limit: r < 1.5913
-Expected  2.5%: r < 0.4839
-Expected 16.0%: r < 0.6437
-Expected 50.0%: r < 0.8919
-Expected 84.0%: r < 1.2389
-Expected 97.5%: r < 1.6461
+Observed Limit: r < 1.5897
+Expected  2.5%: r < 0.4844
+Expected 16.0%: r < 0.6443
+Expected 50.0%: r < 0.8928
+Expected 84.0%: r < 1.2400
+Expected 97.5%: r < 1.6476
 
 Done in 0.00 min (cpu), 0.01 min (real)
