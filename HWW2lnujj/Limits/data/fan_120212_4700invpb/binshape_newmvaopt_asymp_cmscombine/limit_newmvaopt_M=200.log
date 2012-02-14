@@ -5,7 +5,7 @@
 Computing limit starting from observation
 
  -- Asymptotic -- 
-Observed Limit: r < 3.4964
+Observed Limit: r < 3.5048
 Expected  2.5%: r < 1.0893
 Expected 16.0%: r < 1.4490
 Expected 50.0%: r < 2.0078

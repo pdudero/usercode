@@ -24,6 +24,8 @@ CMS_HWWlvjj_shape_back_el2jetCMS shape       -           -           -          
 CMS_HWWlvjj_shape_back_el3jetCMS shape       -           -           -           -           -           -           -           -           -            1          -           -    
 CMS_HWWlvjj_shape_back_mu2jetCMS shape       -           -           -           -           -           -           -           -           -           -            1          -    
 CMS_HWWlvjj_shape_back_mu3jetCMS shape       -           -           -           -           -           -           -           -           -           -           -            1   
+CMS_eff_e                          lnN     1.02        1.02          -           -         1.02        1.02          -           -           -           -           -           -    
+CMS_eff_m                          lnN       -           -         1.02        1.02          -           -         1.02        1.02          -           -           -           -    
 CMS_trigger_e                      lnN     1.01        1.01          -           -         1.01        1.01          -           -           -           -           -           -    
 CMS_trigger_m                      lnN       -           -         1.01        1.01          -           -         1.01        1.01          -           -           -           -    
 QCDscale_ggH                       lnN    1.076       1.076       1.076       1.076          -           -           -           -           -           -           -           -    
