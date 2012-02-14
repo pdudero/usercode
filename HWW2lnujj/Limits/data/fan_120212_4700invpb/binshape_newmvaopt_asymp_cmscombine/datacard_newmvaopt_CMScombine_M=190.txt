@@ -3,14 +3,14 @@ jmax 2  # number of backgrounds
 kmax *  # number of nuisance parameters
 --------------------
 bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
-observation                                6461        2244        6445        4231
+observation                                7708        2519       13917        4869
 --------------------
 shapes * * hww-histo-shapes-newmvaopt-M=190.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
 --------------------
 bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
 process                                     ggH         ggH         ggH         ggH         qqH         qqH         qqH         qqH    Bkgrdtot    Bkgrdtot    Bkgrdtot    Bkgrdtot
 process                                       0           0           0           0          -1          -1          -1          -1           1           1           1           1
-rate                                      37.17       10.75       46.95       21.79        2.51        1.11        3.10        1.91     6462.68     2244.03     6448.20     4231.13
+rate                                      43.11       12.38       78.60       24.75        2.87        1.25        5.08        2.14     7709.18     2519.00    13924.41     4869.19
 --------------------
 CMS_HWWlvjj_eff_sig_el2jetCMS      lnN    1.049          -           -           -        1.049          -           -           -           -           -           -           -    
 CMS_HWWlvjj_eff_sig_el3jetCMS      lnN       -         1.09          -           -           -         1.09          -           -           -           -           -           -    
