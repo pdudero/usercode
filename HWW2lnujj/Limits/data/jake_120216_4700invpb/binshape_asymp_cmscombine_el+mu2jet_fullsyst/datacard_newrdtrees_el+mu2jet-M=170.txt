@@ -1,0 +1,29 @@
+imax 2  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   el2jetCMS   mu2jetCMS
+observation                               20988       48600
+--------------------
+shapes * * hww-histo-shapes-newrdtrees-M=170.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   el2jetCMS   mu2jetCMS   el2jetCMS   mu2jetCMS   el2jetCMS   mu2jetCMS
+process                                     ggH         ggH         qqH         qqH    Bkgrdtot    Bkgrdtot
+process                                       0           0          -1          -1           1           1
+rate                                      65.42      177.79        4.19       10.33    20991.75    48619.68
+--------------------
+CMS_HWWlvjj_eff_sig_el2jetCMS      lnN    1.024          -        1.024          -           -           -    
+CMS_HWWlvjj_eff_sig_mu2jetCMS      lnN       -        1.019          -        1.019          -           -    
+CMS_HWWlvjj_norm_back_el2jetCMS    lnN       -           -           -           -         1.01          -    
+CMS_HWWlvjj_norm_back_mu2jetCMS    lnN       -           -           -           -           -        1.003   
+CMS_HWWlvjj_shape_back_el2jetCMS shape       -           -           -           -            1          -    
+CMS_HWWlvjj_shape_back_mu2jetCMS shape       -           -           -           -           -            1   
+CMS_eff_e                          lnN     1.02          -         1.02          -           -           -    
+CMS_eff_m                          lnN       -         1.02          -         1.02          -           -    
+CMS_trigger_e                      lnN     1.01          -         1.01          -           -           -    
+CMS_trigger_m                      lnN       -         1.01          -         1.01          -           -    
+QCDscale_ggH                       lnN    1.089       1.089          -           -           -           -    
+QCDscale_qqH                       lnN       -           -        1.002       1.002          -           -    
+lumi                               lnN    1.045       1.045       1.045       1.045          -           -    
+pdf_gg                             lnN    1.084       1.084          -           -           -           -    
+pdf_qqbar                          lnN       -           -        1.033       1.033          -           -    
