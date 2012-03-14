@@ -1,0 +1,47 @@
+>>> including systematics
+>>> using the Profile Likelihood test statistics modified for upper limits (Q_LHC)
+>>> method used to compute upper limit is HybridNew
+>>> random number generator seed is 123456
+
+Sanity checks on the model: OK
+Computing limit starting from observation
+Search for upper limit to the limit
+  r = 20 +/- 0
+        CLs = 0 +/- 0
+        CLs      = 0 +/- 0
+        CLb      = 0.504 +/- 0.0447199
+        CLsplusb = 0 +/- 0
+
+Search for lower limit to the limit
+Now doing proper bracketing & bisection
+  r = 10 +/- 10
+        CLs = 0 +/- 0
+        CLs      = 0 +/- 0
+        CLb      = 0.568 +/- 0.0443058
+        CLsplusb = 0 +/- 0
+
+  r = 5 +/- 5
+        CLs = 0 +/- 0
+        CLs      = 0 +/- 0
+        CLb      = 0.456 +/- 0.0445479
+        CLsplusb = 0 +/- 0
+
+  r = 2.5 +/- 2.5
+        CLs = 0.00847458 +/- 0.00603393
+        CLs      = 0.00847458 +/- 0.00603393
+        CLb      = 0.472 +/- 0.0446512
+        CLsplusb = 0.004 +/- 0.00282276
+
+  r = 1.56986 +/- 1.25
+        CLs = 0.0863636 +/- 0.0212976
+        CLs = 0.0790551 +/- 0.0132024
+        CLs = 0.0885527 +/- 0.0113982
+        CLs      = 0.0885527 +/- 0.0113982
+        CLb      = 0.511936 +/- 0.025744
+        CLsplusb = 0.0453333 +/- 0.00537142
+
+
+ -- Hybrid New -- 
+Limit: r < 1.79643 +/- 0.0788387 @ 95% CL
+Done in 0.01 min (cpu), 23.03 min (real)
+Failed to delete temporary file roostats-7Fl7JI.root: No such file or directory
