@@ -1,0 +1,14 @@
+imax 4  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+observation                                3114         840        3840        1277
+--------------------
+shapes * * ./hww-histo-shapes-5p0invfb-M=400.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+process                                     ggH         ggH         ggH         ggH         qqH         qqH         qqH         qqH    Bkgrdtot    Bkgrdtot    Bkgrdtot    Bkgrdtot
+process                                       0           0           0           0          -1          -1          -1          -1           1           1           1           1
+rate                                      54.28       17.66       72.70       28.34        3.35        1.30        4.54        1.96     3118.73      840.97     3846.55     1278.19
+--------------------
