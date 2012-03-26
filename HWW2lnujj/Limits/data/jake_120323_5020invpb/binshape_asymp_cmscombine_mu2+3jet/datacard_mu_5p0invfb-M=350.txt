@@ -1,0 +1,28 @@
+imax 2  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   mu2jetCMS   mu3jetCMS
+observation                                3184         809
+--------------------
+shapes * * ./hww-histo-shapes-5p0invfb-M=350.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   mu2jetCMS   mu3jetCMS   mu2jetCMS   mu3jetCMS   mu2jetCMS   mu3jetCMS
+process                                     ggH         ggH         qqH         qqH    Bkgrdtot    Bkgrdtot
+process                                       0           0          -1          -1           1           1
+rate                                      81.44       21.15        5.34        1.87     3189.62      810.00
+--------------------
+CMS_HWWlvjj_eff_sig_mu2jetCMS      lnN     1.07          -         1.07          -           -           -    
+CMS_HWWlvjj_eff_sig_mu3jetCMS      lnN       -         1.07          -         1.07          -           -    
+CMS_HWWlvjj_norm_back_mu2jetCMS    lnN       -           -           -           -         1.01          -    
+CMS_HWWlvjj_norm_back_mu3jetCMS    lnN       -           -           -           -           -        1.025   
+CMS_HWWlvjj_shape_back_mu2jetCMS shape       -           -           -           -            1          -    
+CMS_HWWlvjj_shape_back_mu3jetCMS shape       -           -           -           -           -            1   
+CMS_eff_m                          lnN     1.02        1.02        1.02        1.02          -           -    
+CMS_trigger_m                      lnN     1.01        1.01        1.01        1.01          -           -    
+QCDscale_ggH                       lnN    1.088       1.088          -           -           -           -    
+QCDscale_qqH                       lnN       -           -        1.007       1.007          -           -    
+lumi                               lnN    1.022       1.022       1.022       1.022          -           -    
+pdf_gg                             lnN    1.094       1.094          -           -           -           -    
+pdf_qqbar                          lnN       -           -        1.035       1.035          -           -    
+theoryUncXS_HighMH                 lnN    1.064       1.064       1.064       1.064          -           -    
