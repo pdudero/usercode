@@ -1,6 +1,3 @@
-// Script takes output of HBHEHORecPulseAnal1.cc and reconstructs the HBHEHO
-// pulse from successive TDC-indexed histograms.
-//
 
 #include <iostream>
 #include <vector>

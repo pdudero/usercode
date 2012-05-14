@@ -397,6 +397,18 @@ processGraphSection(FILE *fp,
 
       wg = new wGraph_t();
 
+      if ( gl_verbose ) { 
+	std::cout << "Dump of bin contents, errors" << std::endl ; 
+	if ( tmph1->GetNbinsX() == tmph2->GetNbinsX() ) { 
+	  for (int ib=1; ib<=tmph1->GetNbinsX(); ib++) {
+	    std::cout << ib << ": " << tmph1->GetBinContent(ib) << "+/-" << tmph1->GetBinError(ib) 
+		      << ", " << tmph2->GetBinContent(ib) << "+/-" << tmph2->GetBinError(ib) << std::endl ; 
+	  }
+	} else { 
+	  cerr << "Histograms being divided do not have same number of bins!!!" << endl ; 
+	}
+      }
+
       // equivalent to BayesDivide
       //
       if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"debug");
@@ -408,6 +420,37 @@ processGraphSection(FILE *fp,
 	continue;
       } else if (gl_verbose) {
 	cout << wg->gr->GetN() << " points in the graph" << endl;
+      }
+
+      // Fix in case something broke
+      bool aOK = true ;
+      for (int i=0; i<wg->gr->GetN(); i++) {
+          if ( wg->gr->GetErrorYhigh(i) == 0. || wg->gr->GetErrorYlow(i) == 0 ) { // Something bad happened
+              if ( gl_verbose ) std::cout << "Problem with Bayes divide, checking..." << std::endl ;
+              double pass  = tmph1->GetBinContent(i+1) ; 
+              double total = tmph2->GetBinContent(i+1) ;
+              if ( gl_verbose ) std::cout << pass << "/" << total << std::endl ;
+              if ( pass == total ) {
+                  if ( gl_verbose ) std::cout << "Everything OK" << std::endl ;
+              } else { 
+                  if ( gl_verbose ) std::cout << "Yep, something is broken" << std::endl ;
+                  double xval, yval ;
+                  wg->gr->GetPoint(i,xval,yval) ;
+                  yval = pass / total ;
+                  // Use simplified efficiency assumption
+                  double u1 = tmph1->GetBinError(i+1) / tmph1->GetBinContent(i+1) ; 
+                  double u2 = tmph2->GetBinError(i+1) / tmph2->GetBinContent(i+1) ; 
+                  // double unc = yval * sqrt( u1*u1 + u2*u2 ) ; 
+                  double unc = sqrt( yval * (1.-yval)/tmph2->GetBinContent(i+1) ) ; 
+                  double uhi = ( (yval + unc > 1.)?(1.-yval):(unc) ) ; 
+                  double ulo = ( (yval - unc < 0.)?(yval):(unc) ) ;
+                  wg->gr->SetPoint(i,xval,yval) ;
+                  ((TGraphAsymmErrors*)wg->gr)->SetPointError(i,wg->gr->GetErrorXlow(i),wg->gr->GetErrorXhigh(i),ulo,uhi) ; 
+//                   wg->gr->SetPointEYhigh(i,uhi) ; 
+//                   wg->gr->SetPointEYlow(i,ulo) ; 
+              }
+          }   
+          if (gl_verbose) std::cout << i << ": " << wg->gr->GetErrorYhigh(i) << "/" << wg->gr->GetErrorYlow(i) << std::endl ; 
       }
 
     } else if (!wg) {

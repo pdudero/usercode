@@ -11,11 +11,9 @@
 template <class T>
 class MyHistoWrapper {
 public:
-#if 0
   MyHistoWrapper<T>(const std::string& name,
 		    const std::string& title,
 		    int nbins, float min, float max);
-#endif
   MyHistoWrapper<T>(T *h, const std::string& name, const std::string& title);
   MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; verbosity_=true; fitxmin_=fitxmax_=0; }
   ~MyHistoWrapper() {}
@@ -88,15 +86,16 @@ public:
     std::string legdrawopt;
     if (h_->GetFillColor())                              legdrawopt = "F";
     else if (drawoption_.size()) {
-      if      (drawoption_.find("E") != string::npos)    legdrawopt = "LE";
-      else if (drawoption_.find("L") != string::npos)    legdrawopt = "L";
-      else if (drawoption_.find("HIST") != string::npos) legdrawopt = "L";
-      else if (drawoption_.find("P") != string::npos)    legdrawopt = "P";
+      // if      (drawoption_.find("E") != std::string::npos)    legdrawopt = "LEP";
+      if      (drawoption_.find("E") != std::string::npos)    legdrawopt = "P";
+      else if (drawoption_.find("L") != std::string::npos)    legdrawopt = "L";
+      else if (drawoption_.find("HIST") != std::string::npos) legdrawopt = "L";
+      else if (drawoption_.find("P") != std::string::npos)    legdrawopt = "P";
     }
     else                                                 legdrawopt = "L";
 
     if (verbosity_)
-      cout << "legdrawopt="<<legdrawopt<<endl;
+      std::cout << "legdrawopt="<<legdrawopt<<std::endl;
     leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
   }
 
@@ -141,7 +140,7 @@ private:
 };
 
 //======================================================================
-#if 0
+
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 				  const std::string& title,
@@ -153,7 +152,7 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
   verbosity_=true;
   fitxmin_=fitxmax_=0;
 }
-#endif
+
 //======================================================================
 
 template<typename T>
@@ -296,8 +295,8 @@ MyHistoWrapper<T>::Draw(const std::string& drawopt)
     gStyle->SetPalette(1,0); // always!
 
   if (verbosity_) {
-    cout << "MyHistoWrapper::Draw: Drawing "<<h_->GetName();
-    cout << " with option(s) "<<drawopt<<endl;
+    std::cout << "MyHistoWrapper::Draw: Drawing "<<h_->GetName();
+    std::cout << " with option(s) "<<drawopt<<std::endl;
   }
   h_->Draw(drawopt.c_str());
 }
@@ -311,7 +310,7 @@ MyHistoWrapper<T>::DrawFits(const std::string& drawopt,
 			    double fitrangemin,
 			    double fitrangemax)
 {
-  string option;
+  std::string option;
   if (fitopt.size())
     option = fitopt; // overrides stored option
   else
@@ -321,17 +320,17 @@ MyHistoWrapper<T>::DrawFits(const std::string& drawopt,
     TF1 *f1 = v_fits_[i];
 
     double xmin=fitrangemin,xmax=fitrangemax; // overrides stored ranges
-    if (xmin >= xmax)
+    if (xmin >= xmax) {
       if (fitxmin_ < fitxmax_) {
 	xmin = fitxmin_; xmax = fitxmax_;
-      }
-      else
+      } else {
 	f1->GetRange(xmin,xmax);
-
+      }
+    }
     if (verbosity_) {
-      cout << "MyHistoWrapper::DrawFits: Drawing fit "<<f1->GetName();
-      cout << " with fitoption(s) "<<option;
-      cout << " and range " << xmin << " to " << xmax << endl;
+      std::cout << "MyHistoWrapper::DrawFits: Drawing fit "<<f1->GetName();
+      std::cout << " with fitoption(s) "<<option;
+      std::cout << " and range " << xmin << " to " << xmax << std::endl;
     } else 
       option+=" Q";
 
@@ -377,7 +376,7 @@ MyHistoWrapper<T>::DrawStats(void)
       std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")"<< std::endl;
     }
   } else {
-    std::cout<<"Sorry, Charlie"<<endl;
+    std::cout<<"Sorry, Charlie"<<std::endl;
   }
 
   if (drawoption_ == "P") {
@@ -402,7 +401,7 @@ MyHistoWrapper<T>::ApplySavedStyle (void)
   style2apply_->cd();
   if (verbosity_) {
     std::cout << "MyHistoWrapper::ApplySavedStyle: ";
-    std::cout << "Applying style " << gStyle->GetName() << endl;
+    std::cout << "Applying style " << gStyle->GetName() << std::endl;
     std::cout << gStyle->GetOptStat() << std::endl;
   }
   h_->UseCurrentStyle();

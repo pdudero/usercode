@@ -237,11 +237,15 @@ void printHisto2File(TH1 *histo, string filename)
     cout << h2->GetName() << endl;
   } else {
     TH1 *h1 = (TH1 *)histo;
-    fprintf(fp,"#x\ty\n");
+    fprintf(fp,"#xlo\tx\txhi\tylo\ty\tyhi\n");
     for (int ix=1; ix<=h1->GetNbinsX(); ix++)
-      fprintf(fp,"%d\t%d\n",
-	      (int)h1->GetBinCenter(ix),
-	      (int)h1->GetBinContent(ix));
+      fprintf(fp,"%f\t%f\t%f\t%f\t%f\t%f\n",
+	      h1->GetBinLowEdge(ix),
+	      h1->GetBinCenter(ix),
+	      (h1->GetBinLowEdge(ix)+h1->GetBinWidth(ix)),
+	      (h1->GetBinContent(ix)-h1->GetBinError(ix)),
+	      h1->GetBinContent(ix),
+	      (h1->GetBinContent(ix)+h1->GetBinError(ix)));
     cout << "File " << filename << " written with contents of ";
     cout << h1->GetName() << endl;
   }
@@ -415,6 +419,11 @@ wTH1 *getHistoFromSpec(const string& hid,
       if( !h1) {
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
       } else {
+	static int linearCounter=0;
+	char fakename[100];
+	sprintf(fakename,"hist%d",linearCounter++);
+	h1=(TH1*)(h1->Clone(fakename));
+
 	// success, record that you read it in.
 	if( gl_verbose) cout << "Found " << fullspec << endl;
 	glmap_objpath2id.insert(pair<string,string>(fullspec,hid));
@@ -476,6 +485,13 @@ void processCommonHistoParams(const string& key,
   else if( key == "linewidth" )   wh.SetLine(0,0,str2int(value));
   else if( key == "fillcolor" )   wh.histo()->SetFillColor(str2int(value));
   else if( key == "leglabel" )    wh.SetLegendEntry(value);
+
+  else if( key == "reduceerror" ) { 
+    for (int ibin=1;ibin<=wh.histo()->GetNbinsX(); ibin++) { 
+      double binError = (wh.histo()->GetBinError(ibin)) * str2int(value) ; 
+      wh.histo()->SetBinError(ibin,binError) ; 
+    }
+  }
 
   else if( key == "rebin" ) {
     if (str2int(value))

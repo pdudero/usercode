@@ -79,9 +79,12 @@ processStackSection(FILE *fp,
 	}
 
 	if (!ws) {
+	  char name[100];
+	  sprintf(name,"%s_stk",wh->histo()->GetName());
 	  ws        = new wStack_t();
-	  ws->stack = new THStack(wh->histo()->GetName(),wh->histo()->GetTitle());
-	  ws->sum   = wh->Clone(wh->histo()->GetName(),
+	  ws->stack = new THStack(name,wh->histo()->GetTitle());
+	  sprintf(name,"%s_sum",wh->histo()->GetName());
+	  ws->sum   = wh->Clone(name,
 				wh->histo()->GetTitle());
 	} else 
 	  ws->sum->histo()->Add(wh->histo());
