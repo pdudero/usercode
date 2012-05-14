@@ -62,7 +62,7 @@ public:
 		  int style=0,
 		  int size=0);
   void SetStats  (bool  on=true,
-		  int   optstat=1,
+		  int   optstat=0,
 		  float x1ndc=0.,
 		  float y1ndc=0.,
 		  float x2ndc=0.,
@@ -96,6 +96,7 @@ public:
 
     if (verbosity_)
       std::cout << "legdrawopt="<<legdrawopt<<std::endl;
+
     leg->AddEntry(h_,legentry_.c_str(),legdrawopt.c_str());
   }
 
@@ -278,7 +279,8 @@ MyHistoWrapper<T>::SetStats(bool  on,
 {
   statsAreOn_ = on;
   h_->SetStats(on);
-  stats_.SetOptStat(optstat);
+  if (on && optstat)
+    stats_.SetOptStat(optstat);
   if (x1ndc > 0.0) stats_.SetX1NDC(x1ndc);
   if (y1ndc > 0.0) stats_.SetY1NDC(y1ndc);
   if (x2ndc > 0.0) stats_.SetX2NDC(x2ndc);
@@ -361,20 +363,21 @@ MyHistoWrapper<T>::DrawStats(void)
   double y1 = stats_.GetY1NDC();
   double y2 = stats_.GetY2NDC();
 
+  if (verbosity_) {
+    std::cout << "MyHistoWrapper::DrawStats: ";
+    std::cout << "Drawing Stats Object for " << h_->GetName() << std::endl;
+    std::cout << "with OptStat = " << stats_.GetOptStat() << std::endl;
+    std::cout << "at (X=";
+    std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")";
+  }
+
   if ((x1 > 0)  && (x1 < 1.) &&
       (x2 > x1) && (x2 < 1.) &&
       (y1 > 0)  && (y1 < 1.) &&
       (y2 > y1) && (y2 < 1.)) {
     st1->SetX1NDC(x1); st1->SetX2NDC(x2);
     st1->SetY1NDC(y1); st1->SetY2NDC(y2);
-
-    if (verbosity_) {
-      std::cout << "MyHistoWrapper::DrawStats: ";
-      std::cout << "Drawing Stats Object for " << h_->GetName() << std::endl;
-      std::cout << "with OptStat = " << stats_.GetOptStat() << std::endl;
-      std::cout << "at (X=";
-      std::cout << x1 << "-" << x2 << ", Y=" << y1 << "-" << y2 << ")"<< std::endl;
-    }
+    std::cout << std::endl;
   } else {
     std::cout<<"Sorry, Charlie"<<std::endl;
   }
