@@ -91,12 +91,14 @@ void getHistosFromRE(const string&   mhid,
     cout<<"Searching for regexp "<<sre<<" in "<<filepath;
 
   // allow for multiple regexes in OR combination
+  //
   vector<string> v_regexes;
   Tokenize(sre,v_regexes,"|");
   if (!v_regexes.size())
     v_regexes.push_back(sre);
 
-  // Check 'em now!
+  // Build validated TRegexp arguments in preparation for directory recursion
+  //
   TObjArray *Args = new TObjArray();
   for (size_t i=0; i<v_regexes.size(); i++) {
     TRegexp re(v_regexes[i].c_str(),kTRUE);
@@ -110,6 +112,8 @@ void getHistosFromRE(const string&   mhid,
     }
   }
 
+  // Get the root file
+  //
   TFile *rootfile = NULL;
   map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(filepath);
   if (it != glmap_id2rootfile.end())
@@ -126,6 +130,8 @@ void getHistosFromRE(const string&   mhid,
 
   glmap_id2rootfile.insert(pair<string,TFile*>(filepath,rootfile));
 
+  // Do the recursion, collect matches
+  //
   TObjArray *Matches = new TObjArray();
   recurseDirs(rootfile, &regexMatchHisto, Args, Matches);
   Args->Delete();
@@ -139,6 +145,7 @@ void getHistosFromRE(const string&   mhid,
   if (gl_verbose) cout << "... " << nx2matches/2 << " match(es) found.";
 
   // Add the matches to the global map of histos
+  //
   int istart = v_wth1.size();
 
   for (int i=0; i<nx2matches; i+=2) {
