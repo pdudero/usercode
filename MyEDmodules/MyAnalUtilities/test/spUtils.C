@@ -105,11 +105,11 @@ bool getKeyValue(const string& theline,
 		 bool expandAliii=true)
 { 
   vector<string> v_tokens;
-  Tokenize(theline,v_tokens,"=");
+  Tokenize(theline,v_tokens,"=",true);
 
-  if ((v_tokens.size() < 2) ||
+  if ((v_tokens.size() < 3) ||
       (!v_tokens[0].size()) ||
-      (!v_tokens[1].size())    ) {
+      (!v_tokens[2].size())    ) {
     cerr << "malformed key=value line " << theline << endl;
     return false;
   }
@@ -118,8 +118,7 @@ bool getKeyValue(const string& theline,
 
   // allow for '=' in the value, but not in the key!
   //
-  for (unsigned i=1; i<v_tokens.size(); i++) {
-    if (value.size()) value += "=";
+  for (unsigned i=2; i<v_tokens.size(); i++) {
     value+=v_tokens[i];
   }
 
@@ -131,9 +130,11 @@ bool getKeyValue(const string& theline,
 			    string& output);
       
     expandAliii(temp,value);
+    //cout << value << endl;
     if( !value.size()) return false;
     if( i>=10 ) {
       cerr << "Potential alias mutual self-reference cycle detected, please fix!" << endl;
+      cerr << "line = " << theline << endl;
       exit(-1);
     }
   }
