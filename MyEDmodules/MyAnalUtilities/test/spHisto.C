@@ -1,5 +1,7 @@
 #include <algorithm>
 
+struct wGraph_t;
+
 inline bool isnumeric(const std::string& foo) {
   return (count_if(foo.begin(), foo.end(), ::isdigit) == (int)foo.size());
   //std::count_if(c.begin(), c.end(),
@@ -29,13 +31,13 @@ TH1 *findHisto(const string& hid, const string& errmsg="")
 void printUsage(const string additionalinfo="") {
   cerr << "\nERROR in printfstat format: " << additionalinfo<< endl;
   cerr << "printfstat format: \"printf fmt str\",arg1,arg2,...";
-  cerr << "where argX = {k|s|i|I|o|u|r|m|e|p|f|h|d}"        << endl;
+  cerr << "where argX = {k|s|i|I|o|u|r|m|M|e|n|p|f|h|d}"    << endl;
   cerr << "	where p=filepath:histo path"                << endl;
   cerr << "	      h=histo path"                         << endl;
   cerr << "	      f=filename"                           << endl;
   cerr << "	      d=histo containing directory/folder"  << endl;
   cerr << "	      I=integral including over/underflows" << endl;
-  cerr << "	      ksiourme=> see ROOT documentation"    << endl;
+  cerr << "	      ksiourmen=> see ROOT documentation"   << endl;
 }
 
 double getStat(TH1 *h, const string& key)
@@ -51,10 +53,25 @@ double getStat(TH1 *h, const string& key)
   case 'u': return h->GetBinContent( 0 );
   case 'r': return h->GetRMS();
   case 'm': return h->GetMean();
+  case 'M': return h->GetMeanError();
   case 'e': return h->GetEntries();
   default:break;
   }
   return -9e99;
+}
+
+float getStatArg(TH1 *h, const string& argstr)
+{
+  float arg;
+  if( isnumeric(argstr) ) {
+    arg = str2flt(argstr);
+  } else if (argstr.find_first_of("ksiIourmMep") != string::npos) {
+    arg = getStat(h,argstr);
+  } else {
+    printUsage("argument not understood: "+argstr);
+    return -9e99;
+  }
+  return arg;
 }
 
 void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
@@ -126,34 +143,22 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
       if( arg.size() > 2 ) { // check for normalization
 	size_t pos = arg.find("/");
 	if( pos != string::npos ) {
-	  string numerstr=arg.substr(0,pos);
-	  string denomstr=arg.substr(pos+1);
-	  if( isnumeric(denomstr) ) {
-	    float denom = str2flt(denomstr);
-	    if( isnumeric(numerstr) ) {
-	      float numer = str2flt(numerstr);
-	      printf( fmt.c_str(), numer/denom );
-	    } else if (numerstr.find_first_of("ksiIourmep") != string::npos) {
-	      double stat = getStat(h,numerstr);
-	      printf( fmt.c_str(), stat/denom );
-	    } else {
-	      printUsage("numerator not understood: "+arg);
-	      return;
-	    }
-	  } else {
-	    printUsage("denominator must be numeric: "+arg);
-	    return;
-	  }
+	  string numerstr = arg.substr(0,pos);
+	  string denomstr = arg.substr(pos+1);
+	  float  numer    = getStatArg(h,numerstr);
+	  float  denom    = getStatArg(h,denomstr);
+	  printf( fmt.c_str(), numer/denom );
 	} else {
 	  printUsage("unrecognized argument: "+arg);
 	  return;
 	}
-      } else if (arg.find_first_of("ksiIourmep") != string::npos) {
+      } else if (arg.find_first_of("ksiIourmMep") != string::npos) {
 	double stat = getStat(h,arg);
 	printf( fmt.c_str(), stat );
       } else {
 	char c = arg[0];
 	switch( c ) {
+	case 'n': printf( fmt.c_str(), h->GetName() );
 	case 'p': // full histo path
 	case 'f': // root filename
 	case 'h': // histo path in file
@@ -353,6 +358,48 @@ void load1DHistoContentsFromTextFile(const char *filename,
 }                                    //  load1DHistoContentsFromTextFile
 
 //======================================================================
+// takes a single column of numbers to fill into a pre-booked histo
+//
+void fill1DHistoFromTextFile(const string& scanspec,
+			     wTH1 *&wth1)
+{
+  char linein[LINELEN];
+  vector<string> v_tokens;
+
+  Tokenize(scanspec,v_tokens,"\",");
+
+  string filename = v_tokens[0];
+
+  TString scanfmt("%lf");
+  if (v_tokens.size() > 1) {
+    scanfmt = TString(v_tokens[1].c_str());
+  }
+  FILE *fp = fopen(filename.c_str(), "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  if (gl_verbose)
+    cout << "Loading numbers from file " << filename;
+
+  double num;
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+
+    int nscan= sscanf(linein, scanfmt.Data(), &num);
+    if (!nscan) {
+      cerr << "Error reading line " << linein;
+      continue;
+    }
+
+    wth1->histo()->Fill(num);
+  }
+
+  fclose(fp);
+}                                            //  fill1DHistoFromTextFile
+
+//======================================================================
 
 wTH1 *getHistoFromSpec(const string& hid,
 		       const string& spec)
@@ -368,15 +415,7 @@ wTH1 *getHistoFromSpec(const string& hid,
   string hspec;
   string rootfn;
 
-  // Expand aliii first
-  if( spec.find('@') != string::npos) {
-    //assert(0);
-    string temp=spec;
-    expandAliii(temp,fullspec);
-    if( !fullspec.size() ) return NULL;
-  } else {
-    fullspec = spec;
-  }
+  fullspec = spec;
 
   Tokenize(fullspec,v_tokens,":");
   if( (v_tokens.size() != 2) ||
@@ -404,17 +443,8 @@ wTH1 *getHistoFromSpec(const string& hid,
     wth1 = hit->second;
   } else {
 #endif
-    // Now check to see if this file has already been opened...
-    map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
-    if( it != glmap_id2rootfile.end() )
-      rootfile = it->second;
-    else
-      rootfile = new TFile(rootfn.c_str());
-
-    if( rootfile->IsZombie() ) {
-      cerr << "File failed to open, " << rootfn << endl;
-    } else {
-      glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
+    rootfile = openRootFile(rootfn);
+    if (rootfile) {
       TH1 *h1 = (TH1 *)rootfile->Get(hspec.c_str());
       if( !h1) {
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
@@ -611,22 +641,31 @@ void processCommonHistoParams(const string& key,
   else if( key == "printfstats" )  printHistoStats( wh.histo(),histo_id,value );
   else if( key == "print2file" )   printHisto2File( wh.histo(),value );
   else if( key == "save2file" )     saveHisto2File( wh.histo(),value );
-  else if( (key == "normalize") &&
-	   str2int(value) ) {
+  else if( key == "normalize" ) {
     TH1 *h1 = (TH1 *)wh.histo();
+    float norm = str2flt(value);
     if( h1->Integral() > 0.0 )
-      h1->Scale( 1./h1->Integral() );
+      h1->Scale( norm/h1->Integral() );
     else
       cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
   //==============================
-  else if( key == "scaleby" ) {
+  else if( key == "scalebyfactor" ) {
+  //==============================
+
+    double sf = (double)str2flt(value);
+    TH1 *h1 = (TH1 *)wh.histo();
+    if( gl_verbose ) cout << "scaling histo "<<h1->GetName()<<" by "<<sf<<endl;
+    h1->Scale(sf);
+  }
+  //==============================
+  else if( key == "scalebysample" ) {
   //==============================
 
     // Expect value=@samplename(integlumi_invpb)
     Tokenize(value,v_tokens,"()");
     if( v_tokens.size() != 2 ) {
-      cerr << "invalid scaleby specifier, " << value << endl;
+      cerr << "invalid scalebysample specifier, " << value << endl;
       return;
     }
     
@@ -737,6 +776,76 @@ processHistoSection(FILE *fp,
       if( !wth1 ) continue;
 
     //------------------------------
+    } else if( key == "book1dpars" ) { // book a blank 1D histo with provided parameters
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( wth1 ) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,","); // title can't have commas in it!
+
+      if( (v_tokens.size() != 5) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())  ||
+	  (!isnumeric(v_tokens[2]))  ||
+	  (!v_tokens[3].size())  ||
+	  (!v_tokens[4].size()) ) {
+	for (unsigned i=0; i<v_tokens.size(); i++)
+	  cout << v_tokens[i] << endl;
+	cerr << "malformed 1d parameter specification " << value << endl; continue;
+      }
+
+      wth1 = new wTH1(new TH1D(v_tokens[0].c_str(),
+			       v_tokens[1].c_str(),
+			       str2int(v_tokens[2]),
+			       str2flt(v_tokens[3]),
+			       str2flt(v_tokens[4])));
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
+    } else if( key == "book2dpars" ) { // book a blank 2D histo with provided parameters
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( wth1 ) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,","); // title can't have commas in it!
+
+      if( (v_tokens.size() != 8) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())  ||
+	  (!isnumeric(v_tokens[2]))  ||
+	  (!v_tokens[3].size())  ||
+	  (!v_tokens[4].size())  ||
+	  (!isnumeric(v_tokens[5]))  ||
+	  (!v_tokens[6].size())  ||
+	  (!v_tokens[7].size())     ) {
+	for (unsigned i=0; i<v_tokens.size(); i++)
+	  cout << v_tokens[i] << endl;
+	cerr << "malformed 1d parameter specification " << value << endl; continue;
+      }
+
+      wth1 = new wTH1(new TH2D(v_tokens[0].c_str(),
+			       v_tokens[1].c_str(),
+			       str2int(v_tokens[2]),
+			       str2flt(v_tokens[3]),
+			       str2flt(v_tokens[4]),
+			       str2int(v_tokens[5]),
+			       str2flt(v_tokens[6]),
+			       str2flt(v_tokens[7])
+			       )
+		      );
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
     } else if( key == "loadtxtfile" ) {
     //------------------------------
       if( !hid ) {
@@ -745,6 +854,49 @@ processHistoSection(FILE *fp,
       load1DHistoContentsFromTextFile(value.c_str(),wth1);
 
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
+    } else if( key == "filltxtfile" ) { // fill pre-booked 1D histo with list of numbers
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "histo not defined yet!" << endl; continue;
+      }
+
+      fill1DHistoFromTextFile(value,wth1);
+
+    //------------------------------
+    } else if( key == "fillfromgraph" ) { // converts graph into 1D histo
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "histo not defined yet!" << endl; continue;
+      }
+
+      // defined in spGraph.C
+      void fill1DHistoFromGraph(std::string& gid,wTH1 *&wth1);
+      
+      fill1DHistoFromGraph(value,wth1);
+
+    //------------------------------
+    } else if( key == "fillfromtree" ) { // converts tree into 1D histo
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "fillfromtree: Histo must be prebooked with book1dpars or book2dpars" << endl; continue;
+	// histo assumed to be booked already in the fill routine
+      }
+
+      // defined in spTree.C
+      void fillHistoFromTreeVar(std::string& gid,wTH1 *&wth1);
+
+      fillHistoFromTreeVar(value,wth1);
 
     //------------------------------
     } else if( key == "hprop" ) {    // fill a histogram with a per-bin property of another
