@@ -99,6 +99,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
     else if (key == "xtitleoffset") thestyle->SetTitleOffset(str2flt(value),"X");
     else if (key == "ytitleoffset") thestyle->SetTitleOffset(str2flt(value),"Y");
     else if (key == "ztitleoffset") thestyle->SetTitleOffset(str2flt(value),"Z");
+    else if (key == "xlabeloffset") thestyle->SetLabelOffset(str2flt(value),"X");
+    else if (key == "ylabeloffset") thestyle->SetLabelOffset(str2flt(value),"Y");
+    else if (key == "zlabeloffset") thestyle->SetLabelOffset(str2flt(value),"Z");
     else if (key == "xtitlefont")   thestyle->SetTitleFont(str2int(value),"X");
     else if (key == "ytitlefont")   thestyle->SetTitleFont(str2int(value),"Y");
     else if (key == "ztitlefont")   thestyle->SetTitleFont(str2int(value),"Z");
