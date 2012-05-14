@@ -120,13 +120,13 @@ struct canvasSet_t {
 static map<string, string>      glmap_objpath2id;  // keep track of objects read in
 static map<string, string>      glmap_id2objpath;  // keep track of objects read in
 static map<string, wTH1 *>      glmap_id2histo;
-static map<string, TFile *>     glmap_id2rootfile;
 
 static string nullstr;
 
 static bool gl_verbose;
 
 #include "spUtils.C"
+#include "spRootFile.C"
 #include "spAlias.C"
 #include "spSample.C"
 #include "spMacro.C"
@@ -134,6 +134,7 @@ static bool gl_verbose;
 #include "spTF1.C"
 #include "spHisto.C"
 #include "spHmath.C"
+#include "spTree.C"
 #include "spGraph.C"
 #include "spLabelLatex.C"
 #include "spLayout.C"
@@ -163,6 +164,7 @@ void clearEverything()
   glmap_id2rootfile.clear();
   glmap_id2style.clear();
   glmap_id2tf1.clear();
+  glmap_id2tree.clear();
   glmap_id2sample.clear();
 }
 
@@ -236,6 +238,7 @@ void parseCanvasLayout(const string& layoutFile,
     else if (section == "SAMPLE")    success=processSampleSection   (fp,theline,new_section);
     else if (section == "TF1")       success=processTF1Section      (fp,theline,new_section);
     else if (section == "MACRO")     success=processMacroSection    (fp,theline,new_section);
+    else if (section == "TREE")      success=processTreeSection     (fp,theline,new_section);
     else {
       cerr << "Unknown section " << section << " in " << layoutFile << endl;
     }
