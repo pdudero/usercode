@@ -19,15 +19,19 @@ void expandAliii(const string& input,
 		 string& output)
 {
   const bool include_delimiters = true;
-  const string ispunc("\",./<>?;:'[]{}\\|`~!#$%^&*()_-+= ");
+  const string ispunc("\",./<>?;:'[]{}\\|`~!#$%^&*()_-+=@ ");
 
   output.clear();
   vector<string> v_tokens;
   Tokenize(input,v_tokens, ispunc, include_delimiters);
   for (size_t i=0; i<v_tokens.size(); i++) {
-    if (v_tokens[i][0] == '@')
-      output += extractAlias(v_tokens[i].substr(1));
-    else
+    if (*v_tokens[i].rbegin() == '@' &&
+	i<v_tokens.size()-1) {
+      int len=v_tokens[i].length();
+      if (len>1) // put the punctuation back! But not the '@'
+	output += v_tokens[i].substr(0,--len);
+      output += extractAlias(v_tokens[++i]);
+    } else
       output += v_tokens[i];
   }
   //cout << "expanded "<<input<<"==>"<<output<<endl;
