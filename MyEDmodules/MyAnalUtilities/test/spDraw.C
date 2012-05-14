@@ -52,7 +52,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 //======================================================================
 
 template<class T>
-void drawInPad(wPad_t *wp, T *obj,const string& drawopt, bool firstInPad=false)
+void drawInPad(wPad_t *wp, T *obj,const string& indrawopt, bool firstInPad=false)
 {
   wp->vp->SetFillColor(wp->fillcolor);
 
@@ -71,10 +71,16 @@ void drawInPad(wPad_t *wp, T *obj,const string& drawopt, bool firstInPad=false)
     if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
   }
 
+  TString drawopt = indrawopt;
+  if (!firstInPad) 
+    drawopt += " SAME";
+
   if (gl_verbose)
     cout<<"Drawing "<<obj->GetName()<<" with option(s) "<<drawopt<<endl;
 
-  obj->Draw(drawopt.c_str());
+  obj->Draw(drawopt);
+
+
 
   wp->vp->Update();
 }                                                           // drawInPad
@@ -153,11 +159,22 @@ void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
       pos0=pos+1;
       switch (namefmt[pos0]) { 
       case 'C': picfilename += wc->title; break;
-      case 'F': {
+      case 'P': { // full path contained in glmap
 	string datafile;
 	map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
 	if (it != glmap_id2rootfile.end())
 	  datafile = it->first.substr(0,it->first.find_last_of('.'));
+	picfilename += datafile;
+      }	break;
+      case 'F': { // filename stripped of path info
+	string datafile;
+	map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
+	if (it != glmap_id2rootfile.end()) {
+	  size_t pos1 = it->first.find_last_of('/');
+	  datafile =  (pos1 != string::npos) ?
+	    it->first.substr(pos1+1,it->first.find_last_of('.')-pos1-1) :
+	    it->first.substr(0,it->first.find_last_of('.'));
+	}
 	picfilename += datafile;
       }	break;
       default:
@@ -555,33 +572,78 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     /***************************************************
      * LOOP OVER GRAPHS DEFINED FOR PAD...
      ***************************************************/
-
-    for (unsigned j = 0; j < wp->graph_ids.size(); j++) {
+#if 0
+    TMultiGraph *mg;
+    if (graph_ids.size())
+      mg = new TMultiGraph();
+#endif
+    for( unsigned j = 0; j < wp->graph_ids.size(); j++ ) {
       string& gid = wp->graph_ids[j];
       map<string,wGraph_t *>::const_iterator it   = glmap_id2graph.find(gid);
       wGraph_t *wg   = NULL;
 
-      if (it == glmap_id2graph.end()) {
+      if( it == glmap_id2graph.end() ) {
 	cerr << "ERROR: graph id " << gid << " never defined in layout" << endl;
 	exit (-1);
       } else {
 	wg = it->second;
       }
 
-      //if (!j && !wp->histo_ids.size() && !wp->macro_ids.size())
-      //drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size();
+      if( firstInPad && wg->gr && wg->gr->IsA()==TGraph::Class() )
+	wg->drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
 
-      if (wg && wg->gr) {
-	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),true);
+      if( wg && wg->gr ) {
+	// "pre-draw" in order to define the plot elements
+	wg->gr->Draw(wg->drawopt.c_str());
+
+	if (firstInPad) {
+	  // Now we can set the axis attributes and range:
+	  wg->gr->GetXaxis()->ImportAttributes(wg->xax);
+	  wg->gr->GetYaxis()->ImportAttributes(wg->yax);
+
+	  cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
+	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
+	    wg->gr->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
+	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
+	    wg->gr->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	}
+	// draw for good
+	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),firstInPad);
+
 	wp->vp->Update();
-	if (drawlegend)
+	if( wg->fitfn ) 
+	  wg->gr->Fit(wg->fitfn);
+	if( drawlegend && wg->leglabel.size() )
 	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
-      if (wg && wg->gr2d) {
-	drawInPad<TGraph2D>(wp,wg->gr2d,wg->drawopt.c_str(),true);
+      if( wg && wg->gr2d ) {
+	drawInPad<TGraph2D>(wp,wg->gr2d,wg->drawopt.c_str(),firstInPad);
+
+	if (firstInPad) {
+	  // Now we can set the axis attributes and range:
+	  wg->gr2d->GetXaxis()->ImportAttributes(wg->xax);
+	  wg->gr2d->GetYaxis()->ImportAttributes(wg->yax);
+
+	  cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
+	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
+	    wg->gr2d->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
+	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
+	    wg->gr2d->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	}
+
+	if (wg->contours) {
+	  //cout << "setting contours "; wg->contours->Print();
+	  wg->gr2d->GetHistogram()->SetContour(wg->contours->GetNoElements(),
+					       wg->contours->GetMatrixArray());
+	  wg->gr2d->SetLineStyle   (wg->lstyle);
+	  wg->gr2d->SetLineColor   (wg->lcolor);
+	  wg->gr2d->SetLineWidth   (wg->lwidth);
+	}
+	wp->vp->Modified();
 	wp->vp->Update();
-	if (drawlegend)
-	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	if( drawlegend && wg->leglabel.size() )
+	  wleg->leg->AddEntry(wg->gr2d,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
     } // graph loop
 
@@ -589,7 +651,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * LOOP OVER LINES DEFINED FOR PAD...
      ***************************************************/
 
-    for (unsigned j = 0; j < wp->line_ids.size(); j++) {
+    for( unsigned j = 0; j < wp->line_ids.size(); j++ ) {
       string drawopt("L");
       string& lid = wp->line_ids[j];
       map<string,TLine *>::const_iterator it2 = glmap_id2line.find(lid);
