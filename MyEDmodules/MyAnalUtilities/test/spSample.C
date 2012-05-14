@@ -32,7 +32,7 @@ processSampleSection(FILE *fp,
 		     bool& new_section)
 {
   string *sid = NULL;
-  double xsecpb=0.0, filteff=1.0;
+  double xsecpb=0.0, filteff=1.0,br=1.0;
   double nevents=0;
 
   if (gl_verbose)
@@ -70,6 +70,14 @@ processSampleSection(FILE *fp,
       xsecpb=(double)str2flt(value);
 
     //------------------------------
+    } else if (key == "br") {
+    //------------------------------
+      if (!sid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      br=(double)str2flt(value);
+
+    //------------------------------
     } else if (key == "nevents") {
     //------------------------------
       if (!sid) {
@@ -90,6 +98,7 @@ processSampleSection(FILE *fp,
     }
   }
 
+  xsecpb *= br;
   if (filteff>0.0) xsecpb /= filteff;
 
   if ((nevents>0)&&
