@@ -1,0 +1,36 @@
+imax 4  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   hwwelnu2j   hwwelnu3j   hwwmunu2j   hwwmunu3j
+observation                          1165.70383   359.45437  1296.18329   464.41763
+--------------------
+shapes * * ./hww-histo-shapes-ichep2012_1p6fbinv_blinded-M=550.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   hwwelnu2j   hwwelnu2j   hwwelnu2j   hwwelnu3j   hwwelnu3j   hwwelnu3j   hwwmunu2j   hwwmunu2j   hwwmunu2j   hwwmunu3j   hwwmunu3j   hwwmunu3j
+process                                     qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot
+process                                      -1           0           1          -1           0           1          -1           0           1          -1           0           1
+rate                                       0.69        7.12     1165.70        0.28        2.81      359.45        0.89        9.25     1296.18        0.34        3.49      464.42
+--------------------
+CMS_eff_e                          lnN     1.02        1.02          -         1.02        1.02          -           -           -           -           -           -           -    
+CMS_eff_m                          lnN       -           -           -           -           -           -         1.02        1.02          -         1.02        1.02          -    
+CMS_hwwelnu2j_eff_sig              lnN      1.1         1.1          -           -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu2j_norm_back            lnN       -           -        1.012          -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu2j_shape_back         shape       -           -            1          -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu3j_eff_sig              lnN       -           -           -          1.1         1.1          -           -           -           -           -           -           -    
+CMS_hwwelnu3j_norm_back            lnN       -           -           -           -           -        1.035          -           -           -           -           -           -    
+CMS_hwwelnu3j_shape_back         shape       -           -           -           -           -            1          -           -           -           -           -           -    
+CMS_hwwmunu2j_eff_sig              lnN       -           -           -           -           -           -          1.1         1.1          -           -           -           -    
+CMS_hwwmunu2j_norm_back            lnN       -           -           -           -           -           -           -           -         1.02          -           -           -    
+CMS_hwwmunu2j_shape_back         shape       -           -           -           -           -           -           -           -            1          -           -           -    
+CMS_hwwmunu3j_eff_sig              lnN       -           -           -           -           -           -           -           -           -          1.1         1.1          -    
+CMS_hwwmunu3j_norm_back            lnN       -           -           -           -           -           -           -           -           -           -           -        1.035   
+CMS_hwwmunu3j_shape_back         shape       -           -           -           -           -           -           -           -           -           -           -            1   
+CMS_trigger_e                      lnN     1.01        1.01          -         1.01        1.01          -           -           -           -           -           -           -    
+CMS_trigger_m                      lnN       -           -           -           -           -           -         1.01        1.01          -         1.01        1.01          -    
+QCDscale_ggH                       lnN       -        1.056          -           -        1.056          -           -        1.056          -           -        1.056          -    
+QCDscale_qqH                       lnN    1.013          -           -        1.013          -           -        1.013          -           -        1.013          -           -    
+lumi                               lnN    1.022       1.022          -        1.022       1.022          -        1.022       1.022          -        1.022       1.022          -    
+pdf_gg                             lnN       -          1.1          -           -          1.1          -           -          1.1          -           -          1.1          -    
+pdf_qqbar                          lnN    1.045          -           -        1.045          -           -        1.045          -           -        1.045          -           -    
+theoryUncXS_HighMH                 lnN     1.25        1.25          -         1.25        1.25          -         1.25        1.25          -         1.25        1.25          -    
