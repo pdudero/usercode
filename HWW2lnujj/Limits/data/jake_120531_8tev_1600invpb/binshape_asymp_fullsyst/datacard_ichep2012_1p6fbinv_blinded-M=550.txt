@@ -12,25 +12,23 @@ process                                     qqH         ggH    Bkgrdtot         
 process                                      -1           0           1          -1           0           1          -1           0           1          -1           0           1
 rate                                       0.69        7.12     1165.70        0.28        2.81      359.45        0.89        9.25     1296.18        0.34        3.49      464.42
 --------------------
-CMS_eff_e                          lnN     1.02        1.02          -         1.02        1.02          -           -           -           -           -           -           -    
-CMS_eff_m                          lnN       -           -           -           -           -           -         1.02        1.02          -         1.02        1.02          -    
-CMS_hwwelnu2j_eff_sig              lnN      1.1         1.1          -           -           -           -           -           -           -           -           -           -    
-CMS_hwwelnu2j_norm_back            lnN       -           -        1.012          -           -           -           -           -           -           -           -           -    
+CMS_eff_e                          lnN    1.022       1.022          -        1.022       1.022          -           -           -           -           -           -           -    
+CMS_eff_m                          lnN       -           -           -           -           -           -        1.022       1.022          -        1.022       1.022          -    
+CMS_hwwelnu2j_eff_sig_8TeV         lnN      1.1         1.1          -           -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu2j_norm_back_8TeV       lnN       -           -        1.012          -           -           -           -           -           -           -           -           -    
 CMS_hwwelnu2j_shape_back         shape       -           -            1          -           -           -           -           -           -           -           -           -    
-CMS_hwwelnu3j_eff_sig              lnN       -           -           -          1.1         1.1          -           -           -           -           -           -           -    
-CMS_hwwelnu3j_norm_back            lnN       -           -           -           -           -        1.035          -           -           -           -           -           -    
+CMS_hwwelnu3j_eff_sig_8TeV         lnN       -           -           -          1.1         1.1          -           -           -           -           -           -           -    
+CMS_hwwelnu3j_norm_back_8TeV       lnN       -           -           -           -           -        1.035          -           -           -           -           -           -    
 CMS_hwwelnu3j_shape_back         shape       -           -           -           -           -            1          -           -           -           -           -           -    
-CMS_hwwmunu2j_eff_sig              lnN       -           -           -           -           -           -          1.1         1.1          -           -           -           -    
-CMS_hwwmunu2j_norm_back            lnN       -           -           -           -           -           -           -           -         1.02          -           -           -    
+CMS_hwwmunu2j_eff_sig_8TeV         lnN       -           -           -           -           -           -          1.1         1.1          -           -           -           -    
+CMS_hwwmunu2j_norm_back_8TeV       lnN       -           -           -           -           -           -           -           -         1.02          -           -           -    
 CMS_hwwmunu2j_shape_back         shape       -           -           -           -           -           -           -           -            1          -           -           -    
-CMS_hwwmunu3j_eff_sig              lnN       -           -           -           -           -           -           -           -           -          1.1         1.1          -    
-CMS_hwwmunu3j_norm_back            lnN       -           -           -           -           -           -           -           -           -           -           -        1.035   
+CMS_hwwmunu3j_eff_sig_8TeV         lnN       -           -           -           -           -           -           -           -           -          1.1         1.1          -    
+CMS_hwwmunu3j_norm_back_8TeV       lnN       -           -           -           -           -           -           -           -           -           -           -        1.035   
 CMS_hwwmunu3j_shape_back         shape       -           -           -           -           -           -           -           -           -           -           -            1   
-CMS_trigger_e                      lnN     1.01        1.01          -         1.01        1.01          -           -           -           -           -           -           -    
-CMS_trigger_m                      lnN       -           -           -           -           -           -         1.01        1.01          -         1.01        1.01          -    
 QCDscale_ggH                       lnN       -        1.056          -           -        1.056          -           -        1.056          -           -        1.056          -    
-QCDscale_qqH                       lnN    1.013          -           -        1.013          -           -        1.013          -           -        1.013          -           -    
+QCDscale_qqH                       lnN    1.005          -           -        1.005          -           -        1.005          -           -        1.005          -           -    
 lumi                               lnN    1.022       1.022          -        1.022       1.022          -        1.022       1.022          -        1.022       1.022          -    
 pdf_gg                             lnN       -          1.1          -           -          1.1          -           -          1.1          -           -          1.1          -    
-pdf_qqbar                          lnN    1.045          -           -        1.045          -           -        1.045          -           -        1.045          -           -    
+pdf_qqbar                          lnN    1.035          -           -        1.035          -           -        1.035          -           -        1.035          -           -    
 theoryUncXS_HighMH                 lnN     1.25        1.25          -         1.25        1.25          -         1.25        1.25          -         1.25        1.25          -    
