@@ -1,0 +1,33 @@
+imax 4  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   hwwelnu2j   hwwelnu3j   hwwmunu2j   hwwmunu3j
+observation                          3863.93321   959.00376  5725.15503  1765.02788
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-ichep2012-M=186.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   hwwelnu2j   hwwelnu2j   hwwelnu2j   hwwelnu3j   hwwelnu3j   hwwelnu3j   hwwmunu2j   hwwmunu2j   hwwmunu2j   hwwmunu3j   hwwmunu3j   hwwmunu3j
+process                                     qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot         qqH         ggH    Bkgrdtot
+process                                      -1           0           1          -1           0           1          -1           0           1          -1           0           1
+rate                                       1.15       20.44     3863.93        0.42        4.48      959.00        2.46       41.46     5725.16        1.03       11.09     1765.03
+--------------------
+CMS_eff_e                          lnN    1.022       1.022          -        1.022       1.022          -           -           -           -           -           -           -    
+CMS_eff_m                          lnN       -           -           -           -           -           -        1.022       1.022          -        1.022       1.022          -    
+CMS_hwwelnu2j_eff_sig_8TeV         lnN      1.1         1.1          -           -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu2j_norm_back_8TeV       lnN       -           -        1.009          -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu2j_shape_back_8TeV    shape       -           -            1          -           -           -           -           -           -           -           -           -    
+CMS_hwwelnu3j_eff_sig_8TeV         lnN       -           -           -          1.1         1.1          -           -           -           -           -           -           -    
+CMS_hwwelnu3j_norm_back_8TeV       lnN       -           -           -           -           -        1.007          -           -           -           -           -           -    
+CMS_hwwelnu3j_shape_back_8TeV    shape       -           -           -           -           -            1          -           -           -           -           -           -    
+CMS_hwwmunu2j_eff_sig_8TeV         lnN       -           -           -           -           -           -          1.1         1.1          -           -           -           -    
+CMS_hwwmunu2j_norm_back_8TeV       lnN       -           -           -           -           -           -           -           -        1.006          -           -           -    
+CMS_hwwmunu2j_shape_back_8TeV    shape       -           -           -           -           -           -           -           -            1          -           -           -    
+CMS_hwwmunu3j_eff_sig_8TeV         lnN       -           -           -           -           -           -           -           -           -          1.1         1.1          -    
+CMS_hwwmunu3j_norm_back_8TeV       lnN       -           -           -           -           -           -           -           -           -           -           -        1.006   
+CMS_hwwmunu3j_shape_back_8TeV    shape       -           -           -           -           -           -           -           -           -           -           -            1   
+QCDscale_ggH                       lnN       -        1.068          -           -        1.068          -           -        1.068          -           -        1.068          -    
+QCDscale_qqH                       lnN    1.002          -           -        1.002          -           -        1.002          -           -        1.002          -           -    
+lumi                               lnN    1.022       1.022          -        1.022       1.022          -        1.022       1.022          -        1.022       1.022          -    
+pdf_gg                             lnN       -         1.08          -           -         1.08          -           -         1.08          -           -         1.08          -    
+pdf_qqbar                          lnN    1.033          -           -        1.033          -           -        1.033          -           -        1.033          -           -    

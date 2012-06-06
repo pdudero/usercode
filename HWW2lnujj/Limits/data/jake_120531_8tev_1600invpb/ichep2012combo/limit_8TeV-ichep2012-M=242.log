@@ -1,0 +1,15 @@
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+
+Computing limit starting from observation
+
+ -- Asymptotic -- 
+Observed Limit: r < 2.2235
+Expected  2.5%: r < 1.2080
+Expected 16.0%: r < 1.6069
+Expected 50.0%: r < 2.2266
+Expected 84.0%: r < 3.0927
+Expected 97.5%: r < 4.1091
+
+Done in 0.01 min (cpu), 0.01 min (real)
