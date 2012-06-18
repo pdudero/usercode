@@ -1,0 +1,25 @@
+imax 2  # number of channels
+jmax 1  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   hwwmunu2j   hwwmunu3j
+observation                          3027.00006   503.99999
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-ichep2012_8tevsamples_unblinded-M=500.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   hwwmunu2j   hwwmunu2j   hwwmunu3j   hwwmunu3j
+process                                     ggH    Bkgrdtot         ggH    Bkgrdtot
+process                                       0           1           0           1
+rate                                      40.09     3032.08       10.05      504.78
+--------------------
+CMS_eff_m                          lnN    1.022          -        1.022          -    
+CMS_hwwmunu2j_eff_sig_8TeV         lnN      1.1          -           -           -    
+CMS_hwwmunu2j_norm_back_8TeV       lnN       -        1.014          -           -    
+CMS_hwwmunu2j_shape_back_8TeV    shape       -            1          -           -    
+CMS_hwwmunu3j_eff_sig_8TeV         lnN       -           -          1.1          -    
+CMS_hwwmunu3j_norm_back_8TeV       lnN       -           -           -            1   
+CMS_hwwmunu3j_shape_back_8TeV    shape       -           -           -            1   
+QCDscale_ggH                       lnN    1.056          -        1.056          -    
+lumi                               lnN    1.022          -        1.022          -    
+pdf_gg                             lnN    1.096          -        1.096          -    
+theoryUncXS_HighMH                 lnN    1.188          -        1.188          -    
