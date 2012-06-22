@@ -6,11 +6,11 @@ combine: /usr/lib64/libxml2.so.2: no version information available (required by 
 Computing limit starting from observation
 
  -- Asymptotic -- 
-Observed Limit: r < 1.2836
-Expected  2.5%: r < 0.7206
-Expected 16.0%: r < 0.9585
-Expected 50.0%: r < 1.3281
-Expected 84.0%: r < 1.8448
-Expected 97.5%: r < 2.4510
+Observed Limit: r < 1.2867
+Expected  2.5%: r < 0.7227
+Expected 16.0%: r < 0.9613
+Expected 50.0%: r < 1.3320
+Expected 84.0%: r < 1.8502
+Expected 97.5%: r < 2.4582
 
 Done in 0.01 min (cpu), 0.01 min (real)
