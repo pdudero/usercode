@@ -1,0 +1,35 @@
+imax 4  # number of channels
+jmax 1  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   hwwelnu2j   hwwelnu3j   hwwmunu2j   hwwmunu3j
+observation                          2743.99999   796.00001  3329.99998  1119.00000
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-ichep2012_8tevsamples_5p1invfbtopup-M=600.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   hwwelnu2j   hwwelnu2j   hwwelnu3j   hwwelnu3j   hwwmunu2j   hwwmunu2j   hwwmunu3j   hwwmunu3j
+process                                     ggH    Bkgrdtot         ggH    Bkgrdtot         ggH    Bkgrdtot         ggH    Bkgrdtot
+process                                       0           1           0           1           0           1           0           1
+rate                                      17.41     2748.57        6.82      797.06       18.82     3335.41        7.26     1119.95
+--------------------
+CMS_eff_e                          lnN    1.022          -        1.022          -           -           -           -           -    
+CMS_eff_m                          lnN       -           -           -           -        1.022          -        1.022          -    
+CMS_hwwelnu2j_eff_sig_8TeV         lnN      1.1          -           -           -           -           -           -           -    
+CMS_hwwelnu2j_norm_back_8TeV       lnN       -        1.013          -           -           -           -           -           -    
+CMS_hwwelnu2j_shape_back_8TeV    shape       -            1          -           -           -           -           -           -    
+CMS_hwwelnu3j_eff_sig_8TeV         lnN       -           -          1.1          -           -           -           -           -    
+CMS_hwwelnu3j_norm_back_8TeV       lnN       -           -           -        1.028          -           -           -           -    
+CMS_hwwelnu3j_shape_back_8TeV    shape       -           -           -            1          -           -           -           -    
+CMS_hwwmunu2j_eff_sig_8TeV         lnN       -           -           -           -          1.1          -           -           -    
+CMS_hwwmunu2j_norm_back_8TeV       lnN       -           -           -           -           -        1.012          -           -    
+CMS_hwwmunu2j_shape_back_8TeV    shape       -           -           -           -           -            1          -           -    
+CMS_hwwmunu3j_eff_sig_8TeV         lnN       -           -           -           -           -           -          1.1          -    
+CMS_hwwmunu3j_norm_back_8TeV       lnN       -           -           -           -           -           -           -            1   
+CMS_hwwmunu3j_shape_back_8TeV    shape       -           -           -           -           -           -           -            1   
+QCDscale_ggH                       lnN     1.25          -           -           -         1.25          -           -           -    
+QCDscale_ggH1in                    lnN     0.78          -         1.26          -         0.78          -         1.26          -    
+QCDscale_ggH2in                    lnN       -           -         0.94          -           -           -         0.94          -    
+UEPS                               lnN     0.92          -        1.121          -         0.92          -        1.121          -    
+lumi                               lnN    1.022          -        1.022          -        1.022          -        1.022          -    
+pdf_gg                             lnN    1.102          -        1.102          -        1.102          -        1.102          -    
+theoryUncXS_HighMH                 lnN    1.324          -        1.324          -        1.324          -        1.324          -    
