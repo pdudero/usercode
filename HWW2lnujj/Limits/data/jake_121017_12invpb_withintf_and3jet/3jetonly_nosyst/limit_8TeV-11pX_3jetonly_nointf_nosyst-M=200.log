@@ -1,0 +1,44 @@
+combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw/CMSSW_5_2_5/external/slc5_amd64_gcc462/lib/libXMLParser.so)
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4891.56
+  2) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11239.9
+  3) RooRealVar::                                r = 0.05 +/- 0.5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 16.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 1)
+
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4891.56
+  2) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11239.9
+  3) RooRealVar::                                r = 0.5
+Obs: 
+  1) RooCategory:: CMS_channel = hwwmunu3j(idx = 1)
+
+  2) RooRealVar::    CMS_th1x = 16.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4891.56
+  2) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11239.9
+  3) RooRealVar::                                r = 0.5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 16.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 1)
+
+
+ -- Asymptotic -- 
+Observed Limit: r < 2.1207
+Expected  2.5%: r < 1.1826
+Expected 16.0%: r < 1.5730
+Expected 50.0%: r < 2.1797
+Expected 84.0%: r < 3.0276
+Expected 97.5%: r < 4.0226
+
+Done in 0.00 min (cpu), 0.00 min (real)
