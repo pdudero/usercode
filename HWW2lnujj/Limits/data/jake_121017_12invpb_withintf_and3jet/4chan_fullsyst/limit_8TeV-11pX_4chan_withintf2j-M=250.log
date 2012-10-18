@@ -1,15 +1,16 @@
-combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw/CMSSW_5_2_5/external/slc5_amd64_gcc462/lib/libXMLParser.so)
+combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw-patch/CMSSW_5_2_4_patch3/external/slc5_amd64_gcc462/lib/libXMLParser.so)
 >>> including systematics
 >>> method used to compute upper limit is Asymptotic
 >>> random number generator seed is 123456
+
 Computing limit starting from observation
 
  -- Asymptotic -- 
-Observed Limit: r < 0.6812
-Expected  2.5%: r < 0.4101
-Expected 16.0%: r < 0.5455
-Expected 50.0%: r < 0.7559
-Expected 84.0%: r < 1.0499
-Expected 97.5%: r < 1.3949
+Observed Limit: r < 0.6840
+Expected  2.5%: r < 0.4133
+Expected 16.0%: r < 0.5497
+Expected 50.0%: r < 0.7617
+Expected 84.0%: r < 1.0580
+Expected 97.5%: r < 1.4057
 
-Done in 0.00 min (cpu), 0.01 min (real)
+Done in 0.01 min (cpu), 0.01 min (real)

@@ -30,5 +30,5 @@ QCDscale_ggH                       lnN        1.16           -              -   
 QCDscale_ggH1in                    lnN        0.86           -              1.27           -              0.86           -              1.27           -      
 QCDscale_ggH2in                    lnN        -              -              0.96           -              -              -              0.96           -      
 UEPS                               lnN       0.955           -             1.058           -             0.955           -             1.058           -      
-lumi                               lnN       1.022           -             1.022           -             1.022           -             1.022           -      
+lumi                               lnN       1.044           -             1.044           -             1.044           -             1.044           -      
 pdf_gg                             lnN        1.08           -              1.08           -              1.08           -              1.08           -      
