@@ -1,0 +1,28 @@
+imax 2  # number of channels
+jmax 1  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                      hwwelnu3j      hwwmunu3j
+observation                             9454.65130    13456.56574
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-11pX_4chan_withintf2j-M=250.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                      hwwelnu3j      hwwelnu3j      hwwmunu3j      hwwmunu3j
+process                                        ggH       Bkgrdtot            ggH       Bkgrdtot
+process                                          0              1              0              1
+rate                                         77.75        9454.65         105.20       13456.57
+--------------------
+CMS_eff_e                          lnN       1.022           -              -              -      
+CMS_eff_m                          lnN        -              -             1.022           -      
+CMS_hwwelnu3j_eff_sig_8TeV         lnN         1.1           -              -              -      
+CMS_hwwelnu3j_norm_back_8TeV       lnN        -             1.004           -              -      
+CMS_hwwelnu3j_shape_back_8TeV    shape        -                 1           -              -      
+CMS_hwwmunu3j_eff_sig_8TeV         lnN        -              -               1.1           -      
+CMS_hwwmunu3j_norm_back_8TeV       lnN        -              -              -             1.003   
+CMS_hwwmunu3j_shape_back_8TeV    shape        -              -              -                 1   
+QCDscale_ggH                       lnN        -              -              -              -      
+QCDscale_ggH1in                    lnN        1.27           -              1.27           -      
+QCDscale_ggH2in                    lnN        0.96           -              0.96           -      
+UEPS                               lnN       1.058           -             1.058           -      
+lumi                               lnN       1.022           -             1.022           -      
+pdf_gg                             lnN        1.08           -              1.08           -      
