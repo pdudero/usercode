@@ -1,0 +1,14 @@
+imax 4  # number of channels
+jmax 1  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                      hwwelnu2j      hwwelnu3j      hwwmunu2j      hwwmunu3j
+observation                            12790.00003     3360.99999    15249.99988     3997.99998
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-hcp2012-12invfb-26oct-unblinding-M=350.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                      hwwelnu2j      hwwelnu2j      hwwelnu3j      hwwelnu3j      hwwmunu2j      hwwmunu2j      hwwmunu3j      hwwmunu3j
+process                                        ggH       Bkgrdtot            ggH       Bkgrdtot            ggH       Bkgrdtot            ggH       Bkgrdtot
+process                                          0              1              0              1              0              1              0              1
+rate                                        354.52       12804.89         101.53        3363.60         420.83       15275.20         115.59        4003.69
+--------------------

@@ -1,0 +1,51 @@
+combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw-patch/CMSSW_5_2_4_patch3/external/slc5_amd64_gcc462/lib/libXMLParser.so)
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 2718.2
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 788.21
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 3222.34
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 690.59
+  5) RooRealVar::                                r = 0.05 +/- 0.5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 7.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 2718.2
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 788.21
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 3222.34
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 690.59
+  5) RooRealVar::                                r = 5
+Obs: 
+  1) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+  2) RooRealVar::    CMS_th1x = 7.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 2718.2
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 788.21
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 3222.34
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 690.59
+  5) RooRealVar::                                r = 5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 7.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+
+ -- Asymptotic -- 
+Observed Limit: r < 0.7532
+Expected  2.5%: r < 0.2925
+Expected 16.0%: r < 0.3890
+Expected 50.0%: r < 0.5391
+Expected 84.0%: r < 0.7488
+Expected 97.5%: r < 0.9948
+
+Done in 0.00 min (cpu), 0.00 min (real)

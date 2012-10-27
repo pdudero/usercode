@@ -1,0 +1,51 @@
+combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw-patch/CMSSW_5_2_4_patch3/external/slc5_amd64_gcc462/lib/libXMLParser.so)
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+The signal model has no nuisance parameters. Please run the limit tool with no systematics (option -S 0).
+To make things easier, I will assume you have done it.
+
+Computing limit starting from observation
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 22233
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4633.16
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 37945.3
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11748.4
+  5) RooRealVar::                                r = 0.05 +/- 0.5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 13.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 22233
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4633.16
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 37945.3
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11748.4
+  5) RooRealVar::                                r = 5
+Obs: 
+  1) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+  2) RooRealVar::    CMS_th1x = 13.5
+PDF didn't factorize!
+Parameters: 
+  1) RooRealVar:: n_exp_binhwwelnu2j_proc_Bkgrdtot = 22233
+  2) RooRealVar:: n_exp_binhwwelnu3j_proc_Bkgrdtot = 4633.16
+  3) RooRealVar:: n_exp_binhwwmunu2j_proc_Bkgrdtot = 37945.3
+  4) RooRealVar:: n_exp_binhwwmunu3j_proc_Bkgrdtot = 11748.4
+  5) RooRealVar::                                r = 5
+Obs: 
+  1) RooRealVar::    CMS_th1x = 13.5
+  2) RooCategory:: CMS_channel = hwwmunu3j(idx = 3)
+
+
+ -- Asymptotic -- 
+Observed Limit: r < 0.7234
+Expected  2.5%: r < 0.4164
+Expected 16.0%: r < 0.5539
+Expected 50.0%: r < 0.7676
+Expected 84.0%: r < 1.0662
+Expected 97.5%: r < 1.4165
+
+Done in 0.00 min (cpu), 0.00 min (real)
