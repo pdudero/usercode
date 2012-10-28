@@ -1,0 +1,12 @@
+combine: /usr/lib64/libxml2.so.2: no version information available (required by /uscmst1/prod/sw/cms/slc5_amd64_gcc462/cms/cmssw-patch/CMSSW_5_2_4_patch3/external/slc5_amd64_gcc462/lib/libXMLParser.so)
+>>> including systematics
+>>> method used to compute upper limit is Asymptotic
+>>> random number generator seed is 123456
+Traceback (most recent call last):
+  File "/uscms/home/pdudero/work/CMSSW_5_2_4_patch3/bin/slc5_amd64_gcc462/text2workspace.py", line 36, in <module>
+    DC = parseCard(file, options)
+  File "/uscms/home/pdudero/work/CMSSW_5_2_4_patch3/python/HiggsAnalysis/CombinedLimit/DatacardParser.py", line 176, in parseCard
+    if ns_bin == 0: raise RuntimeError, "Bin %s has no signal processes contributing to it" % b
+RuntimeError: Bin hwwelnu2j has no signal processes contributing to it
+Error when running the combination:
+	Failed to convert the input datacard from LandS to RooStats format. The lines above probably contain more information about the error.

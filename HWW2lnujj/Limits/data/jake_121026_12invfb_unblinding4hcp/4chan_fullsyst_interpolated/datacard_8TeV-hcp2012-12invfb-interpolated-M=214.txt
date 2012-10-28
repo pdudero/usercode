@@ -1,0 +1,35 @@
+imax 4  # number of channels
+jmax 1  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                      hwwelnu2j      hwwelnu3j      hwwmunu2j      hwwmunu3j
+observation                            25380.00000     4795.00004    46540.00031    11321.99993
+--------------------
+shapes * * ./hwwlvjj.input_8TeV-hcp2012-12invfb-interpolated-M=214.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                      hwwelnu2j      hwwelnu2j      hwwelnu3j      hwwelnu3j      hwwmunu2j      hwwmunu2j      hwwmunu3j      hwwmunu3j
+process                                        ggH       Bkgrdtot            ggH       Bkgrdtot            ggH       Bkgrdtot            ggH       Bkgrdtot
+process                                          0              1              0              1              0              1              0              1
+rate                                        159.65       25025.47          32.51        4762.33         268.95       46518.43          62.30       11320.87
+--------------------
+CMS_eff_e                          lnN       1.022           -             1.022           -              -              -              -              -      
+CMS_eff_m                          lnN        -              -              -              -             1.022           -             1.022           -      
+CMS_hwwelnu2j_eff_sig_8TeV         lnN         1.1           -              -              -              -              -              -              -      
+CMS_hwwelnu2j_norm_back_8TeV       lnN        -             1.007           -              -              -              -              -              -      
+CMS_hwwelnu2j_shape_back_8TeV    shape        -                 1           -              -              -              -              -              -      
+CMS_hwwelnu3j_eff_sig_8TeV         lnN        -              -               1.1           -              -              -              -              -      
+CMS_hwwelnu3j_norm_back_8TeV       lnN        -              -              -             1.004           -              -              -              -      
+CMS_hwwelnu3j_shape_back_8TeV    shape        -              -              -                 1           -              -              -              -      
+CMS_hwwmunu2j_eff_sig_8TeV         lnN        -              -              -              -               1.1           -              -              -      
+CMS_hwwmunu2j_norm_back_8TeV       lnN        -              -              -              -              -             1.004           -              -      
+CMS_hwwmunu2j_shape_back_8TeV    shape        -              -              -              -              -                 1           -              -      
+CMS_hwwmunu3j_eff_sig_8TeV         lnN        -              -              -              -              -              -               1.1           -      
+CMS_hwwmunu3j_norm_back_8TeV       lnN        -              -              -              -              -              -              -             1.003   
+CMS_hwwmunu3j_shape_back_8TeV    shape        -              -              -              -              -              -              -                 1   
+QCDscale_ggH                       lnN        1.15           -              -              -              1.15           -              -              -      
+QCDscale_ggH1in                    lnN        0.88           -              1.27           -              0.88           -              1.27           -      
+QCDscale_ggH2in                    lnN        -              -              0.96           -              -              -              0.96           -      
+UEPS                               lnN       0.952           -             1.055           -             0.952           -             1.055           -      
+interf_ggH                       shape        -              -              -              -              -              -              -              -      
+lumi_8TeV                          lnN       1.044           -             1.044           -             1.044           -             1.044           -      
+pdf_gg                             lnN       1.081           -             1.081           -             1.081           -             1.081           -      
