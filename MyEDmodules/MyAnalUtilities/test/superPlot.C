@@ -192,7 +192,11 @@ void parseCanvasLayout(const string& layoutFile,
   string section("");
   string theline;
   vector<string> v_tokens;
-  bool keepgoing = getLine(fp,theline,"layoutintro");
+  bool keepgoing;
+  do {
+    keepgoing = getLine(fp,theline,"layoutintro");
+  } while (keepgoing && theline[0] != '['); // skip lines until you find a section
+
   while (keepgoing) {
     if (!theline.size()) continue;
     if (theline[0] == '[') {
