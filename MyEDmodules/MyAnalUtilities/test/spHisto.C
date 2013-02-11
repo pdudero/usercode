@@ -346,16 +346,58 @@ void load1DHistoContentsFromTextFile(const char *filename,
     }
     nbins++;
   }
-
+  
   wth1 = new wTH1(new TH1D(filename,filename,nbins,xloedge));
-
+  
   if (gl_verbose) cout << "; read " << nbins << " lines" << endl;
-
+  
   for (int ibin=1; ibin<=nbins; ibin++) {
     wth1->histo()->Fill(wth1->histo()->GetXaxis()->GetBinCenter(ibin),binc[ibin-1]);
     wth1->histo()->SetBinError(ibin,bine[ibin-1]);
   }
 }                                    //  load1DHistoContentsFromTextFile
+
+//======================================================================
+// takes table of "xbincenter ybincenter bincontent"
+//
+void load2DHistoContentsFromTextFile(const char *filename, 
+				     wTH1& wth1, // must be prebooked
+				     const char *fmtstr = "%lf %lf %lf")
+{
+  char linein[LINELEN];
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  if (gl_verbose)
+    cout << "Loading bin contents from file " << filename << endl;
+
+  int nrec=0;
+  cout<<"nrec\txbc\tybc\tibin\tbinc"<<endl;
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+    double xbc,ybc,binc;
+    if (linein[0]=='#') continue; // comments are welcome
+    int nscan= sscanf(linein, fmtstr, &xbc, &ybc, &binc);
+
+    if (nscan != 3) {
+      cerr << "scan failed:";
+      cerr << "  nscan  = " << nscan    << endl;
+      cerr << "  file   = " << filename << endl;
+      cerr << "  fmtstr = " << fmtstr   << endl;
+      cerr << "  line   = " << linein;
+      break;
+    }
+    nrec++;
+    int ibin = wth1.histo()->FindFixBin(xbc,ybc);
+    cout<<nrec<<"\t"<<xbc<<"\t"<<ybc<<"\t"<<ibin<<"\t"<<binc<<endl;
+    wth1.histo()->SetBinContent(ibin,binc);
+  }
+  cout << nrec << " records read in" << endl;
+}                                    //  load2DHistoContentsFromTextFile
 
 //======================================================================
 // takes a single column of numbers to fill into a pre-booked histo
@@ -854,6 +896,26 @@ processHistoSection(FILE *fp,
       load1DHistoContentsFromTextFile(value.c_str(),wth1);
 
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
+    } else if( key == "load2dtxtfile" ) {
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "Must book 2d histo with 'book2dpars' first" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,",");
+
+      switch(v_tokens.size()) {
+      case 1:  load2DHistoContentsFromTextFile(v_tokens[0].c_str(),*wth1); break;
+      case 2:  load2DHistoContentsFromTextFile(v_tokens[0].c_str(),*wth1,v_tokens[1].c_str()); break;
+      default:
+	cerr << "malformed load2dtxtfile spec path[,format]] " << value << endl;
+	break;
+      }
 
     //------------------------------
     } else if( key == "filltxtfile" ) { // fill pre-booked 1D histo with list of numbers
