@@ -422,17 +422,27 @@ processGraphSection(FILE *fp,
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      string path = value;
       if (wg) {
 	cerr << "graph already defined" << endl; continue;
-      }
-      if (inSet<string>(glset_graphFilesReadIn,path)) {
-	cerr << "vector file " << path << " already read in" << endl; break;
       }
 
       wg = new wGraph_t();
 
-      wg->gr2d = new TGraph2D(path.c_str());
+      Tokenize(value,v_tokens,",");
+
+      string path=v_tokens[0];
+      if (inSet<string>(glset_graphFilesReadIn,path)) {
+	cerr << "vector file " << path << " already read in" << endl; break;
+      }
+
+      switch(v_tokens.size()) {
+      case 1:  wg->gr2d = new TGraph2D(path.c_str()); break;
+      case 2:  wg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str()); break;
+      case 3:  wg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str(),v_tokens[2].c_str()); break;
+      default:
+	cerr << "malformed vectorfile2d spec path[,format[,option]] " << value << endl;
+	break;
+      }
 
       if (wg->gr2d->IsZombie()) {
 	cerr << "Unable to make Graph2D from file " << path << endl;
@@ -516,7 +526,7 @@ processGraphSection(FILE *fp,
       }
 
       // Fix in case something broke
-      bool aOK = true ;
+
       for (int i=0; i<wg->gr->GetN(); i++) {
           if ( wg->gr->GetErrorYhigh(i) == 0. || wg->gr->GetErrorYlow(i) == 0 ) { // Something bad happened
               if ( gl_verbose ) std::cout << "Problem with Bayes divide, checking..." << std::endl ;
@@ -531,8 +541,8 @@ processGraphSection(FILE *fp,
                   wg->gr->GetPoint(i,xval,yval) ;
                   yval = pass / total ;
                   // Use simplified efficiency assumption
-                  double u1 = tmph1->GetBinError(i+1) / tmph1->GetBinContent(i+1) ; 
-                  double u2 = tmph2->GetBinError(i+1) / tmph2->GetBinContent(i+1) ; 
+                  // double u1 = tmph1->GetBinError(i+1) / tmph1->GetBinContent(i+1) ; 
+                  // double u2 = tmph2->GetBinError(i+1) / tmph2->GetBinContent(i+1) ; 
                   // double unc = yval * sqrt( u1*u1 + u2*u2 ) ; 
                   double unc = sqrt( yval * (1.-yval)/tmph2->GetBinContent(i+1) ) ; 
                   double uhi = ( (yval + unc > 1.)?(1.-yval):(unc) ) ; 
