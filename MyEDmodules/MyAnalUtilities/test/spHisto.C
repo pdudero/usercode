@@ -956,9 +956,9 @@ processHistoSection(FILE *fp,
       }
 
       // defined in spTree.C
-      void fillHistoFromTreeVar(std::string& gid,wTH1 *&wth1);
+      void fillHistoFromTreeVar(std::string& gid,int index,wTH1 *&wth1);
 
-      fillHistoFromTreeVar(value,wth1);
+      fillHistoFromTreeVar(value,0,wth1);
 
     //------------------------------
     } else if( key == "hprop" ) {    // fill a histogram with a per-bin property of another

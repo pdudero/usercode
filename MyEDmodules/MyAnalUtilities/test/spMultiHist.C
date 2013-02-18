@@ -250,6 +250,46 @@ processMultiHistSection(FILE *fp,
       if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
       globfree(&globbuf);
 
+    //------------------------------
+    } else if( key == "fillfromtree" ) { // converts tree array variables into a group of histos
+    //------------------------------
+      if( !mhid.size() ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      // histo need not be pre-booked, since TTree::Draw can do that
+
+      Tokenize(value,v_tokens,";");
+      string treedrawspec=v_tokens[0];
+
+      int ifirst=-1,ilast=-1;
+      if (v_tokens.size() == 2) {
+	string range=v_tokens[1];
+	Tokenize(range,v_tokens,"-");
+	if (v_tokens.size()==2) {
+	  ifirst=str2int(v_tokens[0]);
+	  ilast =str2int(v_tokens[1]);
+	}
+      }
+      //cout << v_tokens.size() << " " << ifirst << " " << ilast << endl;
+      if (ifirst<0 || 
+	  ilast <0 ||
+	  ilast<ifirst ) {
+	cerr << "malformed filltree expression drawspec;X-Y, where X-Y is the array index range to plot"<<endl;
+	exit(-1);
+      }
+
+      for (int i=ifirst; i<=ilast; i++) {
+	wTH1   *wth1 = NULL;
+	// defined in spTree.C
+	void fillHistoFromTreeVar(std::string& drawspec,int index,wTH1 *&wth1);
+	fillHistoFromTreeVar(treedrawspec,i,wth1);
+	assert(wth1);
+	string hidi= mhid+"_"+int2str(i-ifirst);
+	v_histos.push_back(std::pair<string,wTH1 *>(hidi,wth1));
+	glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
+      }
+
     //-----------------------
     } else if( key == "printf" ) {
     //-----------------------
