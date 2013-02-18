@@ -201,46 +201,93 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
   //       vector messes up the reference to the first element!
   //
   wCanvas_t wci(*wc0); // doesn't copy member "pads"
+
   wPad_t    *mp = wc0->multipad;
   wCanvas_t *wc = wc0;
 
   // Divvy up the pads among multiple canvases if so specified
 
   unsigned ipad=0;                      // ipad=global pad index, not the Apple product!
-  for (unsigned h=0,k=0; ; ipad++) {    /* h=histo index in current histo multiset
-					   k=multiset index */
+  for (unsigned h=0,k=0,l=0,y=0; ; ipad++) {    /* h=histo index in current histo multiset
+						   k=histo_id (multiset) index
+						   l=altyhisto index
+						   y=histoindex in current altyhisto multiset */
     unsigned   i  =  ipad % npads;      // index to current pad in canvas
     unsigned cnum = (ipad / npads) + 1; // current canvas number
 
-    if (cnum > cs.ncanvases) break;
+    if (cnum > cs.ncanvases) {
+      if (++k == mp->histo_ids.size())break;
+      ipad=i=h=0;
+      cnum=1;
+    }
 
-    if ((i==0) && (cnum > cs.canvases.size())) {
-      if (gl_verbose)
-	cout << "making new canvas" << endl;
-      wc = new wCanvas_t(wci);
-      cs.canvases.push_back(wc);
-      wc->title = cs.title + "_" + int2str(cnum);
-      wc->pads.clear();
+    if (!i) { // first pad in new canvas
+      if (cnum > cs.canvases.size()) {
+	if (gl_verbose)
+	  cout << "making new canvas" << endl;
+	wc = new wCanvas_t(wci);
+	cs.canvases.push_back(wc);
+	wc->title = cs.title + "_" + int2str(cnum);
+	wc->pads.clear();
+	wc->latex_ids = wc0->latex_ids;
+      } else {
+	wc = cs.canvases[cnum-1];
+      }
     }
 
     if (!h && gl_verbose)
-      cout<<"Assigning multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
+      cout<<"Assigning histo/multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
 
-    string multihist1 = mp->histo_ids[k]+"_"+int2str(h++);
-    if (findHisto(multihist1, "hit the end of histo multiset")) {
+    string hid=mp->histo_ids[k];
+    bool foundhisto=false;
+    if (!h && findHisto(hid, "switching to multiset"))
+      foundhisto=true;
+    else {
+      hid = hid +"_"+int2str(h++);
+      if (findHisto(hid, "hit the end of histo multiset"))
+	foundhisto=true;
+    }
+    if (foundhisto) {
       // now we associate histogram sets with the pad set
-      wPad_t *wp = new wPad_t(*(mp));
-      wp->histo_ids.clear();
-      wp->histo_ids.push_back(multihist1);
-      wc->pads.push_back(wp);
-    } else {
-      ipad--; // have to back up one...
+      if (!k) {
+	wPad_t *wp = new wPad_t(*(mp));
+	wp->histo_ids.clear(); 
+	if (i) wp->legid.clear(); // don't automatically propagate legend to all pads
+	wp->histo_ids.push_back(hid);
+	wc->pads.push_back(wp);
+      } else {
+	wPad_t *wp = wc->pads[i];
+	wp->histo_ids.push_back(hid);
+      }
+    } else { // reset to next histo id
+      ipad=-1;
       h=0;
+      y=0;
+      ++l;
       if (++k == mp->histo_ids.size()) break;
     }
-  }
 
-  return std::min(npadsall,ipad+1);
+    // altyhistos:
+    if (l < mp->altyh_ids.size()) {
+      string ahid=mp->altyh_ids[l];
+      foundhisto=false;
+      if (!y && findHisto(ahid, "switching to multiset"))
+	foundhisto=true;
+      else {
+	ahid = ahid +"_"+int2str(y++);
+	if (findHisto(ahid, "hit the end of histo multiset"))
+	  foundhisto=true;
+      }
+      if (foundhisto) {
+	// now we associate histogram sets with the pad set
+	wPad_t *wp = wc->pads[i];
+	wp->altyh_ids.push_back(ahid);
+      }
+    }
+
+  } // pad loop
+
+  return std::min(npadsall,ipad);
 }                                               // assignHistos2Multipad
 
 //======================================================================
@@ -273,6 +320,7 @@ unsigned assignPads2Canvases(canvasSet_t& cs)
       cs.canvases.push_back(wc);
       wc->title = cs.title + "_" + int2str(cnum);
       wc->pads.clear();
+      wc->latex_ids = wc0->latex_ids;
     }
 
     wc->pads.push_back(wc0->pads[ipad]);
@@ -313,22 +361,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
   wc0->c1->cd();
 
-  /***************************************************
-   * CHECK FOR LATEX OBJECTS ON THE CANVAS
-   ***************************************************/
-
-  for (unsigned j=0; j<wc0->latex_ids.size(); j++) {
-    string& lid = wc0->latex_ids[j];
-    map<string,TLatex *>::const_iterator it = glmap_id2latex.find(lid);
-    if (it == glmap_id2latex.end()) {
-      cerr << "ERROR: latex id " << lid << " never defined in layout" << endl;
-      exit (-1);
-    }
-    TLatex *ltx = it->second;
-    ltx->Draw();
-    wc0->c1->Update();
-  }
-
   if (gl_verbose)
     cout << "Drawing on " << npadsall << " pad(s)" << endl;
 
@@ -348,21 +380,39 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
     wCanvas_t *wc = cs.canvases[cnum-1];
 
-    if (!ipadc && (cnum-1)) { // first canvas already created
-      wc->c1 = new TCanvas(wc->title.c_str(),wc->title.c_str(),
-			  wc->padxdim*wc->npadsx,
-			  wc->padydim*wc->npadsy);
-      float left = wc->leftmargin;
-      float bot  = wc->bottommargin;
-      float rhgt = 1-wc->rightmargin;
-      float top  = 1-wc->topmargin;
-      wc->motherpad = new TPad("mother","",left,bot,rhgt,top);
-      wc->c1->SetFillColor(wc->fillcolor);
-      wc->motherpad->SetFillColor(wc->fillcolor);
-      wc->motherpad->Draw();
-      wc->motherpad->cd();
-      wc->motherpad->Divide(wc->npadsx,wc->npadsy);
-			   // , wc->padxmargin,wc->padymargin);
+    if (!ipadc) {
+      if (cnum-1) { // first canvas already created
+	wc->c1 = new TCanvas(wc->title.c_str(),wc->title.c_str(),
+			     wc->padxdim*wc->npadsx,
+			     wc->padydim*wc->npadsy);
+	float left = wc->leftmargin;
+	float bot  = wc->bottommargin;
+	float rhgt = 1-wc->rightmargin;
+	float top  = 1-wc->topmargin;
+	wc->motherpad = new TPad("mother","",left,bot,rhgt,top);
+	wc->c1->SetFillColor(wc->fillcolor);
+	wc->motherpad->SetFillColor(wc->fillcolor);
+	wc->motherpad->Draw();
+	wc->motherpad->cd();
+	wc->motherpad->Divide(wc->npadsx,wc->npadsy); // , wc->padxmargin,wc->padymargin);
+      }
+
+      /***************************************************
+       * CHECK FOR LATEX OBJECTS ON THE CANVAS
+       ***************************************************/
+      
+      wc->c1->cd();
+      for (unsigned j=0; j<wc->latex_ids.size(); j++) {
+	string& lid = wc->latex_ids[j];
+	map<string,TLatex *>::const_iterator it = glmap_id2latex.find(lid);
+	if (it == glmap_id2latex.end()) {
+	  cerr << "ERROR: latex id " << lid << " never defined in layout" << endl;
+	  exit (-1);
+	}
+	TLatex *ltx = it->second;
+	ltx->Draw();
+	wc->c1->Update();
+      }
     }
 
     wPad_t *& wp = wc->pads[ipadc];
@@ -547,20 +597,23 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       }
 
       wTH1 *myHisto = it->second;
+      TH1 *h = myHisto->histo();
 
       if (!j) {
 	//scale second set of histos to the pad coordinates
-	rightmin = myHisto->histo()->GetMinimum();
-	rightmax = 1.1*myHisto->histo()->GetMaximum();
+	rightmin = h->GetMinimum();
+	rightmax = 1.1*h->GetMaximum();
 	scale    = gPad->GetUymax()/rightmax;
       }
-      myHisto->histo()->Scale(scale);
-      myHisto->histo()->Draw("same");
+      TH1 *scaled=(TH1 *)h->Clone(Form("%s_%d",h->GetName(),ipad));
+
+      scaled->Scale(scale);
+      scaled->Draw("same");
    
       //draw an axis on the right side
       TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(),
 				gPad->GetUxmax(), gPad->GetUymax(),
-				rightmin,rightmax,510,"+L");
+				rightmin,rightmax,505,"+L");
       axis->Draw();
       gPad->Update();
       if (drawlegend && myHisto->GetLegendEntry().size()) {
