@@ -79,14 +79,14 @@ struct wCanvas_t {
     padxmargin(inpadxmarg),padymargin(inpadymarg),
     leftmargin(inleftmarg),rightmargin(inrightmarg),
     topmargin(intopmarg),bottommargin(inbottommarg),
-    optstat("nemr"), fillcolor(10), multipad(NULL) {}
+    optstat("nemr"), fillcolor(10) {}
   wCanvas_t(const wCanvas_t& wc) :
     title(wc.title), npadsx(wc.npadsx),npadsy(wc.npadsy),
     padxdim(wc.padxdim),padydim(wc.padydim),
     padxmargin(wc.padxmargin),padymargin(wc.padymargin),
     leftmargin(wc.leftmargin),rightmargin(wc.rightmargin),
     topmargin(wc.topmargin),bottommargin(wc.bottommargin),
-    optstat(wc.optstat), fillcolor(wc.fillcolor), multipad(NULL) {}
+    optstat(wc.optstat), fillcolor(wc.fillcolor) {}
   string   style;
   string   title;
   unsigned npadsx;
@@ -102,7 +102,7 @@ struct wCanvas_t {
   string   optstat;
   unsigned fillcolor;
   TPad    *motherpad;
-  wPad_t  *multipad;
+  vector<wPad_t *> multipads;
   vector<wPad_t *> pads;
   vector<string> latex_ids;
   vector<string> savenamefmts;
@@ -218,14 +218,10 @@ void parseCanvasLayout(const string& layoutFile,
       wc->pads.push_back(wpad);
     }
     else if (section == "MULTIPAD") {
-      // Store info for all pads in the 'multipad' member
-      if (wc->multipad) {
-	cerr << "Currently only one MULTIPAD section can be defined, sorry." << endl;
-	continue;
-      }
-      wc->multipad = new wPad_t("multipad");
-      success=processPadSection(fp,theline,wc->multipad,new_section);
-      assert(wc->multipad->histo_ids.size());
+      wPad_t *wpad = new wPad_t(Form("multipad%d",(int)wc->multipads.size()));
+      success=processPadSection(fp,theline,wpad,new_section);
+      //assert(wc->multipad->histo_ids.size());
+      wc->multipads.push_back(wpad);
       // Have to read in multihist before assigning histos to pads, so pended to drawPlots
     }
     else if (section == "HISTO")     success=processHistoSection    (fp,theline,new_section);

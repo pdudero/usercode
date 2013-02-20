@@ -4,6 +4,8 @@
 #include "TObjString.h"
 #include "TClass.h"
 
+static map<string, unsigned>  glmap_mhid2size;
+
 //======================================================================
 // Regex match a histo name in a directory
 //
@@ -250,6 +252,8 @@ processMultiHistSection(FILE *fp,
       if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
       globfree(&globbuf);
 
+      glmap_mhid2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
+
     //------------------------------
     } else if( key == "fillfromtree" ) { // converts tree array variables into a group of histos
     //------------------------------
@@ -289,6 +293,8 @@ processMultiHistSection(FILE *fp,
 	v_histos.push_back(std::pair<string,wTH1 *>(hidi,wth1));
 	glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
       }
+
+      glmap_mhid2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
 
     //-----------------------
     } else if( key == "printf" ) {

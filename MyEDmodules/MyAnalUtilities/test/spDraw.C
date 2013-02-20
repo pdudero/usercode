@@ -193,99 +193,137 @@ void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
 
 unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occupied pads
 {
-  wCanvas_t *wc0    = cs.canvases[0];
-  unsigned npads    = wc0->npadsx*wc0->npadsy;
-  unsigned npadsall = cs.ncanvases*npads;
+  wCanvas_t *wc0       = cs.canvases[0];
+  unsigned npadspercan = wc0->npadsx*wc0->npadsy;
+  unsigned npadsall    = cs.ncanvases*npadspercan;
 
   // Note: wci can't be wCanvas_t& because apparently filling the
   //       vector messes up the reference to the first element!
   //
   wCanvas_t wci(*wc0); // doesn't copy member "pads"
+  wCanvas_t *wc = wc0;  // Divvy up the pads among multiple canvases if so specified
 
-  wPad_t    *mp = wc0->multipad;
-  wCanvas_t *wc = wc0;
+  unsigned ipad=0,ipad2start=0; // ipad=global pad index, not the Apple product!
+  unsigned m=0;                 // m=multipad index
 
-  // Divvy up the pads among multiple canvases if so specified
+  // A multipad potentially references multiple sets of histograms to
+  // overlay. The histograms within a set are plotted in sequential
+  // pads, but another set of histograms assigned to the same multipad
+  // are overlaid sequentially on the previous set. Ideally each set
+  // assigned to the same multipad contains the same number of
+  // histograms, but not necessarily.  Multiple multipads can exist;
+  // their collection of histogram sets are assigned sequentially to
+  // ranges of available pads defined in the layout section.
+  //
+  for (m=0; m<wc0->multipads.size(); m++) {
+    wPad_t  *mp = wc0->multipads[m];
 
-  unsigned ipad=0;                      // ipad=global pad index, not the Apple product!
-  for (unsigned h=0,k=0,l=0,y=0; ; ipad++) {    /* h=histo index in current histo multiset
-						   k=histo_id (multiset) index
-						   l=altyhisto index
-						   y=histoindex in current altyhisto multiset */
-    unsigned   i  =  ipad % npads;      // index to current pad in canvas
-    unsigned cnum = (ipad / npads) + 1; // current canvas number
-
-    if (cnum > cs.ncanvases) {
-      if (++k == mp->histo_ids.size())break;
-      ipad=i=h=0;
-      cnum=1;
-    }
-
-    if (!i) { // first pad in new canvas
-      if (cnum > cs.canvases.size()) {
-	if (gl_verbose)
-	  cout << "making new canvas" << endl;
-	wc = new wCanvas_t(wci);
-	cs.canvases.push_back(wc);
-	wc->title = cs.title + "_" + int2str(cnum);
-	wc->pads.clear();
-	wc->latex_ids = wc0->latex_ids;
+    // figure out how many pads this multipad spans, taking max of the referenced histo sets
+    unsigned npads4mp=0;
+    for (unsigned k=0; k<mp->histo_ids.size(); k++) {
+      std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->histo_ids[k]);
+      if (it==glmap_mhid2size.end()) {
+	if (findHisto(mp->histo_ids[k]),"")
+	  npads4mp = std::max<unsigned>(npads4mp, 1);
       } else {
-	wc = cs.canvases[cnum-1];
+	npads4mp = std::max(npads4mp,it->second);
       }
     }
 
-    if (!h && gl_verbose)
-      cout<<"Assigning histo/multiset "<<mp->histo_ids[k]<<" to pads."<<endl;
+    npads4mp = std::min(npads4mp,npadsall-ipad2start);
 
-    string hid=mp->histo_ids[k];
-    bool foundhisto=false;
-    if (!h && findHisto(hid, "switching to multiset"))
-      foundhisto=true;
-    else {
-      hid = hid +"_"+int2str(h++);
-      if (findHisto(hid, "hit the end of histo multiset"))
-	foundhisto=true;
-    }
-    if (foundhisto) {
-      // now we associate histogram sets with the pad set
-      if (!k) {
-	wPad_t *wp = new wPad_t(*(mp));
-	wp->histo_ids.clear(); 
-	if (i) wp->legid.clear(); // don't automatically propagate legend to all pads
-	wp->histo_ids.push_back(hid);
-	wc->pads.push_back(wp);
-      } else {
-	wPad_t *wp = wc->pads[i];
-	wp->histo_ids.push_back(hid);
+    if (!npads4mp) continue;
+
+    // Plot all objects for this multipad that can be plotted within
+    // the span of assigned pads
+
+    // Create the pads first
+    for (ipad=ipad2start; ipad<ipad2start+npads4mp; ipad++) {
+
+      unsigned   i  =  ipad % npadspercan;      // index to current pad in canvas
+      unsigned cnum = (ipad / npadspercan) + 1; // current canvas number
+
+      if (!i) { // first pad in new canvas
+	if (cnum > cs.canvases.size()) {
+	  if (gl_verbose)
+	    cout << "making new canvas" << endl;
+	  wc = new wCanvas_t(wci);
+	  cs.canvases.push_back(wc);
+	  wc->title = cs.title + "_" + int2str(cnum);
+	  wc->pads.clear();
+	  wc->latex_ids = wc0->latex_ids;
+	}
       }
-    } else { // reset to next histo id
-      ipad=-1;
-      h=0;
-      y=0;
-      ++l;
-      if (++k == mp->histo_ids.size()) break;
+
+      wPad_t *wp = new wPad_t(*(mp));
+      wp->histo_ids.clear(); 
+      if (i) wp->legid.clear(); // don't automatically propagate legend to all pads
+
+      wc->pads.push_back(wp);
     }
 
-    // altyhistos:
-    if (l < mp->altyh_ids.size()) {
-      string ahid=mp->altyh_ids[l];
-      foundhisto=false;
-      if (!y && findHisto(ahid, "switching to multiset"))
+    unsigned h,k,l,y;         /* h=histo index in current histo set
+				 k=histo_id (set) index
+				 l=altyhisto index
+				 y=histoindex in current altyhisto set */
+    h=k=l=y=0;
+
+    // Now assign
+    for (ipad=ipad2start; ipad<ipad2start+npads4mp; ipad++) {
+
+      unsigned   i  =  ipad % npadspercan;      // index to current pad in canvas
+      unsigned cnum = (ipad / npadspercan) + 1; // current canvas number
+
+      wc = cs.canvases[cnum-1];
+      wPad_t *wp = wc->pads[i];
+
+      string hid=mp->histo_ids[k];
+
+      if (!h && gl_verbose) {
+	cout<<"Assigning histo/histo set "<<hid<<" to pads ";
+	cout<<ipad2start<<"-"<<ipad2start+npads4mp-1<<endl;
+      }
+
+      bool foundhisto=false;
+      if (!h && findHisto(hid, "switching to histo set"))
 	foundhisto=true;
       else {
-	ahid = ahid +"_"+int2str(y++);
-	if (findHisto(ahid, "hit the end of histo multiset"))
+	hid = hid +"_"+int2str(h++);
+	if (findHisto(hid, "hit the end of histo set"))
 	  foundhisto=true;
       }
       if (foundhisto) {
 	// now we associate histogram sets with the pad set
-	wPad_t *wp = wc->pads[i];
-	wp->altyh_ids.push_back(ahid);
+	wp->histo_ids.push_back(hid);
+      } else { // reset to next histo id
+	ipad=ipad2start;
+	h=0;
+	y=0;
+	++l;
+	if (++k == mp->histo_ids.size()) break;
       }
-    }
 
-  } // pad loop
+      // altyhistos:
+      if (l < mp->altyh_ids.size()) {
+	string ahid=mp->altyh_ids[l];
+	foundhisto=false;
+	if (!y && findHisto(ahid, "switching to set"))
+	  foundhisto=true;
+	else {
+	  ahid = ahid +"_"+int2str(y++);
+	  if (findHisto(ahid, "hit the end of histo set"))
+	    foundhisto=true;
+	}
+	if (foundhisto) {
+	  // now we associate histogram sets with the pad set
+	  wp->altyh_ids.push_back(ahid);
+	}
+      }
+    } // pad loop
+
+    ipad2start += npads4mp;
+
+  } // multipads loop
 
   return std::min(npadsall,ipad);
 }                                               // assignHistos2Multipad
@@ -347,7 +385,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * CHECK MULTIPAD OPTION, ASSIGN HISTOS TO PADS/CANVASES
      ********************************************************/
 
-    if (wc0->multipad) {
+    if (wc0->multipads.size()) {
       npadsall = assignHistos2Multipad(cs);
     } else {
       cerr << "npads>0, but no pad specs supplied, exiting." << endl;
