@@ -23,6 +23,8 @@ using namespace std;
 #include "TObjArray.h"
 #include "TClass.h"
 #include "TCanvas.h"
+#include "TGaxis.h"
+#include "TLatex.h"
 
 #include "/afs/cern.ch/user/d/dudero/private/root/utils.C"
 #include "/afs/cern.ch/user/d/dudero/private/root/MyHistoWrapper.cc"
@@ -205,10 +207,10 @@ bool getOneHisto(FileInfo_t& file,
   va_start (args, hnamefmt);
   vsprintf (hname,hnamefmt, args);
 
-  TH2 *h2p = (TH2 *)file.p->FindObjectAny(hname);
-  hi.p     = h2p;
+  TH1 *h1p = (TH1 *)file.p->Get(hname);
+  hi.p     = h1p;
 
-  if (!h2p) {
+  if (!h1p) {
     cout << "\tcouldn't get " << hname;
     cout << " from " << file.name << endl;
     return false;
@@ -221,8 +223,10 @@ bool getOneHisto(FileInfo_t& file,
 
 //======================================================================
 
-static int phasebegin = 1048;
-static int phaseend   = 1100;
+//static int phasebegin = 1048;
+//static int phaseend   = 1100;
+static int phasebegin = 1090;
+static int phaseend   = 1130;
 static int nomwinwid  = 8;
 
 void scanphase(wTH1   *inhist,
@@ -298,7 +302,11 @@ void scanphase(wTH1   *inhist,
 //======================================================================
 
 
-void plot(TProfile *histo, int phasepos, int phasewid,bool notfound)
+void plot(TProfile *histo,
+	  int phasepos,
+	  int phasewid,
+	  bool notfound,
+	  const HistInfo_t& tdchi)
 {
   //gPad->SetLogy(1);
   gPad->SetGridy(1);
@@ -319,6 +327,29 @@ void plot(TProfile *histo, int phasepos, int phasewid,bool notfound)
   histo->SetStats(0);
   histo->Draw();
 
+  gPad->Update();
+
+  // Draw tdc phase dist on alternate y axis:
+
+  //scale second set of histos to the pad coordinates
+  Float_t rightmin = tdchi.p->GetMinimum();
+  Float_t rightmax = 1.1*tdchi.p->GetMaximum();
+  Float_t scale    = gPad->GetUymax()/rightmax;
+
+  TH1 *scaled=(TH1 *)tdchi.p->Clone();
+
+  scaled->Scale(scale);
+  scaled->Draw("same");
+   
+  //draw an axis on the right side
+  TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(),
+			    gPad->GetUxmax(), gPad->GetUymax(),
+			    rightmin,rightmax,505,"+L");
+  axis->Draw();
+  gPad->Update();
+
+  // Draw Window
+
   TLine *left, *right;
 
   if (notfound) {
@@ -337,7 +368,7 @@ void plot(TProfile *histo, int phasepos, int phasewid,bool notfound)
 
 //======================================================================
 
-void scanphases(const char* rootfile)
+void scanphases(const char* rootfile, int runnum)
 {
   FileInfo_t file;
   file.name = string(rootfile);
@@ -354,10 +385,16 @@ void scanphases(const char* rootfile)
 
   if (!v_histos.size()) exit(-1);
 
+  HistInfo_t tdchi;
+
+  getOneHisto(file, tdchi, "/hfraddam/cutNone/TDClaserFireTime");
+  assert (tdchi.p);
+
   int ican=0;
   int ipad=0;
 
-  TCanvas *c;
+  TCanvas *c=NULL;
+  TPad *motherpad=NULL;
 
   TString cname;
 
@@ -377,16 +414,42 @@ void scanphases(const char* rootfile)
 
     if (!(ipad%28))
     {
+
       if (c) c->SaveAs(TString(rootfile)+"_"+cname+".png");
+
       cname = Form("c%d",++ican);
       c = new TCanvas(cname,cname,180*7,180*4);
-      c->Divide(7,4);
-      ipad=0;
-    }
-     
-    c->cd(ipad+1);
 
-    plot((TProfile *)(v_histos[i].second->histo()),phasepos,phasewid,notfound);
+      assert(c);
+
+      c->SetFillColor(10);
+
+      motherpad = new TPad(Form("mother%d",ican),"",0.,0.,1.,0.96);
+      motherpad->SetFillColor(10);
+      motherpad->Draw();
+      motherpad->cd();
+
+      motherpad->Divide(7,4);
+      ipad=0;
+
+      c->cd();
+
+      TLatex *ltx = new TLatex();
+      ltx->SetNDC();
+      ltx->SetText(.45,.97,Form("Run # %d",runnum));
+      ltx->SetTextSize(.03);
+      ltx->Draw();
+
+      c->Update();
+    }
+
+    assert(motherpad);
+
+    motherpad->cd(ipad+1);
+
+    plot((TProfile *)(v_histos[i].second->histo()),phasepos,phasewid,notfound,tdchi);
+
+    c->Update();
   }
   c->SaveAs(TString(rootfile)+"_"+cname+".png");
   
