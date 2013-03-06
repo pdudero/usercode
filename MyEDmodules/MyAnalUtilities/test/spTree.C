@@ -1,5 +1,6 @@
 #include "TTree.h"
 #include "TPRegexp.h"
+#include "TGraph.h"
 
 static map<string, TTree *>       glmap_id2tree;
 
@@ -12,7 +13,8 @@ TTree *findTree(const string& tid)
     cerr << "Tree ID " << tid << " not found" << endl;
     return NULL;
   }
-  cout << "Found tree " << tid << endl;
+  if( gl_verbose)
+    cout << "Found tree " << tid << endl;
   return it->second;
 }                                                            // findTree
 
@@ -55,7 +57,8 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
       exit(-1);
     }
   }
-  cout<<"drawspec="<<drawspec<<endl;
+  if( gl_verbose)
+    cout<<"drawspec="<<drawspec<<endl;
 
   TTree *tree = findTree(tid);
   assert (tree);
@@ -82,7 +85,8 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
     varexp = varexp + ">>+" + hname; // append to pre-existing histo
   }
 
-  cout<<"varexp="<<varexp<<", hname="<<hname<<endl;
+  if( gl_verbose)
+    cout<<"varexp="<<varexp<<", hname="<<hname<<endl;
   switch(tokens->GetEntriesFast()) {
   case 1:
     tree->Draw(varexp,"","goff");
@@ -117,10 +121,105 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
   }
   if (!wth1) {
     wth1 = new wTH1((TH1*)gDirectory->Get(hname));
-    wth1->histo()->UseCurrentStyle();
     assert(wth1);
+    wth1->histo()->UseCurrentStyle();
   }
 }                                                // fillHistoFromTreeVar
+
+//======================================================================
+
+void fillGraphFromTreeVar(std::string& treedrawspec,int index,wGraph_t *&pwg)
+{
+  // Sample treedrawspec:
+  // mytree:"TDCwinstart[%d]:runnum","evtnum==1","P"
+  //
+  vector<string> v_tokens;
+  string tid;
+  TString drawspec;
+  Tokenize(treedrawspec,v_tokens,":",true);
+  if( (v_tokens.size() < 2) ||
+      (!v_tokens[0].size())  ||
+      (!v_tokens[2].size())    ) {
+    cerr << "malformed root tree draw spec treeid:\"varexp\",\"selection\",option: " << treedrawspec << endl;
+    return;
+  }
+
+  tid = v_tokens[0];
+  for (size_t i=2; i<v_tokens.size(); i++) {
+    drawspec += v_tokens[i];
+  }
+  int fmtcnt = drawspec.CountChar('%');
+
+  if (fmtcnt) { // use index for tree array var
+    switch(fmtcnt) {
+    case 1: drawspec = Form(drawspec,index); break;
+    case 2: drawspec = Form(drawspec,index,index); break;
+    case 3: drawspec = Form(drawspec,index,index,index); break;
+    case 4: drawspec = Form(drawspec,index,index,index,index); break;
+    case 5: drawspec = Form(drawspec,index,index,index,index,index); break;
+    case 6: drawspec = Form(drawspec,index,index,index,index,index,index); break;
+    default:
+      cerr << "More than six fmt specifiers in drawspec found, fix me! " << drawspec <<endl;
+      exit(-1);
+    }
+  }
+  if( gl_verbose)
+    cout<<"drawspec="<<drawspec<<endl;
+
+  TTree *tree = findTree(tid);
+  assert (tree);
+
+  // can't use comma as delimiter since histo with binning spec may be supplied
+  TObjArray *tokens = drawspec.Tokenize("\"");
+  TString hname;
+
+  TString varexp = ((TObjString *)(*tokens)[0])->GetString();
+
+  if( gl_verbose)
+    cout<<"varexp="<<varexp<<endl;
+  switch(tokens->GetEntriesFast()) {
+  case 1:
+    tree->Draw(varexp,"","goff");
+    break;
+  case 3:
+    {
+      TString cut = ((TObjString *)(*tokens)[2])->GetString();
+      tree->Draw(varexp,cut,"goff"); 
+    }
+    break;
+  case 4: // assume the cut string is blank
+    {
+      TString gopt = ((TObjString *)(*tokens)[3])->GetString();
+      gopt = gopt + " goff";
+      tree->Draw(varexp,"",gopt);
+    }
+    break;
+  case 5:
+    {
+      TString cut  = ((TObjString *)(*tokens)[2])->GetString();
+      TString gopt = ((TObjString *)(*tokens)[4])->GetString();
+      gopt = gopt + " goff";
+      tree->Draw(varexp,cut,gopt);
+    }
+    break;
+  default:
+    cerr << "malformed root tree draw spec treeid:varexp,selection,option";
+    for (int i=0; i<tokens->GetEntriesFast(); i++)
+      cerr << i<<": "<< ((TObjString *)(*tokens)[i])->GetString() << " ";
+    cerr << endl;
+    break;
+  }
+
+  assert(tree->GetSelectedRows());
+
+  if (!pwg)
+    pwg = new wGraph_t();
+
+  assert(pwg);
+  pwg->gr = new TGraph(tree->GetSelectedRows(),
+		       tree->GetV2(), tree->GetV1());
+
+}                                                // fillGraphFromTreeVar
 
 //======================================================================
 
@@ -193,7 +292,8 @@ processTreeSection(FILE *fp,
   string *tid  = NULL;
   TTree  *t1   = NULL;
 
-  cout << "Processing Tree section" << endl;
+  if (gl_verbose)
+    cout << "Processing Tree section" << endl;
 
   new_section=false;
 
