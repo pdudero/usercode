@@ -53,6 +53,26 @@ struct wGraph_t {
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
 static map<string, wGraph_t *>    glmap_id2graph;
+static map<string, unsigned>      glmap_mgid2size;
+
+//======================================================================
+
+wGraph_t *findGraph(const string& gid, const string& errmsg="")
+{
+  map<string,wGraph_t *>::const_iterator it = glmap_id2graph.find(gid);
+  if( it == glmap_id2graph.end() ) {
+    // Try finding the first
+    cerr << "Graph ID " << gid << " not found. " << errmsg << endl;
+    if( gl_verbose) {
+      cout << "Available graph IDs are: " << endl;
+      for (it = glmap_id2graph.begin(); it != glmap_id2graph.end(); it++)
+	cout << it->first << " ";
+      cout << endl;
+    }
+    return NULL;
+  }
+  return it->second;
+}                                                           // findGraph
 
 //======================================================================
 
@@ -253,6 +273,13 @@ printVectorsToFile(wGraph_t *wg) // , const string& filename)
       cout <<lox<<"\t"<<x<<"\t"<<hix<<"\t";
       cout <<loy<<"\t"<<y<<"\t"<<hiy<<"\t"<<ex<<"\t"<<ey<<endl;
     }
+  } else {
+    cout<<"x\ty\t"<<endl;
+    for (int i=0; i<wg->gr->GetN(); i++) {
+      double x,y;
+      wg->gr->GetPoint(i,x,y);
+      cout<<x<<"\t"<<y<<endl;
+    }
   }
 }                                                  // printVectorsToFile
 
@@ -352,7 +379,9 @@ processGraphSection(FILE *fp,
   float xoffset=0.0,yoffset=0.0, yscale=1.0;
   float xmin=0.,xmax=0.,ymin=0.,ymax=0.,zmin=0.,zmax=0.;
   bool asymerrors = false;
-  wGraph_t *wg = NULL;
+  bool printvecs  = false;
+  wGraph_t wg;                                    // placeholder for read-in values
+  vector<std::pair<string, wGraph_t *> > v_graphs;
 
   char xheader[80],yheader[80];
   xheader[0]=0;
@@ -399,22 +428,26 @@ processGraphSection(FILE *fp,
 	scanspec = v_tokens[1];
       }
 
-      if (wg) {
-	cerr << "graph already defined" << endl; continue;
+      if (v_graphs.size()) {
+	cerr << "graph(s) already defined" << endl; continue;
       }
       if (inSet<string>(glset_graphFilesReadIn,path)) {
 	cerr << "vector file " << path << " already read in" << endl; break;
       }
 
-      wg = new wGraph_t();
+      wGraph_t *pwg = new wGraph_t();
 
       if (asymerrors)
 	loadVectorsFromFile(path.c_str(),scanspec.c_str(),vx,vy,exl,exh,eyl,eyh);
       else
 	loadVectorsFromFile(path.c_str(),scanspec.c_str(),vx,vy,xheader,yheader);
 
-      if (strlen(xheader)) wg->xax->SetTitle(xheader);
-      if (strlen(yheader)) wg->yax->SetTitle(yheader);
+      if (strlen(xheader)) pwg->xax->SetTitle(xheader);
+      if (strlen(yheader)) pwg->yax->SetTitle(yheader);
+
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+
+      // pend filling the graph until all parameters are read in
 
     //------------------------------
     } else if (key == "vectorfile2d") {
@@ -422,11 +455,9 @@ processGraphSection(FILE *fp,
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wg) {
-	cerr << "graph already defined" << endl; continue;
+      if (v_graphs.size()) {
+	cerr << "graph(s) already defined" << endl; continue;
       }
-
-      wg = new wGraph_t();
 
       Tokenize(value,v_tokens,",");
 
@@ -435,20 +466,24 @@ processGraphSection(FILE *fp,
 	cerr << "vector file " << path << " already read in" << endl; break;
       }
 
+      wGraph_t *pwg = new wGraph_t();
+
       switch(v_tokens.size()) {
-      case 1:  wg->gr2d = new TGraph2D(path.c_str()); break;
-      case 2:  wg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str()); break;
-      case 3:  wg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str(),v_tokens[2].c_str()); break;
+      case 1:  pwg->gr2d = new TGraph2D(path.c_str()); break;
+      case 2:  pwg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str()); break;
+      case 3:  pwg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str(),v_tokens[2].c_str()); break;
       default:
 	cerr << "malformed vectorfile2d spec path[,format[,option]] " << value << endl;
 	break;
       }
 
-      if (wg->gr2d->IsZombie()) {
+      if (pwg->gr2d->IsZombie()) {
 	cerr << "Unable to make Graph2D from file " << path << endl;
 	exit(-1);
       }
-      wg->gr2d->SetName(gid->c_str());
+      pwg->gr2d->SetName(gid->c_str());
+
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
 
     //------------------------------
     } else if (key == "path") {
@@ -457,12 +492,14 @@ processGraphSection(FILE *fp,
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wg) {
+      if (v_graphs.size()) {
 	cerr << "graph already defined" << endl; continue;
       }
-      wg = new wGraph_t();
-      wg->gr  = getGraphFromSpec(*gid,value);
-      if (!wg->gr) continue;
+      wGraph_t *pwg = new wGraph_t();
+      pwg->gr  = getGraphFromSpec(*gid,value);
+      if (!pwg->gr) continue;
+
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
 
     //------------------------------
     } else if (key == "clone") {
@@ -471,7 +508,7 @@ processGraphSection(FILE *fp,
       if (!gid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if (wg) {
+      if (v_graphs.size()) {
 	cerr << "graph already defined" << endl; continue;
       }
       map<string,wGraph_t *>::const_iterator it = glmap_id2graph.find(value);
@@ -480,7 +517,52 @@ processGraphSection(FILE *fp,
 	cerr << "clone must be defined after the clonee" << endl;
 	break;
       }
-      wg  = new wGraph_t(*(it->second),*gid);
+      wGraph_t *pwg  = new wGraph_t(*(it->second),*gid);
+
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+
+    //------------------------------
+    } else if( key == "fillfromtree" ) { // converts tree array variables into a group of graphs
+    //------------------------------
+      if( !gid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (v_graphs.size()) {
+	cerr << "graph(s) already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,";");
+      string treedrawspec=v_tokens[0];
+
+      int ifirst=-1,ilast=-1;
+      if (v_tokens.size() == 2) {
+	string range=v_tokens[1];
+	Tokenize(range,v_tokens,"-");
+	if (v_tokens.size()==2) {
+	  ifirst=str2int(v_tokens[0]);
+	  ilast =str2int(v_tokens[1]);
+	}
+      }
+      //cout << v_tokens.size() << " " << ifirst << " " << ilast << endl;
+      if (ifirst<0 || 
+	  ilast <0 ||
+	  ilast<ifirst ) {
+	cerr << "malformed filltree expression drawspec;X-Y, where X-Y is the array index range to plot"<<endl;
+	exit(-1);
+      }
+
+      for (int i=ifirst; i<=ilast; i++) {
+	wGraph_t *pwg = NULL;
+
+	// defined in spTree.C
+	void fillGraphFromTreeVar(std::string& drawspec,int index,wGraph_t *&pwg);
+	fillGraphFromTreeVar(treedrawspec,i,pwg);
+	assert(pwg);
+	string gidi= (*gid)+"_"+int2str(i-ifirst);
+	v_graphs.push_back(std::pair<string,wGraph_t *>(gidi,pwg));
+      }
+
+      glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
 
     //------------------------------
     } else if (key == "bayesdiv") {
@@ -498,7 +580,7 @@ processGraphSection(FILE *fp,
 
       cout << tmph1->GetNbinsX() << " " << tmph2->GetNbinsX() << endl;
 
-      wg = new wGraph_t();
+      wGraph_t *pwg = new wGraph_t();
 
       if ( gl_verbose ) { 
 	std::cout << "Dump of bin contents, errors" << std::endl ; 
@@ -514,21 +596,21 @@ processGraphSection(FILE *fp,
 
       // equivalent to BayesDivide
       //
-      if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"debug");
-      else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"");
-      //if (gl_verbose) wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
-      //else            wg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
-      if (!wg->gr) {
+      if (gl_verbose) pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"debug");
+      else            pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"");
+      //if (gl_verbose) pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
+      //else            pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
+      if (!pwg->gr) {
 	cerr << "BayesDivide didn't work! wonder why..." << endl;
 	continue;
       } else if (gl_verbose) {
-	cout << wg->gr->GetN() << " points in the graph" << endl;
+	cout << pwg->gr->GetN() << " points in the graph" << endl;
       }
 
       // Fix in case something broke
 
-      for (int i=0; i<wg->gr->GetN(); i++) {
-          if ( wg->gr->GetErrorYhigh(i) == 0. || wg->gr->GetErrorYlow(i) == 0 ) { // Something bad happened
+      for (int i=0; i<pwg->gr->GetN(); i++) {
+          if ( pwg->gr->GetErrorYhigh(i) == 0. || pwg->gr->GetErrorYlow(i) == 0 ) { // Something bad happened
               if ( gl_verbose ) std::cout << "Problem with Bayes divide, checking..." << std::endl ;
               double pass  = tmph1->GetBinContent(i+1) ; 
               double total = tmph2->GetBinContent(i+1) ;
@@ -538,7 +620,7 @@ processGraphSection(FILE *fp,
               } else { 
                   if ( gl_verbose ) std::cout << "Yep, something is broken" << std::endl ;
                   double xval, yval ;
-                  wg->gr->GetPoint(i,xval,yval) ;
+                  pwg->gr->GetPoint(i,xval,yval) ;
                   yval = pass / total ;
                   // Use simplified efficiency assumption
                   // double u1 = tmph1->GetBinError(i+1) / tmph1->GetBinContent(i+1) ; 
@@ -547,50 +629,51 @@ processGraphSection(FILE *fp,
                   double unc = sqrt( yval * (1.-yval)/tmph2->GetBinContent(i+1) ) ; 
                   double uhi = ( (yval + unc > 1.)?(1.-yval):(unc) ) ; 
                   double ulo = ( (yval - unc < 0.)?(yval):(unc) ) ;
-                  wg->gr->SetPoint(i,xval,yval) ;
-                  ((TGraphAsymmErrors*)wg->gr)->SetPointError(i,wg->gr->GetErrorXlow(i),wg->gr->GetErrorXhigh(i),ulo,uhi) ; 
-//                   wg->gr->SetPointEYhigh(i,uhi) ; 
-//                   wg->gr->SetPointEYlow(i,ulo) ; 
+                  pwg->gr->SetPoint(i,xval,yval) ;
+                  ((TGraphAsymmErrors*)pwg->gr)->SetPointError(i,pwg->gr->GetErrorXlow(i),pwg->gr->GetErrorXhigh(i),ulo,uhi) ; 
+//                   pwg->gr->SetPointEYhigh(i,uhi) ; 
+//                   pwg->gr->SetPointEYlow(i,ulo) ; 
               }
           }   
-          if (gl_verbose) std::cout << i << ": " << wg->gr->GetErrorYhigh(i) << "/" << wg->gr->GetErrorYlow(i) << std::endl ; 
+          if (gl_verbose) std::cout << i << ": " << pwg->gr->GetErrorYhigh(i) << "/" << pwg->gr->GetErrorYlow(i) << std::endl ; 
       }
 
-    } else if (!wg) {
+    } else if (!v_graphs.size()) {
       cerr<<"One of keys path,clone,vectorfile,vectorfile2d or bayesdiv must be defined before key..."<<key<<endl;
     } else {
       if     ( key == "xoffset" )      xoffset   = str2flt(value);
       else if( key == "yoffset" )      yoffset   = str2flt(value);
       else if( key == "yscale" )       yscale    = str2flt(value);
       else if( key == "title"  )       title     = TString(value);
-      else if( key == "xtitle" )       wg->xax->SetTitle(value.c_str());
-      else if( key == "ytitle" )       wg->yax->SetTitle(value.c_str());
-      else if( key == "ztitle" )       wg->zax->SetTitle(value.c_str());
-      else if( key == "xtitleoffset" ) wg->xax->SetTitleOffset(str2flt(value));
-      else if( key == "ytitleoffset" ) wg->yax->SetTitleOffset(str2flt(value));
-      else if( key == "ztitleoffset" ) wg->zax->SetTitleOffset(str2flt(value));
-      else if( key == "xmin" )         xmin      = str2flt(value);
-      else if( key == "xmax" )         xmax      = str2flt(value);
-      else if( key == "ymin" )         ymin      = str2flt(value);
-      else if( key == "ymax" )         ymax      = str2flt(value);
-      else if( key == "zmin" )         zmin      = str2flt(value);
-      else if( key == "zmax" )         zmax      = str2flt(value);
-      else if( key == "linecolor" )    wg->lcolor  = str2int(value);
-      else if( key == "linestyle" )    wg->lstyle  = str2int(value);
-      else if( key == "linewidth" )    wg->lwidth  = str2int(value);
-      else if( key == "markercolor" )  wg->mcolor  = str2int(value);
-      else if( key == "markerstyle" )  wg->mstyle  = str2int(value);
-      else if( key == "markersize"  )  wg->msize   = str2int(value);
-      else if( key == "fillcolor" )    wg->fcolor  = str2int(value);
-      else if( key == "fillstyle" )    wg->fstyle  = str2int(value);
-      else if( key == "xndiv" )        wg->xax->SetNdivisions(str2int(value));
-      else if( key == "yndiv" )        wg->yax->SetNdivisions(str2int(value));
-      else if( key == "asymerrors" )   asymerrors  = (bool)str2int(value);
-      else if( key == "leglabel" )     wg->leglabel   = value;
-      else if( key == "draw" )         wg->drawopt    = value;
-      else if( key == "legdraw" )      wg->legdrawopt = value;
+      else if( key == "xtitle" )       wg.xax->SetTitle      (TString(value));
+      else if( key == "ytitle" )       wg.yax->SetTitle      (TString(value));
+      else if( key == "ztitle" )       wg.zax->SetTitle      (TString(value));
+      else if( key == "xtitleoffset" ) wg.xax->SetTitleOffset(str2flt(value));
+      else if( key == "ytitleoffset" ) wg.yax->SetTitleOffset(str2flt(value));
+      else if( key == "ztitleoffset" ) wg.zax->SetTitleOffset(str2flt(value));
+      else if( key == "xndiv" )        wg.xax->SetNdivisions (str2int(value));
+      else if( key == "yndiv" )        wg.yax->SetNdivisions (str2int(value));
+      else if( key == "zndiv" )        wg.zax->SetNdivisions (str2int(value));
+      else if( key == "xmin" )         xmin         = str2flt(value);
+      else if( key == "xmax" )         xmax         = str2flt(value);
+      else if( key == "ymin" )         ymin         = str2flt(value);
+      else if( key == "ymax" )         ymax         = str2flt(value);
+      else if( key == "zmin" )         zmin         = str2flt(value);
+      else if( key == "zmax" )         zmax         = str2flt(value);
+      else if( key == "linecolor" )    wg.lcolor    = str2int(value);
+      else if( key == "linestyle" )    wg.lstyle    = str2int(value);
+      else if( key == "linewidth" )    wg.lwidth    = str2int(value);
+      else if( key == "markercolor" )  wg.mcolor    = str2int(value);
+      else if( key == "markerstyle" )  wg.mstyle    = str2int(value);
+      else if( key == "markersize"  )  wg.msize     = str2int(value);
+      else if( key == "fillcolor" )    wg.fcolor    = str2int(value);
+      else if( key == "fillstyle" )    wg.fstyle    = str2int(value);
+      else if( key == "asymerrors" )   asymerrors   = (bool)str2int(value);
+      else if( key == "leglabel" )     wg.leglabel  = value;
+      else if( key == "draw" )         wg.drawopt   = value;
+      else if( key == "legdraw" )      wg.legdrawopt= value;
       else if( key == "setprecision" ) cout << setprecision(str2int(value));
-      else if( key == "printvecs2file") printVectorsToFile(wg); // ,value);
+      else if( key == "printvecs2file") printvecs = true;
       else if( key == "fittf1" ) {
 	TF1 *tf1 = findTF1(value);
 	if( !tf1 ) {
@@ -598,14 +681,14 @@ processGraphSection(FILE *fp,
 	  continue;
 	}
 	string funcnewname = value+(*gid);
-	wg->fitfn = new TF1(*tf1);
-	wg->fitfn->SetName(funcnewname.c_str());
+	wg.fitfn = new TF1(*tf1);
+	wg.fitfn->SetName(funcnewname.c_str());
       }
       else if ( key == "contours" ) {
 	Tokenize(value,v_tokens,",");
-	wg->contours = new TVectorD(v_tokens.size());
+	wg.contours = new TVectorD(v_tokens.size());
 	for (size_t i=0; i<v_tokens.size(); i++)
-	  wg->contours[i] = str2flt(v_tokens[i]);
+	  wg.contours[i] = str2flt(v_tokens[i]);
       }
       else {
 	cerr << "unknown key " << key << endl;
@@ -617,46 +700,66 @@ processGraphSection(FILE *fp,
   }
 
   //cout << title << endl;
-  if (wg->gr2d) {
-    wg->gr2d->SetTitle(title);
-    wg->gr2d->SetLineStyle   (wg->lstyle);
-    wg->gr2d->SetLineColor   (wg->lcolor);
-    wg->gr2d->SetLineWidth   (wg->lwidth);
-    wg->gr2d->SetMarkerColor (wg->mcolor);
-    wg->gr2d->SetMarkerStyle (wg->mstyle);
-    wg->gr2d->SetMarkerSize  (wg->msize);
-    wg->gr2d->SetFillStyle   (wg->fstyle);
-    wg->gr2d->SetFillColor   (wg->fcolor);
-    if (zmax>zmin)  
-      wg->zax->SetLimits(zmin,zmax);
-  } else {
-    if (vx.GetNoElements()) { // load utility guarantees the same size for both
-      if (yscale  != 1.0) vy *= yscale;
-      if (xoffset != 0.0) vx += xoffset;
-      if (yoffset != 0.0) vy += yoffset;
-      if (asymerrors) 
-	wg->gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
-      else
-	wg->gr = new TGraph(vx,vy);
-    }
-    wg->gr->UseCurrentStyle();
-    wg->gr->SetTitle(title);
-    wg->gr->SetLineStyle   (wg->lstyle);
-    wg->gr->SetLineColor   (wg->lcolor);
-    wg->gr->SetLineWidth   (wg->lwidth);
-    wg->gr->SetMarkerColor (wg->mcolor);
-    wg->gr->SetMarkerStyle (wg->mstyle);
-    wg->gr->SetMarkerSize  (wg->msize);
-    wg->gr->SetFillStyle   (wg->fstyle);
-    wg->gr->SetFillColor   (wg->fcolor);
 
-    if (xmax>xmin) wg->xax->SetLimits(xmin,xmax);
-    if (ymax>ymin) wg->yax->SetLimits(ymin,ymax);
+  for (size_t i=0; i<v_graphs.size(); i++) {
+    string gidi = v_graphs[i].first;
+    wGraph_t *pwg = v_graphs[i].second;
+    if (pwg->gr2d) {
+      pwg->gr2d->SetTitle(title);
+      pwg->gr2d->SetLineStyle   (wg.lstyle);
+      pwg->gr2d->SetLineColor   (wg.lcolor);
+      pwg->gr2d->SetLineWidth   (wg.lwidth);
+      pwg->gr2d->SetMarkerColor (wg.mcolor);
+      pwg->gr2d->SetMarkerStyle (wg.mstyle);
+      pwg->gr2d->SetMarkerSize  (wg.msize);
+      pwg->gr2d->SetFillStyle   (wg.fstyle);
+      pwg->gr2d->SetFillColor   (wg.fcolor);
+      if (zmax>zmin)  
+	pwg->zax->SetLimits(zmin,zmax);
+    } else {
+      if (vx.GetNoElements()) { // load utility guarantees the same size for both
+	if (yscale  != 1.0) vy *= yscale;
+	if (xoffset != 0.0) vx += xoffset;
+	if (yoffset != 0.0) vy += yoffset;
+	if (asymerrors) 
+	  pwg->gr = new TGraphAsymmErrors(vx,vy,exl,exh,eyl,eyh);
+	else
+	  pwg->gr = new TGraph(vx,vy);
+      }
+      pwg->gr->UseCurrentStyle();
+      pwg->fitfn      =        wg.fitfn;
+      pwg->contours   =        wg.contours;
+      pwg->drawopt    =        wg.drawopt;
+      pwg->legdrawopt =        wg.legdrawopt;
+      pwg->gr->SetTitle       (title);
+      pwg->xax->SetTitle      (wg.xax->GetTitle());
+      pwg->yax->SetTitle      (wg.yax->GetTitle());
+      pwg->zax->SetTitle      (wg.zax->GetTitle());
+      pwg->xax->SetTitleOffset(wg.xax->GetTitleOffset());
+      pwg->yax->SetTitleOffset(wg.yax->GetTitleOffset());
+      pwg->zax->SetTitleOffset(wg.zax->GetTitleOffset());
+      pwg->xax->SetNdivisions (wg.xax->GetNdivisions());
+      pwg->yax->SetNdivisions (wg.yax->GetNdivisions());
+      pwg->zax->SetNdivisions (wg.zax->GetNdivisions());
+      pwg->gr->SetLineStyle   (wg.lstyle);
+      pwg->gr->SetLineColor   (wg.lcolor);
+      pwg->gr->SetLineWidth   (wg.lwidth);
+      pwg->gr->SetMarkerColor (wg.mcolor);
+      pwg->gr->SetMarkerStyle (wg.mstyle);
+      pwg->gr->SetMarkerSize  (wg.msize);
+      pwg->gr->SetFillStyle   (wg.fstyle);
+      pwg->gr->SetFillColor   (wg.fcolor);
+
+      if (xmax>xmin) pwg->xax->SetLimits(xmin,xmax);
+      if (ymax>ymin) pwg->yax->SetLimits(ymin,ymax);
+
+      glmap_id2graph.insert(pair<string,wGraph_t *>(gidi,pwg));
+
+      if (printvecs) printVectorsToFile(pwg); // ,value);
+    }
   }
 
-  glmap_id2graph.insert(pair<string,wGraph_t *>(*gid,wg));
-
-  return (wg != NULL);
+  return (v_graphs.size());
 }                                                 // processGraphSection
 
 //======================================================================
