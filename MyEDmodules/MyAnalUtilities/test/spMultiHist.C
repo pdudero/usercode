@@ -304,6 +304,13 @@ processMultiHistSection(FILE *fp,
       switch( v_tokens.size() ) {
       case 1: printf (v_tokens[0].c_str()); break;
       case 2: printf (v_tokens[0].c_str(),v_tokens[1].c_str()); break;
+      case 3: printf (v_tokens[0].c_str(),
+		      v_tokens[1].c_str(),
+		      v_tokens[2].c_str()); break;
+      case 4: printf (v_tokens[0].c_str(),
+		      v_tokens[1].c_str(),
+		      v_tokens[2].c_str(),
+		      v_tokens[3].c_str()); break;
       default:
 	cerr << "Unsupported number of arguments, " << value << endl;
 	exit(-1);

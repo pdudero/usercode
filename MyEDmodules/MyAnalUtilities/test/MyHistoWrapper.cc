@@ -377,10 +377,11 @@ MyHistoWrapper<T>::DrawStats(void)
       (y2 > y1) && (y2 < 1.)) {
     st1->SetX1NDC(x1); st1->SetX2NDC(x2);
     st1->SetY1NDC(y1); st1->SetY2NDC(y2);
+    if (verbosity_)
     std::cout << std::endl;
-  } else {
+  } else if (verbosity_)
     std::cout<<"Sorry, Charlie"<<std::endl;
-  }
+
 
   if (drawoption_ == "P") {
     st1->SetLineColor(h_->GetMarkerColor());

@@ -1,7 +1,5 @@
 #include <algorithm>
 
-struct wGraph_t;
-
 inline bool isnumeric(const std::string& foo) {
   return (count_if(foo.begin(), foo.end(), ::isdigit) == (int)foo.size());
   //std::count_if(c.begin(), c.end(),
@@ -158,7 +156,7 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
       } else {
 	char c = arg[0];
 	switch( c ) {
-	case 'n': printf( fmt.c_str(), h->GetName() );
+	case 'n': printf( fmt.c_str(), h->GetName() ); break;
 	case 'p': // full histo path
 	case 'f': // root filename
 	case 'h': // histo path in file
