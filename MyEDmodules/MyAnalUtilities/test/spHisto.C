@@ -546,6 +546,7 @@ void processCommonHistoParams(const string& key,
     }
   }
   else if( key == "title" )       wh.histo()->SetTitle(value.c_str());
+  else if( key == "notitle" )     wh.histo()->SetBit(TH1::kNoTitle,str2int(value));
 
   else if( key == "markercolor" ) wh.SetMarker(str2int(value) );
   else if( key == "markerstyle" ) wh.SetMarker(0,str2int(value));
@@ -948,15 +949,15 @@ processHistoSection(FILE *fp,
       if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      if( !wth1 ) {
-	cerr << "fillfromtree: Histo must be prebooked with book1dpars or book2dpars" << endl; continue;
-	// histo assumed to be booked already in the fill routine
-      }
 
       // defined in spTree.C
       void fillHistoFromTreeVar(std::string& gid,int index,wTH1 *&wth1);
 
       fillHistoFromTreeVar(value,0,wth1);
+
+      assert(wth1);
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
     } else if( key == "hprop" ) {    // fill a histogram with a per-bin property of another
