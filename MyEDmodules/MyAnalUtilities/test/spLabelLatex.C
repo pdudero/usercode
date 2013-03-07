@@ -126,6 +126,31 @@ processLatexSection(FILE   *fp,
       if (value.size())
 	ltx->SetText(posx,posy,value.c_str());
     }
+    else if( key == "kstest" ) {
+
+      Tokenize(value,v_tokens,","); 
+      if (v_tokens.size()!=3 &&
+	  v_tokens.size()!=4   ) {
+	cerr << "Invalid format for key kstest: kstest=histoid1,histoid2[,option],printf format" << endl;
+	exit(-1);
+      }
+      TH1 *cmph1 = findHisto(v_tokens[0]);  assert(cmph1);
+      TH1 *cmph2 = findHisto(v_tokens[1]);  assert(cmph2);
+
+      if (gl_verbose)
+	cout<<"Comparing histos "<<cmph1->GetName()<<", "<<cmph2->GetName()<<endl;
+
+      double ksprob;
+      if (v_tokens.size()==4) {
+	ksprob = cmph1->KolmogorovTest(cmph2,v_tokens[2].c_str());
+	ltx->SetText(posx,posy,Form(v_tokens[3].c_str(),ksprob));
+      }
+      else {
+	ksprob = cmph1->KolmogorovTest(cmph2);
+	ltx->SetText(posx,posy,Form(v_tokens[2].c_str(),ksprob));
+      }
+    }
+
     else if (key == "xpos")     { posx = str2flt(value); ltx->SetX(posx); }
     else if (key == "ypos")     { posy = str2flt(value); ltx->SetY(posy); }
     else if (key == "angle")    ltx->SetTextAngle(str2flt(value));
