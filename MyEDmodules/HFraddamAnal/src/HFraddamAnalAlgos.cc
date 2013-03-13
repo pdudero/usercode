@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HFraddamAnalAlgos.cc,v 1.2 2010/08/04 13:30:52 dudero Exp $
+// $Id: HFraddamAnalAlgos.cc,v 1.1 2013/02/18 20:13:01 dudero Exp $
 //
 //
 
@@ -69,6 +69,42 @@ static const double hftwrRadii[] = { // in meters
   1.570-0.505,  // 30
   1.570-0.344   // 29
 };
+
+//==================================================================
+
+int date2day2012(const char *date)
+{
+  const int dayspermonthin2012[12] = {
+    31,29,31,30,31,30,31,31,30,31,30,31
+  };
+
+  int dayofyear;
+
+  TString datestr(date);
+
+  TObjArray *tokens = datestr.Tokenize("-");
+
+  assert(tokens->GetEntriesFast()==3);
+
+  int year  = ((TObjString *)(*tokens)[0])->GetString().Atoi();
+  int month = ((TObjString *)(*tokens)[1])->GetString().Atoi();
+  int day   = ((TObjString *)(*tokens)[2])->GetString().Atoi();
+
+  assert(year==2012);
+
+  dayofyear=0;
+
+  int imonth;
+  for (imonth=0; imonth<12; imonth++) {
+    if (month==imonth+1) break;
+    dayofyear += dayspermonthin2012[imonth];
+  }
+  assert(imonth<12);
+
+  dayofyear += day;
+
+  return dayofyear;
+}                                                    // date2day2012
 
 //==================================================================
 const std::string HFraddamAnalAlgos::mysubdetstr_     = "HF";
@@ -135,8 +171,16 @@ HFraddamAnalAlgos::HFraddamAnalAlgos(const edm::ParameterSet& iConfig)
   rundatesfile_ =
     iConfig.getUntrackedParameter<string>("rundatesfile");
 
+  s2overs1meansfile_ =
+    iConfig.getUntrackedParameter<string>("s2overs1meansfile");
+
+  lumiprofilefile_ =
+    iConfig.getUntrackedParameter<string>("lumiprofilefile");
+
   parseTDCwindows(tdcwindowsfile_);
   readRunDates(rundatesfile_);
+  readS2overS1means(s2overs1meansfile_);
+  readLumiProfile(lumiprofilefile_);
 
   firstEvent_ = true;
 }                                // HFraddamAnalAlgos::HFraddamAnalAlgos
@@ -193,7 +237,8 @@ HFraddamAnalAlgos::buildChannelSet(const std::vector<int>& v_idnumbers)
 
 //======================================================================
 
-void  HFraddamAnalAlgos::parseTDCwindows(const std::string& tdcwindowsfile)
+void
+HFraddamAnalAlgos::parseTDCwindows(const std::string& tdcwindowsfile)
 {
   FILE *fp = fopen(tdcwindowsfile.c_str(),"r");
   if (!fp) {
@@ -218,7 +263,8 @@ void  HFraddamAnalAlgos::parseTDCwindows(const std::string& tdcwindowsfile)
 
 //======================================================================
 
-void  HFraddamAnalAlgos::readRunDates(const std::string& rundatesfile)
+void
+HFraddamAnalAlgos::readRunDates(const std::string& rundatesfile)
 {
   FILE *fp = fopen(rundatesfile.c_str(),"r");
   if (!fp) {
@@ -239,6 +285,81 @@ void  HFraddamAnalAlgos::readRunDates(const std::string& rundatesfile)
   }
   fclose(fp);
 }                                    //  HFraddamAnalAlgos::readRunDates
+
+//======================================================================
+
+void
+HFraddamAnalAlgos::readS2overS1means(const std::string& meansfile)
+{
+  FILE *fp = fopen(meansfile.c_str(),"r");
+  if (!fp) {
+    cerr << "Couldn't find file " << meansfile << endl;
+    exit(-1);
+  }
+  cout << "Reading means file " << meansfile << endl;
+
+  memset(s2overs1means_,0,56*sizeof(float));
+
+  char instr[128];
+  while (!feof(fp) && fgets(instr,128,fp)) {
+    unsigned index;
+    float mean;
+    if (instr[0]=='#') continue; //comments are welcome...
+    if (sscanf(instr,"%u %f",&index,&mean) != 2) {
+      cerr << "bad format in means file " << meansfile << ":"<<instr<<endl;
+      exit(-1);
+    }
+    assert(index < 56);
+    s2overs1means_[index] = mean;
+  }
+  fclose(fp);
+}                               //  HFraddamAnalAlgos::readS2overS1Means
+
+//======================================================================
+
+void
+HFraddamAnalAlgos::readLumiProfile(const std::string& lumiprofilefile)
+{
+  FILE *fp = fopen(lumiprofilefile.c_str(),"r");
+  if (!fp) {
+    cerr << "Couldn't find file " << lumiprofilefile << endl;
+    exit(-1);
+  }
+  cout << "Reading lumiprofile file " << lumiprofilefile << endl;
+
+  m_lumiprofile_.clear();
+  char instr[128];
+  double intlumiofyear = 0.0;
+  while (!feof(fp) && fgets(instr,128,fp)) {
+    char date[12];
+    double intlumi_ub;
+    if (instr[0]=='#') continue; //comments are welcome...
+    if (sscanf(instr,"%s , %lf",date,&intlumi_ub) != 2) {
+      cerr << "bad format in lumi profile file " << lumiprofilefile << ":"<<instr<<endl;
+      exit(-1);
+    }
+    int dayofyear = date2day2012(date);
+    intlumi_ub /= 1e6; // switch to 1/pb
+    intlumiofyear += intlumi_ub;
+    m_lumiprofile_[dayofyear] = std::pair<double,double>(intlumi_ub,intlumiofyear);
+  }
+  fclose(fp);
+}                                 //  HFraddamAnalAlgos::readLumiProfile
+
+//======================================================================
+
+void
+HFraddamAnalAlgos::lumiForDay(int     dayofyear,
+			      float& intlumipbofday,
+			      float& intlumipbofyear)
+{
+  std::map<int,std::pair<double,double> >::iterator itlo;
+
+  itlo = m_lumiprofile_.lower_bound(dayofyear);
+
+  intlumipbofday  = (float)itlo->second.first;
+  intlumipbofyear = (float)itlo->second.second;
+}
 
 //======================================================================
 
@@ -284,16 +405,6 @@ HFraddamAnalAlgos::bookHistos4allCuts(void)
   st_digiColSize_ = "h1d_digiCollectionSize" + mysubdetstr_;
   add1dHisto( st_digiColSize_, "Digi Collection Size, "+mysubdetstr_+" "+rundescr_,
 	      5201,-0.5, 5200.5, // 72chan/RBX*72RBX = 5184, more than HF or HO
-	      v_hpars1d);
-
-  st_s0adc_ = "h1d_s0adc" + mysubdetstr_;
-  add1dHisto( st_s0adc_, "S0"+mysubdetstr_+" "+rundescr_,
-	      100,0, 500,
-	      v_hpars1d);
-
-  st_s1pluss2adc_ = "h1d_s1pluss2adc" + mysubdetstr_;
-  add1dHisto( st_s1pluss2adc_, "S1+S2 "+mysubdetstr_+" "+rundescr_,
-	      100,0, 500,
 	      v_hpars1d);
 
   st_fCamplitude_ = "h1d_fcAmplitude" + mysubdetstr_;
@@ -397,6 +508,8 @@ HFraddamAnalAlgos::bookHistos4allCuts(void)
       
   } // cut loop
 
+  m_cuts_["cutNone"]->cuthistos()->mkSubdir<uint32_t>("_calibdigisfCperID");
+
   cout<<"Done."<<std::endl;
 }                               // HFraddamAnalAlgos::bookHistos4allCuts
 
@@ -466,8 +579,6 @@ HFraddamAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
   myAH->autofill<float>();
 
   myAH->fill1d<TH1D>(st_TDCLaserFireTime_,TDCphase_);
-  myAH->fill1d<TH1D>(st_s0adc_,s0adc_[ididx_]);
-  myAH->fill1d<TH1D>(st_s1pluss2adc_,s1pluss2adc_[ididx_]);
 
   CaloSamples filldigifC;
 
@@ -585,8 +696,9 @@ HFraddamAnalAlgos::fillDigiPulseHistos(perChanHistos     *digiFolder,
     digiFolder->book1d<TProfile>(chkey,hpars,false);
 
   if (hpulse) {
-    for (int its=0; its<digisize; ++its)
+    for (int its=0; its<digisize; ++its) {
       hpulse->Fill(its,filldigi[its]);
+    }
   }
 }                            // HFraddamAnalAlgos::fillDigiPulseHistos
 
@@ -684,12 +796,15 @@ void
 HFraddamAnalAlgos::processDigi(const HcalCalibDataFrame& df)
 {
   double totamp  = 0;
+
   if ( (df.id().det() == DetId::Hcal) &&
        (df.id().hcalSubdet()==HcalForward) &&
        (df.id().calibFlavor()==HcalCalibDetId::CalibrationBox) ) {
     //cout << df.id() << endl;
     calibID_ = df.id();
     //feID_  = lmap_->getHcalFrontEndId(calibID_);
+
+    calibdigifC_ = CaloSamples(DetId(df.id().rawId()),df.size());
 
     double nominal_ped = (df[0].nominal_fC() + df[1].nominal_fC())/2.0;
 
@@ -706,18 +821,18 @@ HFraddamAnalAlgos::processDigi(const HcalCalibDataFrame& df)
     }
     switch(calibID_.cboxChannel()) {
     case HcalCalibDetId::cbox_MixerHigh: {
-      float *calibamp = (zside>0) ? &HFPmixhi_[iquad] : &HFMmixhi_[iquad];
-      *calibamp = totamp;
+      if (zside>0) { HFPmixhi_[iquad] = totamp; }
+      else         { HFMmixhi_[iquad] = totamp; }
       break;
     }
     case HcalCalibDetId::cbox_MixerLow: {
-      float *calibamp = (zside>0) ? &HFPmixlo_[iquad] : &HFMmixlo_[iquad];
-      *calibamp = totamp;
+      if (zside>0) { HFPmixlo_[iquad] = totamp; }
+      else         { HFMmixlo_[iquad] = totamp; }
       break;
     }
     case HcalCalibDetId::cbox_HF_ScintillatorPIN: {
-      float *calibamp = (zside>0) ? &HFPscpin_[iquad] : &HFMscpin_[iquad];
-      *calibamp = totamp;
+      if (zside>0) { HFPscpin_[iquad] = totamp; }
+      else         { HFMscpin_[iquad] = totamp; }
       break;
     }
     default:break;
@@ -740,9 +855,6 @@ HFraddamAnalAlgos::processDigi(const HFDataFrame& df)
   HcalCoderDb coder( *qieCoder, *qieShape );
   coder.adc2fC( df, dfC );
 
-  s0adc_[ididx_] = df[0].adc();
-  s1pluss2adc_[ididx_] = df[1].adc()+df[2].adc();
-
   digiGeV_ = dfC;
   fCamplitude_[ididx_] = 0;
   pkSample_ = -1;
@@ -762,11 +874,44 @@ HFraddamAnalAlgos::processDigi(const HFDataFrame& df)
   // pick the peak and a neighboring sample such that the two samples
   // have the largest sum, and take the ratio
   //
-  if      (pkSample_ == dfC.size())           s2overs1_[ididx_] = dfC[pkSample_]  /dfC[pkSample_-1];
-  else if (pkSample_ == 0)                    s2overs1_[ididx_] = dfC[pkSample_+1]/dfC[pkSample_];
-  else if (dfC[pkSample_+1]>dfC[pkSample_-1]) s2overs1_[ididx_] = dfC[pkSample_+1]/dfC[pkSample_];
-  else                                        s2overs1_[ididx_] = dfC[pkSample_]  /dfC[pkSample_-1];
+  if      (pkSample_ == dfC.size()-1) {
+    s0adc_[ididx_] = df[pkSample_-2].adc();
+    s1adc_[ididx_] = df[pkSample_-1].adc();
+    s2adc_[ididx_] = df[pkSample_].adc();
 
+    s2overs1_      [ididx_] = dfC[pkSample_]  /dfC[pkSample_-1];
+    s2overs2pluss3_[ididx_] = 1;
+  }
+  else if (pkSample_ == 0) {
+    s0adc_[ididx_] = 0;
+    s1adc_[ididx_] = df[pkSample_].adc();
+    s2adc_[ididx_] = df[pkSample_+1].adc();
+
+    s2overs1_      [ididx_] = dfC[pkSample_+1]/ dfC[pkSample_];
+    s2overs2pluss3_[ididx_] = dfC[pkSample_+1]/(dfC[pkSample_+1]+dfC[pkSample_+2]);
+  }
+  else if (dfC[pkSample_+1]>dfC[pkSample_-1]) {
+    s0adc_[ididx_] = 0;
+    s1adc_[ididx_] = df[pkSample_].adc();
+    s2adc_[ididx_] = df[pkSample_+1].adc();
+
+    s2overs1_      [ididx_] = dfC[pkSample_+1]/ dfC[pkSample_];
+    if (pkSample_ == dfC.size()-2)
+      s2overs2pluss3_[ididx_] = 1;
+    else
+      s2overs2pluss3_[ididx_] = dfC[pkSample_+1]/(dfC[pkSample_+1]+dfC[pkSample_+2]);
+  }
+  else  {
+    if (pkSample_ <= 1)
+      s0adc_[ididx_] = 0;
+    else
+      s0adc_[ididx_] = df[pkSample_-2].adc();
+    s1adc_[ididx_] = df[pkSample_-1].adc();
+    s2adc_[ididx_] = df[pkSample_].adc();
+
+    s2overs1_      [ididx_] = dfC[pkSample_]/ dfC[pkSample_-1];
+      s2overs2pluss3_[ididx_] = dfC[pkSample_]/(dfC[pkSample_]+dfC[pkSample_+1]);
+  }
 }                                   // HFraddamAnalAlgos::processDigi
 
 //======================================================================
@@ -785,6 +930,15 @@ void HFraddamAnalAlgos::processDigis
     const HcalCalibDataFrame&  df = (*digihandle)[idf];
 
     processDigi(df);
+
+    uint32_t dix = calibID_.rawId(); 
+    stringstream chname; chname << calibID_;
+
+    perChanHistos *perchFolder = myAH->getAttachedHisto<uint32_t>("_calibdigisfCperID");
+    if (!perchFolder)
+      throw cms::Exception("Folder _calibdigisfCperID not found for histos "+myAH->name());
+
+    fillDigiPulseHistos(perchFolder,dix,chname.str(), calibdigifC_);
 
   } // loop over digis
 
@@ -846,7 +1000,11 @@ void HFraddamAnalAlgos::processDigis
 
     fillHistos4cut(*(m_cuts_["cutNone"]));
 
-    if (s0adc_[ididx_]<10 && s1pluss2adc_[ididx_]>50)
+    if ((s0adc_[ididx_] < 5)  &&
+	(s1adc_[ididx_] > 50) &&
+	(s2adc_[ididx_] > 50) &&
+	(s2overs2pluss3_[ididx_] > 0.94) &&
+	(s2overs2pluss3_[ididx_] < 0.97)   )
       fillHistos4cut(*(m_cuts_["cutamp"]));
       
     if (isWithinWindow()) {
@@ -901,6 +1059,8 @@ HFraddamAnalAlgos::process(const myEventData& ed)
 
   dayofyear_ = m_rundates_[runnum_];
 
+  lumiForDay(dayofyear_,intlumipbofday_,intlumipbofyear_);
+
   if (firstEvent_) {
     firstEvent_ = false;
     if (isLocalHCALrun) 
@@ -948,30 +1108,34 @@ HFraddamAnalAlgos::beginJob()
 
   if (doTree_) {
     tree_ = fs->make<TTree>("mytree","Hcal Results Tree");
-    tree_->Branch("lsnum",         &lsnum_,          "lsnum/I");
-    tree_->Branch("bxnum",         &bxnum_,          "bxnum/I");
-    tree_->Branch("evtnum",        &evtnum_,         "evtnum/I");
-    tree_->Branch("runnum",        &runnum_,         "runnum/I");
-    tree_->Branch("dayofyear",     &dayofyear_,      "dayofyear/I");
-    tree_->Branch("TDCphase",      &TDCphase_,       "TDCphase/F");
-    tree_->Branch("TDCwinstart",   TDCwinstart_,     "TDCwinstart[56]/I");
-    tree_->Branch("TDCwinwidth",   TDCwinwidth_,     "TDCwinwidth[56]/I");
-    tree_->Branch("denseID",       denseID_,         "denseID[56]/I");
-    tree_->Branch("iring",         iring_,           "iring[56]/I");
-    tree_->Branch("iRBX",          iRBX_ ,           "iRBX[56]/I");
-    tree_->Branch("iRM",           iRM_ ,            "iRM[56]/I");
-    tree_->Branch("ieta",          ieta_ ,           "ieta[56]/I");
-    tree_->Branch("iphi",          iphi_ ,           "iphi[56]/I");
-    tree_->Branch("s0adc",         s0adc_,           "s0adc[56]/I");
-    tree_->Branch("s1pluss2adc",   s1pluss2adc_,     "s1pluss2adc[56]/I");
-    tree_->Branch("fCamplitude",   fCamplitude_,     "fCamplitude[56]/F");
-    tree_->Branch("s2overs1",      s2overs1_,        "s2overs1[56]/F");
-    tree_->Branch("HFPmixhi",      HFPmixhi_,        "HFPmixhi[4]/F");
-    tree_->Branch("HFPmixlo",      HFPmixlo_,        "HFPmixlo[4]/F");
-    tree_->Branch("HFPscpin",      HFPscpin_,        "HFPscpin[4]/F");
-    tree_->Branch("HFMmixhi",      HFMmixhi_,        "HFMmixhi[4]/F");
-    tree_->Branch("HFMmixlo",      HFMmixlo_,        "HFMmixlo[4]/F");
-    tree_->Branch("HFMscpin",      HFMscpin_,        "HFMscpin[4]/F");
+    tree_->Branch("lsnum",           &lsnum_,          "lsnum/I");
+    tree_->Branch("bxnum",           &bxnum_,          "bxnum/I");
+    tree_->Branch("evtnum",          &evtnum_,         "evtnum/I");
+    tree_->Branch("runnum",          &runnum_,         "runnum/I");
+    tree_->Branch("dayofyear",       &dayofyear_,      "dayofyear/I");
+    tree_->Branch("intlumipbofday",  &intlumipbofday_, "intlumipbofday/F");
+    tree_->Branch("intlumipbofyear", &intlumipbofyear_,"intlumipbofdyear/F");
+    tree_->Branch("TDCphase",        &TDCphase_,       "TDCphase/F");
+    tree_->Branch("TDCwinstart",     TDCwinstart_,     "TDCwinstart[56]/I");
+    tree_->Branch("TDCwinwidth",     TDCwinwidth_,     "TDCwinwidth[56]/I");
+    tree_->Branch("denseID",         denseID_,         "denseID[56]/I");
+    tree_->Branch("iRBX",            iRBX_ ,           "iRBX[56]/I");
+    tree_->Branch("iRM",             iRM_ ,            "iRM[56]/I");
+    tree_->Branch("ieta",            ieta_ ,           "ieta[56]/I");
+    tree_->Branch("iphi",            iphi_ ,           "iphi[56]/I");
+    tree_->Branch("s0adc",           s0adc_,           "s0adc[56]/I");
+    tree_->Branch("s1adc",           s1adc_,           "s1adc[56]/I");
+    tree_->Branch("s2adc",           s2adc_,           "s2adc[56]/I");
+    tree_->Branch("fCamplitude",     fCamplitude_,     "fCamplitude[56]/F");
+    tree_->Branch("s2overs1",        s2overs1_,        "s2overs1[56]/F");
+    tree_->Branch("s2overs1means",   s2overs1means_,   "s2overs1means[56]/F");
+    tree_->Branch("s2overs2pluss3",  s2overs2pluss3_,  "s2overs2pluss3[56]/F");
+    tree_->Branch("HFPmixhi",        HFPmixhi_,        "HFPmixhi[4]/F");
+    tree_->Branch("HFPmixlo",        HFPmixlo_,        "HFPmixlo[4]/F");
+    tree_->Branch("HFPscpin",        HFPscpin_,        "HFPscpin[4]/F");
+    tree_->Branch("HFMmixhi",        HFMmixhi_,        "HFMmixhi[4]/F");
+    tree_->Branch("HFMmixlo",        HFMmixlo_,        "HFMmixlo[4]/F");
+    tree_->Branch("HFMscpin",        HFMscpin_,        "HFMscpin[4]/F");
   }
 
   std::cout << "----------------------------------------"  << "\n"
@@ -984,7 +1148,9 @@ HFraddamAnalAlgos::beginJob()
     "doPerChannel_       = "      << doPerChannel_      << "\n" <<
     "doTree_             = "      << doTree_            << "\n" <<
     "tdcwindowsfile_     = "      << tdcwindowsfile_    << "\n" <<
-    "rundatesfile_       = "      << rundatesfile_      << "\n";
+    "rundatesfile_       = "      << rundatesfile_      << "\n" <<
+    "s2overs1meansfile_  = "      << s2overs1meansfile_ << "\n" <<
+    "lumiprofilefile_    = "      << lumiprofilefile_   << "\n";
 
 }
 

@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HFraddamAnalAlgos.hh,v 1.1 2010/06/20 12:48:44 dudero Exp $
+// $Id: HFraddamAnalAlgos.hh,v 1.1 2013/02/18 20:12:59 dudero Exp $
 //
 //
 
@@ -73,6 +73,11 @@ private:
   bool   isWithinWindow (void);
 
   void     readRunDates (const std::string& rundatesfile);
+  void readS2overS1means(const std::string& meansfile);
+  void  readLumiProfile (const std::string& lumiprofilefile);
+  void     lumiForDay   (int     dayofyear,
+			 float& intlumipbofday,
+			 float& intlumipbofyear);
 
   myAnalCut *getCut     (const std::string& cutstr);
 
@@ -129,7 +134,9 @@ private:
   
   std::string       tdcwindowsfile_;
   std::string       rundatesfile_;
-  
+  std::string       s2overs1meansfile_;
+  std::string       lumiprofilefile_;
+
   // Tree/branch/histo autofill vars:
   TTree          *tree_;
   uint32_t        lsnum_;
@@ -138,6 +145,8 @@ private:
   float           fevtnum_;
   uint32_t        runnum_;
   int             dayofyear_;
+  float           intlumipbofday_;
+  float           intlumipbofyear_;
   HcalFrontEndId  feID_;
   HcalDetId       detID_;
   int             ididx_;
@@ -147,7 +156,6 @@ private:
   uint32_t        denseID_[56];
   HcalCalibDetId  calibID_;
   int             subdet_[56];
-  int             iring_[56];
   int             iRBX_[56];
   int             iRBXsigned_;
   int             iRM_[56];
@@ -158,11 +166,14 @@ private:
   float           fradius_[56];
   float           fCamplitude_[56];
   float           s2overs1_[56];
+  float           s2overs1means_[56];
+  float           s2overs2pluss3_[56];
   int             neventsProcessed_;
   int             pkSample_;
 
   int             s0adc_[56];
-  int             s1pluss2adc_[56];
+  int             s1adc_[56];
+  int             s2adc_[56];
 
   // one per quadrant
   float           HFPmixhi_[4];
@@ -208,6 +219,7 @@ private:
   std::map<int,int>  channeldetIds_; // key=dense index, value=array index in tree
   std::map<int,std::pair<int,int> > m_tdcwins_;
   std::map<int,int> m_rundates_;
+  std::map<int,std::pair<double,double> > m_lumiprofile_;
 
 };
 
