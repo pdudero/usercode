@@ -47,7 +47,9 @@ hfraddam = cms.EDAnalyzer('HFraddamAnal',
                                   41,35,2,    41,71,2
     ),
     tdcwindowsfile = cms.untracked.string("perchanwindows.txt"),
-    rundatesfile   = cms.untracked.string("rundates2012.txt"),
+    rundatesfile   = cms.untracked.string("../data/rundates2012.txt"),
+    s2overs1meansfile = cms.untracked.string("../data/s2overs1meansperchan.txt"),
+    lumiprofilefile   = cms.untracked.string("../data/2012-delivered-perday.csv"),
                           
     bottomfeeder = cms.untracked.int32(0xbadf00d)
 )

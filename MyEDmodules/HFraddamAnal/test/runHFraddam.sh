@@ -112,7 +112,7 @@ process.hfraddam.TDCpars.CorrectedTimeModCeiling = cms.int32(${CORRECTEDTIMEMODC
 process.hfraddam.TDCpars.TimeModCeiling = cms.int32(${TIMEMODCEILING})
 process.hfraddam.eventDataPset.fedRawDataLabel = cms.untracked.InputTag("")
 #process.hfraddam.eventDataPset.verbose = cms.untracked.bool(True)
-process.hfraddam.tdcwindowsfile=cms.untracked.string("perchanwin_run$1.txt")
+process.hfraddam.tdcwindowsfile=cms.untracked.string("../data/perchanwin_run$1.txt")
 
 #LogicalMapFilename = cms.untracked.string("HCALmapHBEF_Jun.19.2008.txt")
    
