@@ -16,7 +16,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.hh,v 1.12 2010/08/04 13:36:49 dudero Exp $
+// $Id: myEventData.hh,v 1.13 2011/08/16 11:55:18 dudero Exp $
 //
 //
 
@@ -25,6 +25,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/Provenance/interface/EventRange.h"
 #include "DataFormats/Provenance/interface/LuminosityBlockRange.h"
@@ -43,9 +44,12 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBTriggerData.h"
-
+#include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
 #include "SimDataFormats/CaloHit/interface/PCaloHitContainer.h"
+#include "CondFormats/RunInfo/interface/RunInfo.h"
+#include "CondFormats/DataRecord/interface/RunSummaryRcd.h"
 
 //
 // class declaration
@@ -72,6 +76,7 @@ public:
   inline edm::Handle<HODigiCollection>        hodigis(void)         const { return hodigis_;     }
   inline edm::Handle<ZDCRecHitCollection>     zdcrechits(void)      const { return zdcrechits_;  }
   inline edm::Handle<ZDCDigiCollection>       zdcdigis(void)        const { return zdcdigis_;    }
+  inline edm::Handle<HcalCalibDigiCollection> hcalcalibdigis(void)  const { return hcalibdigis_; }
   inline edm::Handle<CaloTowerCollection>     towers(void)          const { return towers_;      }
   inline edm::Handle<reco::CaloMETCollection> calomet(void)         const { return calomet_;     }
   inline edm::Handle<reco::METCollection>     recomet(void)         const { return recomet_;     }
@@ -80,10 +85,15 @@ public:
   inline edm::Handle<reco::VertexCollection>  vertices(void)        const { return vertices_;    }
   inline edm::Handle<bool>                    hbheNoiseResult(void) const { return hbheNoiseResult_; }
 
+  inline edm::ESHandle<HcalDbService>         hcalConditions(void)  const { return hcalconditions_; }
+  inline edm::ESHandle<RunInfo>               runInfo(void)         const { return runInfo_;        }
+
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
   inline uint32_t                            bxNumber(void)      const { return bxn_;  }
   inline uint32_t                            lumiSection(void)   const { return lsn_;  }
+  inline int                                 unixTime(void)      const { return unixTime_; }
+  inline int                                 mikeOffset(void)    const { return mikeOffset_; }
 
   inline const edm::InputTag&                fedRawDataTag(void) const { return fedRawDataTag_; }
   inline const edm::InputTag&                tbTrigDataTag(void) const { return tbTrigDataTag_; }
@@ -96,6 +106,7 @@ public:
   inline const edm::InputTag&                hoDigiTag    (void) const { return hoDigiTag_;     }
   inline const edm::InputTag&                zdcRechitTag (void) const { return zdcRechitTag_;  }
   inline const edm::InputTag&                zdcDigiTag   (void) const { return zdcDigiTag_;    }
+  inline const edm::InputTag&                hcalibDigiTag(void) const { return hcalibDigiTag_; }
   inline const edm::InputTag&                simHitTag    (void) const { return simHitTag_;     }
   inline const edm::InputTag&                caloMETtag   (void) const { return caloMETtag_;    }
   inline const edm::InputTag&                recoMETtag   (void) const { return recoMETtag_;    }
@@ -110,6 +121,8 @@ private:
   // ----------member data ---------------------------
   bool localHCALrun_;
 
+  bool firstEvent_;
+
   // configurable parameter:
   edm::InputTag      fedRawDataTag_;
   edm::InputTag      tbTrigDataTag_;
@@ -122,6 +135,7 @@ private:
   edm::InputTag      hoDigiTag_;
   edm::InputTag      zdcRechitTag_;
   edm::InputTag      zdcDigiTag_;
+  edm::InputTag      hcalibDigiTag_;
   edm::InputTag      simHitTag_;
   edm::InputTag      caloMETtag_;
   edm::InputTag      recoMETtag_;
@@ -136,6 +150,8 @@ private:
   uint32_t evtn_;
   uint32_t bxn_;
   uint32_t lsn_;
+  int      unixTime_;
+  int      mikeOffset_;
 
   edm::Handle<HcalTBTriggerData>       hcaltbtrigdata_;
   edm::Handle<FEDRawDataCollection>    fedrawdata_;
@@ -149,12 +165,16 @@ private:
   edm::Handle<HODigiCollection>        hodigis_;
   edm::Handle<ZDCRecHitCollection>     zdcrechits_;
   edm::Handle<ZDCDigiCollection>       zdcdigis_;
+  edm::Handle<HcalCalibDigiCollection> hcalibdigis_;
   edm::Handle<CaloTowerCollection>     towers_;
   edm::Handle<reco::CaloMETCollection> calomet_;
   edm::Handle<reco::METCollection>     recomet_;
   edm::Handle<reco::VertexCollection>  vertices_;
   edm::Handle<edm::TriggerResults>     trgResults_;
   edm::Handle<bool>                    hbheNoiseResult_;
+
+  edm::ESHandle<HcalDbService>         hcalconditions_;
+  edm::ESHandle<RunInfo>               runInfo_;
 };
 
 #endif // _MYEDMODULESMYANALUTILITIES

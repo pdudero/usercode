@@ -8,6 +8,9 @@
 <use   name="DataFormats/VertexReco"/>
 <use   name="DataFormats/METReco"/>
 <use   name="SimDataFormats/CaloHit"/>
+<use   name="CalibFormats/HcalObjects"/>
+<use   name="CondFormats/RunInfo"/>
+<use   name="CondFormats/DataRecord"/>
 <export>
   <lib   name="1"/>
 </export>

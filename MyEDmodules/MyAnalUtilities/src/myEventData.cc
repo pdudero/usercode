@@ -13,7 +13,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: myEventData.cc,v 1.11 2010/08/04 13:36:49 dudero Exp $
+// $Id: myEventData.cc,v 1.12 2011/08/16 11:55:47 dudero Exp $
 //
 //
 
@@ -52,6 +52,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   hoDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hoDigiLabel",edm::InputTag(""))),
   zdcRechitTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcRechitLabel",edm::InputTag(""))),
   zdcDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("zdcDigiLabel",edm::InputTag(""))),
+  hcalibDigiTag_(edPset.getUntrackedParameter<edm::InputTag>("hcalibDigiLabel",edm::InputTag(""))),
   simHitTag_(edPset.getUntrackedParameter<edm::InputTag>("simHitLabel",edm::InputTag(""))),
   caloMETtag_(edPset.getUntrackedParameter<edm::InputTag>("caloMETlabel",edm::InputTag(""))),
   recoMETtag_(edPset.getUntrackedParameter<edm::InputTag>("recoMETlabel",edm::InputTag(""))),
@@ -61,6 +62,8 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   hbheNoiseResultTag_(edPset.getUntrackedParameter<edm::InputTag>("hbheNoiseResultLabel",edm::InputTag(""))),
   verbose_(edPset.getUntrackedParameter<bool>("verbose",false))
 {
+  firstEvent_ = true;
+
   using namespace std;
   if (fedRawDataTag_.label().size()) cout << "fedRawDataTag_ = " << fedRawDataTag_ << endl;
   if (tbTrigDataTag_.label().size()) cout << "tbTrigDataTag_ = " << tbTrigDataTag_ << endl;
@@ -73,6 +76,7 @@ myEventData::myEventData(const edm::ParameterSet& edPset) :
   if (hoDigiTag_    .label().size()) cout << "hoDigiTag_     = " << hoDigiTag_     << endl;
   if (zdcRechitTag_ .label().size()) cout << "zdcRechitTag_  = " << zdcRechitTag_  << endl;
   if (zdcDigiTag_   .label().size()) cout << "zdcDigiTag_    = " << zdcDigiTag_    << endl;
+  if (hcalibDigiTag_.label().size()) cout << "hcalibDigiTag_ = " << hcalibDigiTag_ << endl;
   if (simHitTag_    .label().size()) cout << "simHitTag_     = " << simHitTag_     << endl;
   if (caloMETtag_   .label().size()) cout << "caloMETtag_    = " << caloMETtag_    << endl;
   if (recoMETtag_   .label().size()) cout << "recoMETtag_    = " << recoMETtag_    << endl;
@@ -132,11 +136,21 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace edm;
   using namespace std;
 
+  if (firstEvent_) {
+    iSetup.get<HcalDbRecord>().get( hcalconditions_ );
+    firstEvent_ = false;
+  }
+
   eventId_ = iEvent.id();
   runn_    = eventId_.run();
   evtn_    = eventId_.event();
   lsn_     = iEvent.luminosityBlock();
   bxn_     = iEvent.bunchCrossing();
+
+  iSetup.get<RunInfoRcd>().get( runInfo_ );
+
+  unixTime_   = iEvent.time().unixTime();
+  mikeOffset_ = iEvent.time().microsecondOffset();
 
   if (tbTrigDataTag_.label().size())
     if(!iEvent.getByType(hcaltbtrigdata_)) {
@@ -226,6 +240,13 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	"Digis not found, "<< zdcDigiTag_ << std::endl;
     } else if (verbose_) 
       cout << "myEventData::get: " << "Got ZDC digis "<< zdcDigiTag_ << std::endl;
+
+  if (hcalibDigiTag_.label().size())
+    if(!iEvent.getByLabel(hcalibDigiTag_,hcalibdigis_)) {
+      cerr << "myEventData::get: " <<
+	"Digis not found, "<< hcalibDigiTag_ << std::endl;
+    } else if (verbose_) 
+      cout << "myEventData::get: " << "Got HCAL Calib digis "<< hcalibDigiTag_ << std::endl;
 
   // CaloTowers
   if (twrTag_.label().size())
