@@ -522,6 +522,34 @@ processGraphSection(FILE *fp,
       v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
 
     //------------------------------
+    } else if( key == "fromhisto" ) { // converts TH1 to TGraph
+    //------------------------------
+      if( !gid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (v_graphs.size()) {
+	cerr << "graph(s) already defined" << endl; continue;
+      }
+      // look for multihist with this identifier
+      std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(value);
+      if (it!=glmap_mhid2size.end()) {
+	for (size_t i=0; i<it->second; i++) {
+	  string hidi=value+int2str(i);
+	  TH1 *h = (TH1 *)findHisto(hidi,"");
+	  assert(h);
+	  wGraph_t *pwg = new wGraph_t();
+	  pwg->gr = new TGraph(h);
+	  v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+	}
+      } else {
+	TH1 *h = (TH1 *)findHisto(value);
+	assert(h);
+	wGraph_t *pwg = new wGraph_t();
+	pwg->gr = new TGraph(h);
+	v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+      }
+
+    //------------------------------
     } else if( key == "fillfromtree" ) { // converts tree array variables into a group of graphs
     //------------------------------
       if( !gid ) {
@@ -544,25 +572,28 @@ processGraphSection(FILE *fp,
 	}
       }
       //cout << v_tokens.size() << " " << ifirst << " " << ilast << endl;
-      if (ifirst<0 || 
-	  ilast <0 ||
-	  ilast<ifirst ) {
-	cerr << "malformed filltree expression drawspec;X-Y, where X-Y is the array index range to plot"<<endl;
-	exit(-1);
-      }
+      if (ifirst>0 && 
+	  ilast>=ifirst ) {
+	for (int i=ifirst; i<=ilast; i++) {
+	  wGraph_t *pwg = NULL;
 
-      for (int i=ifirst; i<=ilast; i++) {
+	  // defined in spTree.C
+	  void fillGraphFromTreeVar(std::string& drawspec,int index,wGraph_t *&pwg);
+	  fillGraphFromTreeVar(treedrawspec,i,pwg);
+	  assert(pwg);
+	  string gidi= (*gid)+"_"+int2str(i-ifirst);
+	  v_graphs.push_back(std::pair<string,wGraph_t *>(gidi,pwg));
+	}
+
+	glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
+      } else {
 	wGraph_t *pwg = NULL;
-
-	// defined in spTree.C
 	void fillGraphFromTreeVar(std::string& drawspec,int index,wGraph_t *&pwg);
-	fillGraphFromTreeVar(treedrawspec,i,pwg);
+	fillGraphFromTreeVar(treedrawspec,0,pwg);
 	assert(pwg);
-	string gidi= (*gid)+"_"+int2str(i-ifirst);
-	v_graphs.push_back(std::pair<string,wGraph_t *>(gidi,pwg));
+	v_graphs.push_back(std::pair<string,wGraph_t *>(*gid,pwg));
+	glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
       }
-
-      glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
 
     //------------------------------
     } else if (key == "bayesdiv") {
@@ -697,7 +728,7 @@ processGraphSection(FILE *fp,
       processCommonHistoParams(key,value,*wh);
 #endif
     }
-  }
+  } // getline loop
 
   //cout << title << endl;
 
