@@ -17,7 +17,30 @@ bool getLine(FILE *fp, string& theline, const string& callerid="")
   if (!feof(fp) && fgets(linein,LINELEN,fp)) {
     if (strlen(linein) && (linein[strlen(linein)-1] == '\n'))
       linein[strlen(linein)-1] = '\0';
-    theline = string(linein);
+
+    if (gl_inloop) {
+      TString tstrline(linein); 
+      int nfmt = tstrline.CountChar('%');
+      if (nfmt) {
+	switch(nfmt){
+	case 1: Form(tstrline,gl_loopindex); break;
+	case 2: Form(tstrline,gl_loopindex,gl_loopindex); break;
+	case 3: Form(tstrline,gl_loopindex,gl_loopindex,gl_loopindex); break;
+	case 4: Form(tstrline,gl_loopindex,gl_loopindex,gl_loopindex,gl_loopindex); break;
+	case 5: Form(tstrline,
+		     gl_loopindex,gl_loopindex,
+		     gl_loopindex,gl_loopindex,gl_loopindex); break;
+	case 6: Form(tstrline,
+		     gl_loopindex,gl_loopindex,gl_loopindex,
+		     gl_loopindex,gl_loopindex,gl_loopindex); break;
+	default:
+	  cerr << "Too many % fmt specifiers, fix me!" << endl;
+	  exit(-1);
+	}
+      }
+      theline=string(tstrline.Data());
+    } else
+      theline = string(linein);
   } else return false;
 
   //cout << theline <<  ", callerid = " << callerid << endl;

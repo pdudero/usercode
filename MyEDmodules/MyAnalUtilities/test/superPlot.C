@@ -120,12 +120,17 @@ struct canvasSet_t {
 static map<string, string>      glmap_objpath2id;  // keep track of objects read in
 static map<string, string>      glmap_id2objpath;  // keep track of objects read in
 static map<string, wTH1 *>      glmap_id2histo;
+static map<string, unsigned>    glmap_mhid2size;
+
+static int gl_loopindex;
+static bool gl_inloop;
 
 static string nullstr;
 
 static bool gl_verbose;
 
 #include "spUtils.C"
+#include "spLoop.C"
 #include "spRootFile.C"
 #include "spAlias.C"
 #include "spSample.C"
@@ -176,7 +181,7 @@ void parseCanvasLayout(const string& layoutFile,
   if (gl_verbose)
     cout << "Processing " << layoutFile << endl;
 
-  FILE *fp = fopen(layoutFile.c_str(),"r");
+  FILE *oldfp=NULL, *fp = fopen(layoutFile.c_str(),"r");
   if (!fp) {
     cerr << "Error, couldn't open " << layoutFile << endl;
     exit(-1);
@@ -188,6 +193,7 @@ void parseCanvasLayout(const string& layoutFile,
   wCanvas_t *wc = new wCanvas_t(cs.title+"_1");
   cs.canvases.push_back(wc);
 
+  int start=-1,stop=-1;
   bool   new_section = false;
   string section("");
   string theline;
@@ -207,7 +213,28 @@ void parseCanvasLayout(const string& layoutFile,
     int success = 0;
 
     if      (!section.size()) continue;
-    if      (section == "STYLE")  success=processStyleSection (fp,theline,new_section);
+
+    if      (section == "LOOP") {
+      success = processLoopSection (fp,theline,new_section,start,stop);
+      if (success) {
+	// Copy loop section to a temp file for repeated processing
+	gl_inloop=true;
+	oldfp = fp;
+	fp = fopen("/tmp/splotsection.txt","w+");
+	while (keepgoing) {
+	  keepgoing = getLine(oldfp,theline,"layoutintro");
+	  if (theline[0]=='[' && (theline.find("ENDLOOP") !=  string::npos)) break;
+	  fprintf(fp,"%s\n",theline.c_str());
+	}
+	gl_loopindex=start;
+	rewind(fp);
+	do {
+	  keepgoing = getLine(fp,theline,"loop setup");
+	} while (keepgoing && theline[0] != '['); // skip lines until you find a section
+	new_section = true;
+      }
+    }
+    else if (section == "STYLE")  success=processStyleSection (fp,theline,new_section);
     else if (section == "LAYOUT") success=processLayoutSection(fp,theline,cs,new_section);
 
     else if (section == "PAD") {
@@ -249,11 +276,26 @@ void parseCanvasLayout(const string& layoutFile,
       exit(-1);
     }
 
+    if (!keepgoing && gl_inloop) { // reached end of temp file
+      if (++gl_loopindex <= stop) { // increment loop index, check loop exit
+	rewind(fp);
+	do {
+	  keepgoing = getLine(fp,theline,"loop iteration");
+	} while (keepgoing && theline[0] != '['); // skip lines until you find a section
+	new_section = true;
+      } else {
+	gl_inloop=false; // loop is done
+	fclose(fp);      // close temp file
+	fp = oldfp;      // revert to original config file
+      }
+    }
+
     if (new_section) {
       new_section = false;
       keepgoing = true;
-    } else 
+    } else {
       keepgoing = getLine(fp,theline,"layoutelse");
+    }
   } // while (getline...
 }                                                   // parseCanvasLayout
 
