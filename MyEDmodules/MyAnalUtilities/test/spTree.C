@@ -240,14 +240,16 @@ TTree *getTreeFromSpec(const string& tid,
   fullspec = spec;
 
   Tokenize(fullspec,v_tokens,":");
-  if( (v_tokens.size() != 2) ||
+  int ntok = (int)v_tokens.size();
+  if( ((ntok != 2) &&
+       (ntok != 3)   ) ||       //ntok==3 means file specifier is a URL
       (!v_tokens[0].size())  ||
       (!v_tokens[1].size())    ) {
     cerr << "malformed root tree path file:folder/subfolder/.../histo " << fullspec << endl;
     return NULL;
   } else {
-    rootfn = v_tokens[0];
-    tspec  = v_tokens[1];
+    rootfn = (ntok==2) ? v_tokens[0] : v_tokens[0]+":"+v_tokens[1];
+    tspec  = (ntok==2) ? v_tokens[1] : v_tokens[2];
   }
 
 #if 0
