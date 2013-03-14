@@ -35,16 +35,22 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       if (!wpad->stack_ids.size()) wpad->stack_ids.push_back(value);
     }
     else if (key == "altyhistos") { // histos on an alternate y-axis
+#if 0
       if (!wpad->histo_ids.size()) {
 	cerr << "No 'histos' defined yet! Define alternates after them." << endl;
 	continue;
       }
+#endif
       Tokenize(value,wpad->altyh_ids," ,"); 
       if (!wpad->altyh_ids.size()) wpad->altyh_ids.push_back(value);
     }
     else if (key == "graphs") {
       Tokenize(value,wpad->graph_ids,","); 
       if (!wpad->graph_ids.size()) wpad->graph_ids.push_back(value);
+    }
+    else if (key == "altygraphs") { // graphs on an alternate y-axis
+      Tokenize(value,wpad->altyg_ids," ,"); 
+      if (!wpad->altyg_ids.size()) wpad->altyg_ids.push_back(value);
     }
     else if (key == "rootmacros") {
       Tokenize(value,wpad->macro_ids,","); 

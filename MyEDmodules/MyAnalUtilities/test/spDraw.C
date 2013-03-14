@@ -219,16 +219,55 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
   for (m=0; m<wc0->multipads.size(); m++) {
     wPad_t  *mp = wc0->multipads[m];
 
+    if (gl_verbose) {
+      cout << "multipad "<<m<<" has "<<mp->histo_ids.size()<<" histo set(s), ";
+      cout << mp->altyh_ids.size()<<" alt y-axis histo set(s), ";
+      cout << mp->graph_ids.size()<<" graph set(s) and ";
+      cout << mp->altyg_ids.size()<<" alt y-axis graph set(s)"<<endl;
+    }
+
     // figure out how many pads this multipad spans, taking max of the referenced histo sets
     unsigned npads4mp=0;
-    for (unsigned k=0; k<mp->histo_ids.size(); k++) {
-      std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->histo_ids[k]);
-      if (it==glmap_mhid2size.end()) {
-	if (findHisto(mp->histo_ids[k]),"")
-	  npads4mp = std::max<unsigned>(npads4mp, 1);
-      } else {
-	npads4mp = std::max(npads4mp,it->second);
+    for (unsigned i=0; ; i++) {
+      unsigned npads4i=0;
+      if (i<mp->histo_ids.size()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->histo_ids[i]);
+	if (it==glmap_mhid2size.end()) {
+	  if (findHisto(mp->histo_ids[i]),"")
+	    npads4i = 1;
+	} else {
+	  npads4i = it->second;
+	}
       }
+      if (i<mp->altyh_ids.size()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->altyh_ids[i]);
+	if (it==glmap_mhid2size.end()) {
+	  if (findHisto(mp->altyh_ids[i]),"")
+	    npads4i = 1;
+	} else {
+	  npads4i = it->second;
+	}
+      }
+      if (i<mp->graph_ids.size()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mgid2size.find(mp->graph_ids[i]);
+	if (it==glmap_mgid2size.end()) {
+	  if (findGraph(mp->graph_ids[i]),"")
+	    npads4i = 1;
+	} else {
+	  npads4mp = it->second;
+	}
+      }
+      if (i<mp->altyg_ids.size()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mgid2size.find(mp->altyg_ids[i]);
+	if (it==glmap_mgid2size.end()) {
+	  if (findGraph(mp->altyg_ids[i]),"")
+	    npads4i = 1;
+	} else {
+	  npads4mp = it->second;
+	}
+      }
+      if (!npads4i) break;
+      npads4mp = std::max(npads4mp,npads4i);
     }
 
     npads4mp = std::min(npads4mp,npadsall-ipad2start);
@@ -260,18 +299,25 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
       wp->histo_ids.clear(); 
       wp->altyh_ids.clear(); 
       wp->graph_ids.clear(); 
+      wp->altyg_ids.clear(); 
       if (i) wp->legid.clear(); // don't automatically propagate legend to all pads
 
       wc->pads.push_back(wp);
     }
 
-    unsigned g,h,j,k,l,y;     /* g=graph index in current graph set
+    if (gl_verbose)
+      cout << npads4mp << " pads created for multipad " << m << endl;
+
+    unsigned g,h,j,k,l,n,y,z; /* g=graph index in current graph set
 				 h=histo index in current histo set
 				 j=graph id (set) index
 				 k=histo_id (set) index
 				 l=altyhisto index
-				 y=histoindex in current altyhisto set */
-    g=h=j=k=l=y=0;
+				 n=altygraph index
+				 y=histoindex in current altyhisto set
+			         z=graphindex in current altygraph set */
+    
+    g=h=j=k=l=n=y=z=0;
 
     // Now assign
     for (ipad=ipad2start; ipad<ipad2start+npads4mp; ipad++) {
@@ -301,6 +347,8 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	if (foundhisto) {
 	  // now we associate histogram sets with the pad set
 	  wp->histo_ids.push_back(hid);
+	  if (gl_verbose)
+	    cout << "histo " << hid << " assigned to pad " << ipad << endl;
 	}
       }
 
@@ -318,15 +366,19 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	if (foundaltyh) {
 	  // now we associate histogram sets with the pad set
 	  wp->altyh_ids.push_back(ahid);
+	  if (gl_verbose)
+	    cout << "alty histo " << ahid << " assigned to pad " << ipad << endl;
 	}
       }
 
       // graphs:
       bool foundgraph=false;
+
       if (j < mp->graph_ids.size()) {
 	string gid=mp->graph_ids[j];
+
 	if (!g && findGraph(gid, "switching to set"))
-	  foundhisto=true;
+	  foundgraph=true;
 	else {
 	  gid = gid +"_"+int2str(g++);
 	  if (findGraph(gid, "hit the end of graph set"))
@@ -335,13 +387,34 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	if (foundgraph) {
 	  // now we associate histogram sets with the pad set
 	  wp->graph_ids.push_back(gid);
+	  if (gl_verbose)
+	    cout << "graph " << gid << " assigned to pad " << ipad << endl;
+	}
+      }
+
+      if (n < mp->altyg_ids.size()) {
+	string gid=mp->altyg_ids[j];
+	bool foundaltyg=false;
+
+	if (!z && findGraph(gid, "switching to set"))
+	  foundaltyg=true;
+	else {
+	  gid = gid +"_"+int2str(z++);
+	  if (findGraph(gid, "hit the end of graph set"))
+	    foundaltyg=true;
+	}
+	if (foundaltyg) {
+	  // now we associate histogram sets with the pad set
+	  wp->altyg_ids.push_back(gid);
+	  if (gl_verbose)
+	    cout << "alty graph " << gid << " assigned to pad " << ipad << endl;
 	}
       }
 
       if (!foundgraph && !foundhisto) { // reset to next graph/histo ids
 	ipad=ipad2start;
-	g=h=y=0;
-	++j;  ++k; ++l;
+	g=h=y=z=0;
+	++j;  ++k; ++l; ++n;
 	if (j == mp->graph_ids.size() &&
 	    k == mp->histo_ids.size()   ) break;
       }
@@ -599,7 +672,8 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	string drawopt("");
 	if (ws->sum->GetDrawOption().size()) {
 	  drawopt = ws->sum->GetDrawOption();
-	  cout << "drawopt stored with histo = " << drawopt << endl;
+	  if (gl_verbose)
+	    cout << "drawopt stored with histo = " << drawopt << endl;
 	}
 
 	drawInPad(wp, ws, firstInPad, drawopt);
@@ -647,6 +721,80 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     } // histos loop
 
     /***************************************************
+     * LOOP OVER GRAPHS DEFINED FOR PAD...
+     ***************************************************/
+#if 0
+    TMultiGraph *mg;
+    if (graph_ids.size())
+      mg = new TMultiGraph();
+#endif
+    for( unsigned j = 0; j < wp->graph_ids.size(); j++ ) {
+      string& gid = wp->graph_ids[j];
+      
+      wGraph_t *wg   = findGraph(gid);
+
+      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size();
+
+      string drawopt = wg->drawopt;
+
+      if( firstInPad && wg->gr && wg->gr->IsA()==TGraph::Class() )
+	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+
+      if( wg && wg->gr ) {
+	// "pre-draw" in order to define the plot elements
+	wg->gr->Draw(drawopt.c_str());
+
+	if (firstInPad) {
+	  // Now we can set the axis attributes and range:
+	  wg->gr->GetXaxis()->ImportAttributes(wg->xax);
+	  wg->gr->GetYaxis()->ImportAttributes(wg->yax);
+
+	  //cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
+	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
+	    wg->gr->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
+	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
+	    wg->gr->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	}
+	// draw for good
+	drawInPad<TGraph>(wp,wg->gr,drawopt.c_str(),firstInPad);
+
+	wp->vp->Update();
+	if( wg->fitfn ) 
+	  wg->gr->Fit(wg->fitfn);
+	if( drawlegend && wg->leglabel.size() )
+	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+      }
+      if( wg && wg->gr2d ) {
+	drawInPad<TGraph2D>(wp,wg->gr2d,drawopt.c_str(),firstInPad);
+
+	if (firstInPad) {
+	  // Now we can set the axis attributes and range:
+	  wg->gr2d->GetXaxis()->ImportAttributes(wg->xax);
+	  wg->gr2d->GetYaxis()->ImportAttributes(wg->yax);
+
+	  //cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
+	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
+	    wg->gr2d->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
+	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
+	    wg->gr2d->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	}
+
+	if (wg->contours) {
+	  //cout << "setting contours "; wg->contours->Print();
+	  wg->gr2d->GetHistogram()->SetContour(wg->contours->GetNoElements(),
+					       wg->contours->GetMatrixArray());
+	  wg->gr2d->SetLineStyle   (wg->lstyle);
+	  wg->gr2d->SetLineColor   (wg->lcolor);
+	  wg->gr2d->SetLineWidth   (wg->lwidth);
+	}
+	wp->vp->Modified();
+	wp->vp->Update();
+	if( drawlegend && wg->leglabel.size() )
+	  wleg->leg->AddEntry(wg->gr2d,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+      }
+    } // graph loop
+
+    /***************************************************
      * LOOP OVER HISTOS DEFINED FOR ALTERNATE Y-AXIS
      ***************************************************/
 
@@ -687,75 +835,47 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     }
 
     /***************************************************
-     * LOOP OVER GRAPHS DEFINED FOR PAD...
+     * LOOP OVER GRAPHS DEFINED FOR ALTERNATE Y-AXIS
      ***************************************************/
-#if 0
-    TMultiGraph *mg;
-    if (graph_ids.size())
-      mg = new TMultiGraph();
-#endif
-    for( unsigned j = 0; j < wp->graph_ids.size(); j++ ) {
-      string& gid = wp->graph_ids[j];
-      
+
+    scale=0.0;
+
+    for( unsigned j = 0; j < wp->altyg_ids.size(); j++ ) {
+      string& gid = wp->altyg_ids[j];
+
       wGraph_t *wg   = findGraph(gid);
 
-      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size();
-      if( firstInPad && wg->gr && wg->gr->IsA()==TGraph::Class() )
-	wg->drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+      string drawopt = wg->drawopt;
 
       if( wg && wg->gr ) {
-	// "pre-draw" in order to define the plot elements
-	wg->gr->Draw(wg->drawopt.c_str());
+	// scale the graph y axis points:
+	TVectorD yaxpts = TVectorD(wg->gr->GetN(),wg->gr->GetY());
 
-	if (firstInPad) {
-	  // Now we can set the axis attributes and range:
-	  wg->gr->GetXaxis()->ImportAttributes(wg->xax);
-	  wg->gr->GetYaxis()->ImportAttributes(wg->yax);
-
-	  cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
-	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
-	    wg->gr->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
-	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
-	    wg->gr->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	if (!j) {
+	  //scale second set of histos to the pad coordinates
+	  rightmin = yaxpts.Min();
+	  rightmax = 1.1*yaxpts.Max();
+	  scale    = gPad->GetUymax()/rightmax;
+	  //cout << "rightmin,rightmax,scale = "<< rightmin<<" "<<rightmax<<" "<<scale<<endl;
 	}
-	// draw for good
-	drawInPad<TGraph>(wp,wg->gr,wg->drawopt.c_str(),firstInPad);
 
-	wp->vp->Update();
-	if( wg->fitfn ) 
-	  wg->gr->Fit(wg->fitfn);
-	if( drawlegend && wg->leglabel.size() )
+	yaxpts *= scale;
+
+	TGraph *scaled=new TGraph(wg->gr->GetN(),wg->gr->GetX(),yaxpts.GetMatrixArray());
+	//scaled->Print();
+	scaled->Draw("same");
+   
+	//draw an axis on the right side
+	TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(),
+				  gPad->GetUxmax(), gPad->GetUymax(),
+				  rightmin,rightmax,505,"+L");
+	axis->Draw();
+	if (drawlegend && wg->leglabel.size()) {
 	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
-      }
-      if( wg && wg->gr2d ) {
-	drawInPad<TGraph2D>(wp,wg->gr2d,wg->drawopt.c_str(),firstInPad);
-
-	if (firstInPad) {
-	  // Now we can set the axis attributes and range:
-	  wg->gr2d->GetXaxis()->ImportAttributes(wg->xax);
-	  wg->gr2d->GetYaxis()->ImportAttributes(wg->yax);
-
-	  cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
-	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
-	    wg->gr2d->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
-	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
-	    wg->gr2d->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
 	}
-
-	if (wg->contours) {
-	  //cout << "setting contours "; wg->contours->Print();
-	  wg->gr2d->GetHistogram()->SetContour(wg->contours->GetNoElements(),
-					       wg->contours->GetMatrixArray());
-	  wg->gr2d->SetLineStyle   (wg->lstyle);
-	  wg->gr2d->SetLineColor   (wg->lcolor);
-	  wg->gr2d->SetLineWidth   (wg->lwidth);
-	}
-	wp->vp->Modified();
-	wp->vp->Update();
-	if( drawlegend && wg->leglabel.size() )
-	  wleg->leg->AddEntry(wg->gr2d,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	gPad->Update();
       }
-    } // graph loop
+    } // altyg loop
 
     /***************************************************
      * LOOP OVER LINES DEFINED FOR PAD...
