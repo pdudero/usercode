@@ -4,8 +4,6 @@
 #include "TObjString.h"
 #include "TClass.h"
 
-static map<string, unsigned>  glmap_mhid2size;
-
 //======================================================================
 // Regex match a histo name in a directory
 //
@@ -116,21 +114,14 @@ void getHistosFromRE(const string&   mhid,
 
   // Get the root file
   //
-  TFile *rootfile = NULL;
-  map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(filepath);
-  if (it != glmap_id2rootfile.end())
-    rootfile = it->second;
-  else
-    rootfile = new TFile(filepath.c_str());
+  TFile *rootfile = openRootFile(filepath);
 
-  if (rootfile->IsZombie()) {
+  if (!rootfile) {
     cerr << "File failed to open, " << filepath << endl;
     Args->Delete();
     delete Args;
     return;
   }
-
-  glmap_id2rootfile.insert(pair<string,TFile*>(filepath,rootfile));
 
   // Do the recursion, collect matches
   //

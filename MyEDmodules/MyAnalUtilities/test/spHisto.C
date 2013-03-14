@@ -281,18 +281,10 @@ void saveHisto2File(TH1 *histo, string outspec)
   } else
     rootfn = outspec;
 
-  // Check to see if the file has already been opened
 
-  //map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
-  //if( it != glmap_id2rootfile.end())
-  //    rootfile = it->second;
-  //else {
-  rootfile = new TFile(rootfn.c_str(),"UPDATE");
-  //}
+  rootfile = openRootFile(rootfn,"UPDATE");
 
-  if( rootfile->IsZombie() ) {
-    cerr << "File failed to open, " << rootfn << endl;
-  } else {
+  if (rootfile) {
     target = histo;
     if( newname.size() ) {
       cout<<"Writing histo "<<newname<<" to file "<<rootfn<<endl;
@@ -301,7 +293,6 @@ void saveHisto2File(TH1 *histo, string outspec)
     } else
       cout<<"Writing histo "<<histo->GetName()<<" to file "<<rootfn<<endl;
 
-    //glmap_id2rootfile.insert(pair<string,TFile*>(rootfn,rootfile));
     target->SetDirectory(rootfile);
     target->Write();
     rootfile->Close();
