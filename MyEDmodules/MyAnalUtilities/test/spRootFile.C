@@ -1,6 +1,8 @@
+#include "TDCacheFile.h"
+
 static map<string, TFile *> glmap_id2rootfile;
 
-TFile *openRootFile(const std::string& rootfn)
+TFile *openRootFile(const std::string& rootfn, const std::string& option="")
 {
   TFile *rootfile = NULL;
 
@@ -9,7 +11,12 @@ TFile *openRootFile(const std::string& rootfn)
   if( it != glmap_id2rootfile.end() )
     rootfile = it->second;
   else {
-    rootfile = new TFile(rootfn.c_str());
+
+    if (strstr(rootfn.c_str(),"dcache") ||
+	strstr(rootfn.c_str(),"dcap")      ) {
+      rootfile = new TDCacheFile(rootfn.c_str(),option.c_str());
+    } else
+      rootfile = new TFile(rootfn.c_str(),option.c_str());
   
     if( rootfile->IsZombie() ) {
       cerr << "File failed to open, " << rootfn << endl;
