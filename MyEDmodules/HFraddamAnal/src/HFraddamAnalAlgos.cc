@@ -14,7 +14,7 @@
 //
 // Original Author:  Phillip Russell DUDERO
 //         Created:  Tue Sep  9 13:11:09 CEST 2008
-// $Id: HFraddamAnalAlgos.cc,v 1.1 2013/02/18 20:13:01 dudero Exp $
+// $Id: HFraddamAnalAlgos.cc,v 1.2 2013/03/13 15:11:40 dudero Exp $
 //
 //
 
@@ -72,10 +72,14 @@ static const double hftwrRadii[] = { // in meters
 
 //==================================================================
 
-int date2day2012(const char *date)
+int date2day(const char *date)
 {
   const int dayspermonthin2012[12] = {
     31,29,31,30,31,30,31,31,30,31,30,31
+  };
+
+  const int dayspermonthin2011[12] = {
+    31,28,31,30,31,30,31,31,30,31,30,31
   };
 
   int dayofyear;
@@ -90,21 +94,23 @@ int date2day2012(const char *date)
   int month = ((TObjString *)(*tokens)[1])->GetString().Atoi();
   int day   = ((TObjString *)(*tokens)[2])->GetString().Atoi();
 
-  assert(year==2012);
+  assert((year==2011) || (year==2012));
 
   dayofyear=0;
 
   int imonth;
+  const int *arr = (year==2011) ? dayspermonthin2011 : dayspermonthin2012;
+
   for (imonth=0; imonth<12; imonth++) {
     if (month==imonth+1) break;
-    dayofyear += dayspermonthin2012[imonth];
+    dayofyear += arr[imonth];
   }
   assert(imonth<12);
 
   dayofyear += day;
 
   return dayofyear;
-}                                                    // date2day2012
+}                                                        // date2day
 
 //==================================================================
 const std::string HFraddamAnalAlgos::mysubdetstr_     = "HF";
@@ -338,7 +344,7 @@ HFraddamAnalAlgos::readLumiProfile(const std::string& lumiprofilefile)
       cerr << "bad format in lumi profile file " << lumiprofilefile << ":"<<instr<<endl;
       exit(-1);
     }
-    int dayofyear = date2day2012(date);
+    int dayofyear = date2day(date);
     intlumi_ub /= 1e6; // switch to 1/pb
     intlumiofyear += intlumi_ub;
     m_lumiprofile_[dayofyear] = std::pair<double,double>(intlumi_ub,intlumiofyear);
