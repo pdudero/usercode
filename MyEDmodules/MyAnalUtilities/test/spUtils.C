@@ -1,4 +1,6 @@
 #include <sstream>
+#include "TKey.h"
+#include "TObjArray.h"
 
 #ifndef LINELEN
 #define LINELEN 512
@@ -94,3 +96,98 @@ bool getKeyValue(const string& theline,
 
   return true;
 }                                                         // getKeyValue
+
+//======================================================================
+
+string buildStringFromSpecifiers(const string& formatstr,
+				 const string& canvastitle="",
+				 const string& rootfilepath="",
+				 const string& fullhistopath="")
+{
+  string tgtstring;
+  size_t len = formatstr.length();
+  size_t pos,pos0 = 0;
+
+  do {
+    pos = formatstr.find('%',pos0);
+    if (pos == string::npos) {
+      tgtstring += formatstr.substr(pos0); // no more format codes, finish up
+      break;
+    } else if (pos>pos0) {
+      tgtstring+=formatstr.substr(pos0,pos-pos0);
+    }
+    // expand format codes
+    if (pos != len-1) {  // make sure '%' wasn't the last character
+      pos0=pos+1;
+
+      switch (formatstr[pos0]) { 
+      case 'C':
+	tgtstring += canvastitle;
+	break;
+
+      case 'P': {               // full path contained in glmap
+	tgtstring +=
+	  rootfilepath.substr(0,rootfilepath.find_last_of('.'));
+      }	break;
+
+      case 'F': {               // filename stripped of path info
+	string datafile;
+	size_t pos1 = rootfilepath.find_last_of('/');
+	datafile =  (pos1 != string::npos) ?
+	  rootfilepath.substr(pos1+1,rootfilepath.find_last_of('.')-pos1-1) :
+	  rootfilepath.substr(0,rootfilepath.find_last_of('.'));
+	tgtstring += datafile;
+      }	break;
+
+      case 'H':               // full path of histo inside the root file
+	tgtstring += fullhistopath;
+	break;
+
+      case 'h': {              // name of histo stripped of path info
+	string histoname;
+	size_t pos1 = fullhistopath.find_last_of('/');
+	histoname =  (pos1 != string::npos) ?
+	  fullhistopath.substr(pos1+1,fullhistopath.find_last_of('.')-pos1-1) :
+	  fullhistopath.substr(0,fullhistopath.find_last_of('.'));
+	tgtstring += histoname;
+	}
+	break;
+      default:
+	cerr<<"Unrecognized format code %"<<formatstr[pos0]<<endl;
+	break;
+      }
+      pos0++;
+    }
+  } while (pos0<len);
+
+  return tgtstring;
+}                                                     // buildStringFromSpecifiers
+
+//======================================================================
+
+void recurseDirs( TDirectory *thisdir,
+		  void (*doFunc)(TObject *, TDirectory *,TObjArray *, TObjArray *),
+		  TObjArray *Args,
+		  TObjArray *Output)
+{
+  assert(doFunc);
+
+  //thisdir->cd();
+
+  // loop over all keys in this directory
+
+  TIter nextkey( thisdir->GetListOfKeys() );
+  TKey *key;
+  while ( (key = (TKey*)nextkey())) {
+
+    TObject *obj = key->ReadObj();
+
+    if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
+      // it's a subdirectory, recurse
+      //cout << "Checking path: " << ((TDirectory *)obj)->GetPath() << endl;
+      recurseDirs( (TDirectory *)obj, doFunc, Args, Output );
+    } else {
+      doFunc(obj, thisdir, Args, Output);
+    }
+  } // key loop
+}                                                         // recurseDirs

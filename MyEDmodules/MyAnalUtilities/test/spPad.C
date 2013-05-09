@@ -52,6 +52,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
       Tokenize(value,wpad->altyg_ids," ,"); 
       if (!wpad->altyg_ids.size()) wpad->altyg_ids.push_back(value);
     }
+    else if (key == "tf1s") {
+      Tokenize(value,wpad->tf1_ids,","); 
+      if (!wpad->tf1_ids.size()) wpad->tf1_ids.push_back(value);
+    }
     else if (key == "rootmacros") {
       Tokenize(value,wpad->macro_ids,","); 
       if (!wpad->macro_ids.size()) wpad->macro_ids.push_back(value);

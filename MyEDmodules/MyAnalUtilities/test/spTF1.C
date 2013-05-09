@@ -1,4 +1,8 @@
 #include "TF1.h"
+#include "TRegexp.h"
+#include "TObjString.h"
+#include "TString.h"
+
 static map<string, TF1 *>       glmap_id2tf1;
 
 //======================================================================
@@ -15,6 +19,138 @@ TF1 *findTF1(const string& fid)
 }                                                             // findTF1
 
 //======================================================================
+// Regex match a TF1 in a directory
+//
+void regexMatchTF1( TObject    *obj,
+		    TDirectory *dir,
+		    TObjArray  *Args,   // list of regexes to match
+		    TObjArray  *Matches)
+{
+  for (int i=0; i<Args->GetEntriesFast(); i++) {
+    TObjString *sre = (TObjString *)(*Args)[i];
+    TRegexp re(sre->GetString(),kFALSE);
+    if (re.Status() != TRegexp::kOK) {
+      cerr << "The regexp " << sre->GetString() << " is invalid, Status() = ";
+      cerr << re.Status() << endl;
+      exit(-1);
+    }
+
+    TString path( (char*)strstr( dir->GetPath(), ":" ) );
+    path.Remove( 0, 2 ); // gets rid of ":/"
+
+    TString fullspec = TString(dir->GetPath()) + "/" + obj->GetName();
+
+    if ((fullspec.Index(re) != kNPOS) &&
+	(obj->InheritsFrom("TF1"))) {
+      // we have a match
+      // Check to see if it's already in memory
+      map<string,string>::const_iterator it = glmap_objpath2id.find(dir->GetPath());
+      if (it != glmap_objpath2id.end()) {
+	if (gl_verbose)
+	  cout << "Object " << fullspec << " already read in, here it is" << endl;
+	map<string,TF1 *>::const_iterator hit = glmap_id2tf1.find(it->second);
+
+	// Is this okay? It's going to get wrapped again...
+	TObjString *rpath = new TObjString(fullspec);
+	Matches->AddLast(rpath);
+	Matches->AddLast(hit->second);
+      } else {
+	// success, record that you read it in.
+	TObjString *rpath = new TObjString(fullspec);
+	Matches->AddLast(rpath);
+	Matches->AddLast(obj);
+      }
+      break; // don't let the object match more than one regex
+    } // if we have a match
+  } // Arg loop
+}                                                       // regexMatchTF1
+
+//======================================================================
+
+void getTF1sFromRE(const string&     fid,
+		   const string&   filepath,
+		   const string&   sre,
+		   vector<std::pair<string,TF1*> >&  v_tf1)
+{
+  if (gl_verbose)
+    cout<<"Searching for regexp "<<sre<<" in "<<filepath;
+
+  // allow for multiple regexes in OR combination
+  //
+  vector<string> v_regexes;
+  Tokenize(sre,v_regexes,"|");
+  if (!v_regexes.size())
+    v_regexes.push_back(sre);
+
+  // Build validated TRegexp arguments in preparation for directory recursion
+  //
+  TObjArray *Args = new TObjArray();
+  for (size_t i=0; i<v_regexes.size(); i++) {
+    TRegexp re(v_regexes[i].c_str(),kTRUE);
+    if (re.Status() != TRegexp::kOK) {
+      cerr << "The regexp " << v_regexes[i] << " is invalid, Status() = ";
+      cerr << re.Status() << endl;
+      exit(-1);
+    }
+    else {
+      Args->AddLast(new TObjString(v_regexes[i].c_str()));
+    }
+  }
+
+  // Get the root file
+  //
+  TFile *rootfile = openRootFile(filepath);
+
+  if (!rootfile) {
+    cerr << "File failed to open, " << filepath << endl;
+    Args->Delete();
+    delete Args;
+    return;
+  }
+
+  // Do the recursion, collect matches
+  //
+  TObjArray *Matches = new TObjArray();
+  recurseDirs(rootfile, &regexMatchTF1, Args, Matches);
+  Args->Delete();
+  delete Args;
+
+  // Returns two objects per match: 
+  // 1. the (string) path that was matched and
+  // 2. the object whose path matched
+  //
+  int nx2matches = Matches->GetEntriesFast();
+  if (gl_verbose) cout << "... " << nx2matches/2 << " match(es) found.";
+
+  // Add the matches to the global map of TF1s
+  //
+  int istart = v_tf1.size();
+
+  for (int i=0; i<nx2matches; i+=2) {
+    TString fullspec = ((TObjString *)(*Matches)[i])->GetString();
+    TF1 *tf1 = new TF1(*(TF1 *)((*Matches)[i+1]));
+    tf1->UseCurrentStyle();
+#if 0
+    tf1->SetLineColor(((i/2)%9)+1);
+    tf1->SetLineStyle((i/18)+1);
+    tf1->SetLineWidth(2);
+    tf1->SetLegendEntry(tf1->GetName());
+#endif
+    string fidi= fid+"_"+int2str(istart+(i/2));
+    v_tf1.push_back(std::pair<string,TF1 *>(fidi,tf1));
+
+    //glmap_objpath2id.insert(pair<string,string>(fullspec,fidi));
+    glmap_id2tf1.insert(pair<string,TF1 *>(fidi,tf1));
+    glmap_id2objpath.insert(pair<string,string>(fidi,string(fullspec.Data())));
+  }
+
+  //Matches->Delete(); // need the TF1s!
+  delete Matches;
+
+  if (gl_verbose) cout << endl;
+}                                                     // getTF1sFromRE
+
+//======================================================================
 
 bool                              // returns true if success
 processTF1Section(FILE *fp,
@@ -27,6 +163,7 @@ processTF1Section(FILE *fp,
   double xmin=0.0, xmax=0.0;
   int lcol=-1,lwid=-1,lsty=-1;
   vector<string> parstrs;
+  vector<std::pair<string, TF1 *> > v_tf1s;
 
   cout << "Processing TF1 section" << endl;
 
@@ -71,12 +208,63 @@ processTF1Section(FILE *fp,
       form = new string (value);
 
     //------------------------------
-    }
-    else if (key == "initpars") {
+    } else if (key == "initpars") {
+    //------------------------------
+
       if (!fid) {
 	cerr << "id key must be defined before formula key" << endl; continue;
       }
       Tokenize(value,parstrs,",");
+
+    //------------------------------
+    } else if (key == "pathglob") {
+    //------------------------------
+      glob_t globbuf;
+      
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      vector<string> v_tokens;
+
+      Tokenize(value,v_tokens,":");
+      if ((v_tokens.size() != 2) ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())    ) {
+	cerr << "malformed pathglob 'fileglob:regex' " << value << endl;
+	exit(-1);
+      }
+
+      // File globbing pattern can select multiple files
+      // regular expression pattern can select multiple TF1s within each file.
+      //
+      string fileglob = v_tokens[0];
+      string stregex  = v_tokens[1];
+
+      int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
+      if (stat) {
+	switch (stat) {
+	case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
+	case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
+	case GLOB_ABORTED: cerr << "glob read error "; break;
+	default: cerr << "unknown glob error stat=" << stat << " "; break;
+	}
+	cerr << fileglob << endl;
+	exit(-1);
+      }
+      if (gl_verbose) cout<<globbuf.gl_pathc<<" files match the glob pattern"<<endl;
+      for (size_t i=0; i<globbuf.gl_pathc; i++) {
+	char *path = globbuf.gl_pathv[i];
+	if (!strncmp(&path[strlen(path)-6],".root",5)) {
+	  cerr << "non-root file found in glob, skipping: " << path << endl;
+	} else {
+	  getTF1sFromRE(*fid,string(path),stregex, v_tf1s);
+	}
+      }
+      if (gl_verbose) cout << v_tf1s.size() << " total matches found." << endl;
+      globfree(&globbuf);
+
+      glmap_mobj2size.insert(pair<string,unsigned>(*fid,v_tf1s.size()));
     }
 
     else if (key == "xmin")      xmin = str2flt(value);
@@ -87,22 +275,25 @@ processTF1Section(FILE *fp,
 
   }
 
-  if (fid && form && (xmax > xmin)) {
+  if (!v_tf1s.size() && fid && form && (xmax > xmin)) {
     f1 = new TF1(fid->c_str(),form->c_str(),xmin,xmax);
+    v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
     for (size_t i=0; i<parstrs.size(); i++) {
       f1->SetParameter(i,str2flt(parstrs[i]));
     }
-    if (lsty>=0) f1->SetLineStyle(lsty);
-    if (lcol>=0) f1->SetLineColor(lcol);
-    if (lwid>=0) f1->SetLineWidth(lwid);
-
     glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
     //delete fid;
     //delete form;
   }
 
+  for (size_t i=0; i<v_tf1s.size(); i++) {
+    if (lsty>=0) v_tf1s[i].second->SetLineStyle(lsty);
+    if (lcol>=0) v_tf1s[i].second->SetLineColor(lcol);
+    if (lwid>=0) v_tf1s[i].second->SetLineWidth(lwid);
+  }
+
   if (fid) delete fid;
-  return (f1 != NULL);
+  return (v_tf1s.size());
 }                                                   // processTF1section
 
 //======================================================================

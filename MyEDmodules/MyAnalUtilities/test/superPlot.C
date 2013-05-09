@@ -57,6 +57,8 @@ struct wPad_t {
   vector<string> stack_ids;
   vector<string> altyh_ids;
   vector<string> graph_ids;
+  vector<string> altyg_ids;
+  vector<string> tf1_ids;
   vector<string> macro_ids;
   vector<string> label_ids;
   vector<string> latex_ids;
@@ -120,7 +122,7 @@ struct canvasSet_t {
 static map<string, string>      glmap_objpath2id;  // keep track of objects read in
 static map<string, string>      glmap_id2objpath;  // keep track of objects read in
 static map<string, wTH1 *>      glmap_id2histo;
-static map<string, unsigned>    glmap_mhid2size;
+static map<string, unsigned>    glmap_mobj2size; // multi objects and their sizes
 
 static int gl_loopindex;
 static bool gl_inloop;

@@ -53,7 +53,6 @@ struct wGraph_t {
 static set<string> glset_graphFilesReadIn;  // keep track of graphs read in
 
 static map<string, wGraph_t *>    glmap_id2graph;
-static map<string, unsigned>      glmap_mgid2size;
 
 //======================================================================
 
@@ -136,8 +135,10 @@ void loadVectorsFromFile(const char *filename,
     }
 
     if( sscanf(linein, scanfmt, &x, &y) != 2 ) {
-      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
-      return;
+      cerr << "scan failed, file " << filename << ", line = " << linein ;
+      cerr << ", skipping" << endl;
+      //return;
+      continue;
     }
     else {
       v.push_back(x); v.push_back(y);
@@ -179,8 +180,10 @@ void loadVectorsFromFile(const char *filename,
     double x, y, z;
     if( linein[0]=='#' ) continue;                // comments are welcome
     if (sscanf(linein, "%lf %lf %lf", &x, &y, &z) != 3) {
-      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
-      return;
+      cerr << "scan failed, file " << filename << ", line = " << linein;
+      cerr << ", skipping" << endl;
+      //return;
+      continue;
     }
     else {
       v.push_back(x); v.push_back(y); v.push_back(z);
@@ -531,8 +534,8 @@ processGraphSection(FILE *fp,
 	cerr << "graph(s) already defined" << endl; continue;
       }
       // look for multihist with this identifier
-      std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(value);
-      if (it!=glmap_mhid2size.end()) {
+      std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(value);
+      if (it!=glmap_mobj2size.end()) {
 	for (size_t i=0; i<it->second; i++) {
 	  string hidi=value+int2str(i);
 	  TH1 *h = (TH1 *)findHisto(hidi,"");
@@ -585,14 +588,14 @@ processGraphSection(FILE *fp,
 	  v_graphs.push_back(std::pair<string,wGraph_t *>(gidi,pwg));
 	}
 
-	glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
+	glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
       } else {
 	wGraph_t *pwg = NULL;
 	void fillGraphFromTreeVar(std::string& drawspec,int index,wGraph_t *&pwg);
 	fillGraphFromTreeVar(treedrawspec,0,pwg);
 	assert(pwg);
 	v_graphs.push_back(std::pair<string,wGraph_t *>(*gid,pwg));
-	glmap_mgid2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
+	glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
       }
 
     //------------------------------

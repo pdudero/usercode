@@ -1,4 +1,3 @@
-#include "TKey.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -50,35 +49,6 @@ void regexMatchHisto( TObject    *obj,
     } // if we have a match
   } // Arg loop
 }                                                     // regexMatchHisto
-
-//======================================================================
-
-void recurseDirs( TDirectory *thisdir,
-		  void (*doFunc)(TObject *, TDirectory *,TObjArray *, TObjArray *),
-		  TObjArray *Args,
-		  TObjArray *Output)
-{
-  assert(doFunc);
-
-  //thisdir->cd();
-
-  // loop over all keys in this directory
-
-  TIter nextkey( thisdir->GetListOfKeys() );
-  TKey *key;
-  while ( (key = (TKey*)nextkey())) {
-
-    TObject *obj = key->ReadObj();
-
-    if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
-      // it's a subdirectory, recurse
-      //cout << "Checking path: " << ((TDirectory *)obj)->GetPath() << endl;
-      recurseDirs( (TDirectory *)obj, doFunc, Args, Output );
-    } else {
-      doFunc(obj, thisdir, Args, Output);
-    }
-  } // key loop
-}                                                         // recurseDirs
 
 //======================================================================
 
@@ -145,6 +115,10 @@ void getHistosFromRE(const string&   mhid,
     TString fullspec = ((TObjString *)(*Matches)[i])->GetString();
     wTH1 *wth1 = new wTH1((TH1 *)((*Matches)[i+1]));
     wth1->histo()->UseCurrentStyle();
+    wth1->histo()->SetLineColor(((i/2)%9)+1);
+    wth1->histo()->SetLineStyle((i/18)+1);
+    wth1->histo()->SetLineWidth(2);
+    wth1->SetLegendEntry(wth1->histo()->GetName());
     string hidi= mhid+"_"+int2str(istart+(i/2));
     v_wth1.push_back(std::pair<string,wTH1 *>(hidi,wth1));
 
@@ -243,7 +217,7 @@ processMultiHistSection(FILE *fp,
       if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
       globfree(&globbuf);
 
-      glmap_mhid2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
+      glmap_mobj2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
 
     //------------------------------
     } else if( key == "fillfromtree" ) { // converts tree array variables into a group of histos
@@ -285,7 +259,7 @@ processMultiHistSection(FILE *fp,
 	glmap_id2histo.insert(pair<string,wTH1 *>(hidi,wth1));
       }
 
-      glmap_mhid2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
+      glmap_mobj2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
 
     //-----------------------
     } else if( key == "printf" ) {

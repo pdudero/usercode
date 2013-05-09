@@ -27,6 +27,9 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
     if (wp->leftmargin)   wp->vp->SetLeftMargin  (wp->leftmargin);
 
     altdrawopt.size() ? myHisto.Draw(altdrawopt) : myHisto.Draw();
+
+    // Now we can set the axis attributes and range:
+    //myHisto.SetAxes();
   }
   else {
     if (!myHisto.statsAreOn()) altdrawopt.size() ?
@@ -138,52 +141,16 @@ void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
 
 void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
 {
-  string picfilename;
-  size_t len = namefmt.length();
-  size_t pos,pos0 = 0;
+  // use first file read in for rootfilepath
 
-  do {
-    // Format of output filename specified in "savenamefmt"
-    // %F = first file read in
-    // %C = configuration file name
-    //
-    pos = namefmt.find('%',pos0);
-    if (pos == string::npos) {
-      picfilename += namefmt.substr(pos0); // no more format codes, finish up
-      break;
-    } else if (pos>pos0) {
-      picfilename+=namefmt.substr(pos0,pos-pos0);
-    }
-    // expand format codes
-    if (pos != len-1) {  // make sure '%' wasn't the last character
-      pos0=pos+1;
-      switch (namefmt[pos0]) { 
-      case 'C': picfilename += wc->title; break;
-      case 'P': { // full path contained in glmap
-	string datafile;
-	map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
-	if (it != glmap_id2rootfile.end())
-	  datafile = it->first.substr(0,it->first.find_last_of('.'));
-	picfilename += datafile;
-      }	break;
-      case 'F': { // filename stripped of path info
-	string datafile;
-	map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
-	if (it != glmap_id2rootfile.end()) {
-	  size_t pos1 = it->first.find_last_of('/');
-	  datafile =  (pos1 != string::npos) ?
-	    it->first.substr(pos1+1,it->first.find_last_of('.')-pos1-1) :
-	    it->first.substr(0,it->first.find_last_of('.'));
-	}
-	picfilename += datafile;
-      }	break;
-      default:
-	cerr<<"Unrecognized format code %"<<namefmt[pos0]<<endl;
-	break;
-      }
-      pos0++;
-    }
-  } while (pos0<len);
+  string datafile;
+  map<string,TFile*>::const_iterator it = glmap_id2rootfile.begin();
+  if (it != glmap_id2rootfile.end())
+    datafile = it->first;
+  
+  string picfilename = buildStringFromSpecifiers(namefmt,
+						 wc->title,
+						 datafile);
 
   cout << "saving to..." << picfilename << endl;
   wc->c1->SaveAs(picfilename.c_str());
@@ -191,7 +158,7 @@ void saveCanvas2File(wCanvas_t *wc, const string& namefmt)
 
 //======================================================================
 
-unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occupied pads
+unsigned assignObjects2Multipad(canvasSet_t& cs) // returns total number of occupied pads
 {
   wCanvas_t *wc0       = cs.canvases[0];
   unsigned npadspercan = wc0->npadsx*wc0->npadsy;
@@ -206,8 +173,8 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
   unsigned ipad=0,ipad2start=0; // ipad=global pad index, not the Apple product!
   unsigned m=0;                 // m=multipad index
 
-  // A multipad potentially references multiple sets of graphical
-  // objects (histograms, graphs) to overlay. The objects within a set
+  // A multipad potentially references multiple sets of graphical objects
+  // (histograms, graphs, etc.) to overlay. The objects within a set
   // are plotted in sequential pads, but another set of objects
   // assigned to the same multipad are overlaid sequentially on the
   // previous set. Ideally each set assigned to the same multipad
@@ -226,13 +193,13 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
       cout << mp->altyg_ids.size()<<" alt y-axis graph set(s)"<<endl;
     }
 
-    // figure out how many pads this multipad spans, taking max of the referenced histo sets
+    // figure out how many pads this multipad spans, taking max of the referenced object sets
     unsigned npads4mp=0;
     for (unsigned i=0; ; i++) {
       unsigned npads4i=0;
       if (i<mp->histo_ids.size()) {
-	std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->histo_ids[i]);
-	if (it==glmap_mhid2size.end()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(mp->histo_ids[i]);
+	if (it==glmap_mobj2size.end()) {
 	  if (findHisto(mp->histo_ids[i]),"")
 	    npads4i = 1;
 	} else {
@@ -240,8 +207,8 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	}
       }
       if (i<mp->altyh_ids.size()) {
-	std::map<string,unsigned>::const_iterator it=glmap_mhid2size.find(mp->altyh_ids[i]);
-	if (it==glmap_mhid2size.end()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(mp->altyh_ids[i]);
+	if (it==glmap_mobj2size.end()) {
 	  if (findHisto(mp->altyh_ids[i]),"")
 	    npads4i = 1;
 	} else {
@@ -249,8 +216,8 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	}
       }
       if (i<mp->graph_ids.size()) {
-	std::map<string,unsigned>::const_iterator it=glmap_mgid2size.find(mp->graph_ids[i]);
-	if (it==glmap_mgid2size.end()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(mp->graph_ids[i]);
+	if (it==glmap_mobj2size.end()) {
 	  if (findGraph(mp->graph_ids[i]),"")
 	    npads4i = 1;
 	} else {
@@ -258,9 +225,18 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	}
       }
       if (i<mp->altyg_ids.size()) {
-	std::map<string,unsigned>::const_iterator it=glmap_mgid2size.find(mp->altyg_ids[i]);
-	if (it==glmap_mgid2size.end()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(mp->altyg_ids[i]);
+	if (it==glmap_mobj2size.end()) {
 	  if (findGraph(mp->altyg_ids[i]),"")
+	    npads4i = 1;
+	} else {
+	  npads4mp = it->second;
+	}
+      }
+      if (i<mp->tf1_ids.size()) {
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(mp->tf1_ids[i]);
+	if (it==glmap_mobj2size.end()) {
+	  if (findTF1(mp->tf1_ids[i]))
 	    npads4i = 1;
 	} else {
 	  npads4mp = it->second;
@@ -300,6 +276,7 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
       wp->altyh_ids.clear(); 
       wp->graph_ids.clear(); 
       wp->altyg_ids.clear(); 
+      wp->tf1_ids.clear(); 
       if (i) wp->legid.clear(); // don't automatically propagate legend to all pads
 
       wc->pads.push_back(wp);
@@ -308,16 +285,18 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
     if (gl_verbose)
       cout << npads4mp << " pads created for multipad " << m << endl;
 
-    unsigned g,h,j,k,l,n,y,z; /* g=graph index in current graph set
-				 h=histo index in current histo set
-				 j=graph id (set) index
-				 k=histo_id (set) index
-				 l=altyhisto index
-				 n=altygraph index
-				 y=histoindex in current altyhisto set
-			         z=graphindex in current altygraph set */
+    unsigned f,g,h,j,k,l,n,t,y,z; /* f=tf1 index in current tf1 set
+				     g=graph index in current graph set
+				     h=histo index in current histo set
+				     j=graph id (set) index
+				     k=histo_id (set) index
+				     l=altyhisto index
+				     n=altygraph index
+				     t=tf1_id (set) index
+				     y=histoindex in current altyhisto set
+				     z=graphindex in current altygraph set */
     
-    g=h=j=k=l=n=y=z=0;
+    f=g=h=j=k=l=n=t=y=z=0;
 
     // Now assign
     for (ipad=ipad2start; ipad<ipad2start+npads4mp; ipad++) {
@@ -385,7 +364,7 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	    foundgraph=true;
 	}
 	if (foundgraph) {
-	  // now we associate histogram sets with the pad set
+	  // now we associate graph sets with the pad set
 	  wp->graph_ids.push_back(gid);
 	  if (gl_verbose)
 	    cout << "graph " << gid << " assigned to pad " << ipad << endl;
@@ -404,19 +383,41 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
 	    foundaltyg=true;
 	}
 	if (foundaltyg) {
-	  // now we associate histogram sets with the pad set
+	  // now we associate graph sets with the pad set
 	  wp->altyg_ids.push_back(gid);
 	  if (gl_verbose)
 	    cout << "alty graph " << gid << " assigned to pad " << ipad << endl;
 	}
       }
 
-      if (!foundgraph && !foundhisto) { // reset to next graph/histo ids
+      // tf1s:
+      bool foundtf1=false;
+
+      if (t < mp->tf1_ids.size()) {
+	string fid=mp->tf1_ids[t];
+
+	if (!f && findTF1(fid))
+	  foundtf1=true;
+	else {
+	  fid = fid +"_"+int2str(f++);
+	  if (findTF1(fid))
+	    foundtf1=true;
+	}
+	if (foundtf1) {
+	  // now we associate tf1 sets with the pad set
+	  wp->tf1_ids.push_back(fid);
+	  if (gl_verbose)
+	    cout << "TF1 " << fid << " assigned to pad " << ipad << endl;
+	}
+      }
+
+      if (!foundgraph && !foundhisto && !foundtf1) { // reset to next graph/histo/tf1 ids
 	ipad=ipad2start;
-	g=h=y=z=0;
-	++j;  ++k; ++l; ++n;
+	f=g=h=y=z=0;
+	++j;  ++k; ++l; ++n, ++t;
 	if (j == mp->graph_ids.size() &&
-	    k == mp->histo_ids.size()   ) break;
+	    k == mp->histo_ids.size() &&
+	    t == mp->tf1_ids.size()) break;
       }
     } // pad loop
 
@@ -425,7 +426,7 @@ unsigned assignHistos2Multipad(canvasSet_t& cs) // returns total number of occup
   } // multipads loop
 
   return std::min(npadsall,ipad);
-}                                               // assignHistos2Multipad
+}                                              // assignObjects2Multipad
 
 //======================================================================
 
@@ -485,7 +486,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      ********************************************************/
 
     if (wc0->multipads.size()) {
-      npadsall = assignHistos2Multipad(cs);
+      npadsall = assignObjects2Multipad(cs);
     } else {
       cerr << "npads>0, but no pad specs supplied, exiting." << endl;
       return; // no pads to draw on.
@@ -558,6 +559,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     if (!wp->histo_ids.size() &&
 	!wp->stack_ids.size() &&
 	!wp->graph_ids.size() &&
+	!wp->tf1_ids.size() &&
 	!wp->macro_ids.size()) {
       cerr << "ERROR: pad #" << ipadc+1 << " has no ids defined for it";
       cerr << ", continuing to the next" << endl;
@@ -686,18 +688,33 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
      * LOOP OVER HISTOS DEFINED FOR PAD...
      ***************************************************/
 
+    int nhist = 0;
     for (unsigned j = 0; j < wp->histo_ids.size(); j++) {
-      string& hid = wp->histo_ids[j];
+      //cout << j << endl;
+      string hid = wp->histo_ids[j];
       map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
       if (it == glmap_id2histo.end()) {
-	cerr << "ERROR: histo id " << hid << " never defined in layout" << endl;
-	exit (-1);
+	// look for a multihist all of which will be assigned to the existing pad..
+	std::map<string,unsigned>::const_iterator mit=glmap_mobj2size.find(hid);
+	if (mit==glmap_mobj2size.end()) {
+	  cerr << "ERROR: histo id " << hid << " never defined in layout" << endl;
+	  exit (-1);
+	} else {
+	  nhist = mit->second;
+	  //cout << nhist << endl;
+	  for (int h=0; h<nhist; h++) {
+	    string hidi = hid +"_"+int2str(h);
+	    //cout << hidi << endl;
+	    wp->histo_ids.push_back(hidi);
+	  }
+	  continue;
+	}
       }
 
       wTH1 *myHisto = it->second;
       
       if (myHisto) {
-	bool firstInPad = !j && !wp->stack_ids.size();
+	bool firstInPad = (!j && !wp->stack_ids.size()) || (j==1 && nhist);
 	if (gl_verbose) {
 	  cout << "Drawing " << hid << " => ";
 	  cout << myHisto->histo()->GetName() << endl;
@@ -876,6 +893,23 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	gPad->Update();
       }
     } // altyg loop
+
+    /***************************************************
+     * LOOP OVER TF1S DEFINED FOR PAD...
+     ***************************************************/
+
+    for( unsigned j = 0; j < wp->tf1_ids.size(); j++ ) {
+      string& fid = wp->tf1_ids[j];
+      
+      TF1 *f1   = findTF1(fid);
+
+      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size() && !wp->graph_ids.size();
+
+      drawInPad<TF1>(wp,f1,"",firstInPad);
+
+      wp->vp->Update();
+
+    } // tf1 loop
 
     /***************************************************
      * LOOP OVER LINES DEFINED FOR PAD...
