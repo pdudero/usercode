@@ -223,20 +223,27 @@ bool getOneHisto(FileInfo_t& file,
 
 //======================================================================
 
-//static int phasebegin = 1048;
-//static int phaseend   = 1100;
-static int phasebegin = 1090;
+static int phasebegin = 1048;
+// static int phaseend   = 1100;
+// static int phasebegin = 1090;
 static int phaseend   = 1130;
 static int nomwinwid  = 8;
 
-void scanphase(wTH1   *inhist,
+void scanphase(TH1 *phasehist,
+	       wTH1   *inhist,
 	       int&    phasepos,  int&    phasewid,
 	       double& minmetric, double& optavgs2overs1)
 {
 
+  double mean = phasehist->GetMean();
+  double rms  = phasehist->GetRMS();
+
+  //int phasebegin = (int)(mean-2*rms);
+  //int phaseend   = (int)(mean+2*rms);
+
   // scan position first with nom. width
   minmetric = 9e99;
-  cout << "xpos\tratio" << endl;
+  cout << "xpos\tibegin\tibeg+wid\t#ent\tnumer\tdenom\tratio\ts2/s1_avg" << endl;
   for (int xpos=phasebegin; xpos <= phaseend-nomwinwid; xpos++) {
     int ibinbegin=inhist->histo()->FindFixBin(xpos);
     double sumvals=0,sumdeltavals=0;
@@ -402,15 +409,16 @@ void scanphases(const char* rootfile, int runnum)
     int phasepos=-1, phasewid=-1;
     double minmetric=9e99;
     double avgs2overs1=9e99;
-    scanphase(v_histos[i].second,phasepos,phasewid,minmetric,avgs2overs1);
+    scanphase(tdchi.p,v_histos[i].second,phasepos,phasewid,minmetric,avgs2overs1);
 
     cout <<v_histos[i].second->histo()->GetName()<<" Optimal position, width = ";
 
-    bool notfound = (avgs2overs1>3) || (minmetric > 1e-04);
-    if (notfound)
-      cout<< "Not found."<<endl;
+    bool reject = (avgs2overs1>3) || (minmetric > 1e-04);
+    cout<<phasepos<<", "<<phasewid<< "; minmetric, avgs2/s1 = "<<minmetric<<", "<<avgs2overs1;
+    if (reject)
+      cout<< ", rejected."<<endl;
     else
-      cout<<phasepos<<", "<<phasewid<< "; minmetric, avgs2/s1 = "<<minmetric<<", "<<avgs2overs1<<endl;
+      cout << endl;
 
     if (!(ipad%28))
     {
@@ -447,7 +455,7 @@ void scanphases(const char* rootfile, int runnum)
 
     motherpad->cd(ipad+1);
 
-    plot((TProfile *)(v_histos[i].second->histo()),phasepos,phasewid,notfound,tdchi);
+    plot((TProfile *)(v_histos[i].second->histo()),phasepos,phasewid,reject,tdchi);
 
     c->Update();
   }
