@@ -1,0 +1,23 @@
+imax 1  # number of channels
+jmax 2  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   mu2jetCMS
+observation                                3427
+--------------------
+shapes * * hww-histo-shapes-M=250.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   mu2jetCMS   mu2jetCMS   mu2jetCMS
+process                                     ggH         qqH    Bkgrdtot
+process                                       0          -1           1
+rate                                      31.08        3.29     3430.90
+--------------------
+CMS_HWWlvjj_eff_sig_mu2jetCMS      lnN    1.025       1.025          -    
+CMS_HWWlvjj_norm_back_mu2jetCMS    lnN       -           -         1.01   
+CMS_HWWlvjj_shape_back_mu2jetCMS shape       -           -            1   
+CMS_trigger_m                      lnN     1.01        1.01          -    
+QCDscale_ggH                       lnN    1.083          -           -    
+QCDscale_qqH                       lnN       -        1.004          -    
+lumi                               lnN    1.045       1.045          -    
+pdf_gg                             lnN    1.085          -           -    
+pdf_qqbar                          lnN       -        1.031          -    

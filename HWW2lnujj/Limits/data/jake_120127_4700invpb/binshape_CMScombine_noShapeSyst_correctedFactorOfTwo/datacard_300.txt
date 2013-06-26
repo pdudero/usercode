@@ -1,0 +1,30 @@
+imax 4  # number of channels
+jmax 2  # number of backgrounds
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+observation                                4087         985        3176        1176
+--------------------
+shapes * * hww-histo-shapes-M=300.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+process                                     ggH         ggH         ggH         ggH         qqH         qqH         qqH         qqH    Bkgrdtot    Bkgrdtot    Bkgrdtot    Bkgrdtot
+process                                       0           0           0           0          -1          -1          -1          -1           1           1           1           1
+rate                                      25.55        7.36       23.61       10.16        2.08        1.09        2.06        1.32     4091.02      985.53     3179.96     1176.58
+--------------------
+CMS_HWWlvjj_eff_sig_el2jetCMS      lnN     1.01          -           -           -         1.01          -           -           -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_el3jetCMS      lnN       -        1.036          -           -           -        1.036          -           -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_mu2jetCMS      lnN       -           -        1.013          -           -           -        1.013          -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_mu3jetCMS      lnN       -           -           -        1.049          -           -           -        1.049          -           -           -           -    
+CMS_HWWlvjj_norm_back_el2jetCMS    lnN       -           -           -           -           -           -           -           -        1.006          -           -           -    
+CMS_HWWlvjj_norm_back_el3jetCMS    lnN       -           -           -           -           -           -           -           -           -        1.008          -           -    
+CMS_HWWlvjj_norm_back_mu2jetCMS    lnN       -           -           -           -           -           -           -           -           -           -        1.006          -    
+CMS_HWWlvjj_norm_back_mu3jetCMS    lnN       -           -           -           -           -           -           -           -           -           -           -        1.009   
+CMS_trigger_e                      lnN     1.01        1.01          -           -         1.01        1.01          -           -           -           -           -           -    
+CMS_trigger_m                      lnN       -           -         1.01        1.01          -           -         1.01        1.01          -           -           -           -    
+QCDscale_ggH                       lnN    1.081       1.081       1.081       1.081          -           -           -           -           -           -           -           -    
+QCDscale_qqH                       lnN       -           -           -           -        1.005       1.005       1.005       1.005          -           -           -           -    
+lumi                               lnN    1.045       1.045       1.045       1.045       1.045       1.045       1.045       1.045          -           -           -           -    
+pdf_gg                             lnN    1.089       1.089       1.089       1.089          -           -           -           -           -           -           -           -    
+pdf_qqbar                          lnN       -           -           -           -        1.033       1.033       1.033       1.033          -           -           -           -    
+theoryUncXS_HighMH                 lnN     1.04        1.04        1.04        1.04        1.04        1.04        1.04        1.04          -           -           -           -    
