@@ -1,0 +1,35 @@
+imax 4  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+observation                                8389        1941       12735        3764
+--------------------
+shapes * * ./hww-histo-shapes-fromPATtuplesNoQGLtweak2-M=190.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS   el2jetCMS   el3jetCMS   mu2jetCMS   mu3jetCMS
+process                                     ggH         ggH         ggH         ggH         qqH         qqH         qqH         qqH    Bkgrdtot    Bkgrdtot    Bkgrdtot    Bkgrdtot
+process                                       0           0           0           0          -1          -1          -1          -1           1           1           1           1
+rate                                      52.01       11.53       89.12       23.96        3.23        1.11        5.66        2.28     8391.50     1941.02    12742.32     3764.16
+--------------------
+CMS_HWWlvjj_eff_sig_el2jetCMS      lnN     1.07          -           -           -         1.07          -           -           -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_el3jetCMS      lnN       -         1.07          -           -           -         1.07          -           -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_mu2jetCMS      lnN       -           -         1.07          -           -           -         1.07          -           -           -           -           -    
+CMS_HWWlvjj_eff_sig_mu3jetCMS      lnN       -           -           -         1.07          -           -           -         1.07          -           -           -           -    
+CMS_HWWlvjj_norm_back_el2jetCMS    lnN       -           -           -           -           -           -           -           -        1.006          -           -           -    
+CMS_HWWlvjj_norm_back_el3jetCMS    lnN       -           -           -           -           -           -           -           -           -        1.006          -           -    
+CMS_HWWlvjj_norm_back_mu2jetCMS    lnN       -           -           -           -           -           -           -           -           -           -        1.005          -    
+CMS_HWWlvjj_norm_back_mu3jetCMS    lnN       -           -           -           -           -           -           -           -           -           -           -        1.004   
+CMS_HWWlvjj_shape_back_el2jetCMS shape       -           -           -           -           -           -           -           -            1          -           -           -    
+CMS_HWWlvjj_shape_back_el3jetCMS shape       -           -           -           -           -           -           -           -           -            1          -           -    
+CMS_HWWlvjj_shape_back_mu2jetCMS shape       -           -           -           -           -           -           -           -           -           -            1          -    
+CMS_HWWlvjj_shape_back_mu3jetCMS shape       -           -           -           -           -           -           -           -           -           -           -            1   
+CMS_eff_e                          lnN     1.02        1.02          -           -         1.02        1.02          -           -           -           -           -           -    
+CMS_eff_m                          lnN       -           -         1.02        1.02          -           -         1.02        1.02          -           -           -           -    
+CMS_trigger_e                      lnN     1.01        1.01          -           -         1.01        1.01          -           -           -           -           -           -    
+CMS_trigger_m                      lnN       -           -         1.01        1.01          -           -         1.01        1.01          -           -           -           -    
+QCDscale_ggH                       lnN    1.086       1.086       1.086       1.086          -           -           -           -           -           -           -           -    
+QCDscale_qqH                       lnN       -           -           -           -        1.002       1.002       1.002       1.002          -           -           -           -    
+lumi                               lnN    1.045       1.045       1.045       1.045       1.045       1.045       1.045       1.045          -           -           -           -    
+pdf_gg                             lnN    1.084       1.084       1.084       1.084          -           -           -           -           -           -           -           -    
+pdf_qqbar                          lnN       -           -           -           -        1.033       1.033       1.033       1.033          -           -           -           -    

@@ -1,0 +1,25 @@
+imax 1  # number of channels
+jmax 2  # number of processes-1
+kmax *  # number of nuisance parameters
+--------------------
+bin                                   mu3jetCMS
+observation                                 478
+--------------------
+shapes * * /uscms/home/pdudero/data/HWWqgldScan120312/cutvalue=0.20/hww-histo-shapes-qgldcutvalue=0.20-M=550.root $PROCESS_$CHANNEL_Mass_$MASS $PROCESS_$CHANNEL_Mass_$MASS_$SYSTEMATIC
+--------------------
+bin                                   mu3jetCMS   mu3jetCMS   mu3jetCMS
+process                                     ggH         qqH    Bkgrdtot
+process                                       0          -1           1
+rate                                       5.28        0.63      478.52
+--------------------
+CMS_HWWlvjj_eff_sig_mu3jetCMS      lnN     1.07        1.07          -    
+CMS_HWWlvjj_norm_back_mu3jetCMS    lnN       -           -        1.027   
+CMS_HWWlvjj_shape_back_mu3jetCMS shape       -           -            1   
+CMS_eff_m                          lnN     1.02        1.02          -    
+CMS_trigger_m                      lnN     1.01        1.01          -    
+QCDscale_ggH                       lnN    1.089          -           -    
+QCDscale_qqH                       lnN       -        1.013          -    
+lumi                               lnN    1.045       1.045          -    
+pdf_gg                             lnN    1.106          -           -    
+pdf_qqbar                          lnN       -        1.045          -    
+theoryUncXS_HighMH                 lnN     1.25        1.25          -    

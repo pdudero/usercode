@@ -1,0 +1,40 @@
+Combination of el2jetCMS=datacard_el2jetCMS_qgldcutvalueeq0.35-Meq550.txt, el3jetCMS=datacard_el3jetCMS_qgldcutvalueeq0.35-Meq550.txt, mu2jetCMS=datacard_mu2jetCMS_qgldcutvalueeq0.20-Meq550.txt, mu3jetCMS=datacard_mu3jetCMS_qgldcutvalueeq0.20-Meq550.txt
+imax 4 number of bins
+jmax 2 number of processes minus 1
+kmax 22 number of nuisance parameters
+----------------------------------------------------------------------------------------------------------------------------------
+shapes *          el2jetCMS  /uscms/home/pdudero/data/HWWqgldScan120312/cutvalue=0.35/hww-histo-shapes-qgldcutvalue=0.35-M=550.root $PROCESS_el2jetCMS_Mass_$MASS $PROCESS_el2jetCMS_Mass_$MASS_$SYSTEMATIC
+shapes *          el3jetCMS  /uscms/home/pdudero/data/HWWqgldScan120312/cutvalue=0.35/hww-histo-shapes-qgldcutvalue=0.35-M=550.root $PROCESS_el3jetCMS_Mass_$MASS $PROCESS_el3jetCMS_Mass_$MASS_$SYSTEMATIC
+shapes *          mu2jetCMS  /uscms/home/pdudero/data/HWWqgldScan120312/cutvalue=0.20/hww-histo-shapes-qgldcutvalue=0.20-M=550.root $PROCESS_mu2jetCMS_Mass_$MASS $PROCESS_mu2jetCMS_Mass_$MASS_$SYSTEMATIC
+shapes *          mu3jetCMS  /uscms/home/pdudero/data/HWWqgldScan120312/cutvalue=0.20/hww-histo-shapes-qgldcutvalue=0.20-M=550.root $PROCESS_mu3jetCMS_Mass_$MASS $PROCESS_mu3jetCMS_Mass_$MASS_$SYSTEMATIC
+----------------------------------------------------------------------------------------------------------------------------------
+bin          el2jetCMS  el3jetCMS  mu2jetCMS  mu3jetCMS
+observation  932.0      330.0      1583.0     478.0    
+----------------------------------------------------------------------------------------------------------------------------------
+bin                                                   el2jetCMS  el2jetCMS  el2jetCMS  el3jetCMS  el3jetCMS  el3jetCMS  mu2jetCMS  mu2jetCMS  mu2jetCMS  mu3jetCMS  mu3jetCMS  mu3jetCMS
+process                                               Bkgrdtot   ggH        qqH        Bkgrdtot   ggH        qqH        Bkgrdtot   ggH        qqH        Bkgrdtot   ggH        qqH      
+process                                               1          0          -1         1          0          -1         1          0          -1         1          0          -1       
+rate                                                  933.5100   8.7600     1.0400     330.3000   3.5400     0.4400     1585.1100  13.8800    1.6200     478.5200   5.2800     0.6300   
+----------------------------------------------------------------------------------------------------------------------------------
+CMS_HWWlvjj_eff_sig_el2jetCMS   lnN                   -          1.07       1.07       -          -          -          -          -          -          -          -          -        
+CMS_HWWlvjj_eff_sig_el3jetCMS   lnN                   -          -          -          -          1.07       1.07       -          -          -          -          -          -        
+CMS_HWWlvjj_eff_sig_mu2jetCMS   lnN                   -          -          -          -          -          -          -          1.07       1.07       -          -          -        
+CMS_HWWlvjj_eff_sig_mu3jetCMS   lnN                   -          -          -          -          -          -          -          -          -          -          1.07       1.07     
+CMS_HWWlvjj_norm_back_el2jetCMS   lnN                 1.014      -          -          -          -          -          -          -          -          -          -          -        
+CMS_HWWlvjj_norm_back_el3jetCMS   lnN                 -          -          -          1.032      -          -          -          -          -          -          -          -        
+CMS_HWWlvjj_norm_back_mu2jetCMS   lnN                 -          -          -          -          -          -          1.009      -          -          -          -          -        
+CMS_HWWlvjj_norm_back_mu3jetCMS   lnN                 -          -          -          -          -          -          -          -          -          1.027      -          -        
+CMS_HWWlvjj_shape_back_el2jetCMS   shape              1.0        -          -          -          -          -          -          -          -          -          -          -        
+CMS_HWWlvjj_shape_back_el3jetCMS   shape              -          -          -          1.0        -          -          -          -          -          -          -          -        
+CMS_HWWlvjj_shape_back_mu2jetCMS   shape              -          -          -          -          -          -          1.0        -          -          -          -          -        
+CMS_HWWlvjj_shape_back_mu3jetCMS   shape              -          -          -          -          -          -          -          -          -          1.0        -          -        
+CMS_eff_e               lnN                           -          1.02       1.02       -          1.02       1.02       -          -          -          -          -          -        
+CMS_eff_m               lnN                           -          -          -          -          -          -          -          1.02       1.02       -          1.02       1.02     
+CMS_trigger_e           lnN                           -          1.01       1.01       -          1.01       1.01       -          -          -          -          -          -        
+CMS_trigger_m           lnN                           -          -          -          -          -          -          -          1.01       1.01       -          1.01       1.01     
+QCDscale_ggH            lnN                           -          1.089      -          -          1.089      -          -          1.089      -          -          1.089      -        
+QCDscale_qqH            lnN                           -          -          1.013      -          -          1.013      -          -          1.013      -          -          1.013    
+lumi                    lnN                           -          1.045      1.045      -          1.045      1.045      -          1.045      1.045      -          1.045      1.045    
+pdf_gg                  lnN                           -          1.106      -          -          1.106      -          -          1.106      -          -          1.106      -        
+pdf_qqbar               lnN                           -          -          1.045      -          -          1.045      -          -          1.045      -          -          1.045    
+theoryUncXS_HighMH      lnN                           -          1.25       1.25       -          1.25       1.25       -          1.25       1.25       -          1.25       1.25     
