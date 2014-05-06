@@ -15,7 +15,7 @@ public:
 		    const std::string& title,
 		    int nbins, float min, float max);
   MyHistoWrapper<T>(T *h, const std::string& name, const std::string& title);
-  MyHistoWrapper<T>(T *h) : h_(h){ style2apply_ = NULL; verbosity_=true; fitxmin_=fitxmax_=0; }
+  MyHistoWrapper<T>(T *h);
   ~MyHistoWrapper() {}
   inline T *histo() const {return h_;}
 
@@ -25,7 +25,7 @@ public:
   void   Draw(const std::string& drawopt);
 
   // Only non-default values get set.
-  TAxis *SetXaxis(const std::string& title,
+  void   SetXaxis(const std::string& title,
 		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
@@ -35,7 +35,7 @@ public:
 		  float rangeuserMin=1e99,
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
-  TAxis *SetYaxis(const std::string& title,
+  void   SetYaxis(const std::string& title,
 		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
@@ -45,7 +45,7 @@ public:
 		  float rangeuserMin=1e99,
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
-  TAxis *SetZaxis(const std::string& title,
+  void   SetZaxis(const std::string& title,
 		  bool center = false,
 		  float titlesize=0.0,
 		  float titleoffs=0.0,
@@ -55,6 +55,9 @@ public:
 		  float rangeuserMin=1e99,
 		  float rangeuserMax=-1e99,
 		  int   ndiv=510);
+
+  void SetAxes   (void);
+
   void SetLine   (int color=0,
 		  int style=0,
 		  int width=0);
@@ -84,16 +87,17 @@ public:
 
   void Add2Legend(TLegend *leg) {
     std::string legdrawopt;
+#if 1
     if (h_->GetFillColor())                              legdrawopt = "F";
     else if (drawoption_.size()) {
       // if      (drawoption_.find("E") != std::string::npos)    legdrawopt = "LEP";
-      if      (drawoption_.find("E") != std::string::npos)    legdrawopt = "P";
+      if      (drawoption_.find("HIST") != std::string::npos) legdrawopt = "L";
+      else if (drawoption_.find("E") != std::string::npos)    legdrawopt = "L";
       else if (drawoption_.find("L") != std::string::npos)    legdrawopt = "L";
-      else if (drawoption_.find("HIST") != std::string::npos) legdrawopt = "L";
       else if (drawoption_.find("P") != std::string::npos)    legdrawopt = "P";
     }
     else                                                 legdrawopt = "L";
-
+#endif
     if (verbosity_)
       std::cout << "legdrawopt="<<legdrawopt<<std::endl;
 
@@ -114,7 +118,7 @@ public:
   MyHistoWrapper<T> *Clone(const std::string& newname,
 			   const std::string& newtitle);
 private:
-  TAxis *SetAxis(TAxis *ax,
+  void   SetAxis(TAxis& ax,
 		 const std::string& title,
 		 bool center = true,
 		 float titlesize=0.0,
@@ -126,6 +130,9 @@ private:
 		 float rangeuserMax=-1e99,
 		 int   ndiv=510);
   T *h_;
+  TAxis xax,yax,zax; /* have to save separately since the internal graph
+			axes are not created until after being drawn. */
+
   std::string pathInFile_;
   std::string legentry_;
   std::string drawoption_;
@@ -147,11 +154,41 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 				  const std::string& title,
 				  int nbins, float min, float max)
 {
+  cout << "MyHistWrapper::MyHistWrapper(nm,t,nb,mn,mx)"<<endl;
+
   h_ = new T(name.c_str(),title.c_str(),nbins,min,max);
   drawoption_=std::string("");
   style2apply_ = NULL;
+  statsAreOn_ = false;
   verbosity_=true;
   fitxmin_=fitxmax_=0;
+
+  xax.ResetAttAxis("X");
+  yax.ResetAttAxis("Y");
+  zax.ResetAttAxis("Z");
+
+  h_->GetXaxis()->Copy(xax);
+  h_->GetYaxis()->Copy(yax);
+  h_->GetZaxis()->Copy(zax);
+
+#if 0
+  if(h_->GetXaxis()->GetXbins()->GetArray())
+    xax.Set(h_->GetNbinsX(),h_->GetXaxis()->GetXbins()->GetArray());
+  else
+    xax.Set(h_->GetNbinsX(),h_->GetXaxis()->GetXmin(),h_->GetXaxis()->GetXmax());
+  if(h_->GetYaxis()->GetXbins()->GetArray())
+    yax.Set(h_->GetNbinsY(),h_->GetYaxis()->GetXbins()->GetArray());
+  else
+    yax.Set(h_->GetNbinsY(),h_->GetYaxis()->GetXmin(),h_->GetYaxis()->GetXmax());
+  if(h_->GetZaxis()->GetXbins()->GetArray())
+    zax.Set(h_->GetNbinsZ(),h_->GetZaxis()->GetXbins()->GetArray());
+  else
+    zax.Set(h_->GetNbinsZ(),h_->GetZaxis()->GetXmin(),h_->GetZaxis()->GetXmax());
+
+  cout<<"xax = "<<xax.GetNbins()<<","<<xax.GetXmin()<<","<<xax.GetXmax()<<endl;
+  cout<<"yax = "<<yax.GetNbins()<<","<<yax.GetXmin()<<","<<yax.GetXmax()<<endl;
+  cout<<"zax = "<<zax.GetNbins()<<","<<zax.GetXmin()<<","<<zax.GetXmax()<<endl;
+#endif
 }
 
 //======================================================================
@@ -159,11 +196,60 @@ MyHistoWrapper<T>::MyHistoWrapper(const std::string& name,
 template<typename T>
 MyHistoWrapper<T>::MyHistoWrapper(T *h, const std::string& name, const std::string& title) : h_(h)
 {
+  cout << "MyHistWrapper::MyHistWrapper(h)"<<endl;
+
   if (name.size())  h_->SetName (name.c_str());
   if (title.size()) h_->SetTitle(title.c_str());
   style2apply_ = NULL;
+  statsAreOn_ = false;
   verbosity_=true;
   fitxmin_=fitxmax_=0;
+
+  xax.ResetAttAxis("X");
+  yax.ResetAttAxis("Y");
+  zax.ResetAttAxis("Z");
+
+  h->GetXaxis()->Copy(xax);
+  h->GetYaxis()->Copy(yax);
+  h->GetZaxis()->Copy(zax);
+
+#if 0
+  if(h_->GetXaxis()->GetXbins()->GetArray())
+    xax.Set(h_->GetNbinsX(),h_->GetXaxis()->GetXbins()->GetArray());
+  else
+    xax.Set(h_->GetNbinsX(),h_->GetXaxis()->GetXmin(),h_->GetXaxis()->GetXmax());
+  if(h_->GetYaxis()->GetXbins()->GetArray())
+    yax.Set(h_->GetNbinsY(),h_->GetYaxis()->GetXbins()->GetArray());
+  else
+    yax.Set(h_->GetNbinsY(),h_->GetYaxis()->GetXmin(),h_->GetYaxis()->GetXmax());
+  if(h_->GetZaxis()->GetXbins()->GetArray())
+    zax.Set(h_->GetNbinsZ(),h_->GetZaxis()->GetXbins()->GetArray());
+  else
+    zax.Set(h_->GetNbinsZ(),h_->GetZaxis()->GetXmin(),h_->GetZaxis()->GetXmax());
+
+  cout<<"xax = "<<xax.GetNbins()<<","<<xax.GetXmin()<<","<<xax.GetXmax()<<endl;
+  cout<<"yax = "<<yax.GetNbins()<<","<<yax.GetXmin()<<","<<yax.GetXmax()<<endl;
+  cout<<"zax = "<<zax.GetNbins()<<","<<zax.GetXmin()<<","<<zax.GetXmax()<<endl;
+#endif
+}
+
+//======================================================================
+
+template <typename T>
+MyHistoWrapper<T>:: MyHistoWrapper(T *h) : h_(h)
+{
+  style2apply_=NULL;
+  verbosity_=true;
+  statsAreOn_=false;
+  fitxmin_=fitxmax_=0; 
+
+  xax.ResetAttAxis("X");
+  yax.ResetAttAxis("Y");
+  zax.ResetAttAxis("Z");
+
+  h->GetXaxis()->Copy(xax);
+  h->GetYaxis()->Copy(yax);
+  h->GetZaxis()->Copy(zax);
 }
 
 //======================================================================
@@ -173,49 +259,51 @@ MyHistoWrapper<T> *
 MyHistoWrapper<T>::Clone(const std::string& newname,
 			 const std::string& newtitle)
 {
+  cout << "MyHistWrapper::Clone"<<endl;
   T *newh = (T *)h_->Clone(newname.c_str());
   newh->SetTitle(newtitle.c_str());
+
   return new MyHistoWrapper<T>(newh);
 }
 
 //======================================================================
 
 template<typename T>
-TAxis *
+void   
 MyHistoWrapper<T>::SetXaxis(const std::string& t,bool c,
 			    float ts, float to, int tf,
 			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
-  return (SetAxis(h_->GetXaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
+  SetAxis(xax,t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd);
 }
 
 //======================================================================
 
 template<typename T>
-TAxis *
+void   
 MyHistoWrapper<T>::SetYaxis(const std::string& t,bool c,
 			    float ts, float to, int tf,
 			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
-  return (SetAxis(h_->GetYaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
+  SetAxis(yax,t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd);
 }
 
 //======================================================================
 
 template<typename T>
-TAxis *
+void   
 MyHistoWrapper<T>::SetZaxis(const std::string& t,bool c,
 			    float ts, float to, int tf,
 			    float ls, int lf,
 			    float ruMin, float ruMax,int nd) {
-  return (SetAxis(h_->GetZaxis(),t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd));
+  SetAxis(zax,t,c,ts,to,tf,ls,lf,ruMin,ruMax,nd);
 }
 
 //======================================================================
 
 template<typename T>
-TAxis *
-MyHistoWrapper<T>::SetAxis(TAxis *ax,
+void   
+MyHistoWrapper<T>::SetAxis(TAxis& ax,
 			   const std::string& title,
 			   bool center,
 			   float titlesize,
@@ -227,21 +315,33 @@ MyHistoWrapper<T>::SetAxis(TAxis *ax,
 			   float rangeuserMax,
 			   int   ndiv)
 {
-  if (title.size())    ax->SetTitle(title.c_str());
-  if (center)          ax->CenterTitle();
-  if (titlesize > 0.0) ax->SetTitleSize(titlesize);
-  if (titleoffs > 0.0) ax->SetTitleOffset(titleoffs);
-  if (titlefont > 0)   ax->SetTitleFont(titlefont);
-  if (labelsize > 0.0) ax->SetLabelSize(labelsize);
-  if (labelfont > 0)   ax->SetLabelFont(labelfont);
+  if (title.size())    ax.SetTitle(title.c_str());
+  if (center)          ax.CenterTitle();
+  if (titlesize > 0.0) ax.SetTitleSize(titlesize);
+  if (titleoffs > 0.0) ax.SetTitleOffset(titleoffs);
+  if (titlefont > 0)   ax.SetTitleFont(titlefont);
+  if (labelsize > 0.0) ax.SetLabelSize(labelsize);
+  if (labelfont > 0)   ax.SetLabelFont(labelfont);
   if (rangeuserMin < rangeuserMax) {
-    //ax->SetLimits(rangeuserMin,rangeuserMax);
-    ax->SetRangeUser(rangeuserMin,rangeuserMax);
+    //ax.SetLimits(rangeuserMin,rangeuserMax);
+    ax.SetRangeUser(rangeuserMin,rangeuserMax);
   }
-  //if (ndiv != 510)     ax->SetNdivisions(ndiv,kFALSE);
-  if (ndiv != 510)     ax->SetNdivisions(ndiv);
+  //if (ndiv != 510)     ax.SetNdivisions(ndiv,kFALSE);
+  if (ndiv != 510)     ax.SetNdivisions(ndiv);
+}
+template<typename T>
+void
+MyHistoWrapper<T>::SetAxes(void)
+{
+  h_->GetXaxis()->ImportAttributes(&xax);
+  h_->GetYaxis()->ImportAttributes(&yax);
+  h_->GetZaxis()->ImportAttributes(&zax);
 
-  return ax;
+#if 0
+  if( xax.GetXmax()>xax.GetXmin() ) h_->GetXaxis()->SetLimits   (xax.GetXmin(),xax.GetXmax());
+  if( yax.GetXmax()>yax.GetXmin() ) h_->GetYaxis()->SetRangeUser(yax.GetXmin(),yax.GetXmax());
+  if( zax.GetXmax()>zax.GetXmin() ) h_->GetZaxis()->SetRangeUser(zax.GetXmin(),zax.GetXmax());
+#endif
 }
 
 //======================================================================
@@ -332,11 +432,12 @@ MyHistoWrapper<T>::DrawFits(const std::string& drawopt,
     if (verbosity_) {
       std::cout << "MyHistoWrapper::DrawFits: Drawing fit "<<f1->GetName();
       std::cout << " with fitoption(s) "<<option;
+      std::cout << " and drawoption(s) "<<drawoption_+drawopt;
       std::cout << " and range " << xmin << " to " << xmax << std::endl;
     } else 
       option+=" Q";
 
-    h_->Fit(f1,option.c_str(),drawopt.c_str(),xmin,xmax);
+    h_->Fit(f1,option.c_str(),"same",xmin,xmax); // (drawoption_+drawopt).c_str(),xmin,xmax);
     //f1->Draw(drawopt.c_str());
   }
 }
