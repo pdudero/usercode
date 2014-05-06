@@ -23,6 +23,24 @@ TH1 *findHisto(const string& hid, const string& errmsg="")
   }
   return it->second->histo();
 }                                                           // findHisto
+//======================================================================
+
+wTH1 *findHisto2(const string& hid, const string& errmsg="")
+{
+  map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
+  if( it == glmap_id2histo.end() ) {
+    // Try finding the first
+    cerr << "Histo ID " << hid << " not found. " << errmsg << endl;
+    if( gl_verbose) {
+      cout << "Available histo IDs are: " << endl;
+      for (it = glmap_id2histo.begin(); it != glmap_id2histo.end(); it++)
+	cout << it->first << " ";
+      cout << endl;
+    }
+    return NULL;
+  }
+  return it->second;
+}                                                           // findHisto2
 
 //======================================================================
 
@@ -37,6 +55,8 @@ void printUsage(const string additionalinfo="") {
   cerr << "	      I=integral including over/underflows" << endl;
   cerr << "	      ksiourmen=> see ROOT documentation"   << endl;
 }
+
+//======================================================================
 
 double getStat(TH1 *h, const string& key)
 {
@@ -58,6 +78,8 @@ double getStat(TH1 *h, const string& key)
   return -9e99;
 }
 
+//======================================================================
+
 float getStatArg(TH1 *h, const string& argstr)
 {
   float arg;
@@ -71,6 +93,8 @@ float getStatArg(TH1 *h, const string& argstr)
   }
   return arg;
 }
+
+//======================================================================
 
 void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 {
@@ -295,7 +319,7 @@ void saveHisto2File(TH1 *histo, string outspec)
 
     target->SetDirectory(rootfile);
     target->Write();
-    rootfile->Close();
+    //rootfile->Close();
   }
 }                                                      // saveHisto2File
 
@@ -673,13 +697,26 @@ void processCommonHistoParams(const string& key,
   else if( key == "printfstats" )  printHistoStats( wh.histo(),histo_id,value );
   else if( key == "print2file" )   printHisto2File( wh.histo(),value );
   else if( key == "save2file" )     saveHisto2File( wh.histo(),value );
+  //==============================
   else if( key == "normalize" ) {
+  //==============================
     TH1 *h1 = (TH1 *)wh.histo();
     float norm = str2flt(value);
     if( h1->Integral() > 0.0 )
       h1->Scale( norm/h1->Integral() );
     else
       cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
+  }
+  //==============================
+  else if( key == "norm2histo" ) {
+  //==============================
+    TH1 *normee = (TH1 *)wh.histo();
+    TH1 *normer = (TH1 *)findHisto2(value,"define first")->histo();
+
+    if( normer->Integral() != 0.0 )
+      normee->Scale( normer->Integral()/normee->Integral() );
+    else
+      cerr << normer->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
   //==============================
   else if( key == "scalebyfactor" ) {
@@ -785,15 +822,11 @@ processHistoSection(FILE *fp,
       if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(value);
-      if( it == glmap_id2histo.end() ) {
-	cerr << "Histo ID " << value << " not found,";
-	cerr << "clone must be defined after the clonee" << endl;
-	break;
+      wTH1 *clonee = findHisto2(value,"Clone must be defined after the clonee");
+      if (clonee) {
+	wth1 = clonee->Clone(*hid, string(clonee->histo()->GetTitle()));
+	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
       }
-      wth1 = it->second->Clone(string(it->second->histo()->GetName())+"_"+(*hid),
-			       string(it->second->histo()->GetTitle()));
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
     } else if( key == "path" ) {
@@ -839,6 +872,42 @@ processHistoSection(FILE *fp,
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
+    } else if( key == "book1dvarbins" ) { // book a blank 1D histo with provided parameters
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( wth1 ) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,","); // title can't have commas in it!
+
+      if( (v_tokens.size() < 4)  ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())  ||
+	  (!v_tokens[2].size())  ||
+	  (!v_tokens[3].size()) ) {
+	for (unsigned i=0; i<v_tokens.size(); i++)
+	  cout << v_tokens[i] << endl;
+	cerr << "malformed 1d parameter specification " << value << endl; continue;
+      }
+
+      TVectorD vbinedges(v_tokens.size()-2);
+      
+      for (unsigned i=2; i<v_tokens.size(); i++)
+	vbinedges[i-2] = (double)str2flt(v_tokens[i]);
+
+      cout << "Bin edges: "; vbinedges.Print();
+
+      wth1 = new wTH1(new TH1D(v_tokens[0].c_str(),
+			       v_tokens[1].c_str(),
+			       (int)(v_tokens.size()-3),
+			       vbinedges.GetMatrixArray()));
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
     } else if( key == "book2dpars" ) { // book a blank 2D histo with provided parameters
     //------------------------------
       if( !hid ) {
@@ -861,7 +930,7 @@ processHistoSection(FILE *fp,
 	  (!v_tokens[7].size())     ) {
 	for (unsigned i=0; i<v_tokens.size(); i++)
 	  cout << v_tokens[i] << endl;
-	cerr << "malformed 1d parameter specification " << value << endl; continue;
+	cerr << "malformed 2d parameter specification " << value << endl; continue;
       }
 
       wth1 = new wTH1(new TH2D(v_tokens[0].c_str(),
@@ -874,6 +943,54 @@ processHistoSection(FILE *fp,
 			       str2flt(v_tokens[7])
 			       )
 		      );
+
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+
+    //------------------------------
+    } else if( key == "book2dvarbins" ) { // book a blank 2D histo with provided parameters
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( wth1 ) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,";"); // title can't have semicolons in it
+
+      if( (v_tokens.size() != 4)  ||
+	  (!v_tokens[0].size())  ||
+	  (!v_tokens[1].size())  ||
+	  (!v_tokens[2].size())  ||
+	  (!v_tokens[3].size()) ) {
+	for (unsigned i=0; i<v_tokens.size(); i++)
+	  cout << v_tokens[i] << endl;
+	cerr << "malformed 1d parameter specification " << value << endl; continue;
+      }
+
+      TString name(v_tokens[0]);
+      TString title(v_tokens[1]);
+      string xbinstr = v_tokens[2];
+      string ybinstr = v_tokens[3];
+
+      Tokenize(xbinstr,v_tokens,",");
+      TVectorD xbinedges(v_tokens.size());
+      for (unsigned i=0; i<v_tokens.size(); i++)
+	xbinedges[i] = (double)str2flt(v_tokens[i]);
+
+      Tokenize(ybinstr,v_tokens,",");
+      TVectorD ybinedges(v_tokens.size());
+      for (unsigned i=0; i<v_tokens.size(); i++)
+	ybinedges[i] = (double)str2flt(v_tokens[i]);
+
+      cout << "X Bin edges: "; xbinedges.Print();
+      cout << "Y Bin edges: "; ybinedges.Print();
+
+      wth1 = new wTH1(new TH2D(name,title,
+			       xbinedges.GetNoElements()-1,
+			       xbinedges.GetMatrixArray(),
+			       ybinedges.GetNoElements()-1,
+			       ybinedges.GetMatrixArray() ));
 
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
@@ -972,22 +1089,18 @@ processHistoSection(FILE *fp,
       string tgthid = v_tokens[0];
       string prop   = v_tokens[1];
 
-      map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(tgthid);
-      if( it == glmap_id2histo.end() ) {
-	cerr << "Histo ID " << tgthid << " not found, histo must be defined first" << endl;
-	break;
-      }
-      TH1 *tgth1 = it->second->histo();
-      wth1       = it->second->Clone(string(tgth1->GetName())+"_"+prop,
-				     string(tgth1->GetTitle())+" ("+prop+")");
-      TH1 *h1=wth1->histo();
-      h1->Clear();
+      wTH1 *src  = findHisto2(tgthid,"histo must be defined first");
+      TH1 *srch1 = src->histo();
+      wth1       = src->Clone(string(srch1->GetName())+"_"+prop,
+			      string(srch1->GetTitle())+" ("+prop+")");
+      TH1 *tgth1=wth1->histo();
+      tgth1->Clear();
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
       
       if( !prop.compare("errors") ) {
-	int nbins = h1->GetNbinsX()*h1->GetNbinsY()*h1->GetNbinsZ();
+	int nbins = tgth1->GetNbinsX()*tgth1->GetNbinsY()*tgth1->GetNbinsZ();
 	for (int ibin=1; ibin<=nbins; ibin++)
-	  h1->SetBinContent(ibin,tgth1->GetBinError(ibin));
+	  tgth1->SetBinContent(ibin,srch1->GetBinError(ibin));
       }
       else {
 	cerr << "Unrecognized property: " << prop << endl;
