@@ -158,10 +158,10 @@ processTF1Section(FILE *fp,
 		  bool& new_section)
 {
   string *fid  = NULL;
-  string *form = NULL;
   TF1    *f1   = NULL;
-  double xmin=0.0, xmax=0.0;
+  double xmin=0.0, xmax=1.0; // same as root defaults
   int lcol=-1,lwid=-1,lsty=-1;
+  vector<string> v_tokens;
   vector<string> parstrs;
   vector<std::pair<string, TF1 *> > v_tf1s;
 
@@ -202,30 +202,144 @@ processTF1Section(FILE *fp,
       if (!fid) {
 	cerr << "id key must be defined before formula key" << endl; continue;
       }
-      if (form) {
-	cerr << "Formula for " << *fid << " already defined" << endl; continue;
+      if (v_tf1s.size()) {
+	cerr << "TF1 " << *fid << " already defined" << endl; continue;
       }
-      form = new string (value);
+      f1 = new TF1(fid->c_str(),value.c_str());
+
+      v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
+      glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
+
+    //------------------------------
+    } else if (key == "compilemacro") {
+    //------------------------------
+      if (!fid) {
+	cerr << "id key must be defined before compilemacro key" << endl; continue;
+      }
+      int error;
+      cout << "Compiling macro " << *fid << " --> " << value << endl;
+      
+      f1 = (TF1 *)gROOT->Macro(value.c_str(), &error, kTRUE);
+      if (error) {
+	static const char *errorstr[] = {
+	  "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
+	cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
+      }
+      else if( !(f1 && f1->InheritsFrom("TF1")) ) {
+	cerr<<"Macro "<<value<<" does not return a TF1 object"<<endl;
+	exit(-1);
+      } else {
+	v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
+	glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
+      }
 
     //------------------------------
     } else if (key == "initpars") {
     //------------------------------
 
       if (!fid) {
-	cerr << "id key must be defined before formula key" << endl; continue;
+	cerr << "id key must be defined first in the section" << endl; continue;
       }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to fixpar key" << endl;
+	exit(-1);
+      }
+
       Tokenize(value,parstrs,",");
 
+      for (size_t i=0; i<v_tf1s.size(); i++) {
+	f1 = v_tf1s[i].second;
+	for (size_t j=0; j<parstrs.size(); j++) {
+	  f1->SetParameter(j,str2flt(parstrs[j]));
+	}
+      }
+
     //------------------------------
-    } else if (key == "pathglob") {
+    } else if (key == "fixpar") { // fix one parameter
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to fixpar key" << endl;
+	exit(-1);
+      }
+
+      Tokenize(value,parstrs,",");
+      if( (parstrs.size() != 2) ||
+	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) )	{
+	cerr<<"ERROR: expect fixpar=index,value syntax, where index < nparameters"<<endl;
+	exit(-1);
+      }
+      for (size_t i=0; i<v_tf1s.size(); i++) {
+	f1 = v_tf1s[i].second;
+	f1->FixParameter(str2int(parstrs[0]),
+			 str2flt(parstrs[1]));
+      }
+
+    //------------------------------
+    } else if (key == "setparlimits") { // SetParLimits for one parameter
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to fixpar key" << endl;
+	exit(-1);
+      }
+
+      Tokenize(value,parstrs,",");
+      if( (parstrs.size() != 3) ||
+	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) ||
+	  (str2flt(parstrs[2]) < str2flt(parstrs[1])) )	{
+	cerr<<"ERROR: expect fixpar=index,min,max syntax, where index < nparameters, min <= max"<<endl;
+	exit(-1);
+      }
+      for (size_t i=0; i<v_tf1s.size(); i++) {
+	f1 = v_tf1s[i].second;
+	f1->SetParLimits(str2int(parstrs[0]),
+			 str2flt(parstrs[1]),
+			 str2flt(parstrs[2]) );
+      }
+
+    //------------------------------
+    } else if (key == "setpar") { // set one parameter
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to setpar key" << endl;
+	exit(-1);
+      }
+
+      Tokenize(value,parstrs,",");
+      if( (parstrs.size() != 2) ||
+	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) )	{
+	cerr<<"ERROR: expect setpar=index,value syntax, where index < nparameters"<<endl;
+	exit(-1);
+      }
+      for (size_t i=0; i<v_tf1s.size(); i++) {
+	f1 = v_tf1s[i].second;
+	f1->SetParameter(str2int(parstrs[0]),
+			 str2flt(parstrs[1]));
+      }
+
+    //------------------------------
+    } else if (key == "pathglob") { // multiple TF1s defined over potentially multiple files
     //------------------------------
       glob_t globbuf;
       
       if (!fid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-
-      vector<string> v_tokens;
 
       Tokenize(value,v_tokens,":");
       if ((v_tokens.size() != 2) ||
@@ -267,24 +381,45 @@ processTF1Section(FILE *fp,
       glmap_mobj2size.insert(pair<string,unsigned>(*fid,v_tf1s.size()));
     }
 
-    else if (key == "xmin")      xmin = str2flt(value);
-    else if (key == "xmax")      xmax = str2flt(value);
+    //------------------------------
+    else if (key == "range") {
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to range key" << endl;
+	exit(-1);
+      }
+
+      Tokenize(value,v_tokens,",-");
+      if ( (v_tokens.size() != 2) || 
+	   (!v_tokens[0].size())  ||
+	   (!v_tokens[1].size())  ||
+	   (str2flt(v_tokens[0]) > str2flt(v_tokens[1]))
+	 ) {
+	cerr << "malformed TF1 range spec range=xmin[,|-]xmax: " << value << endl;
+	exit(-1);
+      }
+      else {
+	xmin = str2flt(v_tokens[0]);
+	xmax = str2flt(v_tokens[1]);
+	for (size_t i=0; i<v_tf1s.size(); i++) {
+	  f1 = v_tf1s[i].second;
+	  f1->SetRange(xmin,xmax);
+	}
+      }
+    }
+
+    //------------------------------
     else if (key == "linecolor") lcol = str2int(value);
     else if (key == "linestyle") lsty = str2int(value);
     else if (key == "linewidth") lwid = str2int(value);
+    //------------------------------
 
-  }
-
-  if (!v_tf1s.size() && fid && form && (xmax > xmin)) {
-    f1 = new TF1(fid->c_str(),form->c_str(),xmin,xmax);
-    v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
-    for (size_t i=0; i<parstrs.size(); i++) {
-      f1->SetParameter(i,str2flt(parstrs[i]));
-    }
-    glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
-    //delete fid;
-    //delete form;
-  }
+  } // line loop
 
   for (size_t i=0; i<v_tf1s.size(); i++) {
     if (lsty>=0) v_tf1s[i].second->SetLineStyle(lsty);
@@ -293,6 +428,11 @@ processTF1Section(FILE *fp,
   }
 
   if (fid) delete fid;
+  if (v_tf1s.size()&&gl_verbose) {
+    cout << "Dump of first TF1: " << endl;
+    v_tf1s[0].second->Print();
+  }
+    
   return (v_tf1s.size());
 }                                                   // processTF1section
 
