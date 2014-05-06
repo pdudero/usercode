@@ -3,8 +3,12 @@
 
 //======================================================================
 
-inline unsigned int str2int(const string& str) {
+inline unsigned int str2uint(const string& str) {
   return (unsigned int)strtoul(str.c_str(),NULL,0);
+}
+
+inline int str2int(const string& str) {
+  return (int)strtol(str.c_str(),NULL,0);
 }
 
 inline float str2flt(const string& str) {
@@ -52,13 +56,14 @@ void Tokenize(const string& str,
 
   // Skip delimiters at beginning.
   string::size_type lastPos = src.find_first_not_of(delimiters, 0);
+
   if (include_delimiters && lastPos>0)
     tokens.push_back(src.substr(0,lastPos));
 
-  // Find first "non-delimiter".
+  // Find first delimiter.
   string::size_type pos = src.find_first_of(delimiters, lastPos);
 
-  while (string::npos != pos || string::npos != lastPos) {
+  while (pos != string::npos || lastPos != string::npos) {
     // Found a token, add it to the vector.
     tokens.push_back(src.substr(lastPos, pos - lastPos));
 
@@ -70,7 +75,9 @@ void Tokenize(const string& str,
 
     // Find next delimiter
     pos = src.find_first_of(delimiters, lastPos);
+
   }
+  //cout << "tokens.size() = " << tokens.size() <<endl;
 }                                                            // Tokenize
 
 //======================================================================
