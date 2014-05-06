@@ -74,14 +74,14 @@ TH1 *IntegrateLeft(TH1 *h)
 // Sweep right and integrate to the right of the sweep line
 
 TH1 *IntegrateRight(TH1 *h,
-		    const string& xrangestr,
+		    const string& xrangestr="",
 		    double skipbinatx=-9e99)
 {
   string newname = string(h->GetName())+"_integright";
   TH1 *hcum = (TH1 *)h->Clone(newname.c_str());
   hcum->Reset();
 
-  int lobin = 0;
+  int lobin = 0;                   // includes underflow
   int hibin = hcum->GetNbinsX()+1; // includes overflow
   if (xrangestr.size()) {
     vector<string> v_tokens;
@@ -833,21 +833,40 @@ processHmathSection(FILE *fp,
 	continue;
       }
 
+      TH1 *hres=NULL;
       TH1 *tmph1 = findHisto(v_tokens[0]); if (!tmph1) continue;
-      TH1 *tmph2 = findHisto(v_tokens[1]); if (!tmph2) continue;
-      TH1 *hres = (TH1 *)tmph1->Clone(hid->c_str());
-      //hres->Reset();
+      TH1 *tmph2 = findHisto(v_tokens[1]);
 
-      if      (theline.find('-') != string::npos) hres->Add(tmph2,-1.0);
-      else if (theline.find('+') != string::npos) hres->Add(tmph2);
-      else if (theline.find('*') != string::npos) hres->Multiply(tmph2);
-      //else if (theline.find('/') != string::npos) hres->Divide(tmph1,tmph2,1.0,1.0,"C");
-      else if (theline.find('/') != string::npos) hres->Divide(tmph2);
+      if (!tmph2) {	// check for stacks
+	wStack_t *findStack(const string&, const string& errmsg="");
+	tmph2 = (findStack(v_tokens[1]))->sum->histo();
+      }
 
-      h1 = (TH1 *)hres;
-      wTH1 *wh = new wTH1(h1);
-      v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+      if (tmph2) {
+	hres = (TH1 *)tmph1->Clone(hid->c_str());
+
+	if      (theline.find('-') != string::npos) hres->Add(tmph2,-1.0);
+	else if (theline.find('+') != string::npos) hres->Add(tmph2);
+	else if (theline.find('*') != string::npos) hres->Multiply(tmph2);
+	//else if (theline.find('/') != string::npos) hres->Divide(tmph1,tmph2,1.0,1.0,"C");
+	else if (theline.find('/') != string::npos) hres->Divide(tmph2);
+      } else {
+	// check for TF1s
+	TF1 *f1 = findTF1(v_tokens[1]);
+	if (f1) {
+	  hres = (TH1 *)tmph1->Clone(hid->c_str());
+	  if      (theline.find('-') != string::npos) hres->Add(f1,-1.0);
+	  else if (theline.find('+') != string::npos) hres->Add(f1);
+	  else if (theline.find('*') != string::npos) hres->Multiply(f1);
+	  else if (theline.find('/') != string::npos) hres->Divide(f1);
+	}
+      }
+      if (hres) {
+	h1 = (TH1 *)hres;
+	wTH1 *wh = new wTH1(h1);
+	v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
+	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+      }
 
     //------------------------------
     } else if (key.find("sum") != string::npos) {
@@ -868,6 +887,33 @@ processHmathSection(FILE *fp,
 	if (!addend) exit(-1);
 	h1->Add(addend,1.0);
       }
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+
+    //------------------------------
+    } else if (key.find("lincombo") != string::npos) {
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+      Tokenize(value,v_tokens,",");
+      if (v_tokens.size() != 4) {
+	cerr << "expect comma-separated list c1,h1id,c2,h2id ";
+	cerr << theline << endl;
+	continue;
+      }
+      float c1 = str2flt(v_tokens[0]);
+      float c2 = str2flt(v_tokens[2]);
+
+      TH1 *hone = (TH1 *)findHisto(v_tokens[1]); if (!hone) exit(-1);
+      TH1 *htwo = (TH1 *)findHisto(v_tokens[3]); if (!htwo) exit(-1);
+      h1 = (TH1 *)hone->Clone(hid->c_str());     h1->Reset();
+      h1->Add(hone,htwo,c1,c2);
+
       wTH1 *wh = new wTH1(h1);
       v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
