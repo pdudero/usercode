@@ -80,7 +80,7 @@ void loadMultiAliii(const string& tableFilename,
 
     Tokenize(theline, v_tokens,"\t");
     if (v_tokens.size() != parnames.size()) {
-      cerr << "Rejecting line in vartable " << theline << endl;
+      cerr<<"Line in vartable "<<theline<<" has "<<v_tokens.size()<<"tokens, rejecting"<<endl;
     } else {
       for (size_t i=0; i<parnames.size(); i++) {
 	m_table[parnames[i]].push_back(v_tokens[i]);
