@@ -12,6 +12,22 @@ static map<string, wStack_t *>      glmap_id2stack;
 
 //======================================================================
 
+wStack_t *findStack(const string& sid, const string& errmsg="")
+{
+  map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
+  if (it == glmap_id2stack.end()) {
+    cerr<<"ERROR: stack id "<<sid<<" not found. " << errmsg << endl;
+    if( gl_verbose) {
+      cout << "Available stack IDs are: " << endl;
+      for (it = glmap_id2stack.begin(); it != glmap_id2stack.end(); it++)
+	cout << it->first << " ";
+      cout << endl;
+    }
+    return NULL;
+  }
+  return it->second;
+}
+
 //======================================================================
 
 bool                              // returns true if success
@@ -61,7 +77,7 @@ processStackSection(FILE *fp,
       if (!v_tokens.size()) v_tokens.push_back(value);
 
       if (ws) {
-	cerr << "histo already defined" << endl; continue;
+	cerr << "stack " << sid << " already defined" << endl; continue;
       }
 
       for (unsigned j = 0; j < v_tokens.size(); j++) {
@@ -98,6 +114,23 @@ processStackSection(FILE *fp,
       break;
     }
 
+    //------------------------------
+    else if (key == "norm2histo") {
+    //------------------------------
+      TH1 *normer = (TH1 *)findHisto2(value,"define first")->histo();
+      if( normer->Integral() == 0.0 ) {
+	cerr << normer->GetName() << " integral is ZERO, cannot normalize." << endl;
+	exit(-1);
+      }
+      float scale = normer->Integral()/ws->sum->histo()->Integral();
+      if (gl_verbose) 
+	cout << "Scaling stack " << *sid << " histos by " << scale << endl;
+      for (size_t i=0; i<ws->v_histos.size(); i++) {
+	TH1 *normee = (TH1 *)ws->v_histos[i]->histo();
+	normee->Scale( scale );
+      }
+      ws->sum->histo()->Scale( scale );
+    }
     else {
       processCommonHistoParams(key,value, "", *(ws->sum));
       if (key=="title") ws->stack->SetTitle(ws->sum->histo()->GetTitle());
