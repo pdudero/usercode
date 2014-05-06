@@ -3,7 +3,7 @@
 #include "TObjArray.h"
 
 #ifndef LINELEN
-#define LINELEN 512
+#define LINELEN 1024
 #endif
 
 #include "utils.C"
