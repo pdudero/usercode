@@ -15,8 +15,6 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
   wp->vp->SetLogz(wp->logz);
-  wp->vp->SetGridx(wp->gridx);
-  wp->vp->SetGridy(wp->gridy);
 
   if (!gl_verbose) myHisto.ShutUpAlready();
 
@@ -29,7 +27,7 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
     altdrawopt.size() ? myHisto.Draw(altdrawopt) : myHisto.Draw();
 
     // Now we can set the axis attributes and range:
-    //myHisto.SetAxes();
+    myHisto.SetAxes();
   }
   else {
     if (!myHisto.statsAreOn()) altdrawopt.size() ?
@@ -39,6 +37,8 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 				 myHisto.Draw(altdrawopt+ " sames") :
 				 myHisto.DrawSames();
   }
+
+  myHisto.DrawFits("same");
 
 #if 0
   myHisto.histo()->Sumw2();
@@ -64,8 +64,6 @@ void drawInPad(wPad_t *wp, T *obj,const string& indrawopt, bool firstInPad=false
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
   wp->vp->SetLogz(wp->logz);
-  wp->vp->SetGridx(wp->gridx);
-  wp->vp->SetGridy(wp->gridy);
 
   if (firstInPad) {
     if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
@@ -84,7 +82,6 @@ void drawInPad(wPad_t *wp, T *obj,const string& indrawopt, bool firstInPad=false
   obj->Draw(drawopt);
 
 
-
   wp->vp->Update();
 }                                                           // drawInPad
 
@@ -100,8 +97,6 @@ void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
   wp->vp->SetLogx(wp->logx);
   wp->vp->SetLogy(wp->logy);
   wp->vp->SetLogz(wp->logz);
-  wp->vp->SetGridx(wp->gridx);
-  wp->vp->SetGridy(wp->gridy);
 
   if (firstInPad) {
     if (wp->topmargin)    wp->vp->SetTopMargin   (wp->topmargin);
@@ -114,6 +109,7 @@ void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
     // and allows for fits on the sum.
     //
     ws->sum->Draw(drawopt);
+    wp->vp->Update();
   } else {
     if (!strstr(drawopt.c_str(),"nostack")) {
       if (!ws->sum->statsAreOn()) drawopt.size() ?
@@ -128,10 +124,13 @@ void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
 
   if (gl_verbose)
     cout << "Drawing stack with option AH" << endl;
-  ws->stack->Draw("AH SAME");
 
-  ws->sum->DrawFits("same");   wp->vp->Update();
-  ws->sum->DrawStats();        wp->vp->Update();
+  ws->stack->Draw("SAME HIST");
+
+  assert(gPad->GetFrame());
+
+  ws->sum->DrawFits("same");  wp->vp->Update();
+  ws->sum->DrawStats();       wp->vp->Update();
 
   //ws->sum->Draw("AXIG SAME");
   //wp->vp->Update();
@@ -525,9 +524,9 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 			     wc->padydim*wc->npadsy);
 	float left = wc->leftmargin;
 	float bot  = wc->bottommargin;
-	float rhgt = 1-wc->rightmargin;
+	float rght = 1-wc->rightmargin;
 	float top  = 1-wc->topmargin;
-	wc->motherpad = new TPad("mother","",left,bot,rhgt,top);
+	wc->motherpad = new TPad("mother","",left,bot,rght,top);
 	wc->c1->SetFillColor(wc->fillcolor);
 	wc->motherpad->SetFillColor(wc->fillcolor);
 	wc->motherpad->Draw();
@@ -555,6 +554,10 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
     wPad_t *& wp = wc->pads[ipadc];
     wp->vp = wc->motherpad->cd(ipadc+1);
+
+    if ((wp->xupndc > wp->xlowndc) &&
+	(wp->yupndc > wp->ylowndc)   )
+      wp->vp->SetPad(wp->xlowndc,wp->ylowndc,wp->xupndc,wp->yupndc);
 
     if (!wp->histo_ids.size() &&
 	!wp->stack_ids.size() &&
@@ -595,25 +598,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 #endif
 
     /***************************************************
-     * Check for external macros to run on the pad
-     ***************************************************/
-    for (size_t i=0; i<wp->macro_ids.size(); i++) {
-      map<string,string>::const_iterator it = glmap_objpath2id.find(wp->macro_ids[i]);
-      if (it != glmap_objpath2id.end()) {
-	string path = it->second;
-	int error;
-	gROOT->Macro(path.c_str(), &error, kTRUE); // update current pad
-	if (error) {
-	  static const char *errorstr[] = {
-	    "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
-	  cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
-	}
-      } else {
-	cerr << "ERROR: macro id " << wp->macro_ids[i];
-	cerr << " never defined in layout" << endl;
-      }
-    }
-    /***************************************************
      * Check for existence of a legend, create it
      ***************************************************/
     bool drawlegend = false;
@@ -627,7 +611,9 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	cerr << "ERROR: legend id " << wp->legid;
 	cerr << " never defined in layout" << endl;
       }
-    } else {
+    }
+#if 0
+    else {
       // Maybe gPad already *has* a legend from macros...
       TPave *testing = (TPave *)gPad->GetPrimitive("TPave");
       if (testing &&
@@ -639,6 +625,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	drawlegend = true;
       }
     }
+#endif
 
     /***************************************************
      * LOOP OVER STACKS DEFINED FOR PAD...
@@ -650,14 +637,16 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	string& sid = wp->stack_ids[j];
 	map<string,wStack_t *>::const_iterator it = glmap_id2stack.find(sid);
 	if (it == glmap_id2stack.end()) {
-	  cerr << "ERROR: stack id " << sid << " never defined in layout" << endl;
+	  cerr<<"ERROR: stack id "<<sid<<" never defined in layout"<<endl;
 	  exit (-1);
 	}
 
 	bool firstInPad = !j;
 
 	ws = it->second;
-	if (!ws) { cerr<< "find returned NULL stack pointer for " << sid << endl; continue; }
+	if (!ws) {
+	  cerr<<"find returned NULL stack pointer for "<<sid<<endl; continue;
+	}
 
 	// Add the histos in the stack to any legend that exists
 
@@ -675,7 +664,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	if (ws->sum->GetDrawOption().size()) {
 	  drawopt = ws->sum->GetDrawOption();
 	  if (gl_verbose)
-	    cout << "drawopt stored with histo = " << drawopt << endl;
+	    cout<<"drawopt stored with histo = "<<drawopt<<endl;
 	}
 
 	drawInPad(wp, ws, firstInPad, drawopt);
@@ -697,7 +686,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	// look for a multihist all of which will be assigned to the existing pad..
 	std::map<string,unsigned>::const_iterator mit=glmap_mobj2size.find(hid);
 	if (mit==glmap_mobj2size.end()) {
-	  cerr << "ERROR: histo id " << hid << " never defined in layout" << endl;
+	  cerr<<"ERROR: histo id "<<hid<<" never defined in layout"<<endl;
 	  exit (-1);
 	} else {
 	  nhist = mit->second;
@@ -722,7 +711,6 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	}
 	drawInPad(wp,*myHisto,firstInPad);
 
-	myHisto->DrawFits("same");
 	if (drawlegend && myHisto->GetLegendEntry().size()) {
 	  if (wleg->drawoption.size()) myHisto->SetDrawOption(wleg->drawoption);
 	  myHisto->Add2Legend(wleg->leg);
@@ -750,7 +738,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       
       wGraph_t *wg   = findGraph(gid);
 
-      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size();
+      bool firstInPad = !j && !wp->histo_ids.size();
 
       string drawopt = wg->drawopt;
 
@@ -778,8 +766,10 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	wp->vp->Update();
 	if( wg->fitfn ) 
 	  wg->gr->Fit(wg->fitfn);
-	if( drawlegend && wg->leglabel.size() )
+	if( drawlegend && wg->leglabel.size() ) {
 	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	  cout << "adding entry " << wg->leglabel << " with option " << endl ;
+	}
       }
       if( wg && wg->gr2d ) {
 	drawInPad<TGraph2D>(wp,wg->gr2d,drawopt.c_str(),firstInPad);
@@ -788,12 +778,15 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	  // Now we can set the axis attributes and range:
 	  wg->gr2d->GetXaxis()->ImportAttributes(wg->xax);
 	  wg->gr2d->GetYaxis()->ImportAttributes(wg->yax);
+	  wg->gr2d->GetZaxis()->ImportAttributes(wg->zax);
 
 	  //cout << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
 	  if( wg->xax->GetXmax()>wg->xax->GetXmin() )
 	    wg->gr2d->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
 	  if( wg->yax->GetXmax()>wg->yax->GetXmin() )
 	    wg->gr2d->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	  if( wg->zax->GetXmax()>wg->zax->GetXmin() )
+	    wg->gr2d->GetZaxis()->SetRangeUser(wg->zax->GetXmin(),wg->zax->GetXmax());
 	}
 
 	if (wg->contours) {
@@ -878,7 +871,9 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
 	yaxpts *= scale;
 
-	TGraph *scaled=new TGraph(wg->gr->GetN(),wg->gr->GetX(),yaxpts.GetMatrixArray());
+	TGraph *scaled=new TGraph(wg->gr->GetN(),
+				  wg->gr->GetX(),
+				  yaxpts.GetMatrixArray());
 	//scaled->Print();
 	scaled->Draw("same");
    
@@ -888,7 +883,9 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 				  rightmin,rightmax,505,"+L");
 	axis->Draw();
 	if (drawlegend && wg->leglabel.size()) {
-	  wleg->leg->AddEntry(wg->gr,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	  wleg->leg->AddEntry(wg->gr,
+			      wg->leglabel.c_str(),
+			      wg->legdrawopt.c_str());
 	}
 	gPad->Update();
       }
@@ -903,13 +900,34 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       
       TF1 *f1   = findTF1(fid);
 
-      bool firstInPad = !j && !wp->histo_ids.size() && !wp->macro_ids.size() && !wp->graph_ids.size();
+      bool firstInPad = !j && !wp->histo_ids.size() && !wp->graph_ids.size();
 
       drawInPad<TF1>(wp,f1,"",firstInPad);
 
       wp->vp->Update();
 
     } // tf1 loop
+
+    /***************************************************
+     * Check for external macros to run on the pad
+     ***************************************************/
+    for (size_t i=0; i<wp->macro_ids.size(); i++) {
+      map<string,string>::const_iterator it = glmap_objpath2id.find(wp->macro_ids[i]);
+      if (it != glmap_objpath2id.end()) {
+	string path = it->second;
+	int error;
+	cout << "Executing macro " << it->first << " --> " << path << endl;
+	gROOT->Macro(path.c_str(), &error, kTRUE); // update current pad
+	if (error) {
+	  static const char *errorstr[] = {
+	    "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
+	  cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
+	}
+      } else {
+	cerr << "ERROR: macro id " << wp->macro_ids[i];
+	cerr << " never defined in layout" << endl;
+      }
+    }
 
     /***************************************************
      * LOOP OVER LINES DEFINED FOR PAD...
@@ -955,6 +973,9 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	drawInPad<TBox>(wp,box,drawopt.c_str());
       }
     }
+
+    wp->vp->SetGridx(wp->gridx);
+    wp->vp->SetGridy(wp->gridy);
 
     /***************************************************
      * Draw the legend
