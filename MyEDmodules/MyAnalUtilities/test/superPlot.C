@@ -25,12 +25,17 @@ using namespace std;
 #include "TCanvas.h"
 
 struct wPad_t {
-  wPad_t(string name) : topmargin(0.),bottommargin(0.),
+  wPad_t(string name) : xlowndc(0.),xupndc(0.),ylowndc(0.0),yupndc(0.0),
+			topmargin(0.),bottommargin(0.),
 			rightmargin(0.),leftmargin(0.),
 			fillcolor(10),logx(0),logy(0),logz(0),
 			legid("")
   { hframe = new wTH1(new TH1F(name.c_str(),name.c_str(),100,0.0,1.0)); }
   wPad_t(const wPad_t& wp) {
+    xlowndc     = wp.xlowndc;
+    xupndc      = wp.xupndc;
+    ylowndc     = wp.ylowndc;
+    yupndc      = wp.yupndc;
     topmargin   = wp.topmargin;
     bottommargin= wp.bottommargin;
     rightmargin = wp.bottommargin;
@@ -46,13 +51,15 @@ struct wPad_t {
     titleyndc   = wp.titleyndc;
     //hframe      = ;           // the frame histo, holds lots of pad info
   }
-  float topmargin, bottommargin, rightmargin, leftmargin;
+  float xlowndc,xupndc,ylowndc,yupndc;       // pad positions in the mother pad frame
+  float topmargin, bottommargin,             // margins within the pad
+    rightmargin, leftmargin;
   unsigned fillcolor;
   unsigned logx, logy,logz;
   unsigned gridx, gridy;
   string legid;
   float titlexndc, titleyndc;
-  wTH1 *hframe;           // the frame histo, holds lots of pad info
+  wTH1 *hframe;                             // the frame histo, holds lots of pad info
   vector<string> histo_ids;
   vector<string> stack_ids;
   vector<string> altyh_ids;
@@ -140,9 +147,6 @@ static bool gl_verbose;
 #include "spStyle.C"
 #include "spTF1.C"
 #include "spHisto.C"
-#include "spHmath.C"
-#include "spGraph.C"
-#include "spTree.C"
 #include "spLabelLatex.C"
 #include "spLayout.C"
 #include "spLegend.C"
@@ -151,6 +155,9 @@ static bool gl_verbose;
 #include "spMultiHist.C"
 #include "spPad.C"
 #include "spStack.C"
+#include "spHmath.C"
+#include "spGraph.C"
+#include "spTree.C"
 #include "spDraw.C"
 
 //======================================================================
@@ -171,7 +178,7 @@ void clearEverything()
   glmap_id2rootfile.clear();
   glmap_id2style.clear();
   glmap_id2tf1.clear();
-  glmap_id2tree.clear();
+  glmap_id2chain.clear();
   glmap_id2sample.clear();
 }
 
