@@ -1,22 +1,26 @@
-#include "TTree.h"
+#include "TChain.h"
 #include "TPRegexp.h"
 #include "TGraph.h"
 
-static map<string, TTree *>       glmap_id2tree;
+static map<string, TChain *>       glmap_id2chain;
 
 //======================================================================
 
-TTree *findTree(const string& tid)
+TChain *findChain(const string& tid)
 {
-  map<string,TTree *>::const_iterator it = glmap_id2tree.find(tid);
-  if (it == glmap_id2tree.end()) {
+  map<string,TChain *>::const_iterator it = glmap_id2chain.find(tid);
+  if (it == glmap_id2chain.end()) {
     cerr << "Tree ID " << tid << " not found" << endl;
+    cerr << "Available ids are: ";
+    for (it = glmap_id2chain.begin(); it != glmap_id2chain.end(); it++)
+      cerr << it->first << " ";
+    cerr << endl;
     return NULL;
   }
   if( gl_verbose)
     cout << "Found tree " << tid << endl;
   return it->second;
-}                                                            // findTree
+}                                                            // findChain
 
 //======================================================================
 
@@ -60,8 +64,8 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
   if( gl_verbose)
     cout<<"drawspec="<<drawspec<<endl;
 
-  TTree *tree = findTree(tid);
-  assert (tree);
+  TChain *chain = findChain(tid);
+  assert (chain);
 
   // can't use comma as delimiter since histo with binning spec may be supplied
   TObjArray *tokens = drawspec.Tokenize("\"");
@@ -71,9 +75,15 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
 
   if (varexp.Contains(">>")) {
     TObjArray *rematches = TPRegexp(">>(\\w+)").MatchS(varexp); // get histo name
+    cout << varexp << " " << rematches->GetEntriesFast() << endl;
     assert(rematches->GetEntriesFast() ==2);
     hname = ((TObjString *)(*rematches)[1])->GetString();
 
+    if (!wth1 && gDirectory->Get(hname)) {
+      cerr << "Error: histo name in treedraw spec "<<hname;
+      cerr <<" already exists as an object in the current directory! "<<endl;
+      exit(-1);
+    }
     if (wth1 && !hname.EqualTo(wth1->histo()->GetName())) {
       cerr << "Error: histo name in treedraw spec "<<hname;
       cerr <<" doesn't match named histo "<<wth1->histo()->GetName()<<endl;
@@ -89,19 +99,19 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
     cout<<"varexp="<<varexp<<", hname="<<hname<<endl;
   switch(tokens->GetEntriesFast()) {
   case 1:
-    tree->Draw(varexp,"","goff");
+    chain->Draw(varexp,"","goff");
     break;
   case 3:
     {
       TString cut = ((TObjString *)(*tokens)[2])->GetString();
-      tree->Draw(varexp,cut,"goff"); 
+      chain->Draw(varexp,cut,"goff"); 
     }
     break;
   case 4: // assume the cut string is blank
     {
       TString gopt = ((TObjString *)(*tokens)[3])->GetString();
       gopt = gopt + " goff";
-      tree->Draw(varexp,"",gopt);
+      chain->Draw(varexp,"",gopt);
     }
     break;
   case 5:
@@ -109,7 +119,7 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
       TString cut  = ((TObjString *)(*tokens)[2])->GetString();
       TString gopt = ((TObjString *)(*tokens)[4])->GetString();
       gopt = gopt + " goff";
-      tree->Draw(varexp,cut,gopt);
+      chain->Draw(varexp,cut,gopt);
     }
     break;
   default:
@@ -166,32 +176,37 @@ void fillGraphFromTreeVar(std::string& treedrawspec,int index,wGraph_t *&pwg)
   if( gl_verbose)
     cout<<"drawspec="<<drawspec<<endl;
 
-  TTree *tree = findTree(tid);
-  assert (tree);
+  TChain *chain = findChain(tid);
+  assert (chain);
 
-  // can't use comma as delimiter since histo with binning spec may be supplied
+  // Expect the user to use commas to delimit the draw options, but 
+  // we can't use comma as delimiter since user may also specify
+  // histo with binning spec with commas
+  //
   TObjArray *tokens = drawspec.Tokenize("\"");
   TString hname;
 
   TString varexp = ((TObjString *)(*tokens)[0])->GetString();
 
-  if( gl_verbose)
-    cout<<"varexp="<<varexp<<endl;
   switch(tokens->GetEntriesFast()) {
   case 1:
-    tree->Draw(varexp,"","goff");
+    if( gl_verbose)
+      cout<<"chain->Draw(\""<<varexp<<"\",\"\",\"goff\")"<<endl;
+    chain->Draw(varexp,"","goff");
     break;
   case 3:
     {
       TString cut = ((TObjString *)(*tokens)[2])->GetString();
-      tree->Draw(varexp,cut,"goff"); 
+      cout<<"chain->Draw(\""<<varexp<<"\",\""<<cut<<"\",\"goff\")"<<endl;
+      chain->Draw(varexp,cut,"goff"); 
     }
     break;
   case 4: // assume the cut string is blank
     {
       TString gopt = ((TObjString *)(*tokens)[3])->GetString();
       gopt = gopt + " goff";
-      tree->Draw(varexp,"",gopt);
+      cout<<"chain->Draw(\""<<varexp<<"\",\"\","<<gopt<<"\")"<<endl;
+      chain->Draw(varexp,"",gopt);
     }
     break;
   case 5:
@@ -199,7 +214,8 @@ void fillGraphFromTreeVar(std::string& treedrawspec,int index,wGraph_t *&pwg)
       TString cut  = ((TObjString *)(*tokens)[2])->GetString();
       TString gopt = ((TObjString *)(*tokens)[4])->GetString();
       gopt = gopt + " goff";
-      tree->Draw(varexp,cut,gopt);
+      cout<<"chain->Draw(\""<<varexp<<"\",\""<<cut<<"\",\""<<gopt<<"\")"<<endl;
+      chain->Draw(varexp,cut,gopt);
     }
     break;
   default:
@@ -210,79 +226,72 @@ void fillGraphFromTreeVar(std::string& treedrawspec,int index,wGraph_t *&pwg)
     break;
   }
 
-  assert(tree->GetSelectedRows());
+  assert(chain->GetSelectedRows());
 
   if (!pwg)
     pwg = new wGraph_t();
 
   assert(pwg);
-  pwg->gr = new TGraph(tree->GetSelectedRows(),
-		       tree->GetV2(), tree->GetV1());
-
+  pwg->gr = new TGraph(chain->GetSelectedRows(),
+		       chain->GetV2(), chain->GetV1());
+  pwg->gr->Sort();
 }                                                // fillGraphFromTreeVar
 
 //======================================================================
 
-TTree *getTreeFromSpec(const string& tid,
-		       const string& spec)
+TChain *getChainFromGlobslist(const string& tid,
+			      const string& treename,
+			      const string& globslist)
 {
-  TTree  *tree    = NULL;
-  TFile *rootfile = NULL;
+  TChain  *chain    = NULL;
   vector<string> v_tokens;
   string fullspec;
 
   if( gl_verbose)
-    cout << "processing " << spec << endl;
+    cout << "processing " << globslist << endl;
 
   string tspec;
   string rootfn;
 
-  fullspec = spec;
-
-  Tokenize(fullspec,v_tokens,":");
-  int ntok = (int)v_tokens.size();
-  if( ((ntok != 2) &&
-       (ntok != 3)   ) ||       //ntok==3 means file specifier is a URL
-      (!v_tokens[0].size())  ||
-      (!v_tokens[1].size())    ) {
-    cerr << "malformed root tree path file:folder/subfolder/.../histo " << fullspec << endl;
-    return NULL;
-  } else {
-    rootfn = (ntok==2) ? v_tokens[0] : v_tokens[0]+":"+v_tokens[1];
-    tspec  = (ntok==2) ? v_tokens[1] : v_tokens[2];
-  }
+  Tokenize(globslist,v_tokens,",");
+  int ntok1 = (int)v_tokens.size();
+  for (int i=0; i<ntok1; i++) {
 
 #if 0
-  map<string,string>::const_iterator it = glmap_objpath2id.find(fullspec);
-  if( it != glmap_objpath2id.end() ) {
-    // Allow the possibility to run the script a second time in root
-    if( gl_verbose)
-      cout << "Object " << fullspec << " already read in, here it is" << endl;
-    map<string,tree *>::const_iterator hit = glmap_id2histo.find(it->second);
-    if( hit == glmap_id2histo.end() ) {
+    map<string,string>::const_iterator it = glmap_objpath2id.find(fullspec);
+    if( it != glmap_objpath2id.end() ) {
+      // Allow the possibility to run the script a second time in root
       if( gl_verbose)
-	cout << "oops, sorry, I lied." << endl;
-      return NULL;
-    }
-    tree = hit->second;
-  } else {
+	cout << "Object " << fullspec << " already read in, here it is" << endl;
+      map<string,tree *>::const_iterator hit = glmap_id2histo.find(it->second);
+      if( hit == glmap_id2histo.end() ) {
+	if( gl_verbose)
+	  cout << "oops, sorry, I lied." << endl;
+	return NULL;
+      }
+      tree = hit->second;
+    } else
 #endif
-    rootfile = openRootFile(rootfn);
-    if (rootfile) {
-      tree = (TTree *)rootfile->Get(tspec.c_str());
-      if( !tree) {
-	cerr << "couldn't find " << tspec << " in " << rootfn << endl;
-      } else {
-	// success, record that you read it in.
-	if( gl_verbose) cout << "Found " << fullspec << endl;
-	glmap_objpath2id.insert(pair<string,string>(fullspec,tid));
-	glmap_id2objpath.insert(pair<string,string>(tid,fullspec));
-	glmap_id2tree.insert(pair<string,TTree *>(tid,tree));
+    {
+      if (!chain)
+	chain = new TChain(treename.c_str());
+
+      if (!chain->Add(v_tokens[i].c_str())) {
+	cerr << "couldn't find " << treename << " in " << v_tokens[i] << endl;
+	delete chain;
+	return NULL;
       }
     }
-    //}
-  return tree;
-}                                                     // getTreeFromSpec
+  } // list loop
+
+  // success, record that you read it in.
+  if( gl_verbose) cout << "Found " << treename << " in " << globslist << endl;
+  glmap_objpath2id.insert(pair<string,string>(globslist,tid));
+  glmap_id2objpath.insert(pair<string,string>(tid,globslist));
+  glmap_id2chain.insert(pair<string,TChain *>(tid,chain));
+
+  return chain;
+}                                               // getChainFromGlobslist
 
 //======================================================================
 
@@ -292,7 +301,10 @@ processTreeSection(FILE *fp,
 		   bool& new_section)
 {
   string *tid  = NULL;
-  TTree  *t1   = NULL;
+  TChain  *t1   = NULL;
+  vector<string> v_tokens;
+
+  string treename;
 
   if (gl_verbose)
     cout << "Processing Tree section" << endl;
@@ -320,22 +332,101 @@ processTreeSection(FILE *fp,
       }
       tid = new string(value);
       
-      map<string, TTree *>::const_iterator tit = glmap_id2tree.find(*tid);
-      if (tit != glmap_id2tree.end()) {
+      map<string, TChain *>::const_iterator tit = glmap_id2chain.find(*tid);
+      if (tit != glmap_id2chain.end()) {
 	cerr << "Tree id " << *tid << " already defined" << endl;
 	break;
       }
     //------------------------------
-    } else if( key == "path" ) {
+    } else if( key == "treename" ) {
     //------------------------------
       if( !tid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
       if( t1 ) {
-	cerr << "histo already defined" << endl; continue;
+	cerr << "Tree already defined" << endl; continue;
       }
-      t1 = getTreeFromSpec(*tid,value);
-      if( !t1 ) continue;
+      treename = value;
+
+    //------------------------------
+    } else if( key == "globslist" ) {
+    //------------------------------
+      t1 = getChainFromGlobslist(*tid,treename,value);
+      if( !t1 )
+	exit(-1);
+
+    //------------------------------
+    } else if( key == "copytree" ) {
+    //------------------------------
+      if( !tid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;      }
+    
+      Tokenize(value,v_tokens,",");
+      
+      if (v_tokens.size() != 2) {
+	cerr << "copytree syntax expected: copytree=treeid,cutstring: " << value << endl; continue; }
+
+      TChain *t2 = findChain(v_tokens[0]);
+      if (!t2) {
+	cerr << "tree " << v_tokens[0] << " must be defined previously" << endl; continue;    }
+      if (gl_verbose)
+	cout<<"Begin CopyTree of "<<v_tokens[0]<<" with selection "<<v_tokens[1]<<flush;
+      
+      t1 = (TChain *)(t2->CopyTree(v_tokens[1].c_str()));
+
+      if( !t1 ) {
+	cerr << "CopyTree failed" << endl; exit(-1); }
+
+      if (gl_verbose)
+	cout<<"...Done."<<endl;
+
+    //------------------------------
+    } else if( key == "save2file" ) {
+    //------------------------------
+      if( !t1 ) {
+	cerr << "save2file: must define tree first" << endl; continue; }
+
+      TFile *rootfile = openRootFile(value,"RECREATE");
+      
+      t1->SetDirectory(rootfile);
+      t1->Write();
+      rootfile->Flush();
+
+      if (gl_verbose)
+	cout << "Tree written to file " << value << endl;
+
+      rootfile->Close();
+
+    //------------------------------
+    } else if( key == "unbinnedfit" ) {
+    //------------------------------
+      if( !tid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;      }
+      if( !t1 ) {
+	cerr << "Tree must already be defined using 'globslist'" << endl; continue;   }
+
+      int fitresult=-99;
+
+      Tokenize(value,v_tokens,",");
+      switch(v_tokens.size()) {
+      case 2: fitresult = t1->UnbinnedFit(v_tokens[0].c_str(),
+					  v_tokens[1].c_str());
+	break;
+      case 3: fitresult = t1->UnbinnedFit(v_tokens[0].c_str(),
+					  v_tokens[1].c_str(),
+					  v_tokens[2].c_str()); 
+	break;
+      case 4: fitresult = t1->UnbinnedFit(v_tokens[0].c_str(),  // funcname
+					  v_tokens[1].c_str(),  // varexp
+					  v_tokens[2].c_str(),  // selection
+					  v_tokens[3].c_str()); // option
+	break;
+      default:
+	cerr << "unbinnedfit: expect 2-4 arguments separated by commas: " << value <<endl;
+	exit(-1);
+      }
+      cout << "fit result returned = " << fitresult << endl;
+      cout << "Number of selected entries in the fit = " << t1->GetSelectedRows() << endl;
     }
     else {
       cerr << "unknown key " << key << endl;
