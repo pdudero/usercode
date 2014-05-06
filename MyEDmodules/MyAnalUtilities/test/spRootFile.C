@@ -8,9 +8,13 @@ TFile *openRootFile(const std::string& rootfn, const std::string& option="")
 
   // Now check to see if this file has already been opened...
   map<string,TFile*>::const_iterator it = glmap_id2rootfile.find(rootfn);
-  if( it != glmap_id2rootfile.end() )
+  if( it != glmap_id2rootfile.end() ) {
     rootfile = it->second;
-  else {
+    if (!rootfile->IsOpen())
+      rootfile->Open(rootfn.c_str(),option.c_str());
+    else
+      rootfile->cd();
+  }  else {
 
     if (strstr(rootfn.c_str(),"dcache") ||
 	strstr(rootfn.c_str(),"dcap")      ) {
