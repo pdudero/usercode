@@ -115,7 +115,7 @@ void loadVectorsFromFile(const char *filename,
 
   if (!fp) {
     cerr << "File failed to open, " << filename << endl;
-    return;
+    exit(-1);
   }
 
   if (gl_verbose)
@@ -370,6 +370,102 @@ void fill1DHistoFromGraph(std::string& gid,
 
 //======================================================================
 
+wGraph_t * myBayesDivide(TH1 *numer,TH1 *denom)
+{
+  cout << numer->GetNbinsX() << " " << denom->GetNbinsX() << endl;
+
+  if ( gl_verbose ) { 
+    std::cout << "Dump of bin contents, errors" << std::endl ; 
+    if ( numer->GetNbinsX() == denom->GetNbinsX() ) { 
+      for (int ib=1; ib<=numer->GetNbinsX(); ib++) {
+	std::cout << ib << ": " << numer->GetBinContent(ib) << "+/-" << numer->GetBinError(ib);
+	std::cout << ", "       << denom->GetBinContent(ib) << "+/-" << denom->GetBinError(ib);
+	std::cout << std::endl ; 
+      }
+    } else { 
+      cerr << "Histograms being divided do not have same number of bins!!!" << endl ; 
+      return NULL;
+    }
+  }
+
+  wGraph_t * pwg = new wGraph_t();
+      
+  // equivalent to BayesDivide
+  //
+  if (gl_verbose) pwg->gr = new TGraphAsymmErrors(numer,denom,"debug");
+  else            pwg->gr = new TGraphAsymmErrors(numer,denom,"");
+  //if (gl_verbose) pwg->gr = new TGraphAsymmErrors(numer,denom,"cl=0.683 b(1,1) mode v");
+  //else            pwg->gr = new TGraphAsymmErrors(numer,denom,"cl=0.683 b(1,1) mode");
+  if (!pwg->gr) {
+    cerr << "BayesDivide didn't work! wonder why..." << endl;
+    return NULL;
+  } else if (gl_verbose) {
+    cout << pwg->gr->GetN() << " points in the graph" << endl;
+  }
+
+  // Fix in case something broke
+
+  for (int i=0; i<pwg->gr->GetN(); i++) {
+    if ( pwg->gr->GetErrorYhigh(i) == 0. || 
+	 pwg->gr->GetErrorYlow(i)  == 0 )  {           // Something bad happened
+      if ( gl_verbose )
+	std::cout << "Problem with Bayes divide, checking..." << std::endl ;
+      double pass  = numer->GetBinContent(i+1) ; 
+      double total = denom->GetBinContent(i+1) ;
+      if ( gl_verbose ) std::cout << pass << "/" << total << std::endl ;
+      if ( pass == total ) {
+	if ( gl_verbose ) std::cout << "Everything OK" << std::endl ;
+      } else { 
+	if ( gl_verbose ) std::cout << "Yep, something is broken" << std::endl ;
+	double xval, yval ;
+	pwg->gr->GetPoint(i,xval,yval) ;
+	yval = pass / total ;
+	// Use simplified efficiency assumption
+	// double u1 = numer->GetBinError(i+1) / numer->GetBinContent(i+1) ; 
+	// double u2 = denom->GetBinError(i+1) / denom->GetBinContent(i+1) ; 
+	// double unc = yval * sqrt( u1*u1 + u2*u2 ) ; 
+	double unc = sqrt( yval * (1.-yval)/denom->GetBinContent(i+1) ) ; 
+	double uhi = ( (yval + unc > 1.)?(1.-yval):(unc) ) ; 
+	double ulo = ( (yval - unc < 0.)?(yval):(unc) ) ;
+	pwg->gr->SetPoint(i,xval,yval) ;
+	((TGraphAsymmErrors*)pwg->gr)->SetPointError(i,pwg->gr->GetErrorXlow(i),
+						     pwg->gr->GetErrorXhigh(i),ulo,uhi) ; 
+	//                   pwg->gr->SetPointEYhigh(i,uhi) ; 
+	//                   pwg->gr->SetPointEYlow(i,ulo) ; 
+      }
+    }   
+    if (gl_verbose)
+      std::cout<<i<<": "<<pwg->gr->GetErrorYhigh(i)<<"/"<<pwg->gr->GetErrorYlow(i)<<std::endl ; 
+  }
+  return pwg;
+}                                                       // myBayesDivide
+
+//======================================================================
+
+wGraph_t *generateROCgraph(TH1 *sgnl,TH1 *bkgd)
+{
+  cout << sgnl->GetNbinsX() << " " << bkgd->GetNbinsX() << endl;
+
+  if ( sgnl->GetNbinsX() != bkgd->GetNbinsX() ) { 
+    cerr << "Histograms being divided do not have same number of bins!!!" << endl ; 
+    return NULL;
+  }
+
+  wGraph_t * pwg = new wGraph_t();
+
+  TH1 *sigeff = (TH1 *)sgnl->Clone("sigeff"); sigeff->Scale(1./sigeff->Integral());
+  TH1 *bkgeff = (TH1 *)bkgd->Clone("sigeff"); bkgeff->Scale(1./bkgeff->Integral());
+  sigeff = IntegrateRight(sigeff);
+  bkgeff = IntegrateRight(bkgeff);
+  pwg->gr = new TGraph(sigeff->GetNbinsX());
+  for (int ib=1; ib<=sigeff->GetNbinsX(); ib++) {
+    pwg->gr->SetPoint(ib-1,sigeff->GetBinContent(ib),(1-bkgeff->GetBinContent(ib)));
+  }
+  return pwg;
+}                                                    // generateROCgraph
+
+//======================================================================
+
 bool                              // returns true if success
 processGraphSection(FILE *fp,
 		    string& theline,
@@ -471,6 +567,9 @@ processGraphSection(FILE *fp,
 
       wGraph_t *pwg = new wGraph_t();
 
+      if (gl_verbose)
+	cout << "Reading " << path << endl;
+
       switch(v_tokens.size()) {
       case 1:  pwg->gr2d = new TGraph2D(path.c_str()); break;
       case 2:  pwg->gr2d = new TGraph2D(path.c_str(),v_tokens[1].c_str()); break;
@@ -485,6 +584,9 @@ processGraphSection(FILE *fp,
 	exit(-1);
       }
       pwg->gr2d->SetName(gid->c_str());
+
+      if (gl_verbose)
+	pwg->gr2d->Print();
 
       v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
 
@@ -562,6 +664,7 @@ processGraphSection(FILE *fp,
 	cerr << "graph(s) already defined" << endl; continue;
       }
 
+      // see if a trailing range spec has been given
       Tokenize(value,v_tokens,";");
       string treedrawspec=v_tokens[0];
 
@@ -612,69 +715,40 @@ processGraphSection(FILE *fp,
       TH1 *tmph1 = (TH1 *)findHisto(v_tokens[0]); if (!tmph1) exit(-1);
       TH1 *tmph2 = (TH1 *)findHisto(v_tokens[1]); if (!tmph2) exit(-1);
 
-      cout << tmph1->GetNbinsX() << " " << tmph2->GetNbinsX() << endl;
+      wGraph_t *pwg = myBayesDivide(tmph1,tmph2);
+      if (!pwg) exit(-1);
 
-      wGraph_t *pwg = new wGraph_t();
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+      glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
 
-      if ( gl_verbose ) { 
-	std::cout << "Dump of bin contents, errors" << std::endl ; 
-	if ( tmph1->GetNbinsX() == tmph2->GetNbinsX() ) { 
-	  for (int ib=1; ib<=tmph1->GetNbinsX(); ib++) {
-	    std::cout << ib << ": " << tmph1->GetBinContent(ib) << "+/-" << tmph1->GetBinError(ib) 
-		      << ", " << tmph2->GetBinContent(ib) << "+/-" << tmph2->GetBinError(ib) << std::endl ; 
-	  }
-	} else { 
-	  cerr << "Histograms being divided do not have same number of bins!!!" << endl ; 
-	}
-      }
+    //------------------------------
+    } else if (key == "generateROC") {
+    //------------------------------
 
-      // equivalent to BayesDivide
-      //
-      if (gl_verbose) pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"debug");
-      else            pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"");
-      //if (gl_verbose) pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode v");
-      //else            pwg->gr = new TGraphAsymmErrors(tmph1,tmph2,"cl=0.683 b(1,1) mode");
-      if (!pwg->gr) {
-	cerr << "BayesDivide didn't work! wonder why..." << endl;
+      Tokenize(value,v_tokens,",");
+      if (v_tokens.size() != 2) {
+	cerr << "expect comma-separated list of exactly two histo specs - signal,background ";
+	cerr << theline << endl;
 	continue;
-      } else if (gl_verbose) {
-	cout << pwg->gr->GetN() << " points in the graph" << endl;
       }
 
-      // Fix in case something broke
+      TH1 *tmph1 = (TH1 *)findHisto(v_tokens[0]); if (!tmph1) exit(-1);
+      TH1 *tmph2 = (TH1 *)findHisto(v_tokens[1]); if (!tmph2) exit(-1);
 
-      for (int i=0; i<pwg->gr->GetN(); i++) {
-          if ( pwg->gr->GetErrorYhigh(i) == 0. || pwg->gr->GetErrorYlow(i) == 0 ) { // Something bad happened
-              if ( gl_verbose ) std::cout << "Problem with Bayes divide, checking..." << std::endl ;
-              double pass  = tmph1->GetBinContent(i+1) ; 
-              double total = tmph2->GetBinContent(i+1) ;
-              if ( gl_verbose ) std::cout << pass << "/" << total << std::endl ;
-              if ( pass == total ) {
-                  if ( gl_verbose ) std::cout << "Everything OK" << std::endl ;
-              } else { 
-                  if ( gl_verbose ) std::cout << "Yep, something is broken" << std::endl ;
-                  double xval, yval ;
-                  pwg->gr->GetPoint(i,xval,yval) ;
-                  yval = pass / total ;
-                  // Use simplified efficiency assumption
-                  // double u1 = tmph1->GetBinError(i+1) / tmph1->GetBinContent(i+1) ; 
-                  // double u2 = tmph2->GetBinError(i+1) / tmph2->GetBinContent(i+1) ; 
-                  // double unc = yval * sqrt( u1*u1 + u2*u2 ) ; 
-                  double unc = sqrt( yval * (1.-yval)/tmph2->GetBinContent(i+1) ) ; 
-                  double uhi = ( (yval + unc > 1.)?(1.-yval):(unc) ) ; 
-                  double ulo = ( (yval - unc < 0.)?(yval):(unc) ) ;
-                  pwg->gr->SetPoint(i,xval,yval) ;
-                  ((TGraphAsymmErrors*)pwg->gr)->SetPointError(i,pwg->gr->GetErrorXlow(i),pwg->gr->GetErrorXhigh(i),ulo,uhi) ; 
-//                   pwg->gr->SetPointEYhigh(i,uhi) ; 
-//                   pwg->gr->SetPointEYlow(i,ulo) ; 
-              }
-          }   
-          if (gl_verbose) std::cout << i << ": " << pwg->gr->GetErrorYhigh(i) << "/" << pwg->gr->GetErrorYlow(i) << std::endl ; 
-      }
+      wGraph_t *pwg = generateROCgraph(tmph1,tmph2);
+      if (!pwg) exit(-1);
 
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+      glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
+
+    //------------------------------
     } else if (!v_graphs.size()) {
-      cerr<<"One of keys path,clone,vectorfile,vectorfile2d or bayesdiv must be defined before key..."<<key<<endl;
+    //------------------------------
+      cerr<<"One of keys path,clone,vectorfile,vectorfile2d,fromhisto,fillfromtree,bayesdiv, or generateROC";
+      cerr<<" must be defined before key..."<<key<<endl;
+    //------------------------------
     } else {
+    //------------------------------
       if     ( key == "xoffset" )      xoffset   = str2flt(value);
       else if( key == "yoffset" )      yoffset   = str2flt(value);
       else if( key == "yscale" )       yscale    = str2flt(value);
@@ -739,7 +813,21 @@ processGraphSection(FILE *fp,
     string gidi = v_graphs[i].first;
     wGraph_t *pwg = v_graphs[i].second;
     if (pwg->gr2d) {
+      pwg->fitfn      =        wg.fitfn;
+      pwg->contours   =        wg.contours;
+      pwg->drawopt    =        wg.drawopt;
+      pwg->leglabel   =        wg.leglabel;
+      pwg->legdrawopt =        wg.legdrawopt;
       pwg->gr2d->SetTitle(title);
+      pwg->xax->SetTitle      (wg.xax->GetTitle());
+      pwg->yax->SetTitle      (wg.yax->GetTitle());
+      pwg->zax->SetTitle      (wg.zax->GetTitle());
+      pwg->xax->SetTitleOffset(wg.xax->GetTitleOffset());
+      pwg->yax->SetTitleOffset(wg.yax->GetTitleOffset());
+      pwg->zax->SetTitleOffset(wg.zax->GetTitleOffset());
+      pwg->xax->SetNdivisions (wg.xax->GetNdivisions());
+      pwg->yax->SetNdivisions (wg.yax->GetNdivisions());
+      pwg->zax->SetNdivisions (wg.zax->GetNdivisions());
       pwg->gr2d->SetLineStyle   (wg.lstyle);
       pwg->gr2d->SetLineColor   (wg.lcolor);
       pwg->gr2d->SetLineWidth   (wg.lwidth);
@@ -750,6 +838,9 @@ processGraphSection(FILE *fp,
       pwg->gr2d->SetFillColor   (wg.fcolor);
       if (zmax>zmin)  
 	pwg->zax->SetLimits(zmin,zmax);
+
+      glmap_id2graph.insert(pair<string,wGraph_t *>(gidi,pwg));
+
     } else {
       if (vx.GetNoElements()) { // load utility guarantees the same size for both
 	if (yscale  != 1.0) vy *= yscale;
@@ -764,6 +855,7 @@ processGraphSection(FILE *fp,
       pwg->fitfn      =        wg.fitfn;
       pwg->contours   =        wg.contours;
       pwg->drawopt    =        wg.drawopt;
+      pwg->leglabel   =        wg.leglabel;
       pwg->legdrawopt =        wg.legdrawopt;
       pwg->gr->SetTitle       (title);
       pwg->xax->SetTitle      (wg.xax->GetTitle());
@@ -790,8 +882,8 @@ processGraphSection(FILE *fp,
       glmap_id2graph.insert(pair<string,wGraph_t *>(gidi,pwg));
 
       if (printvecs) printVectorsToFile(pwg); // ,value);
-    }
-  }
+    } // else not 2d
+  } // loop over vector of graphs
 
   return (v_graphs.size());
 }                                                 // processGraphSection
