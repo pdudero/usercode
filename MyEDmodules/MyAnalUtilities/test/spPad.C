@@ -80,6 +80,10 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     else if (key == "xtitle")       wpad->hframe->histo()->SetXTitle(value.c_str());
     else if (key == "ytitle")       wpad->hframe->histo()->SetYTitle(value.c_str());
     else if (key == "ztitle")       wpad->hframe->histo()->SetZTitle(value.c_str());
+    else if (key == "xlowndc")      wpad->xlowndc      = str2flt(value);
+    else if (key == "xupndc")       wpad->xupndc       = str2flt(value);
+    else if (key == "ylowndc")      wpad->ylowndc      = str2flt(value);
+    else if (key == "yupndc")	    wpad->yupndc       = str2flt(value);
     else if (key == "rightmargin")  wpad->rightmargin  = str2flt(value);
     else if (key == "leftmargin")   wpad->leftmargin   = str2flt(value);
     else if (key == "topmargin")    wpad->topmargin    = str2flt(value);
@@ -109,6 +113,7 @@ processPadSection(FILE *fp,string& theline, wPad_t * wpad, bool& new_section)
     }
     else {
       cerr << "Unknown key " << key << endl;
+      exit(-1);
     }
 
 
