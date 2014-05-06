@@ -79,8 +79,8 @@ void setPRDStyle() {
   prdStyle->SetOptStat("e"); // To display the mean and RMS:   SetOptStat("mr");
   prdStyle->SetStatColor(kWhite);
   prdStyle->SetStatFont(42);
-  //  prdStyle->SetStatFontSize(0.025);
-  prdStyle->SetStatFontSize(0.2);
+  //prdStyle->SetStatFontSize(0.025);
+  prdStyle->SetStatFontSize(0.5);
   prdStyle->SetStatTextColor(1);
   prdStyle->SetStatFormat("6.4g");
   prdStyle->SetStatBorderSize(1);
@@ -99,7 +99,7 @@ void setPRDStyle() {
   //prdStyle->SetPadRightMargin(0.02); // zrap setting
 
 // For the Global title:
-  prdStyle->SetOptTitle(0);
+  prdStyle->SetOptTitle(1);
   prdStyle->SetTitleFont(42);
   prdStyle->SetTitleColor(1);
   prdStyle->SetTitleTextColor(1);
