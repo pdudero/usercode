@@ -1,0 +1,85 @@
+ALIAS.basedir	ALIAS.sigsel		ALIAS.baksel	ALIAS.ptbins	ALIAS.xmin	ALIAS.xmax	ALIAS.j1varvspt	ALIAS.j2varvspt	ALIAS.label
+#
+vbfanal25cores	matchQs			none		1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_vbf+veto_match
+#
+vbfanal25cores	matchQs			none		11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_vbf+veto_match
+#
+vbfanal25cores	none			none		1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_nosel_nomatch
+vbfanal25cores	vbf			vbf		1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	1-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt20_vbf+veto_nomatch
+#
+vbfanal25cores	none			none		11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_nosel_nomatch
+vbfanal25cores	vbf			vbf		11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	11-200		-1.0		3.0		hEEMFj1vsPt	hEEMFj2vsPt	tagjetEMF_minpt50_vbf+veto_nomatch
+#
+#########################################################################################################################
+#
+vbfanal20cores	matchQs			none		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_nosel_match
+vbfanal20cores	vbfANDmatchQs		vbf		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_vbfsel_match
+vbfanal20cores	vbf+vetoANDmatchQs	vbf+veto	1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_vbf+veto_match
+#
+vbfanal20cores	matchQs			none		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_nosel_match
+vbfanal20cores	vbfANDmatchQs		vbf		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_vbfsel_match
+vbfanal20cores	vbf+vetoANDmatchQs	vbf+veto	11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_vbf+veto_match
+#
+vbfanal25cores	matchQs			none		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_vbf+veto_match
+#
+vbfanal25cores	matchQs			none		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_vbf+veto_match
+#
+vbfanal20cores	none			none		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_nosel_nomatch
+vbfanal20cores	vbf			vbf		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_vbfsel_nomatch
+vbfanal20cores	vbf+veto		vbf+veto	1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.20_vbf+veto_nomatch
+#
+vbfanal20cores	none			none		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_nosel_nomatch
+vbfanal20cores	vbf			vbf		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_vbfsel_nomatch
+vbfanal20cores	vbf+veto		vbf+veto	11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.20_vbf+veto_nomatch
+#
+vbfanal25cores	none			none		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_nosel_nomatch
+vbfanal25cores	vbf			vbf		1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	1-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt20_core0.25_vbf+veto_nomatch
+#
+vbfanal25cores	none			none		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_nosel_nomatch
+vbfanal25cores	vbf			vbf		11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	11-200		0.0		0.4		hEdRj1coreVsPt	hEdRj2coreVsPt	dRjcore_minpt50_core0.25_vbf+veto_nomatch
+#
+#########################################################################################################################
+#
+vbfanal20cores	matchQs			none		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_nosel_match
+vbfanal20cores	vbfANDmatchQs		vbf		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_vbfsel_match
+vbfanal20cores	vbf+vetoANDmatchQs	vbf+veto	1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_vbf+veto_match
+#
+vbfanal20cores	matchQs			none		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_nosel_match
+vbfanal20cores	vbfANDmatchQs		vbf		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_vbfsel_match
+vbfanal20cores	vbf+vetoANDmatchQs	vbf+veto	11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_vbf+veto_match
+#
+vbfanal25cores	matchQs			none		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_vbf+veto_match
+#
+vbfanal25cores	matchQs			none		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_nosel_match
+vbfanal25cores	vbfANDmatchQs		vbf		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_vbfsel_match
+vbfanal25cores	vbf+vetoANDmatchQs	vbf+veto	11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_vbf+veto_match
+#
+vbfanal20cores	none			none		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_nosel_nomatch
+vbfanal20cores	vbf			vbf		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_vbfsel_nomatch
+vbfanal20cores	vbf+veto		vbf+veto	1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.20_vbf+veto_nomatch
+#
+vbfanal20cores	none			none		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_nosel_nomatch
+vbfanal20cores	vbf			vbf		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_vbfsel_nomatch
+vbfanal20cores	vbf+veto		vbf+veto	11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.20_vbf+veto_nomatch
+#
+vbfanal25cores	none			none		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_nosel_nomatch
+vbfanal25cores	vbf			vbf		1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	1-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt20_core0.25_vbf+veto_nomatch
+#
+vbfanal25cores	none			none		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_nosel_nomatch
+vbfanal25cores	vbf			vbf		11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_vbfsel_nomatch
+vbfanal25cores	vbf+veto		vbf+veto	11-200		0.0		1.0		hERPtj1coreVsPt	hERPtj2coreVsPt	PTcoreByPTjet_minpt50_core0.25_vbf+veto_nomatch
