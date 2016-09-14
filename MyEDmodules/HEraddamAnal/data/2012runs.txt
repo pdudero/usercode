@@ -1,0 +1,525 @@
+ HCAL 	Entry SUDARSHAN PARAMESVARAN	end of local runs	Planning/status	THU 13.DEC.12 13:35:45
+ HBHEabc_Laser_Megatile_HBM 10k 208965 				
+ HBHEabc_Laser_Megatile_HBP 10k 208968 				
+ HBHEabc_Laser_Megatile_HEM 10k 208969 				
+ HBHEabc_Laser_Megatile_HEP 10k 208970 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs	Local run	THU 06.DEC.12 09:35:26
+ 208693   HBHEabc_Laser_Megatile_HBM  				
+ 208695   HBHEabc_Laser_Megatile_HBP  				
+ 208698   HBHEabc_Laser_Megatile_HEM  				
+ 208699   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs	Local run	SUN 02.DEC.12 16:12:28
+ 208411   HBHEabc_Laser_Megatile_HBP  				
+ 208412   HBHEabc_Laser_Megatile_HEM 				
+ 208413   HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs after beam dump	Local run	SAT 01.DEC.12 16:13:29
+ 208362   HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during MD	Local run	WED 28.NOV.12 09:36:39
+ 208058   HBHEabc_Laser_Megatile_HBM  				
+ 208059   HBHEabc_Laser_Megatile_HBP  				
+ 208060   HBHEabc_Laser_Megatile_HEM  				
+ 208062   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	SUN 25.NOV.12 16:49:18
+ 207915  10K  HBHEabc_Laser_Megatile_HEM 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	FRI 23.NOV.12 12:29:23
+ 207831  10K  HBHEabc_Laser_Megatile_HBM  				
+ 207847  10K  HBHEabc_Laser_Megatile_HBP  				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	TUE 20.NOV.12 11:43:09
+ 207583  10K  HBHEabc_Laser_Megatile_HEM  				
+ 207586  10K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	MON 19.NOV.12 22:55:15
+ 207555  10K  HBHEabc_Laser_Megatile_HBM  				
+ 207556  10K  HBHEabc_Laser_Megatile_HBP  				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	FRI 16.NOV.12 13:10:08
+ 207401 10K HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	THU 15.NOV.12 22:37:28
+ 207349 10K HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	MON 12.NOV.12 15:34:45
+ 207154 10K HBHEabc_Laser_Megatile_HEM 				
+ 207156 10K HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	FRI 09.NOV.12 14:52:01
+ 207000  HBHEabc_Laser_Megatile_HEM 				
+ 207006  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	TUE 06.NOV.12 17:27:12
+ 206770  HBHEabc_Laser_Megatile_HBM 				
+ 206775  HBHEabc_Laser_Megatile_HBP 				
+ 206783  HBHEabc_Laser_Megatile_HEM 				
+ 206785  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	WED 31.OCT.12 11:42:05
+ 206418  HBHEabc_Laser_Megatile_HEM 				
+ 206419  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	TUE 30.OCT.12 16:01:50
+ 206378  HBHEabc_Laser_Megatile_HBM 				
+ 206380  HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/24/12	Local run	WED 24.OCT.12 10:40:24
+ 205933 - HBHEabc_Laser_Megatile_HEM      				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/23/12	Local run	TUE 23.OCT.12 11:34:03
+ 205852 - HBHEabc_Laser_Megatile_HBM      				
+ 205856 - HBHEabc_Laser_Megatile_HBP      				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/22/12	Local run	MON 22.OCT.12 21:49:47
+ 205805 - HBHEabc_Laser_Megatile_HBM      				
+ 205808 - HBHEabc_Laser_Megatile_HBP      				
+ 205811 - HBHEabc_Laser_Megatile_HEM      				
+ 205812 - HBHEabc_Laser_Megatile_HEP      				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/18/12	Local run	THU 18.OCT.12 12:26:16
+ 205359 - HBHEabc_Laser_Megatile_HBM 				
+ 205444 - HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/16/12	Local run	TUE 16.OCT.12 18:07:07
+ 205272 - HBHEabc_Laser_Megatile_HBM 				
+ 205274 - HBHEabc_Laser_Megatile_HBP 				
+ 205279 - HBHEabc_Laser_Megatile_HEM 				
+ 205280 - HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 10/12/12 (Continue)	Local run	FRI 12.OCT.12 15:02:00
+ 204944 - HBHEabc_Laser_Megatile_HBM 				
+ 204947 - HBHEabc_Laser_Megatile_HBP 				
+ 204949 - HBHEabc_Laser_Megatile_HEM (Bad? See Below) 				
+ 204952 - HBHEabc_Laser_Megatile_HEM 				
+ 204954 - HBHEabc_Laser_Megatile_HEP 				
+				
+" 13:00 Receive HTR-SLB-Bad-Idle-Core text message, during run 204949 checking HCAL Alarmer & HyperMonVis.  I see only XMAS-Stale-Data errors and DCC-Bad-BC0-Spacing Warnings in Alarmer.   "				
+				
+" The XMAS-Stale-Data errors are in HF, HO, CASTOR, and ""NULL.Crate1012""  So not in HEM, I will ignore this error then. "				
+				
+" The DCC-Bad_BC0-Spacings are in HBHE FED's appear to be in HBHE with many FED' showing ""Number of BC0 following wrong number of bunches"" in the thousands.  Stopping run to destroy and re-configure. "				
+				
+###############################################################################################################################################################################################################################################################				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs	Local run	THU 04.OCT.12 09:37:14
+" This morning LHC lost cold compressors at P4, ~10 hours to recover, taking some local runs... "				
+				
+ 204255  HBHEabc_Laser_Megatile_HEM  				
+ 204258  HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during LHC access	Local run	WED 03.OCT.12 14:05:34
+ 204176  HBHEabc_Laser  				
+ 204181  HBHEabc_Laser_Megatile_HBM  				
+ 204187  HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	SAT 29.SEP.12 10:39:48
+ 203862  10K   HBHEabc_Laser_Megatile_HBP 				
+ 203866  10K   HBHEabc_Laser_Megatile_HEM  				
+ 203869  10K   HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	FRI 28.SEP.12 23:33:57
+ 203843   1K   HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	SAT 22.SEP.12 13:27:02
+ 203436   10K     HBHEabc_Laser_Megatile_HBM  				
+ 203437   10K     HBHEabc_Laser_Megatile_HBP  				
+ 203439   10K     HBHEabc_Laser_Megatile_HEM  				
+ 203440   10K     HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	FRI 14.SEP.12 15:56:06
+ 202920 HBHEabc_Laser_Megatile_HEM 				
+ 202923 HBHEabc_Laser_Megatile_HEP 				
+ 202924 HBHEabc_Laser_Megatile_HBM 				
+ 202925 HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	WED 12.SEP.12 11:15:54
+ 202637 HBHEabc_Laser_Megatile_HEM 				
+ 202638 HBHEabc_Laser_Megatile_HEP 				
+ 202641 HBHEabc_Laser_Megatile_HBM 				
+ 202646 HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	SUN 09.SEP.12 12:37:43
+ 202485 HBHEabc_Laser_Megatile_HBM 				
+ 202486 HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry SUDARSHAN PARAMESVARAN	Starting laser alignment test	Planning/status	SAT 08.SEP.12 14:58:04
+ HBHEabc_Laser_Megatile_HBM 202426 1k 				
+ HBHEabc_Laser_Megatile_HEM 202428 1k 				
+				
+ after Laser change: 				
+				
+ HBHEabc_Laser_Megatile_HEM 202434 1k  				
+ HBHEabc_Laser_Megatile_HEM 202435 10k 				
+ HBHEabc_Laser_Megatile_HEP 202436 10k 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	FRI 07.SEP.12 15:27:50
+ 202353  HBHEabc_Laser_Megatile_HBP 				
+ 202357  HBHEabc_Laser_Megatile_HEM 				
+ 202360  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	TUE 04.SEP.12 16:37:48
+ 202218  HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during LHC access	Local run	WED 29.AUG.12 09:24:57
+ 201881   HBHEabc_Laser_Megatile_HEM 				
+ 201887   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during LHCb polarity switch	Local run	TUE 28.AUG.12 14:52:48
+ 201837   HBHEabc_Laser_Megatile_HBM 				
+ 201842   HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	more local runs	Local run	MON 27.AUG.12 11:29:39
+ 201754   HBHEabc_Laser_Megatile_HEM  				
+ 201757   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during LHC access	Local run	MON 27.AUG.12 09:36:42
+ 201742   HBHEabc_Laser_Megatile_HBM  				
+ 201747   HBHEabc_Laser_Megatile_HBP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs while kickers cool	Local run	SAT 25.AUG.12 22:34:51
+ 201685  HBHEabc_Laser_Megatile_HBM 				
+ 201686  HBHEabc_Laser_Megatile_HBP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs while no LHC beam	Local run	TUE 21.AUG.12 09:47:17
+ 201301   HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs	Local run	SUN 19.AUG.12 09:34:21
+ 201216   HBHEabc_Laser_Megatile_HBM  				
+ 201218   HBHEabc_Laser_Megatile_HBP 				
+ 201220   HBHEabc_Laser_Megatile_HEM  				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/14/12 (B=3.8T)	Local run	TUE 14.AUG.12 18:49:50
+ 200875 - HBHEabc_Laser_Megatile_HBM 				
+ 200880 - HBHEabc_Laser_Megatile_HBP 				
+ 200885 - HBHEabc_Laser_Megatile_HEM 				
+ 200896 - HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/13/12 (Zero Tesla)	Local run	MON 13.AUG.12 18:47:14
+ 200813 - HBHEabc_Laser_Megatile_HBM 				
+ 200817 - HBHEabc_Laser_Megatile_HBP 				
+ 200822 - HBHEabc_Laser_Megatile_HEM 				
+ 200825 - HBHEabc_Laser_Megatile_HEP 				
+				
+" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/11/12 (Zero Tesla)	Local run	SAT 11.AUG.12 13:07:38
+ 200715 - HBHEabc_Laser_Megatile_HBM 				
+ 200719 - HBHEabc_Laser_Megatile_HBP 				
+ 200722 - HBHEabc_Laser_Megatile_HEM 				
+ 200725 - HBHEabc_Laser_Megatile_HEP 				
+				
+" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "				
+				
+" During HBHEabc_Laser_Megatile_HBP run (#200719) recieved ""HTR Fiber Idle BCN not as expected (3560)"" SMS.  Only one fiber is affected, HBHEa.CR00-SL15b-Fib3, RBX is HEP04.  Continuing the run. "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Many Errors in Alarmer During Megatile Run	DAQ	SAT 11.AUG.12 11:22:00
+ Several new DCC Warnings arose in Alarmer during new HBHEabc_Laser_Megatile_HBM run (#200715).  Attached.  Not as many as before.  But only 2000 events in. 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/10/12 (Zero Tesla)	Local run	FRI 10.AUG.12 19:11:58
+ 200652 - HBHEabc_Laser_Megatile_HBM 				
+ 200655 - HBHEabc_Laser_Megatile_HBP 				
+ 200659 - HBHEabc_Laser_Megatile_HEM 				
+ 200661 - HBHEabc_Laser_Megatile_HEP 				
+				
+" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/9/12	Local run	THU 09.AUG.12 15:00:31
+ 200557 - HBHEabc_Laser_Megatile_HBM 				
+ 200563 - HBHEabc_Laser_Megatile_HBP 				
+ 200566 - HBHEabc_Laser_Megatile_HEM 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 8/7/12	Local run	TUE 07.AUG.12 12:35:40
+ 200398 - HBHEabc_Laser_Megatile_HBM 				
+ 200399 - HBHEabc_Laser_Megatile_HBP 				
+ 200403 - HBHEabc_Laser_Megatile_HEM 				
+ 200404 - HBHEabc_Laser_Megatile_HEP 				
+				
+" Between runs 200398 and 200399, Dick exchanged the spigot 12 and 13 cables at the DCC for FED 712.  We expect that the contact between these cables and the card is now good, and no further problems will come up.  Will continue to monitor situation. "				
+				
+" I have requested, after DAQ update completes, that the shift crew run @ 100kHz to see if Calibration channels (FED 712, Spigots 12 & 13) are okay.  Time permitting.  We need 1 hour or more (possibly 1/2 hour is okay). "				
+				
+" After Run 200408 the update of XDAQ was completed.  Arno & I are restarting xDAQ on these machines using ""/etc/init.d/xdaqd restart"" see elog entry (http://cmsonline.cern.ch/cms-elog/779720) "				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	SUN 05.AUG.12 10:38:59
+ 200288  10K   HBHEabc_Laser_Megatile_HBM  				
+ 200290  10K   HBHEabc_Laser_Megatile_HBP  				
+ 200293  10K   HBHEabc_Laser_Megatile_HEM  				
+ 200297  10K   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	MON 30.JUL.12 17:01:20
+ 199920 10K  HBHEabc_Laser_Megatile_HEM 				
+ 199926 10K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	MON 30.JUL.12 14:56:16
+ 199896 10K HBHEabc_Laser_Megatile_HBM  				
+ 199898 10K HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	SUN 29.JUL.12 09:36:00
+ 199843 10K  HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	THU 26.JUL.12 15:28:52
+ r199709  HBHEabc_Laser_Megatile_HEM 				
+ r199712  HBHEabc_Laser_Megatile_HEP 				
+ r199715  HBHEabc_Laser_Megatile_HBM 				
+ r199719  HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	MON 23.JUL.12 14:41:16
+ 199491 10K  HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	MON 23.JUL.12 13:14:19
+ 199473 10K  HBHEabc_Laser_Megatile_HBP 				
+ 199485 10K  HBHEabc_Laser_Megatile_HEM 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs	Planning/status	MON 23.JUL.12 10:42:27
+ 199449 10K  HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	SAT 21.JUL.12 14:35:34
+ 199389  10K  HBHEabc_Laser_Megatile_HEM  				
+ 199393  10K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	WED 18.JUL.12 11:11:51
+ 199203  10K  HBHEabc_Laser_Megatile_HBM  				
+ 199207  10K  HBHEabc_Laser_Megatile_HBP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	MON 16.JUL.12 11:27:35
+ 199035 10K  HBHEabc_Laser_Megatile_HBM 				
+ 199036 10K  HBHEabc_Laser_Megatile_HBP 				
+ 199042 10K  HBHEabc_Laser_Megatile_HEM  				
+ 199061 10K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry CHRISTOPHER ALAN WEST	Increased default number of events for Laser_Megatile configurations	Planning/status	THU 12.JUL.12 17:28:28
+ HBHEabc_Laser_Megatile_HBM 				
+ HBHEabc_Laser_Megatile_HBP  				
+ HBHEabc_Laser_Megatile_HEM  				
+ HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	THU 12.JUL.12 10:25:19
+ 198867  10K  HBHEabc_Laser_Megatile_HBM 				
+ 198869  10K  HBHEabc_Laser_Megatile_HBP  				
+ 198872  10K  HBHEabc_Laser_Megatile_HEM  				
+ 198873  10K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	uncommented ZDC HTR	Planning/status	TUE 10.JUL.12 10:51:21
+ 198628 10K  HBHEabc_Laser_Megatile_HBM 				
+				
+ HCAL 	Entry PAVEL BUNIN	new local runs	Local run	MON 09.JUL.12 15:04:14
+ 198565  10K  HBHEabc_Laser_Megatile_HEM   				
+ 198568  10K  HBHEabc_Laser_Megatile_HEP     				
+ 198575  10K  HBHEabc_Laser_Megatile_HBP  				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	THU 05.JUL.12 12:38:58
+ r198291  HBHEabc_Laser_Megatile_HBM (10k)  				
+ r198293  HBHEabc_Laser_Megatile_HBP (10k) 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	local runs	Local run	WED 04.JUL.12 18:51:21
+ r198260  HBHEabc_Laser_Megatile_HEM  (10k) 				
+ r198261  HBHEabc_Laser_Megatile_HEP  (10k) 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	SUN 01.JUL.12 14:31:58
+ 197976 5K HBHEabc_Laser_Megatile_HBM  				
+ 197977 5k HBHEabc_Laser_Megatile_HBP  				
+ 197979 5k HBHEabc_Laser_Megatile_HEM  				
+ 197989 5k HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	Change L1ADelay parameter in HE Megatile cfgs [local runs taken]	Configuration	WED 27.JUN.12 15:48:54
+ r197513  HBHEabc_Laser_Megatile_HEM 				
+ r197514  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	Laser Megatile runs (10k)	Local run	TUE 26.JUN.12 17:53:12
+ r197386  HBHEabc_Laser_Megatile_HBM 				
+ r197389  HBHEabc_Laser_Megatile_HBP 				
+ r197391  HBHEabc_Laser_Megatile_HEM 				
+ r197397  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs taken (0 T)	Planning/status	SUN 24.JUN.12 10:25:34
+ 197146   1K    HBHEabc_Laser_Megatile_HBM 				
+ 197147   1K    HBHEabc_Laser_Megatile_HEM  				
+ 197148   1K    HBHEabc_Laser_Megatile_HEM  				
+ 197149   1K    HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Daily Local runs taken (0 T)	Planning/status	WED 20.JUN.12 19:17:58
+ 196864  1K     HBHEabc_Laser_Megatile_HBM  				
+ 196865  1K     HBHEabc_Laser_Megatile_HBP  				
+ 196867  1K     HBHEabc_Laser_Megatile_HEM 				
+ 196868  1K     HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry KADRI OZDEMIR	Daily Local runs taken	Planning/status	SUN 17.JUN.12 15:23:59
+ 196476  1K    HBHEabc_Laser_Megatile_HBM 				
+ 196476  1K    HBHEabc_Laser_Megatile_HBP  				
+ 196478  1K     HBHEabc_Laser_Megatile_HEM  				
+ 196479  1K     HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Daily Local runs taken	Planning/status	FRI 15.JUN.12 17:41:53
+ 196408  1K   HBHEabc_Laser_Megatile_HBM 				
+ 196409  1K   HBHEabc_Laser_Megatile_HBP 				
+ 196411  1K   HBHEabc_Laser_Megatile_HEM  				
+ 196413  1K  HBHEabc_Laser_Megatile_HEM  		originally marked 196143		
+ 196414  1K  HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry KADRI OZDEMIR	Local runs taken	Planning/status	THU 14.JUN.12 08:37:17
+ 196262   1K    HBHEabc_Laser_Megatile_HBM  				
+ 196265   1K    HBHEabc_Laser_Megatile_HBP 				
+ 196266   1K    HBHEabc_Laser_Megatile_HEM 				
+ 196267   1K    HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry KADRI OZDEMIR	Daily Local runs taken	Planning/status	TUE 12.JUN.12 17:01:03
+ 196168    1K     HBHEabc_Laser_Megatile_HBM 				
+ 196170    1K     HBHEabc_Laser_Megatile_HBP 				
+ 196172    1K     HBHEabc_Laser_Megatile_HEM 				
+ 196173    1K     HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 6/11/12	Local run	MON 11.JUN.12 11:34:21
+" Run: 195984, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195986, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195987, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195988, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 6/08/12	Local run	FRI 08.JUN.12 11:24:31
+" Run: 195790, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195791, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195792, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195793, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 6/07/12	Local run	THU 07.JUN.12 13:37:17
+" Run: 195687, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195694, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195697, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195703, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 6/04/12	Local run	MON 04.JUN.12 11:08:04
+" Run: 195472, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195473, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195475, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195477, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 6/03/12	Local run	SUN 03.JUN.12 08:47:26
+" Run: 195415, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195416, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195417, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195418, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/31/12	Local run	THU 31.MAY.12 19:01:18
+" Run: 195335, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195337, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195339, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195342, HBHEabc_Laser_Megatile_HEP "				
+				
+" 18:32 When configuring the HBHEabc_Laser_Megatile_HEM run, I received a text message for HTR Fiber Idle BCN not as expected (3558). RBX is HEP03.  HyperMonVis & HCAL Alarmer confirm this.  Destroying and reconfiguring, might fix this.  Successful. "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/30/2012	Local run	WED 30.MAY.12 11:48:04
+" Run: 195228, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195229, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195231, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195232, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/29/12	Local run	TUE 29.MAY.12 12:00:30
+" Run: 195176, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195177, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195178, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195182, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/28/2012	Local run	MON 28.MAY.12 15:06:23
+" Run: 195126, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195127, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195128, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195129, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/27/2012	Local run	SUN 27.MAY.12 11:52:39
+" Run: 195068, HBHEabc_Laser_Megatile_HBM "				
+" Run: 195069, HBHEabc_Laser_Megatile_HBP "				
+" Run: 195071, HBHEabc_Laser_Megatile_HEM "				
+" Run: 195072, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs after cryo loss	Local run	SAT 26.MAY.12 14:45:42
+ 195030  HBHEabc_Laser_Megatile_HBM  				
+ 195031  HBHEabc_Laser_Megatile_HBP  				
+ 195032  HBHEabc_Laser_Megatile_HEM  				
+ 195033  HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs and configuration changes after DUMP	Local run	FRI 25.MAY.12 15:15:04
+ 194951  HBHEabc_Laser_Megatile_HBM 				
+ 194954  HBHEabc_Laser_Megatile_HBP 				
+ 194955  HBHEabc_Laser_Megatile_HEM 				
+ 194957  HBHEabc_Laser_Megatile_HEP 				
+ 194958  HBHEabc_Laser_Megatile_HEP <-- accidentally took a second HEP Megatile run 				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/24/2012	Local run	THU 24.MAY.12 11:10:22
+" Run: 194861, HBHEabc_Laser_Megatile_HBM "				
+" Run: 194863, HBHEabc_Laser_Megatile_HBP "				
+" Run: 194864, HBHEabc_Laser_Megatile_HEM "				
+" Run: 194866, HBHEabc_Laser_Megatile_HEP "				
+				
+ HCAL 	Entry BRIAN L DORNEY	Local Runs - 5/21/2012	Local run	MON 21.MAY.12 09:52:37
+" Run: 194555, HBHEabc_laser_Megatile_HBM "				
+" Run: 194557, HBHEabc_laser_Megatile_HBP "				
+" Run: 194559, HBHEabc_laser_Megatile_HEM "				
+" Run: 194563, HBHEabc_laser_Megatile_HEP "				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during interfill	Local run	SAT 19.MAY.12 11:23:50
+ 194445   HBHEabc_Laser_Megatile_HBM 				
+ 194446   HBHEabc_Laser_Megatile_HBP 				
+ 194447  HBHEabc_Laser_Megatile_HEM 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during interfill	Local run	THU 17.MAY.12 12:25:10
+ 194338   HBHEabc_Laser_Megatile_HBM 				
+ 194339   HBHEabc_Laser_Megatile_HEM 				
+ 194341   HBHEabc_Laser_Megatile_HBP 				
+ 194344   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during LHC access	Local run	WED 16.MAY.12 09:25:48
+ 194239   HBHEabc_Laser_Megatile_HBM 				
+ 194240   HBHEabc_Laser_Megatile_HBP 				
+ 194241   HBHEabc_Laser_Megatile_HEM 				
+ 194242   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during interfill	Local run	TUE 15.MAY.12 09:17:27
+ 194169   HBHEabc_Laser_Megatile_HBM 				
+ 194171   HBHEabc_Laser_Megatile_HBP  				
+ 194172   HBHEabc_Laser_Megatile_HEM  				
+ 194173   HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	new local runs	Local run	FRI 11.MAY.12 13:05:12
+ 193990 1k HBHEabc_Laser_Megatile_HBM  				
+ 193991 1k HBHEabc_Laser_Megatile_HBP  				
+ 193993 1k HBHEabc_Laser_Megatile_HEM  				
+ 193994 1k HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry TED RITCHIE KOLBERG	local runs during interfill	Local run	TUE 08.MAY.12 10:25:51
+ 193634  HBHEabc_Laser_Megatile_HBM 				
+ 193635  HBHEabc_Laser_Megatile_HBP 				
+ 193637  HBHEabc_Laser_Megatile_HEM 				
+ 193639  HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	FRI 04.MAY.12 13:26:33
+ 193384 1k HBHEabc_Laser_Megatile_HBM  				
+ 193386 1k HBHEabc_Laser_Megatile_HBP  				
+ 193387 1k HBHEabc_Laser_Megatile_HEM  				
+ 193388 1k HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	THU 03.MAY.12 12:03:17
+ 193251 1k HBHEabc_Laser_Megatile_HBM  				
+ 193252 1k HBHEabc_Laser_Megatile_HBP  				
+ 193256 1k HBHEabc_Laser_Megatile_HEM  				
+ 193261 1k HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	local runs	Local run	WED 02.MAY.12 18:08:35
+ 193159 1k HBHEabc_Laser_Megatile_HBM  				
+ 193161 1k HBHEabc_Laser_Megatile_HBP  				
+ 193162 1k HBHEabc_Laser_Megatile_HEM  				
+ 193164 1k HBHEabc_Laser_Megatile_HEP 				
+				
+ HCAL 	Entry PAVEL BUNIN	laser megatile HBHE runs	Local run	TUE 01.MAY.12 16:44:04
+ 193078 1k HBHEabc_Laser_Megatile_HBM   				
+ 193080 1k HBHEabc_Laser_Megatile_HBP   				
+ 193081 1k HBHEabc_Laser_Megatile_HEM   				
+ 193082 1k HBHEabc_Laser_Megatile_HEP  				
+				
+ HCAL 	Entry PABLO DAVID GOLDENZWEIG	test of new run configurations	Local run	TUE 24.APR.12 15:26:08
+ r192161  HBHEabc_Laser_Megatile_HBM 				
+ r192163  HBHEabc_Laser_Megatile_HBP 				
+ r192165  HBHEabc_Laser_Megatile_HEM 				
+ r192167  HBHEabc_Laser_Megatile_HEP 				

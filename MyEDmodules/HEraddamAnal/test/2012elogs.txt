@@ -1,0 +1,505 @@
+Date	Time		Run		
+13-Dec-12	13:35:45	348	 HBHEabc_Laser_Megatile_HBM 10k 208965 		
+13-Dec-12	13:35:45	348	 HBHEabc_Laser_Megatile_HBP 10k 208968 		
+13-Dec-12	13:35:45	348	 HBHEabc_Laser_Megatile_HEM 10k 208969 		
+13-Dec-12	13:35:45	348	 HBHEabc_Laser_Megatile_HEP 10k 208970 		
+					
+					
+6-Dec-12	9:35:26	341	 208693   HBHEabc_Laser_Megatile_HBM  		
+6-Dec-12	9:35:26	341	 208695   HBHEabc_Laser_Megatile_HBP  		
+6-Dec-12	9:35:26	341	 208698   HBHEabc_Laser_Megatile_HEM  		
+6-Dec-12	9:35:26	341	 208699   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+2-Dec-12	16:12:28	337	 208411   HBHEabc_Laser_Megatile_HBP  		
+2-Dec-12	16:12:28	337	 208412   HBHEabc_Laser_Megatile_HEM 		
+2-Dec-12	16:12:28	337	 208413   HBHEabc_Laser_Megatile_HEP  		
+					
+					
+1-Dec-12	16:13:29	336	 208362   HBHEabc_Laser_Megatile_HBM 		
+					
+					
+28-Nov-12	9:36:39	333	 208058   HBHEabc_Laser_Megatile_HBM  		
+28-Nov-12	9:36:39	333	 208059   HBHEabc_Laser_Megatile_HBP  		
+28-Nov-12	9:36:39	333	 208060   HBHEabc_Laser_Megatile_HEM  		
+28-Nov-12	9:36:39	333	 208062   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+25-Nov-12	16:49:18	330	 207915  10K  HBHEabc_Laser_Megatile_HEM 		
+					
+					
+23-Nov-12	12:29:23	328	 207831  10K  HBHEabc_Laser_Megatile_HBM  		
+23-Nov-12	12:29:23	328	 207847  10K  HBHEabc_Laser_Megatile_HBP  		
+					
+					
+20-Nov-12	11:43:09	325	 207583  10K  HBHEabc_Laser_Megatile_HEM  		
+20-Nov-12	11:43:09	325	 207586  10K  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+19-Nov-12	22:55:15	324	 207555  10K  HBHEabc_Laser_Megatile_HBM  		
+19-Nov-12	22:55:15	324	 207556  10K  HBHEabc_Laser_Megatile_HBP  		
+					
+					
+16-Nov-12	13:10:08	321	 207401 10K HBHEabc_Laser_Megatile_HBP 		
+					
+					
+15-Nov-12	22:37:28	320	 207349 10K HBHEabc_Laser_Megatile_HBM 		
+					
+					
+12-Nov-12	15:34:45	317	 207154 10K HBHEabc_Laser_Megatile_HEM 		
+12-Nov-12	15:34:45	317	 207156 10K HBHEabc_Laser_Megatile_HEP 		
+					
+					
+9-Nov-12	14:52:01	314	 207000  HBHEabc_Laser_Megatile_HEM 		
+9-Nov-12	14:52:01	314	 207006  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+6-Nov-12	17:27:12	311	 206770  HBHEabc_Laser_Megatile_HBM 		
+6-Nov-12	17:27:12	311	 206775  HBHEabc_Laser_Megatile_HBP 		
+6-Nov-12	17:27:12	311	 206783  HBHEabc_Laser_Megatile_HEM 		
+6-Nov-12	17:27:12	311	 206785  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+31-Oct-12	11:42:05	305	 206418  HBHEabc_Laser_Megatile_HEM 		
+31-Oct-12	11:42:05	305	 206419  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+30-Oct-12	16:01:50	304	 206378  HBHEabc_Laser_Megatile_HBM 		
+30-Oct-12	16:01:50	304	 206380  HBHEabc_Laser_Megatile_HBP 		
+					
+					
+24-Oct-12	10:40:24	298	 205933 - HBHEabc_Laser_Megatile_HEM      		
+					
+					
+23-Oct-12	11:34:03	297	 205852 - HBHEabc_Laser_Megatile_HBM      		
+23-Oct-12	11:34:03	297	 205856 - HBHEabc_Laser_Megatile_HBP      		
+					
+					
+22-Oct-12	21:49:47	296	 205805 - HBHEabc_Laser_Megatile_HBM      		
+22-Oct-12	21:49:47	296	 205808 - HBHEabc_Laser_Megatile_HBP      		
+22-Oct-12	21:49:47	296	 205811 - HBHEabc_Laser_Megatile_HEM      		
+22-Oct-12	21:49:47	296	 205812 - HBHEabc_Laser_Megatile_HEP      		
+					
+					
+18-Oct-12	12:26:16	292	 205359 - HBHEabc_Laser_Megatile_HBM 		
+18-Oct-12	12:26:16	292	 205444 - HBHEabc_Laser_Megatile_HBP 		
+					
+					
+16-Oct-12	18:07:07	290	 205272 - HBHEabc_Laser_Megatile_HBM 		
+16-Oct-12	18:07:07	290	 205274 - HBHEabc_Laser_Megatile_HBP 		
+16-Oct-12	18:07:07	290	 205279 - HBHEabc_Laser_Megatile_HEM 		
+16-Oct-12	18:07:07	290	 205280 - HBHEabc_Laser_Megatile_HEP 		
+					
+					
+12-Oct-12	15:02:00	286	 204944 - HBHEabc_Laser_Megatile_HBM 		
+12-Oct-12	15:02:00	286	 204947 - HBHEabc_Laser_Megatile_HBP 		
+12-Oct-12	15:02:00	286	 204949 - HBHEabc_Laser_Megatile_HEM (Bad? See Below) 		
+12-Oct-12	15:02:00	286	 204952 - HBHEabc_Laser_Megatile_HEM 		
+12-Oct-12	15:02:00	286	 204954 - HBHEabc_Laser_Megatile_HEP 		
+					
+12-Oct-12	15:02:00	286	" 13:00 Receive HTR-SLB-Bad-Idle-Core text message, during run 204949 checking HCAL Alarmer & HyperMonVis.  I see only XMAS-Stale-Data errors and DCC-Bad-BC0-Spacing Warnings in Alarmer.   "		
+					
+12-Oct-12	15:02:00	286	" The XMAS-Stale-Data errors are in HF, HO, CASTOR, and ""NULL.Crate1012""  So not in HEM, I will ignore this error then. "		
+					
+12-Oct-12	15:02:00	286	" The DCC-Bad_BC0-Spacings are in HBHE FED's appear to be in HBHE with many FED' showing ""Number of BC0 following wrong number of bunches"" in the thousands.  Stopping run to destroy and re-configure. "		
+					
+4-Oct-12	9:37:14	278	 204255  HBHEabc_Laser_Megatile_HEM  		
+4-Oct-12	9:37:14	278	 204258  HBHEabc_Laser_Megatile_HEP  		
+					
+3-Oct-12	14:05:34	277	 204181  HBHEabc_Laser_Megatile_HBM  		
+3-Oct-12	14:05:34	277	 204187  HBHEabc_Laser_Megatile_HBP 		
+					
+					
+29-Sep-12	10:39:48	273	 203862  10K   HBHEabc_Laser_Megatile_HBP 		
+29-Sep-12	10:39:48	273	 203866  10K   HBHEabc_Laser_Megatile_HEM  		
+29-Sep-12	10:39:48	273	 203869  10K   HBHEabc_Laser_Megatile_HEP  		
+					
+					
+28-Sep-12	23:33:57	272	 203843   1K   HBHEabc_Laser_Megatile_HBM 		
+					
+					
+22-Sep-12	13:27:02	266	 203436   10K     HBHEabc_Laser_Megatile_HBM  		
+22-Sep-12	13:27:02	266	 203437   10K     HBHEabc_Laser_Megatile_HBP  		
+22-Sep-12	13:27:02	266	 203349   10K     HBHEabc_Laser_Megatile_HEM  		
+22-Sep-12	13:27:02	266	 203440   10K     HBHEabc_Laser_Megatile_HEP 		
+					
+					
+14-Sep-12	15:56:06	258	 202920 HBHEabc_Laser_Megatile_HEM 		
+14-Sep-12	15:56:06	258	 202923 HBHEabc_Laser_Megatile_HEP 		
+14-Sep-12	15:56:06	258	 202924 HBHEabc_Laser_Megatile_HBM 		
+14-Sep-12	15:56:06	258	 202925 HBHEabc_Laser_Megatile_HBP 		
+					
+					
+12-Sep-12	11:15:54	256	 202637 HBHEabc_Laser_Megatile_HEM 		
+12-Sep-12	11:15:54	256	 202638 HBHEabc_Laser_Megatile_HEP 		
+12-Sep-12	11:15:54	256	 202641 HBHEabc_Laser_Megatile_HBM 		
+12-Sep-12	11:15:54	256	 202646 HBHEabc_Laser_Megatile_HBP 		
+					
+					
+9-Sep-12	12:37:43	253	 202485 HBHEabc_Laser_Megatile_HBM 		
+9-Sep-12	12:37:43	253	 202486 HBHEabc_Laser_Megatile_HBP 		
+					
+					
+8-Sep-12	14:58:04	252	 HBHEabc_Laser_Megatile_HBM 202426 1k 		
+8-Sep-12	14:58:04	252	 HBHEabc_Laser_Megatile_HEM 202428 1k 		
+					
+8-Sep-12	14:58:04	252	 after Laser change: 		
+					
+8-Sep-12	14:58:04	252	 HBHEabc_Laser_Megatile_HEM 202434 1k  		
+8-Sep-12	14:58:04	252	 HBHEabc_Laser_Megatile_HEM 202435 10k 		
+8-Sep-12	14:58:04	252	 HBHEabc_Laser_Megatile_HEP 202436 10k 		
+					
+					
+7-Sep-12	15:27:50	251	 202353  HBHEabc_Laser_Megatile_HBP 		
+7-Sep-12	15:27:50	251	 202357  HBHEabc_Laser_Megatile_HEM 		
+7-Sep-12	15:27:50	251	 202360  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+4-Sep-12	16:37:48	248	 202218  HBHEabc_Laser_Megatile_HBM 		
+					
+					
+29-Aug-12	9:24:57	242	 201881   HBHEabc_Laser_Megatile_HEM 		
+29-Aug-12	9:24:57	242	 201887   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+28-Aug-12	14:52:48	241	 201837   HBHEabc_Laser_Megatile_HBM 		
+28-Aug-12	14:52:48	241	 201842   HBHEabc_Laser_Megatile_HBP 		
+					
+					
+27-Aug-12	11:29:39	240	 201754   HBHEabc_Laser_Megatile_HEM  		
+27-Aug-12	11:29:39	240	 201757   HBHEabc_Laser_Megatile_HEP 		
+27-Aug-12	9:36:42	240	 201742   HBHEabc_Laser_Megatile_HBM  		
+27-Aug-12	9:36:42	240	 201747   HBHEabc_Laser_Megatile_HBP  		
+					
+					
+25-Aug-12	22:34:51	238	 201685  HBHEabc_Laser_Megatile_HBM 		
+25-Aug-12	22:34:51	238	 201686  HBHEabc_Laser_Megatile_HBP  		
+					
+					
+21-Aug-12	9:47:17	234	 201301   HBHEabc_Laser_Megatile_HEP  		
+					
+					
+19-Aug-12	9:34:21	232	 201216   HBHEabc_Laser_Megatile_HBM  		
+19-Aug-12	9:34:21	232	 201218   HBHEabc_Laser_Megatile_HBP 		
+19-Aug-12	9:34:21	232	 201220   HBHEabc_Laser_Megatile_HEM  		
+					
+					
+14-Aug-12	18:49:50	227	 200875 - HBHEabc_Laser_Megatile_HBM 		
+14-Aug-12	18:49:50	227	 200880 - HBHEabc_Laser_Megatile_HBP 		
+14-Aug-12	18:49:50	227	 200885 - HBHEabc_Laser_Megatile_HEM 		
+14-Aug-12	18:49:50	227	 200896 - HBHEabc_Laser_Megatile_HEP 		
+					
+					
+13-Aug-12	18:47:14	226	 200813 - HBHEabc_Laser_Megatile_HBM 		
+13-Aug-12	18:47:14	226	 200817 - HBHEabc_Laser_Megatile_HBP 		
+13-Aug-12	18:47:14	226	 200822 - HBHEabc_Laser_Megatile_HEM 		
+13-Aug-12	18:47:14	226	 200825 - HBHEabc_Laser_Megatile_HEP 		
+					
+13-Aug-12	18:47:14	226	" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "		
+					
+					
+11-Aug-12	13:07:38	224	 200715 - HBHEabc_Laser_Megatile_HBM 		
+11-Aug-12	13:07:38	224	 200719 - HBHEabc_Laser_Megatile_HBP 		
+11-Aug-12	13:07:38	224	 200722 - HBHEabc_Laser_Megatile_HEM 		
+11-Aug-12	13:07:38	224	 200725 - HBHEabc_Laser_Megatile_HEP 		
+					
+11-Aug-12	13:07:38	224	" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "		
+					
+11-Aug-12	13:07:38	224	" During HBHEabc_Laser_Megatile_HBP run (#200719) recieved ""HTR Fiber Idle BCN not as expected (3560)"" SMS.  Only one fiber is affected, HBHEa.CR00-SL15b-Fib3, RBX is HEP04.  Continuing the run. "		
+					
+					
+11-Aug-12	11:22:00	224	 Several new DCC Warnings arose in Alarmer during new HBHEabc_Laser_Megatile_HBM run (#200715).  Attached.  Not as many as before.  But only 2000 events in. 		
+					
+					
+10-Aug-12	19:11:58	223	 200652 - HBHEabc_Laser_Megatile_HBM 		
+10-Aug-12	19:11:58	223	 200655 - HBHEabc_Laser_Megatile_HBP 		
+10-Aug-12	19:11:58	223	 200659 - HBHEabc_Laser_Megatile_HEM 		
+10-Aug-12	19:11:58	223	 200661 - HBHEabc_Laser_Megatile_HEP 		
+					
+10-Aug-12	19:11:58	223	" All runs are taken at B=0 (i.e. the magnet is off due to the fast dump that occurred 8/10/12, see: https://hypernews.cern.ch/HyperNews/CMS/get/hcal/523.html for more details). "		
+					
+9-Aug-12	15:00:31	222	 200563 - HBHEabc_Laser_Megatile_HBP 		
+9-Aug-12	15:00:31	222	 200566 - HBHEabc_Laser_Megatile_HEM 		
+					
+					
+7-Aug-12	12:35:40	220	 200398 - HBHEabc_Laser_Megatile_HBM 		
+7-Aug-12	12:35:40	220	 200399 - HBHEabc_Laser_Megatile_HBP 		
+7-Aug-12	12:35:40	220	 200403 - HBHEabc_Laser_Megatile_HEM 		
+7-Aug-12	12:35:40	220	 200404 - HBHEabc_Laser_Megatile_HEP 		
+					
+7-Aug-12	12:35:40	220	" Between runs 200398 and 200399, Dick exchanged the spigot 12 and 13 cables at the DCC for FED 712.  We expect that the contact between these cables and the card is now good, and no further problems will come up.  Will continue to monitor situation. "		
+					
+7-Aug-12	12:35:40	220	" I have requested, after DAQ update completes, that the shift crew run @ 100kHz to see if Calibration channels (FED 712, Spigots 12 & 13) are okay.  Time permitting.  We need 1 hour or more (possibly 1/2 hour is okay). "		
+					
+7-Aug-12	12:35:40	220	" After Run 200408 the update of XDAQ was completed.  Arno & I are restarting xDAQ on these machines using ""/etc/init.d/xdaqd restart"" see elog entry (http://cmsonline.cern.ch/cms-elog/779720) "		
+					
+					
+5-Aug-12	10:38:59	218	 200288  10K   HBHEabc_Laser_Megatile_HBM  		
+5-Aug-12	10:38:59	218	 200290  10K   HBHEabc_Laser_Megatile_HBP  		
+5-Aug-12	10:38:59	218	 200293  10K   HBHEabc_Laser_Megatile_HEM  		
+5-Aug-12	10:38:59	218	 200297  10K   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+30-Jul-12	17:01:20	212	 199920 10K  HBHEabc_Laser_Megatile_HEM 		
+30-Jul-12	17:01:20	212	 199926 10K  HBHEabc_Laser_Megatile_HEP 		
+					
+30-Jul-12	14:56:16	212	 199896 10K HBHEabc_Laser_Megatile_HBM  		
+30-Jul-12	14:56:16	212	 199898 10K HBHEabc_Laser_Megatile_HBP 		
+					
+29-Jul-12	9:36:00	211	 199843 10K  HBHEabc_Laser_Megatile_HBM 		
+					
+26-Jul-12	15:28:52	208	 r199709  HBHEabc_Laser_Megatile_HEM 		
+26-Jul-12	15:28:52	208	 r199712  HBHEabc_Laser_Megatile_HEP 		
+26-Jul-12	15:28:52	208	 r199715  HBHEabc_Laser_Megatile_HBM 		
+26-Jul-12	15:28:52	208	 r199719  HBHEabc_Laser_Megatile_HBP 		
+					
+23-Jul-12	14:41:16	205	 199491 10K  HBHEabc_Laser_Megatile_HEP  		
+					
+23-Jul-12	13:14:19	205	 199473 10K  HBHEabc_Laser_Megatile_HBP 		
+23-Jul-12	13:14:19	205	 199485 10K  HBHEabc_Laser_Megatile_HEM 		
+					
+23-Jul-12	10:42:27	205	 199449 10K  HBHEabc_Laser_Megatile_HBM 		
+					
+21-Jul-12	14:35:34	203	 199389  10K  HBHEabc_Laser_Megatile_HEM  		
+21-Jul-12	14:35:34	203	 199393  10K  HBHEabc_Laser_Megatile_HEP 		
+					
+18-Jul-12	11:11:51	200	 199203  10K  HBHEabc_Laser_Megatile_HBM  		
+18-Jul-12	11:11:51	200	 199207  10K  HBHEabc_Laser_Megatile_HBP 		
+					
+16-Jul-12	11:27:35	198	 199035 10K  HBHEabc_Laser_Megatile_HBM 		
+16-Jul-12	11:27:35	198	 199036 10K  HBHEabc_Laser_Megatile_HBP 		
+16-Jul-12	11:27:35	198	 199042 10K  HBHEabc_Laser_Megatile_HEM  		
+16-Jul-12	11:27:35	198	 199061 10K  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+12-Jul-12	17:28:28	194	 HBHEabc_Laser_Megatile_HBM 		
+12-Jul-12	17:28:28	194	 HBHEabc_Laser_Megatile_HBP  		
+12-Jul-12	17:28:28	194	 HBHEabc_Laser_Megatile_HEM  		
+12-Jul-12	17:28:28	194	 HBHEabc_Laser_Megatile_HEP 		
+					
+					
+12-Jul-12	10:25:19	194	 198867  10K  HBHEabc_Laser_Megatile_HBM 		
+12-Jul-12	10:25:19	194	 198869  10K  HBHEabc_Laser_Megatile_HBP  		
+12-Jul-12	10:25:19	194	 198872  10K  HBHEabc_Laser_Megatile_HEM  		
+12-Jul-12	10:25:19	194	 198873  10K  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+10-Jul-12	10:51:21	192	 198628 10K  HBHEabc_Laser_Megatile_HBM 		
+					
+					
+9-Jul-12	15:04:14	191	 198565  10K  HBHEabc_Laser_Megatile_HEM   		
+9-Jul-12	15:04:14	191	 198568  10K  HBHEabc_Laser_Megatile_HEP     		
+9-Jul-12	15:04:14	191	 198575  10K  HBHEabc_Laser_Megatile_HBP  		
+					
+					
+5-Jul-12	12:38:58	187	 r198291  HBHEabc_Laser_Megatile_HBM (10k)  		
+5-Jul-12	12:38:58	187	 r198293  HBHEabc_Laser_Megatile_HBP (10k) 		
+					
+					
+4-Jul-12	18:51:21	186	 r198260  HBHEabc_Laser_Megatile_HEM  (10k) 		
+4-Jul-12	18:51:21	186	 r198261  HBHEabc_Laser_Megatile_HEP  (10k) 		
+					
+					
+1-Jul-12	14:31:58	183	 197976 5K HBHEabc_Laser_Megatile_HBM  		
+1-Jul-12	14:31:58	183	 197977 5k HBHEabc_Laser_Megatile_HBP  		
+1-Jul-12	14:31:58	183	 197979 5k HBHEabc_Laser_Megatile_HEM  		
+1-Jul-12	14:31:58	183	 197989 5k HBHEabc_Laser_Megatile_HEP 		
+					
+					
+27-Jun-12	15:48:54	179	 r197513  HBHEabc_Laser_Megatile_HEM 		
+27-Jun-12	15:48:54	179	 r197514  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+26-Jun-12	17:53:12	178	 r197386  HBHEabc_Laser_Megatile_HBM 		
+26-Jun-12	17:53:12	178	 r197389  HBHEabc_Laser_Megatile_HBP 		
+26-Jun-12	17:53:12	178	 r197391  HBHEabc_Laser_Megatile_HEM 		
+26-Jun-12	17:53:12	178	 r197397  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+24-Jun-12	10:25:34	176	 197146   1K    HBHEabc_Laser_Megatile_HBM 		
+24-Jun-12	10:25:34	176	 197147   1K    HBHEabc_Laser_Megatile_HEM  		
+24-Jun-12	10:25:34	176	 197148   1K    HBHEabc_Laser_Megatile_HEM  		
+24-Jun-12	10:25:34	176	 197149   1K    HBHEabc_Laser_Megatile_HEP 		
+					
+					
+20-Jun-12	19:17:58	172	 196864  1K     HBHEabc_Laser_Megatile_HBM  		
+20-Jun-12	19:17:58	172	 196865  1K     HBHEabc_Laser_Megatile_HBP  		
+20-Jun-12	19:17:58	172	 196867  1K     HBHEabc_Laser_Megatile_HEM 		
+20-Jun-12	19:17:58	172	 196868  1K     HBHEabc_Laser_Megatile_HEP  		
+					
+					
+17-Jun-12	15:23:59	169	 196476  1K    HBHEabc_Laser_Megatile_HBM 		
+17-Jun-12	15:23:59	169	 196476  1K    HBHEabc_Laser_Megatile_HBP  		
+17-Jun-12	15:23:59	169	 196478  1K     HBHEabc_Laser_Megatile_HEM  		
+17-Jun-12	15:23:59	169	 196479  1K     HBHEabc_Laser_Megatile_HEP 		
+					
+					
+15-Jun-12	17:41:53	167	 196408  1K   HBHEabc_Laser_Megatile_HBM 		
+15-Jun-12	17:41:53	167	 196409  1K   HBHEabc_Laser_Megatile_HBP 		
+15-Jun-12	17:41:53	167	 196411  1K   HBHEabc_Laser_Megatile_HEM  		
+15-Jun-12	17:41:53	167	 196413  1K  HBHEabc_Laser_Megatile_HEM  		originally marked 196143
+15-Jun-12	17:41:53	167	 196414  1K  HBHEabc_Laser_Megatile_HEP 		
+					
+					
+14-Jun-12	8:37:17	166	 196262   1K    HBHEabc_Laser_Megatile_HBM  		
+14-Jun-12	8:37:17	166	 196265   1K    HBHEabc_Laser_Megatile_HBP 		
+14-Jun-12	8:37:17	166	 196266   1K    HBHEabc_Laser_Megatile_HEM 		
+14-Jun-12	8:37:17	166	 196267   1K    HBHEabc_Laser_Megatile_HEP  		
+					
+					
+12-Jun-12	17:01:03	164	 196168    1K     HBHEabc_Laser_Megatile_HBM 		
+12-Jun-12	17:01:03	164	 196170    1K     HBHEabc_Laser_Megatile_HBP 		
+12-Jun-12	17:01:03	164	 196172    1K     HBHEabc_Laser_Megatile_HEM 		
+12-Jun-12	17:01:03	164	 196173    1K     HBHEabc_Laser_Megatile_HEP 		
+					
+					
+11-Jun-12	11:34:21	163	" Run: 195984, HBHEabc_Laser_Megatile_HBM "		
+11-Jun-12	11:34:21	163	" Run: 195986, HBHEabc_Laser_Megatile_HBP "		
+11-Jun-12	11:34:21	163	" Run: 195987, HBHEabc_Laser_Megatile_HEM "		
+11-Jun-12	11:34:21	163	" Run: 195988, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+8-Jun-12	11:24:31	160	" Run: 195790, HBHEabc_Laser_Megatile_HBM "		
+8-Jun-12	11:24:31	160	" Run: 195791, HBHEabc_Laser_Megatile_HBP "		
+8-Jun-12	11:24:31	160	" Run: 195792, HBHEabc_Laser_Megatile_HEM "		
+8-Jun-12	11:24:31	160	" Run: 195793, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+7-Jun-12	13:37:17	159	" Run: 195687, HBHEabc_Laser_Megatile_HBM "		
+7-Jun-12	13:37:17	159	" Run: 195694, HBHEabc_Laser_Megatile_HBP "		
+7-Jun-12	13:37:17	159	" Run: 195697, HBHEabc_Laser_Megatile_HEM "		
+7-Jun-12	13:37:17	159	" Run: 195703, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+4-Jun-12	11:08:04	156	" Run: 195472, HBHEabc_Laser_Megatile_HBM "		
+4-Jun-12	11:08:04	156	" Run: 195473, HBHEabc_Laser_Megatile_HBP "		
+4-Jun-12	11:08:04	156	" Run: 195475, HBHEabc_Laser_Megatile_HEM "		
+4-Jun-12	11:08:04	156	" Run: 195477, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+3-Jun-12	8:47:26	155	" Run: 195415, HBHEabc_Laser_Megatile_HBM "		
+3-Jun-12	8:47:26	155	" Run: 195416, HBHEabc_Laser_Megatile_HBP "		
+3-Jun-12	8:47:26	155	" Run: 195417, HBHEabc_Laser_Megatile_HEM "		
+3-Jun-12	8:47:26	155	" Run: 195418, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+31-May-12	19:01:18	152	" Run: 195335, HBHEabc_Laser_Megatile_HBM "		
+31-May-12	19:01:18	152	" Run: 195337, HBHEabc_Laser_Megatile_HBP "		
+31-May-12	19:01:18	152	" Run: 195339, HBHEabc_Laser_Megatile_HEM "		
+31-May-12	19:01:18	152	" Run: 195342, HBHEabc_Laser_Megatile_HEP "		
+					
+31-May-12	19:01:18	152	" 18:32 When configuring the HBHEabc_Laser_Megatile_HEM run, I received a text message for HTR Fiber Idle BCN not as expected (3558). RBX is HEP03.  HyperMonVis & HCAL Alarmer confirm this.  Destroying and reconfiguring, might fix this.  Successful. "		
+					
+					
+30-May-12	11:48:04	151	" Run: 195228, HBHEabc_Laser_Megatile_HBM "		
+30-May-12	11:48:04	151	" Run: 195229, HBHEabc_Laser_Megatile_HBP "		
+30-May-12	11:48:04	151	" Run: 195231, HBHEabc_Laser_Megatile_HEM "		
+30-May-12	11:48:04	151	" Run: 195232, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+29-May-12	12:00:30	150	" Run: 195176, HBHEabc_Laser_Megatile_HBM "		
+29-May-12	12:00:30	150	" Run: 195177, HBHEabc_Laser_Megatile_HBP "		
+29-May-12	12:00:30	150	" Run: 195178, HBHEabc_Laser_Megatile_HEM "		
+29-May-12	12:00:30	150	" Run: 195182, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+28-May-12	15:06:23	149	" Run: 195126, HBHEabc_Laser_Megatile_HBM "		
+28-May-12	15:06:23	149	" Run: 195127, HBHEabc_Laser_Megatile_HBP "		
+28-May-12	15:06:23	149	" Run: 195128, HBHEabc_Laser_Megatile_HEM "		
+28-May-12	15:06:23	149	" Run: 195129, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+27-May-12	11:52:39	148	" Run: 195068, HBHEabc_Laser_Megatile_HBM "		
+27-May-12	11:52:39	148	" Run: 195069, HBHEabc_Laser_Megatile_HBP "		
+27-May-12	11:52:39	148	" Run: 195071, HBHEabc_Laser_Megatile_HEM "		
+27-May-12	11:52:39	148	" Run: 195072, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+26-May-12	14:45:42	147	 195030  HBHEabc_Laser_Megatile_HBM  		
+26-May-12	14:45:42	147	 195031  HBHEabc_Laser_Megatile_HBP  		
+26-May-12	14:45:42	147	 195032  HBHEabc_Laser_Megatile_HEM  		
+26-May-12	14:45:42	147	 195033  HBHEabc_Laser_Megatile_HEP  		
+					
+					
+25-May-12	15:15:04	146	 194951  HBHEabc_Laser_Megatile_HBM 		
+25-May-12	15:15:04	146	 194954  HBHEabc_Laser_Megatile_HBP 		
+25-May-12	15:15:04	146	 194955  HBHEabc_Laser_Megatile_HEM 		
+25-May-12	15:15:04	146	 194957  HBHEabc_Laser_Megatile_HEP 		
+25-May-12	15:15:04	146	 194958  HBHEabc_Laser_Megatile_HEP <-- accidentally took a second HEP Megatile run 		
+					
+					
+24-May-12	11:10:22	145	" Run: 194861, HBHEabc_Laser_Megatile_HBM "		
+24-May-12	11:10:22	145	" Run: 194863, HBHEabc_Laser_Megatile_HBP "		
+24-May-12	11:10:22	145	" Run: 194864, HBHEabc_Laser_Megatile_HEM "		
+24-May-12	11:10:22	145	" Run: 194866, HBHEabc_Laser_Megatile_HEP "		
+					
+					
+21-May-12	9:52:37	142	" Run: 194555, HBHEabc_laser_Megatile_HBM "		
+21-May-12	9:52:37	142	" Run: 194557, HBHEabc_laser_Megatile_HBP "		
+21-May-12	9:52:37	142	" Run: 194559, HBHEabc_laser_Megatile_HEM "		
+21-May-12	9:52:37	142	" Run: 194563, HBHEabc_laser_Megatile_HEP "		
+					
+					
+19-May-12	11:23:50	140	 194445   HBHEabc_Laser_Megatile_HBM 		
+19-May-12	11:23:50	140	 194446   HBHEabc_Laser_Megatile_HBP 		
+19-May-12	11:23:50	140	 194447  HBHEabc_Laser_Megatile_HEM 		
+					
+					
+17-May-12	12:25:10	138	 194338   HBHEabc_Laser_Megatile_HBM 		
+17-May-12	12:25:10	138	 194339   HBHEabc_Laser_Megatile_HEM 		
+17-May-12	12:25:10	138	 194341   HBHEabc_Laser_Megatile_HBP 		
+17-May-12	12:25:10	138	 194344   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+16-May-12	9:25:48	137	 194239   HBHEabc_Laser_Megatile_HBM 		
+16-May-12	9:25:48	137	 194240   HBHEabc_Laser_Megatile_HBP 		
+16-May-12	9:25:48	137	 194241   HBHEabc_Laser_Megatile_HEM 		
+16-May-12	9:25:48	137	 194242   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+15-May-12	9:17:27	136	 194169   HBHEabc_Laser_Megatile_HBM 		
+15-May-12	9:17:27	136	 194171   HBHEabc_Laser_Megatile_HBP  		
+15-May-12	9:17:27	136	 194172   HBHEabc_Laser_Megatile_HEM  		
+15-May-12	9:17:27	136	 194173   HBHEabc_Laser_Megatile_HEP 		
+					
+					
+11-May-12	13:05:12	132	 193990 1k HBHEabc_Laser_Megatile_HBM  		
+11-May-12	13:05:12	132	 193991 1k HBHEabc_Laser_Megatile_HBP  		
+11-May-12	13:05:12	132	 193993 1k HBHEabc_Laser_Megatile_HEM  		
+11-May-12	13:05:12	132	 193994 1k HBHEabc_Laser_Megatile_HEP 		
+					
+					
+8-May-12	10:25:51	129	 193634  HBHEabc_Laser_Megatile_HBM 		
+8-May-12	10:25:51	129	 193635  HBHEabc_Laser_Megatile_HBP 		
+8-May-12	10:25:51	129	 193637  HBHEabc_Laser_Megatile_HEM 		
+8-May-12	10:25:51	129	 193639  HBHEabc_Laser_Megatile_HEP  		
+					
+					
+4-May-12	13:26:33	125	 193384 1k HBHEabc_Laser_Megatile_HBM  		
+4-May-12	13:26:33	125	 193386 1k HBHEabc_Laser_Megatile_HBP  		
+4-May-12	13:26:33	125	 193387 1k HBHEabc_Laser_Megatile_HEM  		
+4-May-12	13:26:33	125	 193388 1k HBHEabc_Laser_Megatile_HEP 		
+					
+					
+3-May-12	12:03:17	124	 193251 1k HBHEabc_Laser_Megatile_HBM  		
+3-May-12	12:03:17	124	 193252 1k HBHEabc_Laser_Megatile_HBP  		
+3-May-12	12:03:17	124	 193256 1k HBHEabc_Laser_Megatile_HEM  		
+3-May-12	12:03:17	124	 193261 1k HBHEabc_Laser_Megatile_HEP 		
+					
+					
+2-May-12	18:08:35	123	 193159 1k HBHEabc_Laser_Megatile_HBM  		
+2-May-12	18:08:35	123	 193161 1k HBHEabc_Laser_Megatile_HBP  		
+2-May-12	18:08:35	123	 193162 1k HBHEabc_Laser_Megatile_HEM  		
+2-May-12	18:08:35	123	 193164 1k HBHEabc_Laser_Megatile_HEP 		
+					
+					
+1-May-12	16:44:04	122	 193078 1k HBHEabc_Laser_Megatile_HBM   		
+1-May-12	16:44:04	122	 193080 1k HBHEabc_Laser_Megatile_HBP   		
+1-May-12	16:44:04	122	 193081 1k HBHEabc_Laser_Megatile_HEM   		
+1-May-12	16:44:04	122	 193082 1k HBHEabc_Laser_Megatile_HEP  		
+					
+					
+24-Apr-12	15:26:08	115	 r192161  HBHEabc_Laser_Megatile_HBM 		
+24-Apr-12	15:26:08	115	 r192163  HBHEabc_Laser_Megatile_HBP 		
+24-Apr-12	15:26:08	115	 r192165  HBHEabc_Laser_Megatile_HEM 		
+24-Apr-12	15:26:08	115	 r192167  HBHEabc_Laser_Megatile_HEP 		
