@@ -138,6 +138,7 @@ myEventData::get(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   if (firstEvent_) {
     iSetup.get<HcalDbRecord>().get( hcalconditions_ );
+    iSetup.get<CaloGeometryRecord>().get(geometry_);
     firstEvent_ = false;
   }
 

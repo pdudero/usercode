@@ -11,6 +11,9 @@
 <use   name="CalibFormats/HcalObjects"/>
 <use   name="CondFormats/RunInfo"/>
 <use   name="CondFormats/DataRecord"/>
+<use   name="Geometry/CaloGeometry"/>
+<use   name="Geometry/Records"/>
+<use   name="Geometry/CaloTopology"/>
 <export>
   <lib   name="1"/>
 </export>

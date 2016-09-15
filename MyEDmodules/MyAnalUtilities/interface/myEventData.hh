@@ -50,6 +50,9 @@
 #include "SimDataFormats/CaloHit/interface/PCaloHitContainer.h"
 #include "CondFormats/RunInfo/interface/RunInfo.h"
 #include "CondFormats/DataRecord/interface/RunSummaryRcd.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
+#include "Geometry/CaloTopology/interface/HcalTopology.h"
 
 //
 // class declaration
@@ -87,6 +90,8 @@ public:
 
   inline edm::ESHandle<HcalDbService>         hcalConditions(void)  const { return hcalconditions_; }
   inline edm::ESHandle<RunInfo>               runInfo(void)         const { return runInfo_;        }
+  inline edm::ESHandle<HcalTopology>          hcalTopology(void)    const { return hcaltopo_;       }
+  inline edm::ESHandle<CaloGeometry>          hcalGeometry(void)    const { return geometry_;       }
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
@@ -175,6 +180,8 @@ private:
 
   edm::ESHandle<HcalDbService>         hcalconditions_;
   edm::ESHandle<RunInfo>               runInfo_;
+  edm::ESHandle<HcalTopology>          hcaltopo_;
+  edm::ESHandle<CaloGeometry>          geometry_;
 };
 
 #endif // _MYEDMODULESMYANALUTILITIES
