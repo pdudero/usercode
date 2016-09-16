@@ -8,6 +8,8 @@
 void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 	       const string& altdrawopt="")
 {
+  wp->vp->cd();
+
   wp->vp->SetFillColor(wp->fillcolor);
 
   gStyle->cd();
@@ -57,6 +59,8 @@ void drawInPad(wPad_t *wp, wTH1& myHisto,bool firstInPad,
 template<class T>
 void drawInPad(wPad_t *wp, T *obj,const string& indrawopt, bool firstInPad=false)
 {
+  wp->vp->cd();
+
   wp->vp->SetFillColor(wp->fillcolor);
 
   gStyle->cd();
@@ -90,6 +94,8 @@ void drawInPad(wPad_t *wp, T *obj,const string& indrawopt, bool firstInPad=false
 void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
 	       const string& drawopt="")
 {
+  wp->vp->cd();
+
   wp->vp->SetFillColor(wp->fillcolor);
 
   gStyle->cd();
@@ -133,7 +139,9 @@ void drawInPad(wPad_t *wp, wStack_t *ws, bool firstInPad,
   ws->sum->DrawStats();       wp->vp->Update();
 
   //ws->sum->Draw("AXIG SAME");
-  //wp->vp->Update();
+  wp->vp->RedrawAxis();
+  wp->vp->RedrawAxis("g same");
+  wp->vp->Update();
 }                                                           // drawInPad
 
 //======================================================================
@@ -474,7 +482,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
   unsigned npads = wc0->npadsx*wc0->npadsy;
   unsigned npadsall = cs.ncanvases*npads;
 
-  if (!npads) {
+  if (!npadsall) {
     if (gl_verbose) cout << "Nothing to draw, guess I'm done." << endl;
     return; // no pads to draw on.
 
@@ -733,22 +741,42 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     if (graph_ids.size())
       mg = new TMultiGraph();
 #endif
-    for( unsigned j = 0; j < wp->graph_ids.size(); j++ ) {
-      string& gid = wp->graph_ids[j];
+    size_t size=wp->graph_ids.size();
+    for( unsigned j = 0; j < size; j++ ) {
+      string gid = wp->graph_ids[j];
       
-      wGraph_t *wg   = findGraph(gid);
+      wGraph_t *wg = findGraph(gid, "switching to set");
+      if (!wg) {
+	// handle case where a multi-object is assigned to a single pad
+	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(gid);
+	if (it!=glmap_mobj2size.end() && wp->graph_ids.size()==1) {
+	  string gidi = gid +"_0";
+	  wp->graph_ids[0]=gidi;
+	  for (size_t k=1; k<it->second; k++) {
+	    gidi = gid +"_"+int2str(k);
+	    wp->graph_ids.push_back(gidi);
+	  }
+	  size = wp->graph_ids.size();
+	  j=-1; // reset counter and start over.
+	  continue;
+	} else {
+	  cerr << "Can't assign any object above a single multigraph to a single pad" << endl;
+	  break;
+	}
+      }
 
       bool firstInPad = !j && !wp->histo_ids.size();
 
-      string drawopt = wg->drawopt;
-
-      if( firstInPad && wg->gr && wg->gr->IsA()==TGraph::Class() )
-	drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
-
       if( wg && wg->gr ) {
+
+	string drawopt = wg->drawopt;
+
+	if( firstInPad && wg->gr->InheritsFrom("TGraph") )
+	  drawopt += string("A"); // no histos drawn, need to draw the frame ourselves.
+
 	// "pre-draw" in order to define the plot elements
 	wg->gr->Draw(drawopt.c_str());
-
+	
 	if (firstInPad) {
 	  // Now we can set the axis attributes and range:
 	  wg->gr->GetXaxis()->ImportAttributes(wg->xax);
@@ -772,7 +800,25 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	}
       }
       if( wg && wg->gr2d ) {
-	drawInPad<TGraph2D>(wp,wg->gr2d,drawopt.c_str(),firstInPad);
+	string drawopt = wg->drawopt;
+
+	if (wg->contours) {
+	  //cout << "setting contours for graph " << gid << endl; wg->contours->Print();
+	  wg->gr2d->GetHistogram()->SetContour(wg->contours->GetNoElements(),
+					       wg->contours->GetMatrixArray());
+	  // In order to control the contour lines, we have to draw the 2D first to generate
+	  // the contours and then pick them out of the "contours" object as separate graph
+	  // elements
+	  if (ci_find(drawopt,"LIST") != string::npos) {
+	    new TCanvas("dummy","dummy",100,100);
+	    wg->gr2d->Draw(drawopt.c_str());
+	  } else
+	    drawInPad<TGraph2D>(wp,wg->gr2d,drawopt.c_str(),firstInPad);
+	}
+	else
+	  drawInPad<TGraph2D>(wp,wg->gr2d,drawopt.c_str(),firstInPad);
+
+	gPad->Update();
 
 	if (firstInPad) {
 	  // Now we can set the axis attributes and range:
@@ -788,18 +834,50 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	  if( wg->zax->GetXmax()>wg->zax->GetXmin() )
 	    wg->gr2d->GetZaxis()->SetRangeUser(wg->zax->GetXmin(),wg->zax->GetXmax());
 	}
-
-	if (wg->contours) {
-	  //cout << "setting contours "; wg->contours->Print();
-	  wg->gr2d->GetHistogram()->SetContour(wg->contours->GetNoElements(),
-					       wg->contours->GetMatrixArray());
-	  wg->gr2d->SetLineStyle   (wg->lstyle);
-	  wg->gr2d->SetLineColor   (wg->lcolor);
-	  wg->gr2d->SetLineWidth   (wg->lwidth);
+	
+	if (wg->contours && ci_find(drawopt,"LIST") != string::npos) {
+	  cout << wg->contours->GetNoElements() << " contour(s)" << endl;
+	  for (int i=0; i<wg->contours->GetNoElements(); i++) {
+	    TList *contLevel = (TList*)wg->gr2d->GetContourList((*(wg->contours))(i));
+	    if (!contLevel) {
+	      cerr << "Could not find any contours at level ";
+	      cerr << (*(wg->contours))(i);
+	      cerr << " for graph " << gid << endl;
+	      wp->vp->cd();
+	      continue;
+	    }
+	    TGraph *curv = (TGraph*)contLevel->First();
+	    for (int k=0; k<contLevel->GetSize(); k++) {
+	      cout << "contour #" << k << endl;
+	      curv->SetLineStyle   (wg->lstyle);
+	      curv->SetLineColor   (wg->lcolor);
+	      cout << "setting line color " << wg->lcolor << endl;
+	      curv->SetLineWidth   (wg->lwidth);
+	      if (firstInPad && k==0) {
+		drawInPad<TGraph>(wp,curv,"AL",true);
+		curv->GetXaxis()->ImportAttributes(wg->xax);
+		curv->GetYaxis()->ImportAttributes(wg->yax);
+		cout << "Setting x axis limits " << wg->xax->GetXmin() << " " << wg->xax->GetXmax() << endl;
+		if( wg->xax->GetXmax()>wg->xax->GetXmin() ) {
+		  curv->GetXaxis()->SetLimits(wg->xax->GetXmin(),wg->xax->GetXmax());
+		}
+		if( wg->yax->GetXmax()>wg->yax->GetXmin() )
+		  curv->GetYaxis()->SetRangeUser(wg->yax->GetXmin(),wg->yax->GetXmax());
+	      } else
+		drawInPad<TGraph>(wp,curv,"L",false);
+	      if( drawlegend && wg->leglabel.size() && !k )
+		wleg->leg->AddEntry(curv,wg->leglabel.c_str(),wg->legdrawopt.c_str());
+	      gPad->Modified();
+	      gPad->Update();
+	      firstInPad = false;
+	      curv = (TGraph*)contLevel->After(curv);
+	    }
+	  }
 	}
+
 	wp->vp->Modified();
 	wp->vp->Update();
-	if( drawlegend && wg->leglabel.size() )
+	if( drawlegend && wg->leglabel.size() && !wg->contours )
 	  wleg->leg->AddEntry(wg->gr2d,wg->leglabel.c_str(),wg->legdrawopt.c_str());
       }
     } // graph loop
@@ -898,11 +976,18 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
     for( unsigned j = 0; j < wp->tf1_ids.size(); j++ ) {
       string& fid = wp->tf1_ids[j];
       
-      TF1 *f1   = findTF1(fid);
+      wTF1_t *wtf1   = findwTF1(fid);
 
       bool firstInPad = !j && !wp->histo_ids.size() && !wp->graph_ids.size();
 
-      drawInPad<TF1>(wp,f1,"",firstInPad);
+      drawInPad<TF1>(wp,wtf1->tf1,"",firstInPad);
+
+      if (drawlegend && wtf1->leglabel.size()) {
+	cout << "adding tf1 legend entry with legdrawopt " << wtf1->legdrawopt << endl;
+	wleg->leg->AddEntry(wtf1->tf1,
+			    wtf1->leglabel.c_str(),
+			    wtf1->legdrawopt.c_str());
+      }
 
       wp->vp->Update();
 
@@ -917,11 +1002,28 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 	string path = it->second;
 	int error;
 	cout << "Executing macro " << it->first << " --> " << path << endl;
-	gROOT->Macro(path.c_str(), &error, kTRUE); // update current pad
-	if (error) {
-	  static const char *errorstr[] = {
-	    "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
-	  cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
+
+	if (path.find_first_of(';')) {// execute a function out of .so file
+	  vector<string> v_tok;
+	  Tokenize(path, v_tok, ";");
+	  if (v_tok.size() != 2) {
+	    cerr << "ERROR: invalid format loadlib=funcname_C.so;funcname" << endl;
+	    exit(-1);
+	  }
+	  gSystem->Load(v_tok[0].c_str());
+	  Func_t f = gSystem->DynFindSymbol(v_tok[0].c_str(), v_tok[1].c_str());
+	  if (!f) {
+	    cerr << "ERROR: couldn't find << " << v_tok[1] << " inside " << v_tok[0] << endl;
+	    exit(-1);
+	  }
+	  (*f)();
+	} else {
+	  gROOT->Macro(path.c_str(), &error, kTRUE); // update current pad
+	  if (error) {
+	    static const char *errorstr[] = {
+	      "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
+	    cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
+	  }
 	}
       } else {
 	cerr << "ERROR: macro id " << wp->macro_ids[i];
