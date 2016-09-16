@@ -65,11 +65,20 @@ processBoxSection(FILE *fp,
     } else if (!box) {
       cerr << "key x1x2y1y2 must appear before this key: " << key << endl; continue;
     } else {
-      if      (key == "linecolor")   box->SetLineColor(str2int(value));
-      else if (key == "linestyle")   box->SetLineStyle(str2int(value));
-      else if (key == "linewidth")   box->SetLineWidth(str2int(value));
-      if      (key == "fillcolor")   box->SetFillColor(str2int(value));
-      if      (key == "fillstyle")   box->SetFillStyle(str2int(value));
+      if      (key == "linecolor")      box->SetLineColor(str2int(value));
+      else if (key == "linestyle")      box->SetLineStyle(str2int(value));
+      else if (key == "linewidth")      box->SetLineWidth(str2int(value));
+      if      (key == "fillcolor")      box->SetFillColor(str2int(value));
+#if 0
+      if (key == "fillcoloralpha") {
+	Tokenize(value,v_tokens,",");
+	if (v_tokens.size() != 2) {
+	  cerr << "fillcolor alpha expecting 'color,value' list" << endl; continue;
+	}
+	box->SetFillColorAlpha(str2int(v_tokens[0]),str2flt(v_tokens[1]));
+      }
+#endif
+      if      (key == "fillstyle")      box->SetFillStyle(str2int(value));
       else {
 	cerr << "unknown key " << key << endl;
       }
