@@ -181,6 +181,7 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 	char c = arg[0];
 	switch( c ) {
 	case 'n': printf( fmt.c_str(), h->GetName() ); break;
+	case 't': printf( fmt.c_str(), h->GetTitle() ); break;
 	case 'p': // full histo path
 	case 'f': // root filename
 	case 'h': // histo path in file
@@ -196,12 +197,15 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 	      vector<string> v_tokens;
 	      Tokenize(it->second,v_tokens,":");
 	      switch (c) {
-	      case 'h': printf( fmt.c_str(), v_tokens[1].c_str() ); break;
+	      case 'h': printf( fmt.c_str(),
+				(v_tokens.size() == 3 ? 
+				 v_tokens[2].c_str() :
+				 v_tokens[1].c_str()) ); break;
 	      case 'd':
 		{
 		  size_t dirnumber=0;
 		  if (arg.size()>1) dirnumber=(size_t)str2int(arg.substr(1));
-		  Tokenize(v_tokens[1],v_tokens,"/");
+		  Tokenize((v_tokens.size()==3 ? v_tokens[2] : v_tokens[1]), v_tokens,"/");
 		  if( v_tokens.size() < 2) cout << "/";
 		  else if (dirnumber>=v_tokens.size()) continue;
 		  else printf( fmt.c_str(), v_tokens[dirnumber].c_str() );
@@ -209,7 +213,7 @@ void printHistoStats(TH1 *h, const string& histo_id, const string& printfspec)
 		break;
 	      case 'f':
 		{
-		  Tokenize(v_tokens[0],v_tokens,"/");
+		  Tokenize( (v_tokens.size() == 3 ? v_tokens[1] : v_tokens[0]), v_tokens,"/");
 		  printf( fmt.c_str(), (v_tokens.rbegin())->c_str() );
 		}
 		break;
@@ -280,59 +284,29 @@ void printHisto2File(TH1 *histo, string filename)
 }                                                     // printHisto2File
 
 //======================================================================
-
-void saveHisto2File(TH1 *histo, string outspec)
-{
-  TFile *rootfile;
-  string rootfn,newname;
-  TH1 *target;
-
-#if 0
-  //This filename input can be an alias
-  //
-  if( rootfn[0] == '@') {  // reference to an alias defined in ALIAS section
-    rootfn = extractAlias(rootfn.substr(1));
-    if( !rootfn.size()) return;
-  }
-#endif
-
-  if( outspec.find(":") != string::npos) {
-    vector<string> v_tokens;
-    Tokenize(outspec,v_tokens,":");
-
-    rootfn = v_tokens[0];
-    newname = v_tokens[1];
-  } else
-    rootfn = outspec;
-
-
-  rootfile = openRootFile(rootfn,"UPDATE");
-
-  if (rootfile) {
-    target = histo;
-    if( newname.size() ) {
-      cout<<"Writing histo "<<newname<<" to file "<<rootfn<<endl;
-      target = (TH1 *)histo->Clone(newname.c_str());
-      //target->SetTitle(histo->GetTitle());
-    } else
-      cout<<"Writing histo "<<histo->GetName()<<" to file "<<rootfn<<endl;
-
-    target->SetDirectory(rootfile);
-    target->Write();
-    //rootfile->Close();
-  }
-}                                                      // saveHisto2File
-
-//======================================================================
 // takes table of "xloedge bincontent binerror"
 //
-void load1DHistoContentsFromTextFile(const char *filename, 
+void load1DHistoContentsFromTextFile(const string& loadspec,
+				     const string& histoid,
 				     wTH1 *&wth1)
 {
   char linein[LINELEN];
   double xloedge[100],binc[100],bine[100];
+  vector<TString> xlabels;
 
-  FILE *fp = fopen(filename, "r");
+  vector<string> v_tokens;
+  Tokenize(loadspec,v_tokens,"\",");
+  string filename = v_tokens[0];
+
+  TString scanfmt("%lf");
+  if (v_tokens.size() > 1) {
+    scanfmt = TString(v_tokens[1].c_str());
+  }
+  TString option("gce");
+  if (v_tokens.size() > 2)
+    option=v_tokens[2];
+
+  FILE *fp = fopen(filename.c_str(), "r");
 
   if (!fp) {
     cerr << "File failed to open, " << filename << endl;
@@ -343,30 +317,63 @@ void load1DHistoContentsFromTextFile(const char *filename,
     cout << "Loading vectors from file " << filename;
 
   int nbins=0;
+  char header1[80], header2[80];
+  header2[0]=0;
   while (!feof(fp) && fgets(linein,LINELEN,fp)) {
-
+    if (linein[0]=='#') {
+      if (!nbins) {
+	TString headerscanfmt(scanfmt);
+	headerscanfmt.ReplaceAll("lf","s");
+	headerscanfmt.ReplaceAll("f","s");
+	int n=sscanf(&linein[1],headerscanfmt.Data(), header1,header2);
+	if (n!=2) {
+	  cerr << "Unexpected format for presumed header row " << TString(linein) << endl;
+	}
+      }
+      continue;
+    }
     if (nbins >= 100) {
       cerr << "Change me! I can only take 100 bins max." << endl;
       exit(-1);
     }
-    int nscan= sscanf(linein, "%lf %lf %lf", &xloedge[nbins], &binc[nbins], &bine[nbins]);
-
-    if (nscan==1) { // take this as the end of the histogram, the last "lowedge"
-      break;
-    } else  if (nscan != 3) {
-      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
-      return;
+    int nscan=0;
+    if (option.Contains("gce")) {
+      nscan= sscanf(linein, scanfmt.Data(), &xloedge[nbins], &binc[nbins], &bine[nbins]);
+      if (nscan==1) { // take this as the end of the histogram, the last "lowedge"
+	break;
+      } else  if (nscan != 3) {
+	cerr << "scan failed, file " << filename << ", line = " << TString(linein) << endl;
+	return;
+      }
+    } else if (option.Contains("lc")) {
+      char xlabel[80];
+      nscan= sscanf(linein, scanfmt.Data(), xlabel, &binc[nbins]);
+      if (nscan != 2) {
+	cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+	return;
+      }
+      //cout << linein << " " << scanfmt << " " << binc[nbins] << endl;
+      xlabels.push_back(TString(xlabel));
     }
     nbins++;
   }
   
-  wth1 = new wTH1(new TH1D(filename,filename,nbins,xloedge));
-  
   if (gl_verbose) cout << "; read " << nbins << " lines" << endl;
-  
-  for (int ibin=1; ibin<=nbins; ibin++) {
-    wth1->histo()->Fill(wth1->histo()->GetXaxis()->GetBinCenter(ibin),binc[ibin-1]);
-    wth1->histo()->SetBinError(ibin,bine[ibin-1]);
+
+  if (option.Contains("gce")) {
+    wth1 = new wTH1(new TH1D(histoid.c_str(),histoid.c_str(),nbins,xloedge));
+    for (int ibin=1; ibin<=nbins; ibin++) {
+      wth1->histo()->Fill(wth1->histo()->GetXaxis()->GetBinCenter(ibin),binc[ibin-1]);
+      wth1->histo()->SetBinError(ibin,bine[ibin-1]);
+    }
+  } else if (option.Contains("lc")) {
+    wth1 = new wTH1(new TH1D(histoid.c_str(),histoid.c_str(),nbins,0,nbins));
+    if (strlen(header2)) wth1->histo()->SetTitle(header2);
+    for (int ibin=1; ibin<=nbins; ibin++) {
+      wth1->histo()->SetBinContent(ibin,binc[ibin-1]);
+      wth1->histo()->SetBinError(ibin,sqrt(binc[ibin-1]));
+      wth1->histo()->GetXaxis()->SetBinLabel(ibin,xlabels[ibin-1]);
+    }
   }
 }                                    //  load1DHistoContentsFromTextFile
 
@@ -413,6 +420,48 @@ void load2DHistoContentsFromTextFile(const char *filename,
 }                                    //  load2DHistoContentsFromTextFile
 
 //======================================================================
+// takes table of "xbincenter ybincenter bincontent"
+//
+void load3DHistoContentsFromTextFile(const char *filename, 
+				     wTH1& wth1, // must be prebooked
+				     const char *fmtstr = "%lf %lf %lf %lf")
+{
+  char linein[LINELEN];
+
+  FILE *fp = fopen(filename, "r");
+
+  if (!fp) {
+    cerr << "File failed to open, " << filename << endl;
+    return;
+  }
+
+  if (gl_verbose)
+    cout << "Loading bin contents from file " << filename << endl;
+
+  int nrec=0;
+  cout<<"nrec\txbc\tybc\tzbc\tibin\tbinc"<<endl;
+  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+    double xbc,ybc,zbc,binc;
+    if (linein[0]=='#') continue; // comments are welcome
+    int nscan= sscanf(linein, fmtstr, &xbc, &ybc, &zbc, &binc);
+
+    if (nscan != 4) {
+      cerr << "scan failed:";
+      cerr << "  nscan  = " << nscan    << endl;
+      cerr << "  file   = " << filename << endl;
+      cerr << "  fmtstr = " << fmtstr   << endl;
+      cerr << "  line   = " << linein;
+      break;
+    }
+    nrec++;
+    int ibin = wth1.histo()->FindFixBin(xbc,ybc,zbc);
+    cout<<nrec<<"\t"<<xbc<<"\t"<<ybc<<"\t"<<zbc<<"\t"<<ibin<<"\t"<<binc<<endl;
+    wth1.histo()->SetBinContent(ibin,binc);
+  }
+  cout << nrec << " records read in" << endl;
+}                                    //  load3DHistoContentsFromTextFile
+
+//======================================================================
 // takes a single column of numbers to fill into a pre-booked histo
 //
 void fill1DHistoFromTextFile(const string& scanspec,
@@ -437,7 +486,8 @@ void fill1DHistoFromTextFile(const string& scanspec,
   }
 
   if (gl_verbose)
-    cout << "Loading numbers from file " << filename;
+    cout << "Loading numbers from file " << filename 
+	 << " with scanfmt \"" << scanfmt << "\"" << endl;
 
   double num;
   while (!feof(fp) && fgets(linein,LINELEN,fp)) {
@@ -447,7 +497,7 @@ void fill1DHistoFromTextFile(const string& scanspec,
       cerr << "Error reading line " << linein;
       continue;
     }
-
+    //cout << linein << " " << num << endl;
     wth1->histo()->Fill(num);
   }
 
@@ -473,16 +523,18 @@ wTH1 *getHistoFromSpec(const string& hid,
   fullspec = spec;
 
   Tokenize(fullspec,v_tokens,":");
-  if( (v_tokens.size() != 2) ||
-      (!v_tokens[0].size())  ||
-      (!v_tokens[1].size())    ) {
-    cerr << "malformed root histo path file:folder/subfolder/.../histo " << fullspec << endl;
-    return NULL;
-  } else {
+  if( (v_tokens.size() == 3) &&v_tokens[0].size() && v_tokens[1].size() && v_tokens[2].size())
+  {
+    rootfn = v_tokens[0]+":"+v_tokens[1];
+    hspec  = v_tokens[2];
+  } else if( (v_tokens.size() == 2) &&v_tokens[0].size() && v_tokens[1].size()) {
     rootfn = v_tokens[0];
     hspec  = v_tokens[1];
   }
-
+  else {
+    cerr << "malformed root histo path file:folder/subfolder/.../histo " << fullspec << endl;
+    return NULL;
+  }
 #if 0
   map<string,string>::const_iterator it = glmap_objpath2id.find(fullspec);
   if( it != glmap_objpath2id.end() ) {
@@ -504,10 +556,11 @@ wTH1 *getHistoFromSpec(const string& hid,
       if( !h1) {
 	cerr << "couldn't find " << hspec << " in " << rootfn << endl;
       } else {
-	static int linearCounter=0;
-	char fakename[100];
-	sprintf(fakename,"hist%d",linearCounter++);
-	h1=(TH1*)(h1->Clone(fakename));
+	//static int linearCounter=0;
+	//char fakename[100];
+	//sprintf(fakename,"hist%d",linearCounter++);
+	//h1=(TH1*)(h1->Clone(fakename));
+	h1=(TH1*)(h1->Clone());
 
 	// success, record that you read it in.
 	if( gl_verbose) cout << "Found " << fullspec << endl;
@@ -569,8 +622,10 @@ void processCommonHistoParams(const string& key,
   else if( key == "linecolor" )   wh.SetLine(str2int(value));
   else if( key == "linestyle" )   wh.SetLine(0,str2int(value));
   else if( key == "linewidth" )   wh.SetLine(0,0,str2int(value));
+  else if( key == "fillstyle" )   wh.histo()->SetFillStyle(str2int(value));
   else if( key == "fillcolor" )   wh.histo()->SetFillColor(str2int(value));
   else if( key == "leglabel" )    wh.SetLegendEntry(value);
+  else if( key == "legdraw" )     wh.SetLegDrawOpt(value);
 
   else if( key == "reduceerror" ) { 
     for (int ibin=1;ibin<=wh.histo()->GetNbinsX(); ibin++) { 
@@ -696,15 +751,19 @@ void processCommonHistoParams(const string& key,
 
   else if( key == "printfstats" )  printHistoStats( wh.histo(),histo_id,value );
   else if( key == "print2file" )   printHisto2File( wh.histo(),value );
-  else if( key == "save2file" )     saveHisto2File( wh.histo(),value );
+  else if( key == "save2file" )    save2File( wh.histo(),value ); // save with same name
+  else if( key == "saveas" )       saveAs( wh.histo(),value ); // save with different name
+
   //==============================
   else if( key == "normalize" ) {
   //==============================
     TH1 *h1 = (TH1 *)wh.histo();
     float norm = str2flt(value);
-    if( h1->Integral() > 0.0 )
-      h1->Scale( norm/h1->Integral() );
-    else
+    if( h1->Integral() > 0.0 ){
+      double sf = norm/h1->Integral();
+      if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<h1->GetName()<<" by "<<sf<<endl;
+      h1->Scale( sf );
+    } else
       cerr << h1->GetName() << " integral is ZERO, cannot normalize." << endl;
   }
   //==============================
@@ -713,10 +772,35 @@ void processCommonHistoParams(const string& key,
     TH1 *normee = (TH1 *)wh.histo();
     TH1 *normer = (TH1 *)findHisto2(value,"define first")->histo();
 
-    if( normer->Integral() != 0.0 )
-      normee->Scale( normer->Integral()/normee->Integral() );
-    else
+    if( normer->Integral() != 0.0 ) {
+      double sf = normer->Integral()/normee->Integral();
+      if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<normee->GetName()<<" by "<<sf<<endl;
+      normee->Scale( sf );
+    } else
       cerr << normer->GetName() << " integral is ZERO, cannot normalize." << endl;
+  }
+  //==============================
+  else if( key == "normbyhisto" ) { // divide by named histo's integral
+  //==============================
+    TH1 *normee = (TH1 *)wh.histo();
+    TH1 *normer = (TH1 *)findHisto2(value,"define first")->histo();
+
+    if( normer->Integral(0,normer->GetNbinsX()+1) != 0.0 ) {
+      double sf = 1./normer->Integral(0,normer->GetNbinsX()+1);
+      if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<normee->GetName()<<" by "<<sf<<endl;
+      normee->Scale( sf );
+    }  else
+      cerr << normer->GetName() << " integral is ZERO, cannot normalize." << endl;
+  }
+  //==============================
+  else if( key == "normaxis2mean" ) { // reset X axis by dividing by histo mean
+  //==============================
+    double mean = wh.histo()->GetMean();
+    if (mean != 0.0) {
+      TAxis *xax = wh.histo()->GetXaxis();
+      xax->SetLimits(xax->GetXmin()/wh.histo()->GetMean(),
+		     xax->GetXmax()/wh.histo()->GetMean());
+    }
   }
   //==============================
   else if( key == "scalebyfactor" ) {
@@ -724,24 +808,36 @@ void processCommonHistoParams(const string& key,
 
     double sf = (double)str2flt(value);
     TH1 *h1 = (TH1 *)wh.histo();
-    if( gl_verbose ) cout << "scaling histo "<<h1->GetName()<<" by "<<sf<<endl;
+    if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<h1->GetName()<<" by "<<sf<<endl;
     h1->Scale(sf);
+  }
+  //==============================
+  else if( key == "scalebytf1" ) {
+  //==============================
+    TF1 *tf1 = findTF1(value);
+    if( !tf1 ) {
+      cerr << "TF1 " << value << " must be defined first" << endl;
+      return;
+    }
+
+    TH1 *h1 = (TH1 *)wh.histo();
+    if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<h1->GetName()<<" by TF1 "<<tf1->GetName()<<endl;
+    h1->Multiply(tf1);
   }
   //==============================
   else if( key == "scalebysample" ) {
   //==============================
-
     // Expect value=@samplename(integlumi_invpb)
     Tokenize(value,v_tokens,"()");
     if( v_tokens.size() != 2 ) {
-      cerr << "invalid scalebysample specifier, " << value << endl;
+      cerr << "invalid scalebysample specifier, expecting sampleid(luminvpb) " << value << endl;
       return;
     }
     
     double sf = getSampleScaleFactor(v_tokens[0],
 				     (double)str2flt(v_tokens[1]));
     TH1 *h1 = (TH1 *)wh.histo();
-    if( gl_verbose ) cout << "scaling histo "<<h1->GetName()<<" by "<<sf<<endl;
+    if( gl_verbose ) cout << "scaling histo "<<histo_id<<"=>"<<h1->GetName()<<" by "<<sf<<endl;
     h1->Scale(sf);
   }
   //==============================
@@ -841,7 +937,7 @@ processHistoSection(FILE *fp,
       if( !wth1 ) continue;
 
     //------------------------------
-    } else if( key == "book1dpars" ) { // book a blank 1D histo with provided parameters
+    } else if( key == "bookfixedbinpars" ) { // book a blank 1D/2D/3D histo with fixed binning
     //------------------------------
       if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
@@ -852,24 +948,96 @@ processHistoSection(FILE *fp,
 
       Tokenize(value,v_tokens,","); // title can't have commas in it!
 
-      if( (v_tokens.size() != 5) ||
-	  (!v_tokens[0].size())  ||
-	  (!v_tokens[1].size())  ||
-	  (!isnumeric(v_tokens[2]))  ||
-	  (!v_tokens[3].size())  ||
-	  (!v_tokens[4].size()) ) {
-	for (unsigned i=0; i<v_tokens.size(); i++)
-	  cout << v_tokens[i] << endl;
-	cerr << "malformed 1d parameter specification " << value << endl; continue;
-      }
+      switch(v_tokens.size()) {
+      case 5:
+	{
+	  if((!v_tokens[0].size())  ||
+	     (!v_tokens[1].size())  ||
+	     (!isnumeric(v_tokens[2]))  ||
+	     (!v_tokens[3].size())  ||
+	     (!v_tokens[4].size()) ) {
+	    for (unsigned i=0; i<v_tokens.size(); i++)
+	      cout << v_tokens[i] << endl;
+	    cerr << "malformed 1d parameter specification " << value << endl; continue;
+	  }
 
-      wth1 = new wTH1(new TH1D(v_tokens[0].c_str(),
-			       v_tokens[1].c_str(),
-			       str2int(v_tokens[2]),
-			       str2flt(v_tokens[3]),
-			       str2flt(v_tokens[4])));
+	  wth1 = new wTH1(new TH1D(v_tokens[0].c_str(),
+				   v_tokens[1].c_str(),
+				   str2int(v_tokens[2]),
+				   str2flt(v_tokens[3]),
+				   str2flt(v_tokens[4])));
+	  
+	  glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+	}
+	break;
+      case 8: 
+	{
+	  if( (!v_tokens[0].size())  ||
+	      (!v_tokens[1].size())  ||
+	      (!isnumeric(v_tokens[2]))  ||
+	      (!v_tokens[3].size())  ||
+	      (!v_tokens[4].size())  ||
+	      (!isnumeric(v_tokens[5]))  ||
+	      (!v_tokens[6].size())  ||
+	      (!v_tokens[7].size())     ) {
+	    for (unsigned i=0; i<v_tokens.size(); i++)
+	      cout << v_tokens[i] << endl;
+	    cerr << "malformed 2d parameter specification " << value << endl; continue;
+	  }
 
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+	  wth1 = new wTH1(new TH2D(v_tokens[0].c_str(),
+				   v_tokens[1].c_str(),
+				   str2int(v_tokens[2]),
+				   str2flt(v_tokens[3]),
+				   str2flt(v_tokens[4]),
+				   str2int(v_tokens[5]),
+				   str2flt(v_tokens[6]),
+				   str2flt(v_tokens[7])
+				   )
+			  );
+
+	  glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+	}
+	break;
+      case 11: 
+	{
+	  if( (!v_tokens[0].size())  ||
+	      (!v_tokens[1].size())  ||
+	      (!isnumeric(v_tokens[2]))  ||
+	      (!v_tokens[3].size())  ||
+	      (!v_tokens[4].size())  ||
+	      (!isnumeric(v_tokens[5]))  ||
+	      (!v_tokens[6].size())  ||
+	      (!v_tokens[7].size())  ||
+	      (!isnumeric(v_tokens[8]))  ||
+	      (!v_tokens[9].size())  ||
+	      (!v_tokens[10].size())
+	      ) {
+	    for (unsigned i=0; i<v_tokens.size(); i++)
+	      cout << v_tokens[i] << endl;
+	    cerr << "malformed 3d parameter specification " << value << endl; continue;
+	  }
+
+	  wth1 = new wTH1(new TH3D(v_tokens[0].c_str(),
+				   v_tokens[1].c_str(),
+				   str2int(v_tokens[2]),
+				   str2flt(v_tokens[3]),
+				   str2flt(v_tokens[4]),
+				   str2int(v_tokens[5]),
+				   str2flt(v_tokens[6]),
+				   str2flt(v_tokens[7]),
+				   str2int(v_tokens[8]),
+				   str2flt(v_tokens[9]),
+				   str2flt(v_tokens[10])
+				   )
+			  );
+	  
+	  glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
+	}
+	break;
+      default:
+	  cerr << "malformed parameter specification " << value << endl; continue;
+      } // end switch
 
     //------------------------------
     } else if( key == "book1dvarbins" ) { // book a blank 1D histo with provided parameters
@@ -904,45 +1072,6 @@ processHistoSection(FILE *fp,
 			       v_tokens[1].c_str(),
 			       (int)(v_tokens.size()-3),
 			       vbinedges.GetMatrixArray()));
-
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
-
-    //------------------------------
-    } else if( key == "book2dpars" ) { // book a blank 2D histo with provided parameters
-    //------------------------------
-      if( !hid ) {
-	cerr << "id key must be defined first in the section" << endl; continue;
-      }
-      if( wth1 ) {
-	cerr << "histo already defined" << endl; continue;
-      }
-
-      Tokenize(value,v_tokens,","); // title can't have commas in it!
-
-      if( (v_tokens.size() != 8) ||
-	  (!v_tokens[0].size())  ||
-	  (!v_tokens[1].size())  ||
-	  (!isnumeric(v_tokens[2]))  ||
-	  (!v_tokens[3].size())  ||
-	  (!v_tokens[4].size())  ||
-	  (!isnumeric(v_tokens[5]))  ||
-	  (!v_tokens[6].size())  ||
-	  (!v_tokens[7].size())     ) {
-	for (unsigned i=0; i<v_tokens.size(); i++)
-	  cout << v_tokens[i] << endl;
-	cerr << "malformed 2d parameter specification " << value << endl; continue;
-      }
-
-      wth1 = new wTH1(new TH2D(v_tokens[0].c_str(),
-			       v_tokens[1].c_str(),
-			       str2int(v_tokens[2]),
-			       str2flt(v_tokens[3]),
-			       str2flt(v_tokens[4]),
-			       str2int(v_tokens[5]),
-			       str2flt(v_tokens[6]),
-			       str2flt(v_tokens[7])
-			       )
-		      );
 
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
@@ -995,12 +1124,26 @@ processHistoSection(FILE *fp,
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
     //------------------------------
+    } else if( key == "autofill" ) {
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "ERROR: must book histo first..." << endl; continue;
+      }
+      double val = str2dbl(value);
+      TH1 *h1 = wth1->histo();
+      for (int ibin=1; ibin<=h1->GetNbinsX(); ibin++)
+	h1->SetBinContent(ibin,val);
+
+    //------------------------------
     } else if( key == "loadtxtfile" ) {
     //------------------------------
       if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
-      load1DHistoContentsFromTextFile(value.c_str(),wth1);
+      load1DHistoContentsFromTextFile(value.c_str(),*hid,wth1);
 
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wth1));
 
@@ -1021,6 +1164,26 @@ processHistoSection(FILE *fp,
       case 2:  load2DHistoContentsFromTextFile(v_tokens[0].c_str(),*wth1,v_tokens[1].c_str()); break;
       default:
 	cerr << "malformed load2dtxtfile spec path[,format]] " << value << endl;
+	break;
+      }
+
+    //------------------------------
+    } else if( key == "load3dtxtfile" ) {
+    //------------------------------
+      if( !hid ) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if( !wth1 ) {
+	cerr << "Must book 3d histo with 'book3dpars' first" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,",");
+
+      switch(v_tokens.size()) {
+      case 1:  load3DHistoContentsFromTextFile(v_tokens[0].c_str(),*wth1); break;
+      case 2:  load3DHistoContentsFromTextFile(v_tokens[0].c_str(),*wth1,v_tokens[1].c_str()); break;
+      default:
+	cerr << "malformed load3dtxtfile spec path[,format]] " << value << endl;
 	break;
       }
 
