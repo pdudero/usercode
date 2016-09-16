@@ -1,22 +1,28 @@
 #include <sstream>
+#include <vector>
 #include <algorithm> // std::search
+#include <string>
 
 //======================================================================
 
-inline unsigned int str2uint(const string& str) {
+inline unsigned int str2uint(const std::string& str) {
   return (unsigned int)strtoul(str.c_str(),NULL,0);
 }
 
-inline int str2int(const string& str) {
+inline int str2int(const std::string& str) {
   return (int)strtol(str.c_str(),NULL,0);
 }
 
-inline float str2flt(const string& str) {
+inline float str2flt(const std::string& str) {
   return (float)strtod(str.c_str(),NULL);
 }
 
-inline string int2str(int i) {
-  ostringstream ss;
+inline double str2dbl(const std::string& str) {
+  return strtod(str.c_str(),NULL);
+}
+
+inline std::string int2str(int i) {
+  std::ostringstream ss;
   ss << i;
   return ss.str();
 }
@@ -31,12 +37,13 @@ bool ci_equal(char ch1, char ch2)
           toupper((unsigned char)ch2));
 }
 
-size_t ci_find(const string& str1, const string& str2)
+size_t ci_find(const std::string& str1, const std::string& str2)
 {
-  string::const_iterator pos = search(str1.begin(), str1.end(),
-				      str2.begin(), str2.end(), ci_equal);
+  std::string::const_iterator pos = search(str1.begin(), str1.end(),
+					   str2.begin(), str2.end(),
+					   ci_equal);
   if (pos == str1.end())
-    return string::npos;
+    return std::string::npos;
   else
     return (pos-str1.begin());
 }
@@ -46,30 +53,30 @@ size_t ci_find(const string& str1, const string& str2)
 // http://oopweb.com/CPP/Documents/CPPHOWTO/Volume/C++Programming-HOWTO-7.html
 // returns one token (the whole string) if none of the delimiters are found.
 //
-void Tokenize(const string& str,
-	      vector<string>& tokens,
-	      const string& delimiters = " ",
+void Tokenize(const std::string& str,
+	      std::vector<std::string>& tokens,
+	      const std::string& delimiters = " ",
 	      bool include_delimiters=false)
 {
-  string src=str;
+  std::string src=str;
   tokens.clear();
 
   // Skip delimiters at beginning.
-  string::size_type lastPos = src.find_first_not_of(delimiters, 0);
+  std::string::size_type lastPos = src.find_first_not_of(delimiters, 0);
 
   if (include_delimiters && lastPos>0)
     tokens.push_back(src.substr(0,lastPos));
 
   // Find first delimiter.
-  string::size_type pos = src.find_first_of(delimiters, lastPos);
+  std::string::size_type pos = src.find_first_of(delimiters, lastPos);
 
-  while (pos != string::npos || lastPos != string::npos) {
+  while (pos != std::string::npos || lastPos != std::string::npos) {
     // Found a token, add it to the vector.
     tokens.push_back(src.substr(lastPos, pos - lastPos));
 
     lastPos = src.find_first_not_of(delimiters, pos);
 
-    if (include_delimiters && pos!=string::npos) {
+    if (include_delimiters && pos!=std::string::npos) {
       tokens.push_back(src.substr(pos, lastPos-pos));
     } //else skip delimiters.
 
@@ -82,15 +89,15 @@ void Tokenize(const string& str,
 
 //======================================================================
 
-string stripDirsAndSuffix(const string& input)
+std::string stripDirsAndSuffix(const std::string& input)
 {
-  string output;
+  std::string output;
   size_t startpos=input.find_last_of('/');
   size_t endpos  =input.find_last_of('.');
-  if (startpos==string::npos) startpos = 0;
+  if (startpos==std::string::npos) startpos = 0;
   else startpos++;
-  if (endpos==string::npos) output=input.substr(startpos);
-  else                      output=input.substr(startpos,endpos-startpos);
+  if (endpos==std::string::npos) output=input.substr(startpos);
+  else                           output=input.substr(startpos,endpos-startpos);
 
   return output;
 }
