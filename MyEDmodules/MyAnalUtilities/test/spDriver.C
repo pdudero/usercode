@@ -22,7 +22,7 @@ void loadMultiAliii(const string& tableFilename,
     cerr<<"Error, couldn't open alias include file '"<<tableFilename<<"'"<<endl;
     exit(-1);
   }
-  if (verbose) cout << "Loading include table '" << tableFilename << "'" << endl;
+  if (verbose) cout << "Loading include table '"<<tableFilename<<"'"<<endl;
 
   string theline;
 
@@ -35,7 +35,7 @@ void loadMultiAliii(const string& tableFilename,
     cerr << "ERROR: include table file empty" << endl;
     return;
   } else {
-    Tokenize(theline, parnames,"\t");
+    Tokenize(theline, parnames," \t");
     if (!parnames.size()) {
       //===================================================================
       cerr << "ERROR: first line of include table ";
@@ -143,7 +143,7 @@ void writeTmpConfig(const string& canvasLayout,
 
   const string catstring = "cat "+canvasLayout+">>"+tmpname;
   gSystem->Exec(catstring.c_str());
-}
+}                                                      // writeTmpConfig
 
 //======================================================================
 
