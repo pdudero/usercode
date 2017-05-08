@@ -33,7 +33,7 @@
 #include "CondFormats/HcalObjects/interface/HcalLogicalMap.h"
 #include "DataFormats/Common/interface/SortedCollection.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+
 #include "MyEDmodules/MyAnalUtilities/interface/myEventData.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalCut.hh"
 #include "MyEDmodules/MyAnalUtilities/interface/myAnalHistos.hh"
@@ -195,6 +195,7 @@ private:
 
   edm::ESHandle<HcalDbService>  conditions_;
   edm::ESHandle<CaloGeometry>   geometry_;
+  edm::ESHandle<HcalElectronicsMap> hcalemap_;
 
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;

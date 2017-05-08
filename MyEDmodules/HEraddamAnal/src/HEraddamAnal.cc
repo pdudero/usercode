@@ -85,7 +85,7 @@ HEraddamAnal::HEraddamAnal(const edm::ParameterSet& iConfig)
   edm::ParameterSet edPset =
     iConfig.getUntrackedParameter<edm::ParameterSet>("eventDataPset");
 
-  eventData_ = new myEventData(edPset);
+  eventData_ = new myEventData(edPset,consumesCollector());
   algos_     = new HEraddamAnalAlgos(iConfig);
 }
 

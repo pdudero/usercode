@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-year=2012
+year=2016
 
 heraddam = cms.EDAnalyzer('HEraddamAnal',
                              

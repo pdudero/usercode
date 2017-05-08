@@ -70,7 +70,7 @@ int date2day(const char *date)
 
   TString datestr(date);
 
-  TObjArray *tokens = datestr.Tokenize("-");
+  TObjArray *tokens = datestr.Tokenize("-/");
 
   assert(tokens->GetEntriesFast()==3);
 
@@ -122,7 +122,7 @@ HEraddamAnalAlgos::HEraddamAnalAlgos(const edm::ParameterSet& iConfig)
   st_lastCut_ = "cutamp";
 
   for (unsigned i=0; i<v_cuts_.size(); i++)
-    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],*fs);
+    m_cuts_[v_cuts_[i]] = new myAnalCut(i,v_cuts_[i],fs->tFileDirectory());
 
   if (doPerChannel_) {
     getCut("cutNone")->setFlag(st_doPerChannel_);
@@ -325,26 +325,32 @@ HEraddamAnalAlgos::readLumiProfile(const std::string& lumiprofilefile)
   m_lumiprofile_.clear();
   char instr[128];
   double intlumiofyear = 0.0;
+  double intlumiofday = 0.0;
   while (!feof(fp) && fgets(instr,128,fp)) {
-    char date[12];
-    char time[12];
     double intlumi_pb;
-    int dayofyear;
+    int dayofyear,olddayofyear=-1;
     if (instr[0]=='#') continue; //comments are welcome...
     if (lumiprofilefile.find("2016") != string::npos) {
-      if (sscanf(instr,"%s %s %lf",date,time,&intlumi_pb) != 3) {
+      if (sscanf(instr,"%*s %*s %d %lf %lf",&dayofyear,&intlumi_pb,&intlumiofyear) != 3) {
 	cerr << "bad format in lumi profile file " << lumiprofilefile << ":"<<instr<<endl;
 	exit(-1);
       }
-      intlumiofyear = intlumi_pb;
-      dayofyear = date2day(date);
+      //dayofyear = date2day(date);
     } else {
-      if (sscanf(instr,"%s %d %lf %lf",date,&dayofyear,&intlumi_pb,&intlumiofyear) != 4) {
+      if (sscanf(instr,"%*s %d %lf %lf",&dayofyear,&intlumi_pb,&intlumiofyear) != 3) {
 	cerr << "bad format in lumi profile file " << lumiprofilefile << ":"<<instr<<endl;
 	exit(-1);
       }
     }
-    m_lumiprofile_[dayofyear] = std::pair<double,double>(intlumi_pb,intlumiofyear);
+    if (olddayofyear==dayofyear)
+      intlumiofday += intlumi_pb;
+    else {
+      intlumiofday = intlumi_pb;
+      olddayofyear = dayofyear;
+    }
+
+    // multiple entries with the same day of year will have only the last entry kept.
+    m_lumiprofile_[dayofyear] = std::pair<double,double>(intlumiofday,intlumiofyear);
   }
   fclose(fp);
 }                                 //  HEraddamAnalAlgos::readLumiProfile
@@ -516,7 +522,9 @@ HEraddamAnalAlgos::bookDetailHistos4cut(myAnalCut& cut)
 void
 HEraddamAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
 {
-  //edm::LogInfo("Filling histograms for subdet ") << mysubdetstr_ << std::endl;
+  edm::LogInfo("Filling histograms for subdet ") << mysubdetstr_
+						 << " and cut " << thisCut.description()
+						 << std::endl;
 
   myAnalHistos *myAH;
   if (thisCut.isActive()) {
@@ -562,12 +570,14 @@ HEraddamAnalAlgos::fillHistos4cut(myAnalCut& thisCut)
     avgPulse->Fill(its,filldigifC[its]);
 
   //cout << detID_ << "\t" << feID_.rbx() << "\t" << feID_.rbx().substr(3,2) << "\t";
-  //cout << feID_.rm() << " maps to RBX/RM# " << iRBX << "/" << fRM_ << endl;
+  //cout << feID_.rm() << " maps to RBX/RM# " << iRBX_[ididx_] << "/" << iRM_[ididx_] << endl;
 
   stringstream chname;
   uint32_t     dix;
 
   dix = detID_.rawId(); chname << detID_;
+
+  //cout << thisCut.flagSet(st_doPerChannel_) << endl;
 
   if (   // (myAH != thisCut.invhistos()) &&
       thisCut.flagSet(st_doPerChannel_)) {
@@ -625,6 +635,8 @@ HEraddamAnalAlgos::fillfCamp4chan(perChanHistos     *perchFolder,
 				  const std::string& chname)
 {
   perChanHistos::HistoParams_t hpars(int2str(chkey),chname,20000,0,20000);
+
+  //cout << "fillfCamp4chan " << chname << endl;
   
   if (!perchFolder) throw cms::Exception("perch folder not found");
 
@@ -634,6 +646,9 @@ HEraddamAnalAlgos::fillfCamp4chan(perChanHistos     *perchFolder,
 
   if (h1d)
     h1d->Fill(fCamplitude_[ididx_]);
+  else
+    cerr << "Couldn't find or book histo for channel " << chname << endl;
+
 }                                   // HEraddamAnalAlgos::fillfCamp4chan
 
 //==================================================================
@@ -718,7 +733,7 @@ HEraddamAnalAlgos::processDigi(const myDataFrame& df)
 
   const HcalCalibrations& calibs = conditions_->getHcalCalibrations(df.id());
   const HcalQIECoder *qieCoder   = conditions_->getHcalCoder( df.id() );
-  const HcalQIEShape *qieShape   = conditions_->getHcalShape();
+  const HcalQIEShape *qieShape   = conditions_->getHcalShape(qieCoder);
   HcalCoderDb coder( *qieCoder, *qieShape );
   coder.adc2fC( df, dfC );
 
@@ -807,12 +822,18 @@ void HEraddamAnalAlgos::processDigis
 
   myAH->fill1d<TH1D>(st_digiColSize_,digihandle->size());
 
+  cout << "# digis: " << digihandle->size() << endl;
+
+  int notfound=0;
   for (unsigned idf = 0; idf < digihandle->size();++idf) {
 
     const myDataFrame&  df = (*digihandle)[idf];
 
     map<int,int>::const_iterator it=channeldetIds_.find(df.id().rawId());
-    if (it==channeldetIds_.end()) continue;
+    if (it==channeldetIds_.end()) {
+      notfound++;
+      continue;
+    }
 
     ididx_=it->second;
 
@@ -855,6 +876,9 @@ void HEraddamAnalAlgos::processDigis
       fillHistos4cut(*(m_cuts_["cutamp"]));
 
   } // loop over digis
+
+  if (notfound)
+    cout << notfound << " digis not found out of " << digihandle->size() << endl;
 
 }                                     // HEraddamAnalAlgos::processDigis
 
@@ -916,7 +940,7 @@ HEraddamAnalAlgos::process(const myEventData& ed)
     buildCalibChannelSet();
  
     HcalLogicalMapGenerator gen;
-    lmap_ = new HcalLogicalMap(gen.createMap());
+    lmap_ = new HcalLogicalMap(gen.createMap(&(*(ed.hcalTopology()))));
 
     if (!rundescr_.size())
       rundescr_ = "Run "+int2str(runnum_);
