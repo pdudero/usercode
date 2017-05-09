@@ -130,6 +130,9 @@ processStyleSection(FILE *fp,string& theline, bool& new_section)
 
     else if (key == "painttextfmt") thestyle->SetPaintTextFormat(value.c_str());
     else if (key == "markersize")   thestyle->SetMarkerSize(str2flt(value));
+
+    else if (key == "palette")      thestyle->SetPalette(str2int(value));
+
     else {
       cerr << "Unknown key " << key << endl;
     }
