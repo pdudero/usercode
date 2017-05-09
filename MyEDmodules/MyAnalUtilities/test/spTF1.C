@@ -3,19 +3,44 @@
 #include "TObjString.h"
 #include "TString.h"
 
-static map<string, TF1 *>       glmap_id2tf1;
+struct wTF1_t {
+  wTF1_t() :
+    leglabel(""),drawopt(""),legdrawopt(""),
+    tf1(NULL) {}
+
+  wTF1_t(TF1 *intf1) :
+    leglabel(""),drawopt(""),legdrawopt(""),
+    tf1(intf1) {}
+
+  wTF1_t(const wTF1_t& wtf1,const string& newname) :
+    leglabel(wtf1.leglabel),drawopt(wtf1.drawopt),legdrawopt(wtf1.legdrawopt),
+    tf1(NULL) {
+    if (wtf1.tf1)
+      tf1 = (TF1 *)wtf1.tf1->Clone(newname.c_str());
+  }
+  string leglabel;
+  string drawopt;
+  string legdrawopt;
+  TF1 *tf1;
+};
+
+static map<string, wTF1_t *>       glmap_id2tf1;
 
 //======================================================================
 
-TF1 *findTF1(const string& fid)
+wTF1_t *findwTF1(const string& fid)
 {
   cout << "looking for " << fid << endl;
-  map<string,TF1 *>::const_iterator it = glmap_id2tf1.find(fid);
+  map<string,wTF1_t *>::const_iterator it = glmap_id2tf1.find(fid);
   if (it == glmap_id2tf1.end()) {
     cerr << "TF1 ID " << fid << " not found" << endl;
     return NULL;
   }
   return it->second;
+}                                                            // findwTF1
+
+TF1 *findTF1(const string& fid) {
+  return (findwTF1(fid))->tf1;
 }                                                             // findTF1
 
 //======================================================================
@@ -48,12 +73,12 @@ void regexMatchTF1( TObject    *obj,
       if (it != glmap_objpath2id.end()) {
 	if (gl_verbose)
 	  cout << "Object " << fullspec << " already read in, here it is" << endl;
-	map<string,TF1 *>::const_iterator hit = glmap_id2tf1.find(it->second);
+	map<string,wTF1_t *>::const_iterator hit = glmap_id2tf1.find(it->second);
 
 	// Is this okay? It's going to get wrapped again...
 	TObjString *rpath = new TObjString(fullspec);
 	Matches->AddLast(rpath);
-	Matches->AddLast(hit->second);
+	Matches->AddLast(hit->second->tf1);
       } else {
 	// success, record that you read it in.
 	TObjString *rpath = new TObjString(fullspec);
@@ -70,7 +95,7 @@ void regexMatchTF1( TObject    *obj,
 void getTF1sFromRE(const string&     fid,
 		   const string&   filepath,
 		   const string&   sre,
-		   vector<std::pair<string,TF1*> >&  v_tf1)
+		   vector<std::pair<string,wTF1_t*> >&  v_tf1)
 {
   if (gl_verbose)
     cout<<"Searching for regexp "<<sre<<" in "<<filepath;
@@ -137,10 +162,10 @@ void getTF1sFromRE(const string&     fid,
     tf1->SetLegendEntry(tf1->GetName());
 #endif
     string fidi= fid+"_"+int2str(istart+(i/2));
-    v_tf1.push_back(std::pair<string,TF1 *>(fidi,tf1));
+    v_tf1.push_back(std::pair<string,wTF1_t *>(fidi,new wTF1_t(tf1)));
 
     //glmap_objpath2id.insert(pair<string,string>(fullspec,fidi));
-    glmap_id2tf1.insert(pair<string,TF1 *>(fidi,tf1));
+    glmap_id2tf1.insert(std::pair<string,wTF1_t *>(fidi,new wTF1_t(tf1)));
     glmap_id2objpath.insert(pair<string,string>(fidi,string(fullspec.Data())));
   }
 
@@ -158,14 +183,15 @@ processTF1Section(FILE *fp,
 		  bool& new_section)
 {
   string *fid  = NULL;
-  TF1    *f1   = NULL;
+  wTF1_t *wtf1 = NULL;
   double xmin=0.0, xmax=1.0; // same as root defaults
   int lcol=-1,lwid=-1,lsty=-1;
+  TString leglabel, legdrawopt;
   vector<string> v_tokens;
   vector<string> parstrs;
-  vector<std::pair<string, TF1 *> > v_tf1s;
+  vector<std::pair<string, wTF1_t *> > v_tf1s;
 
-  cout << "Processing TF1 section" << endl;
+  if (gl_verbose) cout << "Processing TF1 section" << endl;
 
   new_section=false;
 
@@ -190,7 +216,7 @@ processTF1Section(FILE *fp,
       }
       fid = new string(value);
       
-      map<string, TF1 *>::const_iterator fit = glmap_id2tf1.find(*fid);
+      map<string, wTF1_t *>::const_iterator fit = glmap_id2tf1.find(*fid);
       if (fit != glmap_id2tf1.end()) {
 	cerr << "Function id " << *fid << " already defined" << endl;
 	break;
@@ -205,10 +231,10 @@ processTF1Section(FILE *fp,
       if (v_tf1s.size()) {
 	cerr << "TF1 " << *fid << " already defined" << endl; continue;
       }
-      f1 = new TF1(fid->c_str(),value.c_str());
+      wtf1 = new wTF1_t(new TF1(fid->c_str(),value.c_str()));
 
-      v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
-      glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
+      v_tf1s.push_back(std::pair<string,wTF1_t *>(*fid,wtf1));
+      glmap_id2tf1.insert(pair<string,wTF1_t *>(*fid,wtf1));
 
     //------------------------------
     } else if (key == "compilemacro") {
@@ -219,18 +245,19 @@ processTF1Section(FILE *fp,
       int error;
       cout << "Compiling macro " << *fid << " --> " << value << endl;
       
-      f1 = (TF1 *)gROOT->Macro(value.c_str(), &error, kTRUE);
+      wtf1 = new wTF1_t((TF1 *)gROOT->Macro(value.c_str(), &error, kTRUE));
+
       if (error) {
 	static const char *errorstr[] = {
 	  "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
 	cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
       }
-      else if( !(f1 && f1->InheritsFrom("TF1")) ) {
+      else if( !(wtf1 && wtf1->tf1->InheritsFrom("TF1")) ) {
 	cerr<<"Macro "<<value<<" does not return a TF1 object"<<endl;
 	exit(-1);
       } else {
-	v_tf1s.push_back(std::pair<string,TF1 *>(*fid,f1));
-	glmap_id2tf1.insert(pair<string,TF1 *>(*fid,f1));
+	v_tf1s.push_back(std::pair<string,wTF1_t *>(*fid,wtf1));
+	glmap_id2tf1.insert(pair<string,wTF1_t *>(*fid,wtf1));
       }
 
     //------------------------------
@@ -242,16 +269,16 @@ processTF1Section(FILE *fp,
       }
 
       if (!v_tf1s.size()) {
-	cerr << "ERROR: TF1s must be created prior to fixpar key" << endl;
+	cerr << "ERROR: TF1s must be created prior to initpars key" << endl;
 	exit(-1);
       }
 
       Tokenize(value,parstrs,",");
 
       for (size_t i=0; i<v_tf1s.size(); i++) {
-	f1 = v_tf1s[i].second;
+	wtf1 = v_tf1s[i].second;
 	for (size_t j=0; j<parstrs.size(); j++) {
-	  f1->SetParameter(j,str2flt(parstrs[j]));
+	  wtf1->tf1->SetParameter(j,str2dbl(parstrs[j]));
 	}
       }
 
@@ -270,14 +297,14 @@ processTF1Section(FILE *fp,
 
       Tokenize(value,parstrs,",");
       if( (parstrs.size() != 2) ||
-	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) )	{
+	  (str2int(parstrs[0]) > v_tf1s[0].second->tf1->GetNpar()) )	{
 	cerr<<"ERROR: expect fixpar=index,value syntax, where index < nparameters"<<endl;
 	exit(-1);
       }
       for (size_t i=0; i<v_tf1s.size(); i++) {
-	f1 = v_tf1s[i].second;
-	f1->FixParameter(str2int(parstrs[0]),
-			 str2flt(parstrs[1]));
+	wtf1 = v_tf1s[i].second;
+	wtf1->tf1->FixParameter(str2int(parstrs[0]),
+				str2dbl(parstrs[1]));
       }
 
     //------------------------------
@@ -295,16 +322,16 @@ processTF1Section(FILE *fp,
 
       Tokenize(value,parstrs,",");
       if( (parstrs.size() != 3) ||
-	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) ||
-	  (str2flt(parstrs[2]) < str2flt(parstrs[1])) )	{
+	  (str2int(parstrs[0]) > v_tf1s[0].second->tf1->GetNpar()) ||
+	  (str2dbl(parstrs[2]) < str2dbl(parstrs[1])) )	{
 	cerr<<"ERROR: expect fixpar=index,min,max syntax, where index < nparameters, min <= max"<<endl;
 	exit(-1);
       }
       for (size_t i=0; i<v_tf1s.size(); i++) {
-	f1 = v_tf1s[i].second;
-	f1->SetParLimits(str2int(parstrs[0]),
-			 str2flt(parstrs[1]),
-			 str2flt(parstrs[2]) );
+	wtf1 = v_tf1s[i].second;
+	wtf1->tf1->SetParLimits(str2int(parstrs[0]),
+				str2dbl(parstrs[1]),
+				str2dbl(parstrs[2]) );
       }
 
     //------------------------------
@@ -322,21 +349,19 @@ processTF1Section(FILE *fp,
 
       Tokenize(value,parstrs,",");
       if( (parstrs.size() != 2) ||
-	  (str2int(parstrs[0]) > v_tf1s[0].second->GetNpar()) )	{
+	  (str2int(parstrs[0]) > v_tf1s[0].second->tf1->GetNpar()) )	{
 	cerr<<"ERROR: expect setpar=index,value syntax, where index < nparameters"<<endl;
 	exit(-1);
       }
       for (size_t i=0; i<v_tf1s.size(); i++) {
-	f1 = v_tf1s[i].second;
-	f1->SetParameter(str2int(parstrs[0]),
-			 str2flt(parstrs[1]));
+	wtf1 = v_tf1s[i].second;
+	wtf1->tf1->SetParameter(str2int(parstrs[0]),
+				str2dbl(parstrs[1]));
       }
 
     //------------------------------
     } else if (key == "pathglob") { // multiple TF1s defined over potentially multiple files
     //------------------------------
-      glob_t globbuf;
-      
       if (!fid) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
@@ -355,28 +380,18 @@ processTF1Section(FILE *fp,
       string fileglob = v_tokens[0];
       string stregex  = v_tokens[1];
 
-      int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
-      if (stat) {
-	switch (stat) {
-	case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
-	case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
-	case GLOB_ABORTED: cerr << "glob read error "; break;
-	default: cerr << "unknown glob error stat=" << stat << " "; break;
-	}
-	cerr << fileglob << endl;
-	exit(-1);
-      }
-      if (gl_verbose) cout<<globbuf.gl_pathc<<" files match the glob pattern"<<endl;
-      for (size_t i=0; i<globbuf.gl_pathc; i++) {
-	char *path = globbuf.gl_pathv[i];
-	if (!strncmp(&path[strlen(path)-6],".root",5)) {
+      vector<string> vpaths;
+      expandGlob(fileglob,vpaths);
+      if (gl_verbose) cout<<vpaths.size()<<" files match the glob pattern"<<endl;
+      for (size_t i=0; i<vpaths.size(); i++) {
+	string path = vpaths[i];
+	if (!path.compare(path.length()-6,5,".root")) {
 	  cerr << "non-root file found in glob, skipping: " << path << endl;
 	} else {
 	  getTF1sFromRE(*fid,string(path),stregex, v_tf1s);
 	}
       }
       if (gl_verbose) cout << v_tf1s.size() << " total matches found." << endl;
-      globfree(&globbuf);
 
       glmap_mobj2size.insert(pair<string,unsigned>(*fid,v_tf1s.size()));
     }
@@ -398,19 +413,52 @@ processTF1Section(FILE *fp,
       if ( (v_tokens.size() != 2) || 
 	   (!v_tokens[0].size())  ||
 	   (!v_tokens[1].size())  ||
-	   (str2flt(v_tokens[0]) > str2flt(v_tokens[1]))
+	   (str2dbl(v_tokens[0]) > str2dbl(v_tokens[1]))
 	 ) {
 	cerr << "malformed TF1 range spec range=xmin[,|-]xmax: " << value << endl;
 	exit(-1);
       }
       else {
-	xmin = str2flt(v_tokens[0]);
-	xmax = str2flt(v_tokens[1]);
+	xmin = str2dbl(v_tokens[0]);
+	xmax = str2dbl(v_tokens[1]);
 	for (size_t i=0; i<v_tf1s.size(); i++) {
-	  f1 = v_tf1s[i].second;
-	  f1->SetRange(xmin,xmax);
+	  wtf1 = v_tf1s[i].second;
+	  wtf1->tf1->SetRange(xmin,xmax);
 	}
       }
+    }
+
+    //------------------------------
+    else if (key == "npts2drw") {
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (!v_tf1s.size()) {
+	cerr << "ERROR: TF1s must be created prior to npts2drw key" << endl;
+	exit(-1);
+      }
+      for (size_t i=0; i<v_tf1s.size(); i++) {
+	wtf1 = v_tf1s[i].second;
+	wtf1->tf1->SetNpx(str2int(value));
+      }
+      
+    }
+    //------------------------------
+    else if( key == "saveas" ) {
+    //------------------------------
+
+      if (!fid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+
+      if (v_tf1s.size()!=1) {
+	cerr << "ERROR: Exactly one TF1 must be created prior to saveas key" << endl;
+	exit(-1);
+      }
+      saveAs( v_tf1s[0].second->tf1, value ); // save with different name
     }
 
     //------------------------------
@@ -419,18 +467,33 @@ processTF1Section(FILE *fp,
     else if (key == "linewidth") lwid = str2int(value);
     //------------------------------
 
+    else if (key == "leglabel")  leglabel = value;
+    else if (key == "legdraw")   legdrawopt = value;
+
+    else
+      cerr << "unknown key " << key << endl;
+      
   } // line loop
 
   for (size_t i=0; i<v_tf1s.size(); i++) {
-    if (lsty>=0) v_tf1s[i].second->SetLineStyle(lsty);
-    if (lcol>=0) v_tf1s[i].second->SetLineColor(lcol);
-    if (lwid>=0) v_tf1s[i].second->SetLineWidth(lwid);
+    if (lsty>=0) v_tf1s[i].second->tf1->SetLineStyle(lsty);
+    if (lcol>=0) v_tf1s[i].second->tf1->SetLineColor(lcol);
+    if (lwid>=0) v_tf1s[i].second->tf1->SetLineWidth(lwid);
+
+    v_tf1s[i].second->leglabel   = leglabel;
+    v_tf1s[i].second->legdrawopt = legdrawopt;
   }
 
   if (fid) delete fid;
   if (v_tf1s.size()&&gl_verbose) {
     cout << "Dump of first TF1: " << endl;
-    v_tf1s[0].second->Print();
+    v_tf1s[0].second->tf1->Print();
+
+    double *pars = v_tf1s[0].second->tf1->GetParameters();
+    printf("*Precision* printout of fit parameters for TF1 %s:\n",
+	   v_tf1s[0].second->tf1->GetName());
+    for (int j=0; j<v_tf1s[0].second->tf1->GetNpar(); j++)
+      printf("Par %2d:  %.18g\n", j, pars[j]);
   }
     
   return (v_tf1s.size());
