@@ -28,6 +28,36 @@ bool parseBinRange ( const string& binrange,
 
 //======================================================================
 
+bool xrange2binrange ( TH1 *th1,
+		       const string& xrange,
+		       int& lobin,
+		       int& hibin )
+{
+  vector<string> v_tokens;
+
+  Tokenize(xrange,v_tokens,"-");
+  if (v_tokens.size() != 2) {
+    cerr << "Error, expecting xrange of form 'xmin-xmax'";
+    cerr << xrange << endl;
+    return false;
+  }
+    
+  double xmin=str2dbl(v_tokens[0]);
+  double xmax=str2dbl(v_tokens[1]);
+  if (xmin > xmax) {
+    cerr << "Error, expecting xrange of form 'xmin-xmax'";
+    cerr << xrange << endl;
+    return false;
+  }
+
+  lobin = th1->FindFixBin(xmin);
+  hibin = th1->FindFixBin(xmax)-1;
+
+  return true;
+}                                                     // xrange2binrange
+
+//======================================================================
+
 bool parseBinSpec( const string& binspec,
 		   string& histname,
 		   string& binrange,
@@ -49,6 +79,132 @@ bool parseBinSpec( const string& binspec,
   return parseBinRange(binrange,lobin,hibin);
 }                                                        // parseBinSpec
 
+
+//======================================================================
+
+TH1 * processUnaryOp(const string& hid,
+		     string& arg1,
+		     string& arg2,
+		     const string& op)
+{
+  TH1 *histop = 0;
+  double dummynum=0.0;
+  TF1 *f1 = 0;
+  
+  if (arg1[0] == '@') {
+    assert(0);
+    arg1= extractAlias(arg1.substr(1));
+    if (!arg1.size()) return NULL;
+  }
+  if (arg2[0] == '@') {
+    assert(0);
+    arg2= extractAlias(arg2.substr(1));
+    if (!arg2.size()) return NULL;
+  }
+
+  TH1 *hres = NULL;
+
+  histop = findHisto(arg1,"Checking:is this a histo?");
+  if (!histop) {	// trying scanning a double
+    if(!sscanf(arg1.c_str(),"%lg",&dummynum)) {
+      cerr << arg1 << ": it's not a known histo, and it's not a number.";
+      cerr << "I'm outta here." << endl;
+      return NULL;
+    } else {
+      // arg1 is a constant, so
+      // arg2 must be a histogram
+      histop = findHisto(arg2,"Checking:is this a histo?");
+      if (!histop) return NULL;
+      if (op.find('-') != string::npos) {
+	// the histo operand is being negated
+	//
+	// WARNING: not handling negative constants
+	//
+	f1 = new TF1("minus1","-1",
+		     histop->GetXaxis()->GetXmin(),
+		     histop->GetXaxis()->GetXmax());
+	histop->Multiply(f1);
+	string newname= hid + "_" + string(histop->GetName())+"_"+arg1+"-this";
+	hres = (TH1 *)histop->Clone(newname.c_str());
+	f1 = new TF1("someconst",arg1.c_str(),
+		     histop->GetXaxis()->GetXmin(),
+		     histop->GetXaxis()->GetXmax());
+	hres->Add(f1);
+      }
+    }
+  } else {
+    // arg1 is a histo, so
+    // arg2 must be a number
+    if(!sscanf(arg2.c_str(),"%lg",&dummynum)) {
+      cerr << arg2 << " must be a number, since " << arg1 << " is a histogram. ";
+      cerr << "Use 'binaryop' otherwise." << endl;
+      return NULL;
+    }
+    f1 = new TF1("myfunc",arg2.c_str(),
+		 histop->GetXaxis()->GetXmin(),
+		 histop->GetXaxis()->GetXmax());
+    if (op.find('-') != string::npos) {
+      string newname= hid + "_" + string(histop->GetName())+"-"+arg2;
+      hres = (TH1 *)histop->Clone(newname.c_str());
+      hres->Add(f1,-1.0);
+    } else if (op.find('*') != string::npos) {
+      string newname= hid + "_" + string(histop->GetName())+"x"+arg2;
+      hres = (TH1 *)histop->Clone(newname.c_str());
+    } else {
+      string newname= hid + "_" + string(histop->GetName())+"_?"+arg2;
+      hres = (TH1 *)histop->Clone(newname.c_str());
+    }
+  }
+  
+  if      (op.find('*') != string::npos) hres->Multiply(f1);
+  //else if (op.find('/') != string::npos) hres->Divide(h1,h2,1.0,1.0,"C");
+  else if (op.find('/') != string::npos) hres->Divide(f1);
+  else if (op.find('+') != string::npos) hres->Add(f1);
+  
+  return hres;
+}                                                      // processUnaryOp
+
+//======================================================================
+
+TH1 *processBinaryOp(const string& hid,
+		     string& arg1,
+		     string& arg2,
+		     const string& op)
+{
+  TH1 *hres=NULL;
+  TH1 *tmph1 = findHisto(arg1);
+  TH1 *tmph2 = findHisto(arg2);
+
+  if (!tmph2) {	// check for stacks
+    wStack_t *findStack(const string&, const string& errmsg=""), *st;
+    st = findStack(arg1);
+    if (st)
+      tmph2 = st->sum->histo();
+  }
+
+  if (tmph2) {
+    hres = (TH1 *)tmph1->Clone(hid.c_str());
+
+    if      (op.find('-') != string::npos) hres->Add(tmph2,-1.0);
+    else if (op.find('+') != string::npos) hres->Add(tmph2);
+    else if (op.find('*') != string::npos) hres->Multiply(tmph2);
+    //else if (op.find('/') != string::npos) hres->Divide(tmph1,tmph2,1.0,1.0,"C");
+    else if (op.find('/') != string::npos) hres->Divide(tmph2);
+  } else {
+    // check for TF1s
+    TF1 *f1 = findTF1(arg2);
+    if (f1) {
+      hres = (TH1 *)tmph1->Clone(hid.c_str());
+      if      (op.find('-') != string::npos) hres->Add(f1,-1.0);
+      else if (op.find('+') != string::npos) hres->Add(f1);
+      else if (op.find('*') != string::npos) hres->Multiply(f1);
+      else if (op.find('/') != string::npos) hres->Divide(f1);
+    }
+  }
+
+  return hres;
+}                                                     // processBinaryOp
+
 //======================================================================
 // Sweep right and integrate to the left of the sweep line
 
@@ -59,13 +215,15 @@ TH1 *IntegrateLeft(TH1 *h)
   hcum->Reset();
 
   int nbins = hcum->GetNbinsX();
-  double htotal = h->Integral(1,nbins+1);
+  //double htotal = h->Integral(1,nbins+1);
 
   // Include the overflow bin
   for (int i=1; i<=nbins+1 ; i++) { // includes overflow
     double integral = h->Integral(1,i);
-    hcum->SetBinContent(i,integral/htotal);
+    hcum->SetBinContent(i,integral);
   }
+
+  //hcum->Scale(1./htotal);
 
   return hcum;
 }                                                       // IntegrateLeft
@@ -95,7 +253,7 @@ TH1 *IntegrateRight(TH1 *h,
     lobin = h->FindBin(xmin);
     hibin = h->FindBin(xmax); // hope that kCanRebin isn't set
   }
-  double htotal = h->Integral(lobin,hibin);
+  //double htotal = h->Integral(lobin,hibin);
   int   skipbin = hcum->GetNbinsX()+2;
   float skipcontent = 0.0;
 
@@ -114,13 +272,14 @@ TH1 *IntegrateRight(TH1 *h,
   for (int i=lobin; i<=hibin; i++) {
     double integral = h->Integral(i,hibin);
     if (i > skipbin) skipcontent=0.0;
-    hcum->SetBinContent(i,(integral-skipcontent)/htotal);
-    //hcum->SetBinError(i,sqrt(integral-skipcontent)/htotal);
+    hcum->SetBinContent(i,(integral-skipcontent));
+    //hcum->SetBinError(i,sqrt(integral-skipcontent));
   }
+
+  //hcum->Scale(1./htotal);
 
   return hcum;
 }                                                      // IntegrateRight
-
 
 //======================================================================
 // 1D integral: Sweep out from zero on both sides, integ inside the sweep lines
@@ -229,44 +388,115 @@ TH2 *IntegrateRightAndUp(TH2 *h,
 
 //======================================================================
 
-void projectX(const string& binspec,
+TH1 *IntegrateBinned(TH1 *h, const string& xbinspec)
+{
+  vector<string> v_tokens;
+
+  Tokenize(xbinspec,v_tokens,",");
+
+  vector<double> bins(v_tokens.size());
+  for (size_t i=0; i<v_tokens.size(); i++)
+    bins[i] = (double)str2flt(v_tokens[i]);
+
+  TH1D *hout = new TH1D("","",bins.size()-1,bins.data());
+
+  int ibin=1;
+  for (size_t i=0; i<v_tokens.size()-1; i++) {
+    double xoutlo, xinlo, xouthi, xinhi;
+
+    xoutlo = bins[i]; xouthi = bins[i+1];
+
+    double sum = 0;
+    for (; ibin<=h->GetNbinsX(); ibin++) {
+      xinlo = h->GetXaxis()->GetBinLowEdge(ibin);
+      xinhi = h->GetXaxis()->GetBinUpEdge(ibin);
+      if (xinlo < xoutlo)
+	continue;
+      if ((xinlo >= xoutlo) && (xinhi <= xouthi))
+	sum += h->GetBinContent(ibin);
+      if (xinhi == xouthi) {
+	hout->SetBinContent(i+1,sum);
+	if (gl_verbose)
+	  cout << "bin " << i+1 << " gets " << sum << endl;
+	break;
+      }
+    }
+  }
+  return hout;
+}                                                    //  IntegrateBinned
+
+//======================================================================
+
+void projectX(const string& projspec,
 	      const string& hid,
 	      vector<pair<string,wTH1 *> >& outhistos)
 {
-  int lobin;
-  int hibin;
-  string histname,binrange;
-  if (parseBinSpec(binspec,histname,binrange,lobin,hibin))
-    exit(-1);
+  int lobin=0;
+  int hibin=-1;
+  string histname,binspec,binrange,option;
+  vector<string> v_tokens;
+
+  if (projspec.find(',') != string::npos) {
+    Tokenize(projspec,v_tokens,",");
+    if (v_tokens.size() != 2) {
+      cerr << "Expecting projectx=histoid:binrange[,option]" << endl;
+      cerr << hid << endl;
+      exit(-1);
+    }
+    binspec = v_tokens[0];
+    option  = v_tokens[1];
+  } else
+    binspec = projspec;
+
+  assert (parseBinSpec(binspec,histname,binrange,lobin,hibin));
 
   TH2 *tmph2 = (TH2 *)findHisto(histname,"histo operand must be defined before math ops");
-  if (!tmph2) exit(-1);
+  assert (tmph2);
 
   string newname = hid + "_" + string(tmph2->GetName())+"_Ybins"+binrange;
   
-  wTH1 *wh = new wTH1((TH1 *)tmph2->ProjectionX(newname.c_str(),lobin,hibin));
+  wTH1 *wh = new wTH1((TH1 *)tmph2->ProjectionX(newname.c_str(),lobin,hibin,option.c_str()));
   outhistos.push_back(pair<string,wTH1 *>(hid,wh));
   glmap_id2histo.insert(pair<string,wTH1 *>(hid,wh));
 }                                                            // projectX
 
 //======================================================================
 
-void projectY(const string& binspec,
+void projectY(const string& projspec,
 	      const string& hid,
 	      vector<pair<string,wTH1 *> >& outhistos)
 {
-  int lobin;
-  int hibin;
-  string histname,binrange;
-  if (parseBinSpec(binspec,histname,binrange,lobin,hibin))
-    exit(-1);
+  cout << "projecty " << projspec << endl;
+
+  int lobin=0;
+  int hibin=-1;
+  string histname,binspec,binrange,option;
+  vector<string> v_tokens;
+
+  if (projspec.find(',') != string::npos) {
+    Tokenize(projspec,v_tokens,",");
+    if (v_tokens.size() != 2) {
+      cerr << "Expecting projecty=histoid:binrange[,option]" << endl;
+      cerr << hid << endl;
+      exit(-1);
+    }
+    binspec = v_tokens[0];
+    option  = v_tokens[1];
+  } else
+    binspec = projspec;
+
+  assert (parseBinSpec(binspec,histname,binrange,lobin,hibin));
+
+  cout << "good bin spec " << endl;
 
   TH2 *tmph2 = (TH2 *)findHisto(histname,"single histo operand not found");
 
   vector<TH2 *> v_hist;
-  if (tmph2)
+  if (tmph2) {
+    cout << "found histo " << histname << endl;
+
     v_hist.push_back(tmph2);
-  else {
+  } else {
     string multihist1 = histname+"_0";
     tmph2 = (TH2 *)findHisto(multihist1,
     "multi histo operand not found, histo operand must be defined before math ops");
@@ -284,7 +514,7 @@ void projectY(const string& binspec,
   for (size_t i=0; i<v_hist.size(); i++) {
     string newname = hid + "_" + string(v_hist[i]->GetName())+"_Xbins"+binrange;
 
-    wTH1 *wh = new wTH1((TH1 *)v_hist[i]->ProjectionY(newname.c_str(),lobin,hibin));
+    wTH1 *wh = new wTH1((TH1 *)v_hist[i]->ProjectionY(newname.c_str(),lobin,hibin,option.c_str()));
     string hid2 = hid;
     if (v_hist.size() > 1) hid2 += "_"+int2str(i);
     glmap_id2histo.insert(pair<string,wTH1 *>(hid2,wh));
@@ -298,14 +528,14 @@ void projectYX(const string& binspec,
 	       const string& hid,
 	       vector<pair<string,wTH1 *> >& outhistos)
 {
-  int lobin;
-  int hibin;
+  int lobin=0;
+  int hibin=-1;
   string histname,binrange;
-  if (parseBinSpec(binspec,histname,binrange,lobin,hibin))
-    exit(-1);
+
+  assert (parseBinSpec(binspec,histname,binrange,lobin,hibin));
 
   TH1 *tmph = findHisto(histname,"histo operand must be defined before math ops");
-  if (!tmph) exit(-1);
+  assert (tmph);
   if (!tmph->InheritsFrom("TH3")) {
     cerr << "operation projectyx only defined for 3D histograms, ";
     cerr << hid << endl; 
@@ -332,17 +562,20 @@ void sliceHistos(const string slicetype,
 		 const string& hid,
 		 vector<pair<string,wTH1 *> >& outhistos)
 {
-  int lobin;
-  int hibin;
+  int lobin=0;
+  int hibin=-1;
   string histname,binrange;
-  if (parseBinSpec(binspec,histname,binrange,lobin,hibin))
+
+  cout << binspec << endl;
+  if (!parseBinSpec(binspec,histname,binrange,lobin,hibin))
     exit(-1);
 
   TH2 *tmph2 = (TH2 *)findHisto
     (histname, "histo operand must be defined before math ops");
 
-  if (!tmph2)
-    exit(-1);
+  assert(tmph2);
+
+  cout << hid << "\t" << tmph2->GetName() << endl;
 
   // Save all the histos for possible future reference:
   
@@ -360,18 +593,18 @@ void sliceHistos(const string slicetype,
   // aSlice elements point to "dead histos walking"
   TH1 *h1 = (TH1 *)(*aSlices)[1];
   wTH1 *wh=new wTH1((TH1 *)h1->Clone());
-  outhistos.push_back(pair<string,wTH1 *>(hid+"mean",wh));
-  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"mean",wh));
+  outhistos.push_back(pair<string,wTH1 *>(hid+"_mean",wh));
+  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"_mean",wh));
 
   h1 = (TH1 *)(*aSlices)[2]; 
   wh = new wTH1((TH1 *)h1->Clone()); 
-  outhistos.push_back(pair<string,wTH1 *>(hid+"rms",wh));
-  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"rms",wh));
+  outhistos.push_back(pair<string,wTH1 *>(hid+"_rms",wh));
+  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"_rms",wh));
 
   h1 = (TH1 *)(*aSlices)[aSlices->GetEntriesFast()-1];
   wh = new wTH1((TH1 *)h1->Clone());
-  outhistos.push_back(pair<string,wTH1 *>(hid+"chi2",wh));
-  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"chi2",wh));
+  outhistos.push_back(pair<string,wTH1 *>(hid+"_chi2",wh));
+  glmap_id2histo.insert(pair<string,wTH1 *>(hid+"_chi2",wh));
 
 }                                                         // sliceHistos
 
@@ -574,8 +807,7 @@ void rebinVariable1D(const string& hidlist,
   int hibin=prihistos[0]->GetNbinsX(); // excludes overflow by default
 
   if (binrange.size())
-    if (!parseBinRange(binrange,lobin,hibin))
-      exit(-1);
+    assert (parseBinRange(binrange,lobin,hibin));
 
   vector<int>    oldbinnums;
   vector<double> newbinvals;
@@ -715,6 +947,9 @@ processHmathSection(FILE *fp,
 
       hid = new string(value);
 
+      if (gl_verbose)
+	cout << "ID: "<< *hid << endl;
+
     //------------------------------
     } else if (key == "unaryop") {  // unary operation /+-* with a constant
     //------------------------------
@@ -726,93 +961,20 @@ processHmathSection(FILE *fp,
       }
       string hmathexpr = value;
 
-      Tokenize(hmathexpr,v_tokens,"-+*/");
-      if (v_tokens.size() != 2) {
+      Tokenize(hmathexpr,v_tokens,"-+*/",true);
+      if (v_tokens.size() != 3) {
 	cerr << "only simple math ops -+*/ supported between two operands, sorry!";
 	cerr << theline << endl;
 	continue;
       }
 
-      TH1 *histop = 0;
-      double dummynum=0.0;
-      TF1 *f1 = 0;
+      h1 = processUnaryOp(*hid,v_tokens[0],v_tokens[2],v_tokens[1]);
 
-      string& arg1=v_tokens[0];
-      string& arg2=v_tokens[1];
-      if (arg1[0] == '@') {
-	assert(0);
-	arg1= extractAlias(arg1.substr(1));
-	if (!arg1.size()) continue;
+      if (h1) {
+	wTH1 *wh = new wTH1(h1);
+	v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
+	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
       }
-      if (arg2[0] == '@') {
-	assert(0);
-	arg2= extractAlias(arg2.substr(1));
-	if (!arg2.size()) continue;
-      }
-
-      TH1 *hres = NULL;
-
-      histop = findHisto(arg1,"Checking:is this a histo?");
-      if (!histop) {	// trying scanning a double
-	if(!sscanf(arg1.c_str(),"%lg",&dummynum)) {
-	  cerr << arg1 << ": it's not a known histo, and it's not a number.";
-	  cerr << "I'm outta here." << endl;
-	  continue;
-	} else {
-	  // arg1 is a constant, so
-	  // arg2 must be a histogram
-	  histop = findHisto(arg2,"Checking:is this a histo?");
-	  if (!histop) continue;
-	  if (theline.find('-') != string::npos) {
-	    // the histo operand is being negated
-	    //
-	    // WARNING: not handling negative constants
-	    //
-	    f1 = new TF1("minus1","-1",
-			 histop->GetXaxis()->GetXmin(),
-			 histop->GetXaxis()->GetXmax());
-	    histop->Multiply(f1);
-	    string newname= (*hid) + "_" + string(histop->GetName())+"_"+arg1+"-this";
-	    hres = (TH1 *)histop->Clone(newname.c_str());
-	    f1 = new TF1("someconst",arg1.c_str(),
-			 histop->GetXaxis()->GetXmin(),
-			 histop->GetXaxis()->GetXmax());
-	    hres->Add(f1);
-	  }
-	}
-      } else {
-	// arg1 is a histo, so
-	// arg2 must be a number
-	if(!sscanf(arg2.c_str(),"%lg",&dummynum)) {
-	  cerr << arg2 << " must be a number, since " << arg1 << " is a histogram. ";
-	  cerr << "Use 'binaryop' otherwise." << endl;
-	  continue;
-	}
-	f1 = new TF1("myfunc",arg2.c_str(),
-		     histop->GetXaxis()->GetXmin(),
-		     histop->GetXaxis()->GetXmax());
-	if (theline.find('-') != string::npos) {
-	  string newname= (*hid) + "_" + string(histop->GetName())+"-"+arg2;
-	  hres = (TH1 *)histop->Clone(newname.c_str());
-	  hres->Add(f1,-1.0);
-	} else if (theline.find('*') != string::npos) {
-	  string newname= (*hid) + "_" + string(histop->GetName())+"x"+arg2;
-	  hres = (TH1 *)histop->Clone(newname.c_str());
-	} else {
-	  string newname= (*hid) + "_" + string(histop->GetName())+"_?"+arg2;
-	  hres = (TH1 *)histop->Clone(newname.c_str());
-	}
-      }
-
-      if      (theline.find('*') != string::npos) hres->Multiply(f1);
-      //else if (theline.find('/') != string::npos) hres->Divide(h1,h2,1.0,1.0,"C");
-      else if (theline.find('/') != string::npos) hres->Divide(f1);
-      else if (theline.find('+') != string::npos) hres->Add(f1);
-
-      h1 = hres;
-      wTH1 *wh = new wTH1(h1);
-      v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
-      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
     //------------------------------
     } else if (key == "binaryop") {  // binary operation +-*/
@@ -826,43 +988,16 @@ processHmathSection(FILE *fp,
       }
       string hmathexpr = value;
 
-      Tokenize(hmathexpr,v_tokens,"-+*/");
-      if (v_tokens.size() != 2) {
+      Tokenize(hmathexpr,v_tokens,"-+*/",true);
+      if (v_tokens.size() != 3) {
 	cerr << "only simple math ops -+*/ supported between two operands, sorry! ";
 	cerr << theline << endl;
 	continue;
       }
 
-      TH1 *hres=NULL;
-      TH1 *tmph1 = findHisto(v_tokens[0]); if (!tmph1) continue;
-      TH1 *tmph2 = findHisto(v_tokens[1]);
+      h1 = processBinaryOp(*hid,v_tokens[0],v_tokens[2],v_tokens[1]);
 
-      if (!tmph2) {	// check for stacks
-	wStack_t *findStack(const string&, const string& errmsg="");
-	tmph2 = (findStack(v_tokens[1]))->sum->histo();
-      }
-
-      if (tmph2) {
-	hres = (TH1 *)tmph1->Clone(hid->c_str());
-
-	if      (theline.find('-') != string::npos) hres->Add(tmph2,-1.0);
-	else if (theline.find('+') != string::npos) hres->Add(tmph2);
-	else if (theline.find('*') != string::npos) hres->Multiply(tmph2);
-	//else if (theline.find('/') != string::npos) hres->Divide(tmph1,tmph2,1.0,1.0,"C");
-	else if (theline.find('/') != string::npos) hres->Divide(tmph2);
-      } else {
-	// check for TF1s
-	TF1 *f1 = findTF1(v_tokens[1]);
-	if (f1) {
-	  hres = (TH1 *)tmph1->Clone(hid->c_str());
-	  if      (theline.find('-') != string::npos) hres->Add(f1,-1.0);
-	  else if (theline.find('+') != string::npos) hres->Add(f1);
-	  else if (theline.find('*') != string::npos) hres->Multiply(f1);
-	  else if (theline.find('/') != string::npos) hres->Divide(f1);
-	}
-      }
-      if (hres) {
-	h1 = (TH1 *)hres;
+      if (h1) {
 	wTH1 *wh = new wTH1(h1);
 	v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
 	glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
@@ -879,7 +1014,9 @@ processHmathSection(FILE *fp,
       }
       TH1 *firstone = (TH1 *)findHisto(v_tokens[0]);
       if (!firstone) exit(-1);
+
       h1 = (TH1 *)firstone->Clone(hid->c_str());
+
       if (key == "weightsum")
 	h1->SetBit(TH1::kIsAverage);  // <========== Addends also have to have this set.
       for (unsigned i=1; i<v_tokens.size(); i++) {
@@ -887,7 +1024,10 @@ processHmathSection(FILE *fp,
 	if (!addend) exit(-1);
 	h1->Add(addend,1.0);
       }
+
       wTH1 *wh = new wTH1(h1);
+
+
       v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
       glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
 
@@ -1011,9 +1151,9 @@ processHmathSection(FILE *fp,
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
       }
-      string binspec = value; // range of bins to project
+      string projspec = value;
 
-      projectX(binspec,*hid,v_histos);
+      projectX(projspec,*hid,v_histos);
 
     //------------------------------
     } else if (key == "projecty") {
@@ -1024,9 +1164,9 @@ processHmathSection(FILE *fp,
       if (h1) {
 	cerr << "histo already defined" << endl; continue;
       }
-      string binspec = value; // range of bins to project
+      string projspec = value; // range of bins to project
 
-      projectY(binspec,*hid,v_histos);
+      projectY(projspec,*hid,v_histos);
 
     //------------------------------
     } else if (key == "projectyx") {
@@ -1038,9 +1178,9 @@ processHmathSection(FILE *fp,
 	cerr << "histo already defined, " << hid << endl; continue;
       }
 
-      string binspec = value; // range of bins to project
+      string projspec = value;
 
-      projectYX(binspec,*hid,v_histos);
+      projectYX(projspec,*hid,v_histos);
     }
     //------------------------------
     else if (key.find("slice") != string::npos) { // [xy]slice{mean|rms|chi2}
@@ -1114,6 +1254,72 @@ processHmathSection(FILE *fp,
 
       rebinVariable1D(value,binrange,statsPerBin,*hid,v_histos);
 
+    //------------------------------
+    } else if (key == "rebin2spec") {  // specify bin edges of output histo
+    //------------------------------
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,":");
+      assert(v_tokens.size() == 2);
+
+      TH1 *tmph1 = findHisto(v_tokens[0],"histo operand must be defined before math ops");
+      if (!tmph1) exit(-1);
+      h1 = (TH1 *)IntegrateBinned(tmph1, v_tokens[1]);
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+
+    //------------------------------
+    } else if (key == "extractrange") {  // "clone" a section in x of an existing 1D histogram
+    //------------------------------
+
+      if (!hid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+      if (h1) {
+	cerr << "histo already defined" << endl; continue;
+      }
+
+      Tokenize(value,v_tokens,",");
+      if (v_tokens.size() != 2) {
+	cerr << "expect histoid,xrange where xrange is expressed as xmin-xmax";
+	cerr << theline << endl;
+	continue;
+      }
+      TH1 *tmph1 = findHisto(v_tokens[0], "first argument must identify existing histogram");
+      if (!tmph1) continue;
+
+      string xrange=v_tokens[1];
+
+      int lobin,hibin;
+      if (!xrange2binrange(tmph1,xrange,lobin,hibin))
+	exit(-1);
+
+      string newname = string(tmph1->GetName())+xrange;
+
+      if (gl_verbose) {
+	cout << "Copying " << tmph1->GetXaxis()->GetBinLowEdge(lobin);
+	cout << "-"        << tmph1->GetXaxis()->GetBinUpEdge(hibin);
+	cout  << " to "    << newname << endl;
+      }
+      h1 = new TH1D(newname.c_str(),
+		    newname.c_str(),
+		    hibin-lobin+1,
+		    tmph1->GetXaxis()->GetBinLowEdge(lobin),
+		    tmph1->GetXaxis()->GetBinUpEdge(hibin));
+      for (int ibin=1; ibin<=hibin-lobin+1; ibin++) {
+	h1->SetBinContent(ibin,tmph1->GetBinContent(ibin+lobin-1));
+	h1->SetBinError(ibin,tmph1->GetBinError(ibin+lobin-1));
+      }
+      wTH1 *wh = new wTH1(h1);
+      v_histos.push_back(pair<string,wTH1 *>(*hid,wh));
+      glmap_id2histo.insert(pair<string,wTH1 *>(*hid,wh));
+	
     } else if (!v_histos.size()) {
       cerr << "an operation key must be defined before key " << key << endl;
       break;
