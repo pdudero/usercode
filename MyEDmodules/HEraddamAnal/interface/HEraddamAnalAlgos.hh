@@ -50,12 +50,14 @@ class HEraddamAnal;
 #define mySample HcalQIESample
 #define myDigiCollection HBHEDigiCollection
 #define myDataFrame HBHEDataFrame
-//#define mySample QIE11DataFrame::Sample
-//#define myDigiCollection QIE11DigiCollection
-//#define myDataFrame QIE11DataFrame
-//#define mySample HcalUpgradeQIESample
-//#define myDigiCollection HcalUpgradeDigiCollection
-//#define myDataFrame HcalUpgradeDataFrame
+//
+// #define mySample QIE11DataFrame::Sample
+// #define myDigiCollection QIE11DigiCollection
+// #define myDataFrame QIE11DataFrame
+//
+// #define mySample HcalUpgradeQIESample
+// #define myDigiCollection HcalUpgradeDigiCollection
+// #define myDataFrame HcalUpgradeDataFrame
 
 class HEraddamAnalAlgos {
 public:
@@ -195,7 +197,6 @@ private:
 
   edm::ESHandle<HcalDbService>  conditions_;
   edm::ESHandle<CaloGeometry>   geometry_;
-  edm::ESHandle<HcalElectronicsMap> hcalemap_;
 
   std::string st_lastCut_;
   HcalLogicalMap *lmap_;
