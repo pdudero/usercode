@@ -115,8 +115,8 @@ void getHistosFromRE(const string&   mhid,
     TString fullspec = ((TObjString *)(*Matches)[i])->GetString();
     wTH1 *wth1 = new wTH1((TH1 *)((*Matches)[i+1]));
     wth1->histo()->UseCurrentStyle();
-    wth1->histo()->SetLineColor(((i/2)%9)+1);
-    wth1->histo()->SetLineStyle((i/18)+1);
+    //wth1->histo()->SetLineColor(((i/2)%9)+1);
+    //wth1->histo()->SetLineStyle((i/18)+1);
     wth1->histo()->SetLineWidth(2);
     wth1->SetLegendEntry(wth1->histo()->GetName());
     string hidi= mhid+"_"+int2str(istart+(i/2));
@@ -174,48 +174,49 @@ processMultiHistSection(FILE *fp,
     //------------------------------
     } else if (key == "pathglob") {
     //------------------------------
-      glob_t globbuf;
-      
       if (!mhid.size()) {
 	cerr << "id key must be defined first in the section" << endl; continue;
       }
 
+      string fileglob;
+      string stregex;
+
       Tokenize(value,v_tokens,":");
-      if ((v_tokens.size() != 2) ||
-	  (!v_tokens[0].size())  ||
+      if ((!v_tokens[0].size())  ||
 	  (!v_tokens[1].size())    ) {
 	cerr << "malformed pathglob 'fileglob:regex' " << value << endl;
 	exit(-1);
-      }
-
-      // File globbing pattern can select multiple files
-      // regular expression pattern can select multiple histos within each file.
-      //
-      string fileglob = v_tokens[0];
-      string stregex  = v_tokens[1];
-
-      int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
-      if (stat) {
-	switch (stat) {
-	case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
-	case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
-	case GLOB_ABORTED: cerr << "glob read error "; break;
-	default: cerr << "unknown glob error stat=" << stat << " "; break;
-	}
-	cerr << fileglob << endl;
+      } else if (v_tokens.size() == 3) {
+	fileglob = v_tokens[0]+":"+v_tokens[1];
+	stregex  = v_tokens[2];
+      } else if (v_tokens.size() != 2) {
+	cerr << "malformed pathglob 'fileglob:regex' " << value << endl;
 	exit(-1);
+      }	else {
+	// File globbing pattern can select multiple files
+	// regular expression pattern can select multiple histos within each file.
+	//
+	fileglob = v_tokens[0];
+	stregex  = v_tokens[1];
       }
-      if (gl_verbose) cout<<globbuf.gl_pathc<<" files match the glob pattern"<<endl;
-      for (size_t i=0; i<globbuf.gl_pathc; i++) {
-	char *path = globbuf.gl_pathv[i];
-	if (!strncmp(&path[strlen(path)-6],".root",5)) {
-	  cerr << "non-root file found in glob, skipping: " << path << endl;
-	} else {
-	  getHistosFromRE(mhid,string(path),stregex, v_histos);
+
+      if (fileglob.find("*") == string::npos)
+	getHistosFromRE(mhid,fileglob,stregex, v_histos);
+      else {
+	vector<string> vpaths;
+	expandGlob(fileglob, vpaths);
+	if (gl_verbose)
+	  cout<<vpaths.size()<<" files match the glob pattern"<<endl;
+	for (size_t i=0; i<vpaths.size(); i++) {
+	  string path = vpaths[i];
+	  if (!path.compare(path.length()-6,5,".root")) {
+	    cerr << "non-root file found in glob, skipping: " << path << endl;
+	  } else {
+	    getHistosFromRE(mhid,path,stregex, v_histos);
+	  }
 	}
+	if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
       }
-      if (gl_verbose) cout << v_histos.size() << " total matches found." << endl;
-      globfree(&globbuf);
 
       glmap_mobj2size.insert(pair<string,unsigned>(mhid,v_histos.size()));
 
