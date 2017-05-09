@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm> // std::search
 #include <string>
+#include <glob.h>
 
 //======================================================================
 
@@ -101,5 +102,32 @@ std::string stripDirsAndSuffix(const std::string& input)
 
   return output;
 }
+
+//======================================================================
+
+void expandGlob(const string& globstr,
+		vector<string>& outpaths)
+{
+  glob_t globbuf;
+
+  int stat = glob (globstr.c_str(), GLOB_MARK, NULL, &globbuf);
+  if (stat) {
+    switch (stat) {
+    case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
+    case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
+    case GLOB_ABORTED: cerr << "glob read error "; break;
+    default: cerr << "unknown glob error stat=" << stat << " "; break;
+    }
+    cerr << globstr << endl;
+    exit(-1);
+  }
+      
+  for (size_t i=0; i<globbuf.gl_pathc; i++)
+    outpaths.push_back(string(globbuf.gl_pathv[i]));
+
+  if (globbuf.gl_pathc) 
+    globfree(&globbuf);
+}
+
 
 //======================================================================
