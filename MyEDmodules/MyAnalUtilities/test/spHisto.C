@@ -12,7 +12,7 @@ TH1 *findHisto(const string& hid, const string& errmsg="")
   map<string,wTH1 *>::const_iterator it = glmap_id2histo.find(hid);
   if( it == glmap_id2histo.end() ) {
     // Try finding the first
-    cerr << "Histo ID " << hid << " not found. " << errmsg << endl;
+    cerr << "Histo ID \"" << hid << "\" not found. " << errmsg << endl;
     if( gl_verbose) {
       cout << "Available histo IDs are: " << endl;
       for (it = glmap_id2histo.begin(); it != glmap_id2histo.end(); it++)
@@ -464,8 +464,8 @@ void load3DHistoContentsFromTextFile(const char *filename,
 //======================================================================
 // takes a single column of numbers to fill into a pre-booked histo
 //
-void fill1DHistoFromTextFile(const string& scanspec,
-			     wTH1 *&wth1)
+void fillHistoFromTextFile(const string& scanspec,
+			   wTH1 *&wth1)
 {
   char linein[LINELEN];
   vector<string> v_tokens;
@@ -489,20 +489,69 @@ void fill1DHistoFromTextFile(const string& scanspec,
     cout << "Loading numbers from file " << filename 
 	 << " with scanfmt \"" << scanfmt << "\"" << endl;
 
-  double num;
-  while (!feof(fp) && fgets(linein,LINELEN,fp)) {
-
-    int nscan= sscanf(linein, scanfmt.Data(), &num);
-    if (!nscan) {
-      cerr << "Error reading line " << linein;
-      continue;
+  int fmtcnt = scanfmt.CountChar('%')-scanfmt.CountChar('*'); // kludgy I know
+  switch (fmtcnt) {
+  case 1: {
+    double num;
+    while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+      int nscan= sscanf(linein, scanfmt.Data(), &num);
+      if (!nscan) {
+	cerr << "Error reading line " << linein;
+	continue;
+      }
+      //cout << linein << " " << num << endl;
+      wth1->histo()->Fill(num);
     }
-    //cout << linein << " " << num << endl;
-    wth1->histo()->Fill(num);
+    break;
   }
-
+  case 2: {
+    double x,yorw;
+    int linect;
+    for (linect=0; !feof(fp) && fgets(linein,LINELEN,fp); linect++) {
+      int nscan= sscanf(linein, scanfmt.Data(), &x, &yorw);
+      if (nscan != 2) {
+	cerr << "Error reading line # " << linect << ": " << linein;
+	continue;
+      }
+      //cout << linein << " " << num << endl;
+      if (wth1->histo()->InheritsFrom("TH1"))
+	wth1->histo()->Fill(x,yorw);
+      else if (wth1->histo()->InheritsFrom("TH2")) {
+	TH2 *h2 = (TH2 *)wth1->histo(); 
+	h2->Fill(x,yorw);
+      }
+    }
+    if (gl_verbose)
+      cout << "read " << linect << " lines." << endl;
+    break;
+  }
+  case 3: {
+    double x,y,zorw;
+    while (!feof(fp) && fgets(linein,LINELEN,fp)) {
+      int nscan= sscanf(linein, scanfmt.Data(), &x, &y, &zorw);
+      if (nscan != 3) {
+	cerr << "Error reading line " << linein;
+	continue;
+      }
+      //cout << linein << " " << num << endl;
+      if (wth1->histo()->InheritsFrom("TH2")) {
+	TH2 *h2 = (TH2 *)wth1->histo(); 
+	h2->Fill(x,y,zorw);
+      }
+      else if (wth1->histo()->InheritsFrom("TH3")) {
+	TH3 *h3 = (TH3 *)wth1->histo(); 
+	h3->Fill(x,y,zorw);
+      }
+    }
+    break;
+  }
+  default:
+    cerr << "Can't handle more than 3 format specifiers in scan spec, sorry!" << endl;
+    exit(-1);
+    break;
+  }
   fclose(fp);
-}                                            //  fill1DHistoFromTextFile
+}                                              //  fillHistoFromTextFile
 
 //======================================================================
 
@@ -851,10 +900,12 @@ void processCommonHistoParams(const string& key,
 	cerr << "TF1 " << v_tokens[i] << " must be defined first" << endl;
 	continue;
       }
+      
       string funcnewname = v_tokens[i]+histo_id;
-      TF1 *mytf1 = new TF1(*tf1);
-      mytf1->SetName(funcnewname.c_str());
+      TF1 *mytf1 = (TF1 *)tf1->Clone(funcnewname.c_str());
       wh.loadFitFunction(mytf1);
+
+      wh.DrawFits("goff");
     }
   }
   else {
@@ -1188,7 +1239,7 @@ processHistoSection(FILE *fp,
       }
 
     //------------------------------
-    } else if( key == "filltxtfile" ) { // fill pre-booked 1D histo with list of numbers
+    } else if( key == "filltxtfile" ) { // fill pre-booked histo with list of numbers
     //------------------------------
       if( !hid ) {
 	cerr << "id key must be defined first in the section" << endl; continue;
@@ -1197,7 +1248,7 @@ processHistoSection(FILE *fp,
 	cerr << "histo not defined yet!" << endl; continue;
       }
 
-      fill1DHistoFromTextFile(value,wth1);
+      fillHistoFromTextFile(value,wth1);
 
     //------------------------------
     } else if( key == "fillfromgraph" ) { // converts graph into 1D histo
