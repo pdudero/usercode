@@ -24,8 +24,10 @@
 #include <vector>
 
 // user include files
+#include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/Provenance/interface/EventRange.h"
 #include "DataFormats/Provenance/interface/LuminosityBlockRange.h"
@@ -50,9 +52,9 @@
 #include "SimDataFormats/CaloHit/interface/PCaloHitContainer.h"
 #include "CondFormats/RunInfo/interface/RunInfo.h"
 #include "CondFormats/DataRecord/interface/RunSummaryRcd.h"
+#include "CondFormats/HcalObjects/interface/HcalElectronicsMap.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/Records/interface/CaloTopologyRecord.h"
-#include "Geometry/CaloTopology/interface/HcalTopology.h"
 
 //
 // class declaration
@@ -60,13 +62,13 @@
 
 class myEventData {
 public:
-  myEventData(const edm::ParameterSet&);
+  myEventData(const edm::ParameterSet&, edm::ConsumesCollector && );
   ~myEventData() {}
 
   void get(const edm::Event&, const edm::EventSetup&);
 
-  static const std::vector<edm::EventRange>          getEvents2Process(void);
-  static const std::vector<edm::LuminosityBlockRange> getLumis2Process(void);
+  //static const std::vector<edm::EventRange>          getEvents2Process(void);
+  //static const std::vector<edm::LuminosityBlockRange> getLumis2Process(void);
 
   inline edm::Handle<HcalTBTriggerData>       hcaltbtrigdata(void)  const { return hcaltbtrigdata_; }
   inline edm::Handle<FEDRawDataCollection>    fedrawdata(void)      const { return fedrawdata_;  }
@@ -92,6 +94,7 @@ public:
   inline edm::ESHandle<RunInfo>               runInfo(void)         const { return runInfo_;        }
   inline edm::ESHandle<HcalTopology>          hcalTopology(void)    const { return hcaltopo_;       }
   inline edm::ESHandle<CaloGeometry>          hcalGeometry(void)    const { return geometry_;       }
+  inline edm::ESHandle<HcalElectronicsMap>    hcalEmap(void)        const { return hcalemap_;       }
 
   inline uint32_t                            runNumber(void)     const { return runn_; }
   inline uint32_t                            evtNumber(void)     const { return evtn_; }
@@ -150,6 +153,26 @@ private:
   edm::InputTag      hbheNoiseResultTag_;
   bool               verbose_;
 
+  edm::EDGetTokenT<FEDRawDataCollection>     fedRawDataTok_;
+  edm::EDGetTokenT<HcalTBTriggerData>        tbTrigDataTok_;
+  edm::EDGetTokenT<HcalLaserDigi>            laserDigiTok_;
+  edm::EDGetTokenT<HBHERecHitCollection>     hbheRechitTok_;
+  edm::EDGetTokenT<HBHEDigiCollection>       hbheDigiTok_;
+  edm::EDGetTokenT<HFRecHitCollection>       hfRechitTok_;
+  edm::EDGetTokenT<HFDigiCollection>         hfDigiTok_;
+  edm::EDGetTokenT<HORecHitCollection>       hoRechitTok_;
+  edm::EDGetTokenT<HODigiCollection>         hoDigiTok_;
+  edm::EDGetTokenT<ZDCRecHitCollection>      zdcRechitTok_;
+  edm::EDGetTokenT<ZDCDigiCollection>        zdcDigiTok_;
+  edm::EDGetTokenT<HcalCalibDigiCollection>  hcalibDigiTok_;
+  edm::EDGetTokenT<edm::PCaloHitContainer>   simHitTok_;
+  edm::EDGetTokenT<reco::CaloMETCollection>  caloMETtok_;
+  edm::EDGetTokenT<reco::METCollection>      recoMETtok_;
+  edm::EDGetTokenT<CaloTowerCollection>      twrTok_;
+  edm::EDGetTokenT<reco::VertexCollection>   vertexTok_;
+  edm::EDGetTokenT<edm::TriggerResults>      trgResultsTok_;
+  edm::EDGetTokenT<bool>                     hbheNoiseResultTok_;
+
   edm::EventID eventId_;
   uint32_t runn_;
   uint32_t evtn_;
@@ -182,6 +205,9 @@ private:
   edm::ESHandle<RunInfo>               runInfo_;
   edm::ESHandle<HcalTopology>          hcaltopo_;
   edm::ESHandle<CaloGeometry>          geometry_;
+  edm::ESHandle<HcalElectronicsMap>    hcalemap_;
+
 };
+
 
 #endif // _MYEDMODULESMYANALUTILITIES

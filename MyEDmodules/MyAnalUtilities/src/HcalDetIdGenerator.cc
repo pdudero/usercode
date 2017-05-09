@@ -47,12 +47,12 @@ HcalDetIdGenerator::appendDetIds4subdet(HcalSubdetector         subdet,
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=1; ieta<=16; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalBarrel,(zside*ieta),iphi,1).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalBarrel,(zside*ieta),iphi,1).rawId());
 	}
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=15; ieta<=16; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalBarrel,(zside*ieta),iphi,2).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalBarrel,(zside*ieta),iphi,2).rawId());
 	}
     break;
 
@@ -60,21 +60,21 @@ HcalDetIdGenerator::appendDetIds4subdet(HcalSubdetector         subdet,
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=17; ieta<=29; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,1).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,1).rawId());
 	}
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=18; ieta<=29; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,2).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,2).rawId());
 	}
     for (int zside=-1; zside <=1; zside+=2)
       for (int iphi=1; iphi<=72; iphi++) {
-	v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*16),iphi,3).denseIndex());
+	v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*16),iphi,3).rawId());
       }
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=27; ieta<=29; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,3).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalEndcap,(zside*ieta),iphi,3).rawId());
 	}
     break;
 
@@ -82,7 +82,7 @@ HcalDetIdGenerator::appendDetIds4subdet(HcalSubdetector         subdet,
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=1; ieta<=15; ieta++)
 	for (int iphi=1; iphi<=72; iphi++) {
-	  v_denseIds.push_back(HcalDetId(HcalOuter,(zside*ieta),iphi,4).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalOuter,(zside*ieta),iphi,4).rawId());
 	}
     break;
 
@@ -90,12 +90,12 @@ HcalDetIdGenerator::appendDetIds4subdet(HcalSubdetector         subdet,
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=29; ieta<=41; ieta++)
 	for (int iphi=1; iphi<=71; iphi+=2) {
-	  v_denseIds.push_back(HcalDetId(HcalForward,(zside*ieta),iphi,1).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalForward,(zside*ieta),iphi,1).rawId());
 	}
     for (int zside=-1; zside <=1; zside+=2)
       for (int ieta=29; ieta<=41; ieta++)
 	for (int iphi=1; iphi<=71; iphi+=2) {
-	  v_denseIds.push_back(HcalDetId(HcalForward,(zside*ieta),iphi,2).denseIndex());
+	  v_denseIds.push_back(HcalDetId(HcalForward,(zside*ieta),iphi,2).rawId());
 	}
     break;
 
