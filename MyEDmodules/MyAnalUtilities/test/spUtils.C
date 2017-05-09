@@ -1,6 +1,7 @@
 #include <sstream>
 #include "TKey.h"
 #include "TObjArray.h"
+#include "TClass.h"
 
 #ifndef LINELEN
 #define LINELEN 1024
@@ -102,7 +103,8 @@ bool getKeyValue(const string& theline,
 string buildStringFromSpecifiers(const string& formatstr,
 				 const string& canvastitle="",
 				 const string& rootfilepath="",
-				 const string& fullhistopath="")
+				 const string& fullhistopath="",
+				 const string& objtitle="")
 {
   string tgtstring;
   size_t len = formatstr.length();
@@ -121,9 +123,8 @@ string buildStringFromSpecifiers(const string& formatstr,
       pos0=pos+1;
 
       switch (formatstr[pos0]) { 
-      case 'C':
-	tgtstring += canvastitle;
-	break;
+      case 'C':	tgtstring += canvastitle;	break;
+      case 't':	{ tgtstring += objtitle;  cout << objtitle << endl;}  break;
 
       case 'P': {               // full path contained in glmap
 	tgtstring +=
