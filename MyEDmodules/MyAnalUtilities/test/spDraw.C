@@ -749,19 +749,18 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
       if (!wg) {
 	// handle case where a multi-object is assigned to a single pad
 	std::map<string,unsigned>::const_iterator it=glmap_mobj2size.find(gid);
-	if (it!=glmap_mobj2size.end() && wp->graph_ids.size()==1) {
-	  string gidi = gid +"_0";
-	  wp->graph_ids[0]=gidi;
-	  for (size_t k=1; k<it->second; k++) {
-	    gidi = gid +"_"+int2str(k);
+	if (it!=glmap_mobj2size.end()) {
+	  wp->graph_ids.erase(wp->graph_ids.begin()+j);
+	  for (size_t k=0; k<it->second; k++) {
+	    string gidi = gid +"_"+int2str(k);
 	    wp->graph_ids.push_back(gidi);
 	  }
 	  size = wp->graph_ids.size();
 	  j=-1; // reset counter and start over.
 	  continue;
 	} else {
-	  cerr << "Can't assign any object above a single multigraph to a single pad" << endl;
-	  break;
+	  cerr << "Can't find multigraph with id " << gid << endl;
+	  exit(-1);
 	}
       }
 
@@ -1118,6 +1117,7 @@ void  drawPlots(canvasSet_t& cs,bool savePlots2file)
 
       wp->vp->Update();
     }
+
     wc->c1->Update();
 
   } // pad loop
