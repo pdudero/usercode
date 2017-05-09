@@ -154,6 +154,7 @@ void loadVectorsFromFile(const char *filename,
 
     if (firstline && strlen(titlescanfmt)) {
       sscanf(linein, titlescanfmt, title);
+      cout << linein << ", " << titlescanfmt << ", " << title << endl;
       firstline=false;
     }
     
@@ -261,7 +262,8 @@ void loadVectorsFromFile(const char *filename,
     double x, xerr, y, yerr;
     if( linein[0]=='#' ) continue;                // comments are welcome
     if (sscanf(linein, scanfmt, &x, &y, &xerr, &yerr) != 4) {
-      cerr << "scan failed, file " << filename << ", line = " << linein << endl;
+      cerr << "scan failed, need 4 values per line in file "
+	   << filename << ", line = " << linein << endl;
       return;
     }
     else {
@@ -383,8 +385,14 @@ wGraph_t *loadVectorsByType(bool symerrors,
 //======================================================================
 
 void
-printVectorsToFile(wGraph_t *wg, const string& filename)
+printVectorsToFile(wGraph_t *wg, const string& inname)
 {
+  string filename=inname;
+  if (filename.find("%") != string::npos) {
+    filename = buildStringFromSpecifiers(filename,"","",
+					 wg->gr->GetName(),
+					 wg->gr->GetTitle());
+  }
   ofstream of(filename.c_str());
 
   if (wg->gr->InheritsFrom("TGraphAsymmErrors")) {
@@ -825,12 +833,31 @@ processGraphSection(FILE *fp,
 	(symerrors ? "%lf %lf %lf %lf" : "%lf %lf");
       string titlescanspec;
 
-      Tokenize(value,v_tokens,",\"");
-      if (v_tokens.size() > 1) {
+      if (value.find('"')) { // quotes have precedence over commas
+	Tokenize(value,v_tokens,"\"");
+	assert(v_tokens.size()>1);
+	if (*(v_tokens[0].rbegin())==',') {
+	  v_tokens[0].pop_back();
+	}
 	path     = v_tokens[0];
 	scanspec = v_tokens[1];
-	if (v_tokens.size() > 2)
-	  titlescanspec = v_tokens[2];
+	if (v_tokens.size() > 2) {
+	  if ((!v_tokens[2].compare(",")) && (v_tokens.size()>3))
+	    titlescanspec = v_tokens[3];
+	  else
+	    titlescanspec = v_tokens[2];
+	}
+      } else {
+	Tokenize(value,v_tokens,",");
+	path     = v_tokens[0];
+	if (v_tokens.size() > 1 ) scanspec = v_tokens[1];
+	if (v_tokens.size() > 2 ) titlescanspec = v_tokens[2];
+      }
+      
+      if (gl_verbose) {
+	cout << "path     = " << path << endl;
+	cout << "scanspec = " << scanspec << endl;
+	if (titlescanspec.size()) cout << "titlescanspec = " << scanspec << endl;
       }
 
       // allow fileglobs
@@ -838,27 +865,16 @@ processGraphSection(FILE *fp,
 	wGraph_t *pwg = loadVectorsByType(symerrors,asymerrors,path,scanspec,titlescanspec);
 	v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
       } else { // glob found
-	glob_t globbuf;
 	string fileglob = path;
-
-	int stat = glob (fileglob.c_str(), GLOB_MARK, NULL, &globbuf);
-	if (stat) {
-	  switch (stat) {
-	  case GLOB_NOMATCH: cerr << "No file matching glob pattern "; break;
-	  case GLOB_NOSPACE: cerr << "glob ran out of memory "; break;
-	  case GLOB_ABORTED: cerr << "glob read error "; break;
-	  default: cerr << "unknown glob error stat=" << stat << " "; break;
-	  }
-	  cerr << fileglob << endl;
-	  exit(-1);
-	}
+	vector<string> vpaths;
+	expandGlob(fileglob, vpaths);
 	if (gl_verbose)
-	  cout<<globbuf.gl_pathc<<" files match the glob pattern"<<endl;
+	  cout<<vpaths.size()<<" files match the glob pattern"<<endl;
       
-	for (size_t i=0; i<std::max((size_t)1,globbuf.gl_pathc); i++) {
+	for (size_t i=0; i<std::max((size_t)1,vpaths.size()); i++) {
 	  string gidi = *gid;
-	  if (globbuf.gl_pathc) {
-	    path = globbuf.gl_pathv[i];
+	  if (vpaths.size()) {
+	    path = vpaths[i];
 	    gidi = *gid + "_" + int2str(i);
 	  }
 
@@ -869,9 +885,6 @@ processGraphSection(FILE *fp,
 	  wGraph_t *pwg = loadVectorsByType(symerrors,asymerrors,path,scanspec);
 	  v_graphs.push_back(pair<string,wGraph_t *>(gidi,pwg));
 	} // glob loop
-
-	if (globbuf.gl_pathc) 
-	  globfree(&globbuf);
 
 	glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
       } // if glob found
@@ -1028,6 +1041,30 @@ processGraphSection(FILE *fp,
 	v_graphs.push_back(std::pair<string,wGraph_t *>(*gid,pwg));
 	glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
       }
+
+    //------------------------------
+    } else if (key == "divhistos") {
+    //------------------------------
+
+      Tokenize(value,v_tokens,",/"); // either comma-separated or using '/'
+      string option;
+      if (v_tokens.size()==3) option = v_tokens[2];
+      else if (v_tokens.size()!= 2) {
+	cerr << "expect comma-separated list of exactly two histo specs to divide! ";
+	cerr << theline << endl;
+	continue;
+      }
+
+      TH1 *tmph1 = (TH1 *)findHisto(v_tokens[0]); if (!tmph1) exit(-1);
+      TH1 *tmph2 = (TH1 *)findHisto(v_tokens[1]); if (!tmph2) exit(-1);
+
+      wGraph_t *pwg = new wGraph_t();
+      pwg->gr = new TGraphAsymmErrors();
+
+      ((TGraphAsymmErrors *)(pwg->gr))->Divide(tmph1,tmph2,option.c_str());
+
+      v_graphs.push_back(pair<string,wGraph_t *>(*gid,pwg));
+      glmap_mobj2size.insert(pair<string,unsigned>(*gid,v_graphs.size()));
 
     //------------------------------
     } else if (key == "bayesdiv") {
@@ -1356,7 +1393,7 @@ processGraphSection(FILE *fp,
 	      gr->SetPoint(j,xtop,ytop/ybot);
 	    }
 	  } else {
-	    cerr << "Cannot perform division, different # of points" << endl;
+	    cerr << "Cannot perform division, different # of points: " << npts << "/" << nptsdivsr << endl;
 	    exit(-1);
 	  }
 	}
