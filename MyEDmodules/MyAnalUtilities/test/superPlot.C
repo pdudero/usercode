@@ -7,10 +7,10 @@
 #include <iomanip>
 #include <sstream>
 #include <ctype.h>     // isdigit
-#include <stdlib.h>
+#include <cstdlib>
 //#define __size_t unsigned // needed for glob.h!!
-#include "/usr/lib/gcc/x86_64-redhat-linux/4.1.2/include/stddef.h"
-#include <glob.h>
+//#include "/usr/lib/gcc/x86_64-redhat-linux/4.1.2/include/stddef.h"
+#include "/usr/lib/gcc/x86_64-redhat-linux/4.4.4/include/stddef.h"
 #include <assert.h>
 
 using namespace std;
@@ -147,7 +147,6 @@ static bool gl_verbose;
 #include "spStyle.C"
 #include "spTF1.C"
 #include "spHisto.C"
-#include "spLabelLatex.C"
 #include "spLayout.C"
 #include "spLegend.C"
 #include "spLine.C"
@@ -158,6 +157,7 @@ static bool gl_verbose;
 #include "spHmath.C"
 #include "spGraph.C"
 #include "spTree.C"
+#include "spLabelLatex.C"
 #include "spDraw.C"
 
 //======================================================================
@@ -374,4 +374,6 @@ void superPlot(const string& canvasLayout="canvas.txt",
 
 
   drawPlots(*initCanvasSet(canvasLayout),savePlot2file);
+
+  //closeFiles();
 }
