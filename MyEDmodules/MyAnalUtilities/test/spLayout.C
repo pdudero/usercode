@@ -28,8 +28,8 @@ processLayoutSection(FILE         *fp,
 
     if (key == "ncanvases") {
       unsigned long ncanvases = str2int(value);
-      if (ncanvases > 0) cs.ncanvases = ncanvases;
-      else if (gl_verbose)
+      cs.ncanvases = ncanvases;
+      if (!ncanvases && gl_verbose)
 	cout << "ncanvases="<<ncanvases<<"?? You can't be serious." << endl;
     }
     else if (key == "npadsx") {
