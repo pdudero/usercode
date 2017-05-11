@@ -84,6 +84,8 @@ void save2File(TNamed *obj, string outspec)
 
 
   rootfile = openRootFile(rootfn,"UPDATE");
+  if (!rootfile)
+    rootfile = openRootFile(rootfn,"RECREATE"); // try overwriting whatever's there.
 
   if (rootfile) {
     target = obj;
