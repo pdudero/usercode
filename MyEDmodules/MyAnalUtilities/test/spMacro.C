@@ -60,6 +60,32 @@ processMacroSection(FILE *fp,
       success = 1;
 
     //------------------------------
+    } else if (key == "execfromlib") {
+    //------------------------------
+
+      if (!mid) {
+	cerr << "id key must be defined first in the section" << endl; continue;
+      }
+#if 0
+      gSystem->Load(value.c_str());
+
+      if (executenow) {
+	int error;
+	cout << "Executing macro " << *mid << " --> " << value << endl;
+	gROOT->Macro(value.c_str(), &error, kTRUE); // update current pad
+	if (error) {
+	  static const char *errorstr[] = {
+	    "kNoError","kRecoverable","kDangerous","kFatal","kProcessing" };
+	  cerr << "ERROR: error returned from macro: " << errorstr[error] << endl;
+	}
+      }
+#endif
+      // We're actually using this map in reverse here!
+      glmap_objpath2id.insert(pair<string,string>(*mid,value));
+
+      success = 1;
+
+    //------------------------------
     } else if (key == "executenow") {
     //------------------------------
 
