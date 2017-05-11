@@ -452,14 +452,14 @@ MyHistoWrapper<T>::loadFitFunction(TF1 *fitfn)
     }
     if (verbosity_) {
       std::cout << "MyHistoWrapper::loadFitFunction: ";
-      std::cout << "resetting fit function range ";
+      std::cout << "resetting TF1 " << fitfn->GetName() <<" range ";
       std::cout << fitmin << " - " << fitmax << std::endl;
     }
     fitfn->SetRange(fitmin,fitmax);
 
     v_fits_.push_back(fitfn);
   }
-}
+}                                                     // loadFitFunction
 
 //======================================================================
 
@@ -508,7 +508,7 @@ MyHistoWrapper<T>::DrawFits(const std::string& drawopt,
     }
     //f1->Draw(drawopt.c_str());
   }
-}
+}                                                            // DrawFits
 
 //======================================================================
 
@@ -561,7 +561,7 @@ MyHistoWrapper<T>::DrawStats(void)
   }
   st1->SetOptStat(stats_.GetOptStat());
   st1->Draw();
-}
+}                                                           // DrawStats
 
 //======================================================================
 
