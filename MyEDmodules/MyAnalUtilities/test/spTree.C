@@ -84,6 +84,7 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
       cerr <<" already exists as an object in the current directory! "<<endl;
       exit(-1);
     }
+
     if (wth1 && !hname.EqualTo(wth1->histo()->GetName())) {
       cerr << "Error: histo name in treedraw spec "<<hname;
       cerr <<" doesn't match named histo "<<wth1->histo()->GetName()<<endl;
@@ -91,6 +92,7 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
     }
   } else { // add histo name
     assert (wth1);
+    assert (wth1->histo());
     hname = TString(wth1->histo()->GetName());
     varexp = varexp + ">>+" + hname; // append to pre-existing histo
   }
@@ -104,6 +106,7 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
   case 3:
     {
       TString cut = ((TObjString *)(*tokens)[2])->GetString();
+      cout << "cutstring = " << cut << endl;
       chain->Draw(varexp,cut,"goff"); 
     }
     break;
@@ -111,6 +114,7 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
     {
       TString gopt = ((TObjString *)(*tokens)[3])->GetString();
       gopt = gopt + " goff";
+      cout << "optstring = " << gopt << endl;
       chain->Draw(varexp,"",gopt);
     }
     break;
@@ -119,6 +123,8 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
       TString cut  = ((TObjString *)(*tokens)[2])->GetString();
       TString gopt = ((TObjString *)(*tokens)[4])->GetString();
       gopt = gopt + " goff";
+      cout << "cutstring = " << cut << endl;
+      cout << "optstring = " << gopt << endl;
       chain->Draw(varexp,cut,gopt);
     }
     break;
@@ -130,7 +136,13 @@ void fillHistoFromTreeVar(std::string& treedrawspec,
     break;
   }
   if (!wth1) {
-    wth1 = new wTH1((TH1*)gDirectory->Get(hname));
+    TH1 *h = (TH1*)gDirectory->Get(hname);
+    if (!h) {
+      cerr << "Histo " << hname << " not found in current directory, sorry!" << endl;
+      gDirectory->ls();
+      exit(-1);
+    }
+    wth1 = new wTH1(h);
     assert(wth1);
     wth1->histo()->UseCurrentStyle();
   }
