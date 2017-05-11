@@ -134,8 +134,18 @@ processLatexSection(FILE   *fp,
 	cerr << "Invalid format for key kstest: kstest=histoid1,histoid2[,option],printf format" << endl;
 	exit(-1);
       }
-      TH1 *cmph1 = findHisto(v_tokens[0]);  assert(cmph1);
-      TH1 *cmph2 = findHisto(v_tokens[1]);  assert(cmph2);
+      TH1 *cmph1 = findHisto(v_tokens[0]);
+      if (!cmph1) {
+	wStack_t *st = findStack(v_tokens[0]);
+	assert(st);
+	cmph1 = st->sum->histo();
+      }
+      TH1 *cmph2 = findHisto(v_tokens[1]);
+      if (!cmph2) {
+	wStack_t *st = findStack(v_tokens[1]);
+	assert(st);
+	cmph2 = st->sum->histo();
+      }
 
       if (gl_verbose)
 	cout<<"Comparing histos "<<cmph1->GetName()<<", "<<cmph2->GetName()<<endl;
